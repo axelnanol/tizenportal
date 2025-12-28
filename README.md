@@ -35,10 +35,10 @@ Modern web apps rely on CSS features like `gap`, `aspect-ratio`, and `focus-visi
 This application is loaded via **TizenBrew**.
 
 1. Open **TizenBrew** on your Samsung TV.
-2. Go to **Add Repository**.
-3. Enter URL: `https://github.com/alexnolan/tizenportal`
-4. Install the **TizenPortal** module.
-5. Launch.
+2. Navigate to the **Folder Icon** (Module Manager).
+3. Select **Add GitHub Module**.
+4. Enter the repository: `alexnolan/tizenportal`
+5. Install and Launch.
 
 ## ⚙️ Configuration
 
