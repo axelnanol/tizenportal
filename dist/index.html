@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal v0.1.0</title>
+    <title>TizenPortal v0.1.3</title>
     <style>
         body { background: #0a0a0a; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         
@@ -17,18 +17,17 @@
         .card { 
             background: #1e1e1e; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; 
             border: 3px solid transparent; border-radius: 8px; font-weight: bold; font-size: 20px; 
-            flex-direction: column; gap: 10px; cursor: pointer; position: relative;
+            flex-direction: column; gap: 10px; cursor: pointer; position: relative; transition: transform 0.1s;
         }
         .card img { width: 48px; height: 48px; object-fit: contain; }
         .card i { font-size: 40px; color: #888; }
         
-        /* FOCUS */
+        /* FOCUS STATES (Crucial for Remote) */
         .card:focus, button:focus, input:focus, select:focus { 
             border-color: #FFD700; background: #2a2a2a; outline: none; 
             transform: scale(1.05); z-index: 10; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: white;
         }
         
-        /* ADD BUTTON */
         .add { border: 3px dashed #444; background: transparent; color: #666; }
         
         /* MODAL */
@@ -41,13 +40,16 @@
         button { padding: 12px 20px; background: #333; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
         button.primary { background: #FFD700; color: black; }
         button.danger { background: #900; }
+
+        /* VIRTUAL CURSOR */
+        #tp-cursor { position:fixed; width:24px; height:24px; background:rgba(255,0,0,0.8); border:2px solid white; border-radius:50%; z-index:99999; pointer-events:none; display:none; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
     <header>
-        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.0</span></h1>
+        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.3</span></h1>
         <button onclick="location.reload()" tabindex="0" style="font-size: 14px;">
             <i class="fas fa-sync"></i> Reload
         </button>
@@ -78,13 +80,14 @@
             </div>
         </div>
     </div>
+    
+    <div id="tp-cursor"></div>
 
     <script>
-        // --- 1. THE LIBRARY (Presets) ---
         const PRESETS = {
             "__CORE__": {
                 "css": "img, svg, video { max-width: 100% !important; height: auto !important; flex-shrink: 1 !important; } .flex > * { min-width: 0 !important; } :focus, :focus-visible { outline: 5px solid #FFD700 !important; box-shadow: 0 0 20px rgba(255,0,0,0.8) !important; z-index: 99999 !important; } ::-webkit-scrollbar { display: none; }",
-                "js": "window.TizenUtils={keepAwake:()=>{const v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play().catch(()=>{});document.body.appendChild(v);}};window.TizenUtils.keepAwake();setInterval(()=>{const a=document.activeElement;if(!a||a===document.body){const t=document.querySelector('.card, .item, button, input, [tabindex=\"0\"]');if(t)t.focus();}},2000);"
+                "js": "window.TizenUtils={keepAwake:()=>{const v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play().catch(()=>{});document.body.appendChild(v);}};window.TizenUtils.keepAwake();"
             },
             "abs": {
                 "name": "Audiobookshelf",
@@ -104,6 +107,10 @@
         };
 
         let apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
+        
+        // MOUSE MODE VARS
+        let mouseMode = false;
+        let mouseX = window.innerWidth/2; let mouseY = window.innerHeight/2;
 
         function init() {
             const sel = document.getElementById('preset');
@@ -126,11 +133,15 @@
             add.innerHTML = `<i class="fas fa-plus"></i><span>Add</span>`;
             add.onclick = () => openModal();
             g.appendChild(add);
-            if(apps.length>0) setTimeout(()=>document.querySelector('.card').focus(), 100);
+            
+            // AGGRESSIVE AUTO FOCUS
+            setTimeout(() => {
+                const first = document.querySelector('.card');
+                if(first) first.focus();
+            }, 500);
         }
 
         function launch(app) {
-            // --- THE SMUGGLER ---
             const core = PRESETS['__CORE__'];
             const preset = PRESETS[app.presetID] || {};
             
@@ -168,17 +179,48 @@
             }
         }
 
-        // --- SPATIAL NAV ---
+        // --- INPUT HANDLING ---
         document.addEventListener('keydown', (e) => {
-            if([37,38,39,40].includes(e.keyCode) && document.getElementById('modal').style.display==='none') {
-                e.preventDefault(); navigate(e.keyCode);
+            const k = e.keyCode;
+            
+            // GREEN BUTTON (404) -> Toggle Mouse
+            if(k === 404) { toggleMouse(); e.preventDefault(); }
+            
+            // MOUSE MODE
+            if(mouseMode) {
+                const step=20;
+                if(k===37) mouseX-=step;
+                if(k===38) mouseY-=step;
+                if(k===39) mouseX+=step;
+                if(k===40) mouseY+=step;
+                if(k===13) {
+                    const el = document.elementFromPoint(mouseX, mouseY);
+                    if(el) el.click();
+                }
+                updateCursor();
+                e.preventDefault();
+                return;
             }
-            if((e.keyCode===10009 || e.keyCode===27) && document.getElementById('modal').style.display==='flex') closeModal();
+
+            // SPATIAL NAV
+            if([37,38,39,40].includes(k) && document.getElementById('modal').style.display==='none') {
+                // Check if anything has focus. If not, focus first item.
+                if(document.activeElement === document.body) {
+                    const first = document.querySelector('.card');
+                    if(first) first.focus();
+                    e.preventDefault();
+                } else {
+                    navigate(k);
+                }
+            }
+            if((k===10009 || k===27) && document.getElementById('modal').style.display==='flex') closeModal();
         });
 
         function navigate(k) {
-            const all = Array.from(document.querySelectorAll('.card'));
+            const all = Array.from(document.querySelectorAll('.card, button'));
             const cur = document.activeElement;
+            if(!all.includes(cur)) return;
+
             const rect = cur.getBoundingClientRect();
             const cx = rect.x + rect.width/2; const cy = rect.y + rect.height/2;
             let best=null; let minD=Infinity;
@@ -188,13 +230,38 @@
                 const r = el.getBoundingClientRect();
                 const ex = r.x+r.width/2; const ey = r.y+r.height/2;
                 let valid=false;
-                if(k===37 && ex<cx && Math.abs(ey-cy)<60) valid=true; 
-                if(k===39 && ex>cx && Math.abs(ey-cy)<60) valid=true; 
-                if(k===38 && ey<cy && Math.abs(ex-cx)<100) valid=true; 
-                if(k===40 && ey>cy && Math.abs(ex-cx)<100) valid=true; 
-                if(valid) { const d=Math.hypot(ex-cx,ey-cy); if(d<minD){ minD=d; best=el; } }
+                
+                // Allow sloppy navigation (not strictly axis-aligned)
+                const dx = ex - cx; const dy = ey - cy;
+                
+                if(k===37 && dx < 0 && Math.abs(dy) < Math.abs(dx)) valid=true; // Left
+                if(k===39 && dx > 0 && Math.abs(dy) < Math.abs(dx)) valid=true; // Right
+                if(k===38 && dy < 0 && Math.abs(dx) < Math.abs(dy)) valid=true; // Up
+                if(k===40 && dy > 0 && Math.abs(dx) < Math.abs(dy)) valid=true; // Down
+                
+                if(valid) { 
+                    const d = Math.hypot(dx,dy); 
+                    if(d<minD){ minD=d; best=el; } 
+                }
             });
-            if(best) best.focus();
+            
+            if(best) {
+                best.focus();
+                e.preventDefault(); // Stop scrolling
+            }
+        }
+        
+        function toggleMouse() {
+            mouseMode = !mouseMode;
+            const c = document.getElementById('tp-cursor');
+            c.style.display = mouseMode ? 'block' : 'none';
+            updateCursor();
+        }
+        function updateCursor() {
+            const c = document.getElementById('tp-cursor');
+            mouseX = Math.max(0, Math.min(window.innerWidth, mouseX));
+            mouseY = Math.max(0, Math.min(window.innerHeight, mouseY));
+            c.style.left = (mouseX-12)+'px'; c.style.top = (mouseY-12)+'px';
         }
 
         init();
