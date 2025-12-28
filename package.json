@@ -1,7 +1,7 @@
 {
   "name": "@alexnolan/tizenportal",
   "appName": "TizenPortal",
-  "version": "2.0.0",
+  "version": "0.1.0",
   "description": "Universal Tizen Launcher",
   "packageType": "mods",
   "websiteURL": "https://alexnolan.github.io/tizenportal/dist/index.html",
@@ -11,5 +11,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/alexnolan/tizenportal"
-  }
+  },
+  "keys": [
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+    "MediaPlay", "MediaPause", "MediaPlayPause", "MediaStop",
+    "MediaFastForward", "MediaRewind", "MediaTrackNext", "MediaTrackPrevious",
+    "ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue",
+    "Info", "Tools", "Return", "Enter"
+  ]
 }

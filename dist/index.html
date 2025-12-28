@@ -35,7 +35,8 @@
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 100; }
         .box { background: #222; padding: 40px; width: 500px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #444; }
         
-        input, select { padding: 15px; background: #111; color: white; border: 1px solid #444; width: 100%; box-sizing: border-box; font-size: 18px; }
+        label { font-size: 12px; color: #888; margin-bottom: -10px; }
+        input, select { padding: 15px; background: #111; color: white; border: 1px solid #444; width: 100%; box-sizing: border-box; font-size: 16px; }
         .btn-row { display: flex; gap: 15px; justify-content: flex-end; margin-top: 10px; }
         button { padding: 12px 20px; background: #333; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
         button.primary { background: #FFD700; color: black; }
@@ -59,7 +60,17 @@
             <h2>Config App</h2>
             <input type="text" id="name" placeholder="Name">
             <input type="url" id="url" placeholder="http://192.168...">
-            <select id="preset"><option value="">-- Preset --</option></select>
+            
+            <label>Preset (Auto-Fixes)</label>
+            <select id="preset"><option value="">-- Custom --</option></select>
+            
+            <label>Device Type (User Agent)</label>
+            <select id="ua">
+                <option value="default">Default (TV)</option>
+                <option value="desktop">Desktop (Force PC View)</option>
+                <option value="mobile">Mobile (Force Touch View)</option>
+            </select>
+
             <div class="btn-row">
                 <button onclick="deleteApp()" class="danger">Delete</button>
                 <button onclick="closeModal()">Cancel</button>
@@ -85,6 +96,11 @@
                 "css": ":focus-visible { outline: 4px solid #FFD700 !important; transform: scale(1.02); }",
                 "js": "document.body.classList.add('layout-tv');"
             }
+        };
+
+        const UA_STRINGS = {
+            "desktop": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "mobile": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         };
 
         let apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
@@ -115,7 +131,6 @@
 
         function launch(app) {
             // --- THE SMUGGLER ---
-            // Package the code into window.name so it survives the trip to 192.168.x.x
             const core = PRESETS['__CORE__'];
             const preset = PRESETS[app.presetID] || {};
             
@@ -123,7 +138,8 @@
                 id: 'tp_payload',
                 css: (core.css||'') + '\n' + (preset.css||'') + '\n' + (app.customCSS||''),
                 js: (core.js||'') + '\n' + (preset.js||'') + '\n' + (app.customJS||''),
-                home: window.location.href // Remember how to get back
+                home: window.location.href,
+                userAgent: UA_STRINGS[app.ua] || null
             };
             
             window.name = JSON.stringify(payload);
@@ -137,16 +153,16 @@
             const name = document.getElementById('name').value;
             const url = document.getElementById('url').value;
             const presetID = document.getElementById('preset').value;
+            const ua = document.getElementById('ua').value;
+
             if(name && url) {
-                apps.push({name, url, presetID});
+                apps.push({name, url, presetID, ua});
                 localStorage.setItem('tp_apps', JSON.stringify(apps));
                 location.reload();
             }
         }
         
         function deleteApp() {
-            // Simple delete logic for Alpha (Deletes last added for now to avoid ID complex)
-            // Ideally, pass index to modal. For v0.1, we just pop.
             if(confirm("Delete most recent app?")) { 
                 apps.pop(); localStorage.setItem('tp_apps', JSON.stringify(apps)); location.reload(); 
             }
