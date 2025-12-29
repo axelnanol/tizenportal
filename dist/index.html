@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal v0.1.5</title>
+    <title>TizenPortal v0.1.8</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         
@@ -11,14 +11,12 @@
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; }
         
-        /* CARD STYLES */
         .card { 
             background: #1a1a1a; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; 
             border: 4px solid transparent; border-radius: 8px; font-weight: bold; font-size: 20px; 
-            flex-direction: column; gap: 10px; cursor: pointer; opacity: 0.7;
+            flex-direction: column; gap: 10px; cursor: pointer; opacity: 0.7; transition: transform 0.1s;
         }
         .card img { width: 50px; height: 50px; object-fit: contain; }
-        .card i { font-size: 40px; color: #888; }
         
         /* ACTIVE STATE */
         .card.active { 
@@ -38,23 +36,23 @@
         .btn-row { display: flex; gap: 15px; margin-top: 10px; }
         button { flex: 1; padding: 15px; background: #333; color: white; border: 1px solid #555; font-size: 16px; font-weight: bold; }
         button.primary { background: #FFD700; color: black; border-color: #FFD700; }
-
-        /* KEY DEBUGGER */
-        #key-debug { position: fixed; bottom: 10px; right: 10px; font-family: monospace; color: #444; font-size: 12px; }
+        
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.5s; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
     <header>
-        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.5</span></h1>
+        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.8</span></h1>
     </header>
     
     <div id="grid" class="grid"></div>
+    <div id="toast">Long Press Enter to Edit</div>
 
     <div id="modal">
         <div class="box">
-            <h2>Add App</h2>
+            <h2 id="modal-title">Add App</h2>
             <input type="text" id="name" placeholder="App Name" autocomplete="off">
             <input type="url" id="url" placeholder="http://192.168.1.X:PORT" autocomplete="off">
             <select id="preset"><option value="">-- No Preset --</option></select>
@@ -66,29 +64,12 @@
                 <button onclick="closeModal()">Cancel</button>
                 <button onclick="save()" class="primary">Save</button>
             </div>
-            <button onclick="deleteApp()" style="margin-top:10px; background:#500; border:none;">Delete App</button>
+            <button id="btn-delete" onclick="deleteApp()" style="margin-top:10px; background:#500; border:none; display:none;">Delete App</button>
         </div>
     </div>
-    
-    <div id="key-debug">Last Key: None</div>
 
     <script>
-        // --- 1. TIZEN KEY REGISTRATION (THE FIX) ---
-        function registerKeys() {
-            if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
-                const keys = ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", "MediaPlay", "MediaPause", "MediaStop", "MediaFastForward", "MediaRewind"];
-                keys.forEach(k => {
-                    try {
-                        tizen.tvinputdevice.registerKey(k);
-                        console.log("Registered:", k);
-                    } catch(e) { console.error("Key Reg Fail:", k); }
-                });
-            } else {
-                console.warn("Tizen API not found (Browser Mode?)");
-            }
-        }
-
-        // --- 2. DATA & PRESETS ---
+        // --- 1. SETUP ---
         const PRESETS = {
             "__CORE__": {
                 "css": "img, svg, video { max-width: 100% !important; height: auto !important; } :focus { outline: 5px solid #FFD700 !important; } ::-webkit-scrollbar { display: none; }",
@@ -97,20 +78,28 @@
             "abs": { "name": "Audiobookshelf", "css": ".flex { gap: 0 !important; }", "js": "" },
             "jellyfin": { "name": "Jellyfin", "css": ":focus-visible { outline: 4px solid #FFD700 !important; }", "js": "" }
         };
-
-        const UA_STRINGS = {
-            "desktop": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"
-        };
+        const UA_STRINGS = { "desktop": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36" };
 
         let apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
         let selectedIndex = 0; 
+        let editIndex = -1; // -1 = Add Mode
+        let enterTimer = null;
 
-        // --- 3. RENDER & NAV ---
         function init() {
-            registerKeys(); // Call immediately
+            // Keys
+            if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
+                ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", "MediaPlay", "MediaPause"].forEach(k => {
+                    try { tizen.tvinputdevice.registerKey(k); } catch(e){}
+                });
+            }
+            
             const sel = document.getElementById('preset');
             Object.keys(PRESETS).forEach(k => { if(k!=='__CORE__') sel.innerHTML+=`<option value="${k}">${PRESETS[k].name}</option>`; });
             render();
+            
+            // Show hint
+            const t = document.getElementById('toast');
+            t.style.opacity = 1; setTimeout(()=>t.style.opacity=0, 5000);
         }
 
         function render() {
@@ -137,23 +126,16 @@
             });
         }
 
-        // --- 4. INPUT HANDLING ---
+        // --- 2. INPUT ---
         document.addEventListener('keydown', (e) => {
             const k = e.keyCode;
-            document.getElementById('key-debug').innerText = "Last Key: " + k;
-
-            // COLOR KEYS (Test if they work in launcher)
-            if(k === 403) alert("Red Key Works!"); 
-
-            const modal = document.getElementById('modal').style.display === 'flex';
-            const cards = document.querySelectorAll('.card');
-            const cols = Math.floor(document.getElementById('grid').offsetWidth / 250) || 3;
-
-            if(modal) {
+            if(document.getElementById('modal').style.display === 'flex') {
                 if(k === 10009 || k === 27) closeModal();
                 return;
             }
 
+            const cols = Math.floor(document.getElementById('grid').offsetWidth / 250) || 3;
+            
             if (k === 37) selectedIndex--; 
             if (k === 39) selectedIndex++; 
             if (k === 38) selectedIndex -= cols; 
@@ -164,13 +146,32 @@
                 updateSelection();
             }
 
+            // LONG PRESS ENTER LOGIC
             if (k === 13) {
-                const isAddBtn = (selectedIndex === cards.length - 1);
-                if (isAddBtn) openModal();
-                else launch(apps[selectedIndex]);
+                if (!enterTimer) {
+                    enterTimer = setTimeout(() => {
+                        enterTimer = null;
+                        openModal(selectedIndex); // EDIT MODE
+                    }, 800); // 800ms hold
+                }
             }
         });
 
+        document.addEventListener('keyup', (e) => {
+            if (e.keyCode === 13) {
+                if (enterTimer) {
+                    // Timer still running = Short Press
+                    clearTimeout(enterTimer);
+                    enterTimer = null;
+                    
+                    const cards = document.querySelectorAll('.card');
+                    if (selectedIndex === cards.length - 1) openModal(-1); // Add
+                    else launch(apps[selectedIndex]);
+                }
+            }
+        });
+
+        // --- 3. MODAL & LOGIC ---
         function launch(app) {
             const core = PRESETS['__CORE__'];
             const preset = PRESETS[app.presetID] || {};
@@ -179,30 +180,62 @@
                 js: (core.js||'') + '\n' + (preset.js||''),
                 ua: UA_STRINGS[app.ua] || null
             };
-            
-            const json = JSON.stringify(payload);
-            const b64 = btoa(json);
-            const separator = app.url.includes('?') ? '&' : '?';
-            const target = app.url + separator + 'tp=' + b64;
-            
-            window.location.href = target;
+            const b64 = btoa(JSON.stringify(payload));
+            const sep = app.url.includes('?') ? '&' : '?';
+            window.location.href = app.url + sep + 'tp=' + b64;
         }
 
-        // --- 5. MODAL LOGIC ---
-        function openModal() { document.getElementById('modal').style.display='flex'; document.getElementById('name').focus(); }
+        function openModal(index) { 
+            editIndex = index;
+            const isAdd = (index === -1 || index >= apps.length);
+            
+            document.getElementById('modal-title').innerText = isAdd ? "Add App" : "Edit App";
+            document.getElementById('btn-delete').style.display = isAdd ? 'none' : 'block';
+            
+            if (!isAdd) {
+                const a = apps[index];
+                document.getElementById('name').value = a.name;
+                document.getElementById('url').value = a.url;
+                document.getElementById('preset').value = a.presetID || "";
+                document.getElementById('ua').value = a.ua || "default";
+            } else {
+                document.getElementById('name').value = "";
+                document.getElementById('url').value = "";
+            }
+
+            document.getElementById('modal').style.display='flex'; 
+            document.getElementById('name').focus(); 
+        }
+
         function closeModal() { document.getElementById('modal').style.display='none'; }
+
         function save() {
             const name = document.getElementById('name').value;
             const url = document.getElementById('url').value;
-            const preset = document.getElementById('preset').value;
+            const presetID = document.getElementById('preset').value;
             const ua = document.getElementById('ua').value;
+
             if(name && url) {
-                apps.push({name, url, presetID: preset, ua});
+                const appObj = {name, url, presetID, ua};
+                if (editIndex > -1 && editIndex < apps.length) {
+                    apps[editIndex] = appObj; // Update
+                } else {
+                    apps.push(appObj); // Add
+                }
                 localStorage.setItem('tp_apps', JSON.stringify(apps));
                 location.reload();
             }
         }
-        function deleteApp() { apps.pop(); localStorage.setItem('tp_apps', JSON.stringify(apps)); location.reload(); }
+
+        function deleteApp() { 
+            if(editIndex > -1) {
+                if(confirm("Delete this app?")) {
+                    apps.splice(editIndex, 1);
+                    localStorage.setItem('tp_apps', JSON.stringify(apps));
+                    location.reload();
+                }
+            }
+        }
 
         init();
     </script>
