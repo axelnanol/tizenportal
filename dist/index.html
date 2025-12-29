@@ -2,31 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 029</title>
+    <title>TizenPortal 033</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
-        
         header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
         h1 { margin: 0; font-weight: 300; letter-spacing: 2px; }
-        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; }
-        
         .card { 
             background: #1a1a1a; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; 
             border: 4px solid transparent; border-radius: 8px; font-weight: bold; font-size: 20px; 
             flex-direction: column; gap: 10px; cursor: pointer; opacity: 0.7; transition: transform 0.1s;
             overflow: hidden !important; position: relative; max-width: 100%; min-width: 0;
         }
-        
         .icon-box { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .icon-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
         .icon-box i { font-size: 50px; color: #888; display: none; }
-        
         .card.active, .card:focus { 
             border-color: #FFD700; background: #333; opacity: 1; transform: scale(1.05); z-index: 10; 
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); outline: none;
         }
-        
         .add { border: 4px dashed #333; color: #666; }
         .add.active { border-color: #FFD700; color: #fff; }
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; z-index: 100; }
@@ -41,7 +35,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">029</span></h1></header>
+    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">033</span></h1></header>
     <div id="grid" class="grid"></div>
     <div id="toast">Long Press Enter to Edit</div>
     <div id="modal">
@@ -62,56 +56,93 @@
                 "js": "window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}}};window.TizenUtils.keepAwake();" 
             },
             
-            // --- ABS FIX 029 (Fight Back) ---
+            // --- ABS FIX 033 (The Color Polyfill) ---
             "abs": { 
                 "name": "Audiobookshelf", 
                 "css": `
-                    /* 1. FORCE GREEN & VISIBLE */
+                    /* 1. VARIABLE REPAIR (Fixes the Black Screen) */
+                    :root {
+                        --color-bg: #222222 !important;
+                        --color-primary: #333333 !important;
+                        --color-text: #eeeeee !important;
+                        --color-white: #ffffff !important;
+                        --color-black: #000000 !important;
+                        --color-gray-50: #f9f9f9 !important;
+                        --color-gray-100: #f3f3f3 !important;
+                        --color-gray-200: #e5e5e5 !important;
+                        --color-gray-300: #d4d4d4 !important;
+                        --color-gray-400: #a3a3a3 !important;
+                        --color-gray-500: #737373 !important;
+                        --color-gray-600: #525252 !important;
+                        --color-gray-700: #404040 !important;
+                        --color-gray-800: #262626 !important;
+                        --spacing: 0.25rem !important;
+                    }
+
+                    /* 2. FORCE VISIBILITY & BACKGROUND */
                     html, body, #__nuxt, #__layout, #app { 
-                        background-color: #003300 !important; /* GREEN */
-                        background-image: none !important;
+                        background-color: #222 !important;
+                        color: #fff !important; 
                         opacity: 1 !important; 
                         visibility: visible !important; 
                         height: 100vh !important; 
                         width: 100vw !important; 
-                        overflow-y: auto !important; 
-                        display: block !important;
+                        overflow-y: auto !important;
                     }
 
-                    /* 2. HIDE LOADING OVERLAYS */
-                    [class*="loading"], [id*="loading"], .v-overlay {
-                        display: none !important;
-                        opacity: 0 !important;
-                        pointer-events: none !important;
+                    /* 3. APPBAR FIX (Prevent Giant Icon) */
+                    #appbar img, .w-8, .h-8 { 
+                        width: 32px !important; 
+                        height: 32px !important; 
+                        min-width: 32px !important;
                     }
-                    
-                    /* 3. REBUILD GRID */
-                    .library-item, .card, .shelf-item { 
+                    /* Hide Appbar entirely if it blocks view (Optional, remove if needed) */
+                    /* #appbar { display: none !important; } */ 
+
+                    /* 4. BOOK GRID REPAIR */
+                    /* Targets your specific IDs found in source */
+                    [id^="book-card-"], .library-item, .card { 
                         display: inline-block !important; 
-                        width: 140px !important; 
+                        width: 160px !important; 
                         height: 260px !important; 
-                        margin: 15px !important; 
+                        margin: 10px !important; 
                         vertical-align: top !important; 
-                        background: #222 !important; 
-                        border: 1px solid #444 !important; 
+                        position: relative !important;
+                        background: #333 !important; 
+                        border: 1px solid #555 !important;
+                        z-index: 10 !important;
                     }
                     
-                    /* 4. IMAGES */
-                    .library-item img, .card img { 
-                        height: 200px !important; width: 100% !important; object-fit: cover !important; display: block !important; 
+                    /* 5. COVER IMAGES */
+                    [id^="cover-area-"] {
+                        height: 160px !important;
+                        width: 100% !important;
+                    }
+                    [id^="book-card-"] img, .card img { 
+                        width: 100% !important; 
+                        height: 100% !important; 
+                        object-fit: cover !important; 
+                    }
+
+                    /* 6. TEXT VISIBILITY */
+                    p, h1, h2, span, div { color: #fff !important; }
+                    .text-gray-300, .text-gray-400 { color: #ccc !important; }
+
+                    /* 7. FOCUS RING */
+                    [id^="book-card-"]:focus, .card:focus { 
+                        outline: 4px solid #FFD700 !important; 
+                        transform: scale(1.1); 
+                        z-index: 5000 !important; 
+                        background: #444 !important; 
+                        box-shadow: 0 0 15px #000 !important;
                     }
                     
-                    /* 5. FOCUS */
-                    .library-item:focus, .card:focus { 
-                        outline: 4px solid #FFD700 !important; transform: scale(1.1); z-index: 5000 !important; background: #333 !important; 
-                    }
-                    
-                    /* 6. HIDE NAV */
-                    nav, aside, .app-bar-and-toolbar, .shelf-bg { display: none !important; }
-                    .flex, .flex-row { display: block !important; }
+                    /* 8. LAYOUT RESET */
+                    .flex { display: block !important; }
+                    .flex.items-center { display: flex !important; } /* Restore appbar flex */
+                    .bookshelf-row { white-space: normal !important; overflow: visible !important; }
                 `,
-                // 1. Force Green. 2. Log DOM Size. 3. Fix Clicks.
-                "js": "setInterval(function(){ document.body.style.backgroundColor='#003300'; console.log('DOM Size: ' + document.body.innerHTML.length); var els = document.querySelectorAll('.library-item, .card, .shelf-item'); for(var i=0; i<els.length; i++) { var el = els[i]; if(!el.getAttribute('tabindex')) el.setAttribute('tabindex','0'); if(!el.dataset.tpClick) { el.dataset.tpClick='1'; el.addEventListener('keydown', function(e){ if(e.keyCode===13){ e.preventDefault(); e.stopPropagation(); this.click(); } }); } } }, 1000);" 
+                "js": "setInterval(function(){ var els = document.querySelectorAll('[id^=\"book-card-\"], .library-item'); for(var i=0; i<els.length; i++) { var el = els[i]; if(!el.getAttribute('tabindex')) el.setAttribute('tabindex','0'); if(!el.dataset.tpClick) { el.dataset.tpClick='1'; el.addEventListener('keydown', function(e){ if(e.keyCode===13){ e.preventDefault(); e.stopPropagation(); this.click(); } }); } } }, 1000);" 
             },
             
             "jellyfin": { "name": "Jellyfin", "css": ":focus-visible{outline:4px solid #FFD700!important}", "js": "" }
