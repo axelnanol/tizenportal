@@ -2,266 +2,208 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal v0.1.3</title>
+    <title>TizenPortal v0.1.4</title>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
+        body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         
-        /* HEADER */
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
         h1 { margin: 0; font-weight: 300; letter-spacing: 2px; }
         
-        /* GRID */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; padding: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; }
         
-        /* CARDS */
+        /* CARD STYLES */
         .card { 
-            background: #1e1e1e; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; 
-            border: 3px solid transparent; border-radius: 8px; font-weight: bold; font-size: 20px; 
-            flex-direction: column; gap: 10px; cursor: pointer; position: relative; transition: transform 0.1s;
+            background: #1a1a1a; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; 
+            border: 4px solid transparent; border-radius: 8px; font-weight: bold; font-size: 20px; 
+            flex-direction: column; gap: 10px; cursor: pointer; opacity: 0.7;
         }
-        .card img { width: 48px; height: 48px; object-fit: contain; }
+        .card img { width: 50px; height: 50px; object-fit: contain; }
         .card i { font-size: 40px; color: #888; }
         
-        /* FOCUS STATES (Crucial for Remote) */
-        .card:focus, button:focus, input:focus, select:focus { 
-            border-color: #FFD700; background: #2a2a2a; outline: none; 
-            transform: scale(1.05); z-index: 10; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: white;
+        /* THE ACTIVE STATE (Manual Focus) */
+        .card.active { 
+            border-color: #FFD700; background: #333; opacity: 1;
+            transform: scale(1.05); z-index: 10; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
         }
         
-        .add { border: 3px dashed #444; background: transparent; color: #666; }
-        
-        /* MODAL */
-        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); align-items: center; justify-content: center; z-index: 100; }
-        .box { background: #222; padding: 40px; width: 500px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #444; }
-        
-        label { font-size: 12px; color: #888; margin-bottom: -10px; }
-        input, select { padding: 15px; background: #111; color: white; border: 1px solid #444; width: 100%; box-sizing: border-box; font-size: 16px; }
-        .btn-row { display: flex; gap: 15px; justify-content: flex-end; margin-top: 10px; }
-        button { padding: 12px 20px; background: #333; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button.primary { background: #FFD700; color: black; }
-        button.danger { background: #900; }
+        .add { border: 4px dashed #333; color: #666; }
+        .add.active { border-color: #FFD700; color: #fff; }
 
-        /* VIRTUAL CURSOR */
-        #tp-cursor { position:fixed; width:24px; height:24px; background:rgba(255,0,0,0.8); border:2px solid white; border-radius:50%; z-index:99999; pointer-events:none; display:none; }
+        /* MODAL */
+        #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; z-index: 100; }
+        .box { background: #222; padding: 40px; width: 500px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #555; }
+        input, select { padding: 15px; background: #111; color: white; border: 1px solid #444; width: 100%; font-size: 18px; }
+        input:focus, select:focus, button:focus { border-color: #FFD700; outline: none; }
+        
+        .btn-row { display: flex; gap: 15px; margin-top: 10px; }
+        button { flex: 1; padding: 15px; background: #333; color: white; border: 1px solid #555; font-size: 16px; font-weight: bold; }
+        button.primary { background: #FFD700; color: black; border-color: #FFD700; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
     <header>
-        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.3</span></h1>
-        <button onclick="location.reload()" tabindex="0" style="font-size: 14px;">
-            <i class="fas fa-sync"></i> Reload
-        </button>
+        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.4</span></h1>
     </header>
     
     <div id="grid" class="grid"></div>
 
     <div id="modal">
         <div class="box">
-            <h2>Config App</h2>
-            <input type="text" id="name" placeholder="Name">
-            <input type="url" id="url" placeholder="http://192.168...">
-            
-            <label>Preset (Auto-Fixes)</label>
-            <select id="preset"><option value="">-- Custom --</option></select>
-            
-            <label>Device Type (User Agent)</label>
+            <h2>Add App</h2>
+            <input type="text" id="name" placeholder="App Name" autocomplete="off">
+            <input type="url" id="url" placeholder="http://192.168.1.X:PORT" autocomplete="off">
+            <select id="preset"><option value="">-- No Preset --</option></select>
             <select id="ua">
-                <option value="default">Default (TV)</option>
-                <option value="desktop">Desktop (Force PC View)</option>
-                <option value="mobile">Mobile (Force Touch View)</option>
+                <option value="default">TV (Default)</option>
+                <option value="desktop">PC (Desktop Mode)</option>
             </select>
-
             <div class="btn-row">
-                <button onclick="deleteApp()" class="danger">Delete</button>
                 <button onclick="closeModal()">Cancel</button>
                 <button onclick="save()" class="primary">Save</button>
             </div>
+            <button onclick="deleteApp()" style="margin-top:10px; background:#500; border:none;">Delete App</button>
         </div>
     </div>
-    
-    <div id="tp-cursor"></div>
 
     <script>
+        // --- 1. DATA & PRESETS ---
         const PRESETS = {
             "__CORE__": {
-                "css": "img, svg, video { max-width: 100% !important; height: auto !important; flex-shrink: 1 !important; } .flex > * { min-width: 0 !important; } :focus, :focus-visible { outline: 5px solid #FFD700 !important; box-shadow: 0 0 20px rgba(255,0,0,0.8) !important; z-index: 99999 !important; } ::-webkit-scrollbar { display: none; }",
-                "js": "window.TizenUtils={keepAwake:()=>{const v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play().catch(()=>{});document.body.appendChild(v);}};window.TizenUtils.keepAwake();"
+                "css": "img, svg, video { max-width: 100% !important; height: auto !important; } :focus { outline: 5px solid #FFD700 !important; } ::-webkit-scrollbar { display: none; }",
+                "js": "window.TizenUtils={keepAwake:()=>{try{const v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v);}catch(e){}}};window.TizenUtils.keepAwake();"
             },
-            "abs": {
-                "name": "Audiobookshelf",
-                "css": ".flex, .flex-row, .flex-col { gap: 0 !important; } .flex > *:not(:last-child) { margin-right: 8px !important; }",
-                "js": "setInterval(() => { document.querySelectorAll('.library-item, .card, .series-card').forEach(e => e.setAttribute('tabindex', '0')); }, 1500);"
-            },
-            "jellyfin": {
-                "name": "Jellyfin",
-                "css": ":focus-visible { outline: 4px solid #FFD700 !important; transform: scale(1.02); }",
-                "js": "document.body.classList.add('layout-tv');"
-            }
+            "abs": { "name": "Audiobookshelf", "css": ".flex { gap: 0 !important; }", "js": "" },
+            "jellyfin": { "name": "Jellyfin", "css": ":focus-visible { outline: 4px solid #FFD700 !important; }", "js": "" }
         };
 
         const UA_STRINGS = {
-            "desktop": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "mobile": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+            "desktop": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36"
         };
 
         let apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
-        
-        // MOUSE MODE VARS
-        let mouseMode = false;
-        let mouseX = window.innerWidth/2; let mouseY = window.innerHeight/2;
+        let selectedIndex = 0; // MANUAL SELECTION TRACKER
 
+        // --- 2. RENDER & NAV ---
         function init() {
+            // Fill Select
             const sel = document.getElementById('preset');
-            Object.keys(PRESETS).forEach(k => { 
-                if(k!=='__CORE__') sel.innerHTML+=`<option value="${k}">${PRESETS[k].name}</option>`; 
-            });
+            Object.keys(PRESETS).forEach(k => { if(k!=='__CORE__') sel.innerHTML+=`<option value="${k}">${PRESETS[k].name}</option>`; });
             render();
         }
 
         function render() {
             const g = document.getElementById('grid'); g.innerHTML = '';
-            apps.forEach(a => {
-                const d = document.createElement('div'); d.className = 'card'; d.tabIndex = 0;
-                let icon = `https://s2.googleusercontent.com/s2/favicons?domain_url=${encodeURIComponent(a.url)}&sz=64`;
-                d.innerHTML = `<img src="${icon}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><i class="fas fa-globe" style="display:none"></i><span>${a.name}</span>`;
-                d.onclick = () => launch(a);
+            
+            // App Cards
+            apps.forEach((a, i) => {
+                const d = document.createElement('div');
+                d.className = 'card';
+                d.innerHTML = `<img src="https://s2.googleusercontent.com/s2/favicons?domain_url=${encodeURIComponent(a.url)}&sz=64"><span>${a.name}</span>`;
                 g.appendChild(d);
             });
-            const add = document.createElement('div'); add.className = 'card add'; add.tabIndex = 0;
-            add.innerHTML = `<i class="fas fa-plus"></i><span>Add</span>`;
-            add.onclick = () => openModal();
+
+            // Add Button
+            const add = document.createElement('div'); 
+            add.className = 'card add';
+            add.innerHTML = `<i class="fas fa-plus"></i><span>Add App</span>`;
             g.appendChild(add);
-            
-            // AGGRESSIVE AUTO FOCUS
-            setTimeout(() => {
-                const first = document.querySelector('.card');
-                if(first) first.focus();
-            }, 500);
+
+            updateSelection();
         }
 
+        function updateSelection() {
+            const cards = document.querySelectorAll('.card');
+            if (selectedIndex >= cards.length) selectedIndex = cards.length - 1;
+            if (selectedIndex < 0) selectedIndex = 0;
+
+            cards.forEach((c, i) => {
+                if (i === selectedIndex) c.classList.add('active');
+                else c.classList.remove('active');
+            });
+        }
+
+        // --- 3. INPUT HANDLING (THE FIX) ---
+        document.addEventListener('keydown', (e) => {
+            const k = e.keyCode;
+            const modal = document.getElementById('modal').style.display === 'flex';
+            const cards = document.querySelectorAll('.card');
+            const cols = Math.floor(document.getElementById('grid').offsetWidth / 250) || 3;
+
+            // IF MODAL IS OPEN, LET BROWSER HANDLE INPUT (TAB/ENTER)
+            if(modal) {
+                if(k === 10009 || k === 27) closeModal();
+                return;
+            }
+
+            // GRID NAVIGATION
+            if (k === 37) selectedIndex--; // Left
+            if (k === 39) selectedIndex++; // Right
+            if (k === 38) selectedIndex -= cols; // Up
+            if (k === 40) selectedIndex += cols; // Down
+            
+            // Wrap logic (Optional, keeping it simple for now: clamp)
+            if (selectedIndex < 0) selectedIndex = 0;
+            if (selectedIndex >= cards.length) selectedIndex = cards.length - 1;
+
+            if ([37,38,39,40].includes(k)) {
+                e.preventDefault();
+                updateSelection();
+            }
+
+            // ENTER (Launch / Open Modal)
+            if (k === 13) {
+                const isAddBtn = (selectedIndex === cards.length - 1); // Last item is always Add
+                if (isAddBtn) openModal();
+                else launch(apps[selectedIndex]);
+            }
+        });
+
+        // --- 4. LAUNCH LOGIC (URL PAYLOAD) ---
         function launch(app) {
             const core = PRESETS['__CORE__'];
             const preset = PRESETS[app.presetID] || {};
             
             const payload = {
-                id: 'tp_payload',
-                css: (core.css||'') + '\n' + (preset.css||'') + '\n' + (app.customCSS||''),
-                js: (core.js||'') + '\n' + (preset.js||'') + '\n' + (app.customJS||''),
-                home: window.location.href,
-                userAgent: UA_STRINGS[app.ua] || null
+                css: (core.css||'') + '\n' + (preset.css||''),
+                js: (core.js||'') + '\n' + (preset.js||''),
+                ua: UA_STRINGS[app.ua] || null
             };
             
-            window.name = JSON.stringify(payload);
-            window.location.href = app.url;
+            // ENCODE PAYLOAD INTO URL
+            const json = JSON.stringify(payload);
+            const b64 = btoa(json); // Base64 Encode
+            
+            // Append ?tp=...
+            const separator = app.url.includes('?') ? '&' : '?';
+            const target = app.url + separator + 'tp=' + b64;
+            
+            window.location.href = target;
         }
 
-        function openModal() { document.getElementById('modal').style.display='flex'; document.getElementById('name').focus(); }
-        function closeModal() { document.getElementById('modal').style.display='none'; document.querySelector('.add').focus(); }
-
+        // --- 5. MODAL LOGIC ---
+        function openModal() { 
+            document.getElementById('modal').style.display='flex'; 
+            document.getElementById('name').focus(); 
+        }
+        function closeModal() { 
+            document.getElementById('modal').style.display='none'; 
+        }
         function save() {
             const name = document.getElementById('name').value;
             const url = document.getElementById('url').value;
-            const presetID = document.getElementById('preset').value;
+            const preset = document.getElementById('preset').value;
             const ua = document.getElementById('ua').value;
-
             if(name && url) {
-                apps.push({name, url, presetID, ua});
+                apps.push({name, url, presetID: preset, ua});
                 localStorage.setItem('tp_apps', JSON.stringify(apps));
                 location.reload();
             }
         }
-        
         function deleteApp() {
-            if(confirm("Delete most recent app?")) { 
-                apps.pop(); localStorage.setItem('tp_apps', JSON.stringify(apps)); location.reload(); 
-            }
-        }
-
-        // --- INPUT HANDLING ---
-        document.addEventListener('keydown', (e) => {
-            const k = e.keyCode;
-            
-            // GREEN BUTTON (404) -> Toggle Mouse
-            if(k === 404) { toggleMouse(); e.preventDefault(); }
-            
-            // MOUSE MODE
-            if(mouseMode) {
-                const step=20;
-                if(k===37) mouseX-=step;
-                if(k===38) mouseY-=step;
-                if(k===39) mouseX+=step;
-                if(k===40) mouseY+=step;
-                if(k===13) {
-                    const el = document.elementFromPoint(mouseX, mouseY);
-                    if(el) el.click();
-                }
-                updateCursor();
-                e.preventDefault();
-                return;
-            }
-
-            // SPATIAL NAV
-            if([37,38,39,40].includes(k) && document.getElementById('modal').style.display==='none') {
-                // Check if anything has focus. If not, focus first item.
-                if(document.activeElement === document.body) {
-                    const first = document.querySelector('.card');
-                    if(first) first.focus();
-                    e.preventDefault();
-                } else {
-                    navigate(k);
-                }
-            }
-            if((k===10009 || k===27) && document.getElementById('modal').style.display==='flex') closeModal();
-        });
-
-        function navigate(k) {
-            const all = Array.from(document.querySelectorAll('.card, button'));
-            const cur = document.activeElement;
-            if(!all.includes(cur)) return;
-
-            const rect = cur.getBoundingClientRect();
-            const cx = rect.x + rect.width/2; const cy = rect.y + rect.height/2;
-            let best=null; let minD=Infinity;
-            
-            all.forEach(el => {
-                if(el===cur) return;
-                const r = el.getBoundingClientRect();
-                const ex = r.x+r.width/2; const ey = r.y+r.height/2;
-                let valid=false;
-                
-                // Allow sloppy navigation (not strictly axis-aligned)
-                const dx = ex - cx; const dy = ey - cy;
-                
-                if(k===37 && dx < 0 && Math.abs(dy) < Math.abs(dx)) valid=true; // Left
-                if(k===39 && dx > 0 && Math.abs(dy) < Math.abs(dx)) valid=true; // Right
-                if(k===38 && dy < 0 && Math.abs(dx) < Math.abs(dy)) valid=true; // Up
-                if(k===40 && dy > 0 && Math.abs(dx) < Math.abs(dy)) valid=true; // Down
-                
-                if(valid) { 
-                    const d = Math.hypot(dx,dy); 
-                    if(d<minD){ minD=d; best=el; } 
-                }
-            });
-            
-            if(best) {
-                best.focus();
-                e.preventDefault(); // Stop scrolling
-            }
-        }
-        
-        function toggleMouse() {
-            mouseMode = !mouseMode;
-            const c = document.getElementById('tp-cursor');
-            c.style.display = mouseMode ? 'block' : 'none';
-            updateCursor();
-        }
-        function updateCursor() {
-            const c = document.getElementById('tp-cursor');
-            mouseX = Math.max(0, Math.min(window.innerWidth, mouseX));
-            mouseY = Math.max(0, Math.min(window.innerHeight, mouseY));
-            c.style.left = (mouseX-12)+'px'; c.style.top = (mouseY-12)+'px';
+             // Deletes the LAST app (Simplistic for Alpha)
+             apps.pop(); localStorage.setItem('tp_apps', JSON.stringify(apps)); location.reload();
         }
 
         init();
