@@ -2,35 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 025</title>
+    <title>TizenPortal 026</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
-        
         header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
         h1 { margin: 0; font-weight: 300; letter-spacing: 2px; }
-        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; }
-        
         .card { 
             background: #1a1a1a; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; 
             border: 4px solid transparent; border-radius: 8px; font-weight: bold; font-size: 20px; 
             flex-direction: column; gap: 10px; cursor: pointer; opacity: 0.7; transition: transform 0.1s;
             overflow: hidden !important; position: relative; max-width: 100%; min-width: 0;
         }
-        
-        /* ICON JAIL (Launcher) */
         .icon-box { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .icon-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
         .icon-box i { font-size: 50px; color: #888; display: none; }
-        
         .card.active, .card:focus { 
             border-color: #FFD700; background: #333; opacity: 1; transform: scale(1.05); z-index: 10; 
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); outline: none;
         }
-        
         .add { border: 4px dashed #333; color: #666; }
         .add.active { border-color: #FFD700; color: #fff; }
-
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; z-index: 100; }
         .box { background: #222; padding: 40px; width: 600px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #555; }
         input, select { padding: 15px; background: #111; color: white; border: 1px solid #444; width: 100%; font-size: 18px; }
@@ -43,7 +35,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">025</span></h1></header>
+    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">026</span></h1></header>
     <div id="grid" class="grid"></div>
     <div id="toast">Long Press Enter to Edit</div>
     <div id="modal">
@@ -64,67 +56,14 @@
                 "js": "window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}}};window.TizenUtils.keepAwake();" 
             },
             
-            // --- ABS NUCLEAR FIX (025) ---
+            // --- ABS FIX 026 (Safe Mode) ---
+            // 1. Dark Blue Background (Debug)
+            // 2. Safe 'for' loops (No forEach)
+            // 3. Forced Layout Inflation
             "abs": { 
                 "name": "Audiobookshelf", 
-                "css": `
-                    /* 1. NUCLEAR VISIBILITY & COLORS */
-                    html, body, #__nuxt, #__layout { 
-                        background: #111 !important; 
-                        color: #ddd !important; 
-                        opacity: 1 !important; 
-                        visibility: visible !important; 
-                        height: 100% !important; 
-                        overflow-y: auto !important;
-                    }
-                    
-                    /* 2. REVEAL CONTENT (Fixes Stuck Fade-Ins) */
-                    div, span, section, main { 
-                        opacity: 1 !important; 
-                        visibility: visible !important; 
-                    }
-
-                    /* 3. DEBUG BORDER (Remove later if fixed) */
-                    #__nuxt { border: 2px solid #500 !important; }
-
-                    /* 4. REBUILD THE GRID */
-                    .library-item, .card, .shelf-item { 
-                        display: inline-block !important; 
-                        width: 140px !important; 
-                        height: 240px !important; 
-                        margin: 10px !important; 
-                        vertical-align: top !important; 
-                        position: relative !important;
-                        background: #222 !important;
-                        border: 1px solid #444 !important;
-                        z-index: 10 !important;
-                    }
-                    
-                    /* 5. IMAGE JAIL (Fixes Massive Icon) */
-                    img { 
-                        max-width: 100% !important; 
-                        height: auto !important; 
-                        display: block !important; 
-                    }
-                    .library-item img, .card img {
-                        height: 180px !important;
-                        width: 100% !important;
-                        object-fit: cover !important;
-                    }
-                    
-                    /* 6. FOCUS RING */
-                    .library-item:focus, .card:focus {
-                        outline: 4px solid #FFD700 !important;
-                        transform: scale(1.1);
-                        z-index: 9999 !important;
-                        background: #333 !important;
-                    }
-                    
-                    /* 7. CLEANUP */
-                    nav, aside, .app-bar-and-toolbar { display: none !important; }
-                    .flex, .flex-row { display: block !important; }
-                `,
-                "js": "setInterval(function(){ var sel = '.library-item, .card, .shelf-item'; document.querySelectorAll(sel).forEach(function(el){ if(!el.getAttribute('tabindex')){ el.setAttribute('tabindex','0'); } if(!el.dataset.tpClick){ el.dataset.tpClick='1'; el.addEventListener('keydown', function(e){ if(e.keyCode===13){ e.preventDefault(); e.stopPropagation(); el.click(); } }); } }); }, 2000);" 
+                "css": "html, body, #__nuxt, #__layout { background: #000033 !important; color: #ddd !important; height: 100vh !important; width: 100vw !important; overflow-y: auto !important; opacity: 1 !important; visibility: visible !important; display: block !important; } .library-item, .card, .shelf-item { display: inline-block !important; width: 140px !important; height: 260px !important; margin: 15px !important; vertical-align: top !important; position: relative !important; background: #222 !important; border: 1px solid #444 !important; z-index: 10 !important; } .library-item img, .card img { height: 200px !important; width: 100% !important; object-fit: cover !important; display: block !important; } .library-item:focus, .card:focus { outline: 4px solid #FFD700 !important; transform: scale(1.1); z-index: 9999 !important; background: #333 !important; } nav, aside, .app-bar-and-toolbar, .shelf-bg { display: none !important; } .flex, .flex-row { display: block !important; }", 
+                "js": "setInterval(function(){ var els = document.querySelectorAll('.library-item, .card, .shelf-item'); for(var i=0; i<els.length; i++) { var el = els[i]; if(!el.getAttribute('tabindex')) el.setAttribute('tabindex','0'); if(!el.dataset.tpClick) { el.dataset.tpClick='1'; el.addEventListener('keydown', function(e){ if(e.keyCode===13){ e.preventDefault(); e.stopPropagation(); this.click(); } }); } } }, 2000);" 
             },
             
             "jellyfin": { "name": "Jellyfin", "css": ":focus-visible{outline:4px solid #FFD700!important}", "js": "" }
