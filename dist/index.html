@@ -2,75 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 022</title>
+    <title>TizenPortal 024</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
-        
         header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
         h1 { margin: 0; font-weight: 300; letter-spacing: 2px; }
-        
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; }
-        
-        /* CARD STYLES */
         .card { 
             background: #1a1a1a; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; 
             border: 4px solid transparent; border-radius: 8px; font-weight: bold; font-size: 20px; 
             flex-direction: column; gap: 10px; cursor: pointer; opacity: 0.7; transition: transform 0.1s;
-            overflow: hidden !important; /* CRITICAL FIX */
-            position: relative;
-            max-width: 100%;
+            overflow: hidden !important; position: relative; max-width: 100%; min-width: 0;
         }
-        
-        /* STRICT IMAGE SIZING */
-        .card img { 
-            width: 64px !important; 
-            height: 64px !important; 
-            max-width: 64px !important;
-            max-height: 64px !important;
-            object-fit: contain; 
-            display: block;
-        }
-        
-        /* FALLBACK ICON SIZING */
-        .card i { 
-            font-size: 50px !important; 
-            color: #888; 
-            display: none; 
-            max-width: 100%;
-        }
-        
+        .icon-box { width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .icon-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        .icon-box i { font-size: 50px; color: #888; display: none; }
         .card.active, .card:focus { 
-            border-color: #FFD700; background: #333; opacity: 1;
-            transform: scale(1.05); z-index: 10; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
-            outline: none;
+            border-color: #FFD700; background: #333; opacity: 1; transform: scale(1.05); z-index: 10; 
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); outline: none;
         }
-        
         .add { border: 4px dashed #333; color: #666; }
         .add.active { border-color: #FFD700; color: #fff; }
-
-        /* MODAL */
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; z-index: 100; }
         .box { background: #222; padding: 40px; width: 600px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #555; }
         input, select { padding: 15px; background: #111; color: white; border: 1px solid #444; width: 100%; font-size: 18px; }
         input:focus, select:focus, button:focus { border-color: #FFD700; outline: none; }
-        
         .btn-row { display: flex; gap: 15px; margin-top: 10px; }
         button { flex: 1; padding: 15px; background: #333; color: white; border: 1px solid #555; font-size: 16px; font-weight: bold; }
         button.primary { background: #FFD700; color: black; border-color: #FFD700; }
-        
         #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-
-    <header>
-        <h1>TizenPortal <span style="font-size:14px; color:#666;">022</span></h1>
-    </header>
-    
+    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">024</span></h1></header>
     <div id="grid" class="grid"></div>
     <div id="toast">Long Press Enter to Edit</div>
-
     <div id="modal">
         <div class="box">
             <h2 id="modal-title">Add App</h2>
@@ -78,27 +45,62 @@
             <input type="url" id="url" placeholder="URL">
             <select id="preset"><option value="">-- No Preset --</option></select>
             <select id="ua"></select>
-            <div class="btn-row">
-                <button onclick="closeModal()">Cancel</button>
-                <button onclick="save()" class="primary">Save</button>
-            </div>
+            <div class="btn-row"><button onclick="closeModal()">Cancel</button><button onclick="save()" class="primary">Save</button></div>
             <button id="btn-delete" onclick="deleteApp()" style="margin-top:10px; background:#500; border:none; display:none;">Delete App</button>
         </div>
     </div>
-
     <script>
-        // --- DATA & PRESETS ---
         var PRESETS = {
             "__CORE__": { 
                 "css": "img,svg,video{max-width:100%!important;height:auto!important}:focus{outline:5px solid #FFD700!important}::-webkit-scrollbar{display:none}", 
                 "js": "window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}}};window.TizenUtils.keepAwake();" 
             },
             
-            // AUDIOBOOKSHELF PRESET (FIXED)
+            // --- ABS RESCUE STYLES ---
             "abs": { 
                 "name": "Audiobookshelf", 
-                "css": ".library-item:focus, .card:focus, .shelf-item:focus { border: 2px solid #FFD700 !important; transform: scale(1.02); z-index: 100; outline: none; }", 
-                "js": "setInterval(function(){ document.querySelectorAll('.library-item, .card, .shelf-item').forEach(function(el){ if(!el.getAttribute('tabindex')){ el.setAttribute('tabindex','0'); el.addEventListener('keydown', function(e){ if(e.keyCode===13){ el.click(); e.preventDefault(); e.stopPropagation(); } }); } }); }, 2000);" 
+                "css": `
+                    /* 1. RESET EVERYTHING */
+                    body, div, span, a, p, h1, h2 { color: #ccc !important; font-family: sans-serif !important; border: none !important; }
+                    
+                    /* 2. FORCE BACKGROUND */
+                    body, #__nuxt { background: #111 !important; overflow-y: auto !important; height: auto !important; }
+                    
+                    /* 3. REBUILD THE GRID */
+                    .library-item, .card, .shelf-item { 
+                        display: inline-block !important; 
+                        width: 160px !important; 
+                        height: 280px !important; 
+                        margin: 15px !important; 
+                        vertical-align: top !important; 
+                        position: relative !important;
+                        background: #222 !important;
+                    }
+                    
+                    /* 4. COVER IMAGES */
+                    .library-item img, .card img { 
+                        width: 100% !important; 
+                        height: 220px !important; 
+                        object-fit: cover !important; 
+                        display: block !important; 
+                    }
+                    
+                    /* 5. FOCUS RING */
+                    .library-item:focus, .card:focus {
+                        outline: 4px solid #FFD700 !important;
+                        transform: scale(1.1);
+                        z-index: 9999;
+                        background: #333 !important;
+                    }
+                    
+                    /* 6. HIDE BROKEN NAV & SHELVES */
+                    nav, aside, .app-bar-and-toolbar, .shelf-bg { display: none !important; }
+                    
+                    /* 7. FORCE FLEX CONTAINERS TO WRAP */
+                    .flex { display: block !important; }
+                    .flex-row { display: block !important; }
+                `,
+                "js": "setInterval(function(){ var sel = '.library-item, .card, .shelf-item'; document.querySelectorAll(sel).forEach(function(el){ if(!el.getAttribute('tabindex')){ el.setAttribute('tabindex','0'); } if(!el.dataset.tpClick){ el.dataset.tpClick='1'; el.addEventListener('keydown', function(e){ if(e.keyCode===13){ e.preventDefault(); e.stopPropagation(); el.click(); } }); } }); }, 2000);" 
             },
             
             "jellyfin": { "name": "Jellyfin", "css": ":focus-visible{outline:4px solid #FFD700!important}", "js": "" }
@@ -109,27 +111,18 @@
             { id: "mobile",  name: "📱 Mobile (Android)", str: "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36" },
             { id: "desktop", name: "💻 Desktop (PC)",     str: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" }
         ];
-
+        
         var apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
-        var selectedIndex = 0;
-        var editIndex = -1;
-        var pressTimer = null;
+        var selectedIndex = 0; var editIndex = -1; var pressTimer = null;
 
         function init() {
             if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
                 var keys = ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", "MediaPlay", "MediaPause"];
                 for (var i = 0; i < keys.length; i++) { try { tizen.tvinputdevice.registerKey(keys[i]); } catch(e){} }
             }
-            
-            var selP = document.getElementById('preset');
-            Object.keys(PRESETS).forEach(function(k) { if(k!=='__CORE__') selP.innerHTML+='<option value="'+k+'">'+PRESETS[k].name+'</option>'; });
-            
-            var selU = document.getElementById('ua');
-            USER_AGENTS.forEach(function(u) { selU.innerHTML+='<option value="'+u.id+'">'+u.name+'</option>'; });
-
-            render();
-            showToast("Long Press Enter to Edit");
-            setInterval(enforceFocus, 200);
+            var selP = document.getElementById('preset'); Object.keys(PRESETS).forEach(function(k) { if(k!=='__CORE__') selP.innerHTML+='<option value="'+k+'">'+PRESETS[k].name+'</option>'; });
+            var selU = document.getElementById('ua'); USER_AGENTS.forEach(function(u) { selU.innerHTML+='<option value="'+u.id+'">'+u.name+'</option>'; });
+            render(); showToast("Long Press Enter to Edit"); setInterval(enforceFocus, 200);
         }
 
         function getIconClass(name) {
@@ -143,19 +136,16 @@
         function render() {
             var g = document.getElementById('grid'); g.innerHTML = '';
             apps.forEach(function(a, i) {
-                var d = document.createElement('div');
-                d.className = 'card'; d.tabIndex = 0;
-                
+                var d = document.createElement('div'); d.className = 'card'; d.tabIndex = 0;
                 var iconClass = getIconClass(a.name);
                 var imgHTML = '<img src="https://s2.googleusercontent.com/s2/favicons?domain_url='+encodeURIComponent(a.url)+'&sz=64" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">';
                 var iconHTML = '<i class="fas '+iconClass+'"></i>';
-                
-                d.innerHTML = imgHTML + iconHTML + '<span>'+a.name+'</span>';
+                var box = '<div class="icon-box">' + imgHTML + iconHTML + '</div>';
+                d.innerHTML = box + '<span>'+a.name+'</span>';
                 g.appendChild(d);
             });
             var add = document.createElement('div'); add.className = 'card add'; add.tabIndex = 0;
-            add.innerHTML = '<i class="fas fa-plus"></i><span>Add App</span>';
-            g.appendChild(add);
+            add.innerHTML = '<i class="fas fa-plus"></i><span>Add App</span>'; g.appendChild(add);
             updateSelection();
         }
 
@@ -163,80 +153,38 @@
             var cards = document.querySelectorAll('.card');
             if (selectedIndex >= cards.length) selectedIndex = cards.length - 1;
             if (selectedIndex < 0) selectedIndex = 0;
-            for (var i = 0; i < cards.length; i++) {
-                if (i === selectedIndex) { cards[i].classList.add('active'); cards[i].focus(); } 
-                else { cards[i].classList.remove('active'); }
-            }
+            for (var i = 0; i < cards.length; i++) { if (i === selectedIndex) { cards[i].classList.add('active'); cards[i].focus(); } else { cards[i].classList.remove('active'); } }
         }
-
-        function enforceFocus() {
-            if(document.getElementById('modal').style.display === 'flex') return;
-            var cards = document.querySelectorAll('.card');
-            if(cards[selectedIndex] && document.activeElement !== cards[selectedIndex]) cards[selectedIndex].focus();
-        }
+        function enforceFocus() { if(document.getElementById('modal').style.display === 'flex') return; var cards = document.querySelectorAll('.card'); if(cards[selectedIndex] && document.activeElement !== cards[selectedIndex]) cards[selectedIndex].focus(); }
 
         document.addEventListener('keydown', function(e) {
             var k = e.keyCode;
             if(document.getElementById('modal').style.display === 'flex') { if(k===10009||k===27) closeModal(); return; }
-            
             var cols = Math.floor(document.getElementById('grid').offsetWidth / 250) || 3;
-            if (k===37) selectedIndex--; if (k===39) selectedIndex++; 
-            if (k===38) selectedIndex-=cols; if (k===40) selectedIndex+=cols; 
-            
+            if (k===37) selectedIndex--; if (k===39) selectedIndex++; if (k===38) selectedIndex-=cols; if (k===40) selectedIndex+=cols; 
             if ([37,38,39,40].indexOf(k) > -1) { e.preventDefault(); updateSelection(); }
-            
-            // LONG PRESS LOGIC
-            if (k===13 && !pressTimer) { 
-                pressTimer = setTimeout(function() { pressTimer=null; openModal(selectedIndex); }, 800); 
-            }
+            if (k===13 && !pressTimer) { pressTimer = setTimeout(function() { pressTimer=null; openModal(selectedIndex); }, 800); }
         });
-
-        document.addEventListener('keyup', function(e) {
-            if (e.keyCode === 13) {
-                if (pressTimer) { 
-                    clearTimeout(pressTimer); pressTimer = null; 
-                    if (selectedIndex === document.querySelectorAll('.card').length-1) openModal(-1); else launch(apps[selectedIndex]); 
-                }
-            }
-        });
+        document.addEventListener('keyup', function(e) { if (e.keyCode === 13) { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; if (selectedIndex === document.querySelectorAll('.card').length-1) openModal(-1); else launch(apps[selectedIndex]); } } });
 
         function launch(app) {
-            var core = PRESETS['__CORE__'];
-            var preset = PRESETS[app.presetID] || {};
-            var uaObj = USER_AGENTS.find(function(u){ return u.id === app.ua }) || USER_AGENTS[0];
-            
+            var core = PRESETS['__CORE__']; var preset = PRESETS[app.presetID] || {}; var uaObj = USER_AGENTS.find(function(u){ return u.id === app.ua }) || USER_AGENTS[0];
             var payload = { css: (core.css||'')+'\n'+(preset.css||''), js: (core.js||'')+'\n'+(preset.js||''), ua: uaObj.str };
-            var b64 = btoa(JSON.stringify(payload));
-            var sep = app.url.indexOf('?') > -1 ? '&' : '?';
-            window.location.href = app.url + sep + 'tp=' + b64;
+            window.location.href = app.url + (app.url.indexOf('?') > -1 ? '&' : '?') + 'tp=' + btoa(JSON.stringify(payload));
         }
 
         function openModal(index) { 
-            editIndex = index;
-            var isAdd = (index === -1 || index >= apps.length);
-            document.getElementById('modal-title').innerText = isAdd ? "Add App" : "Edit App";
-            document.getElementById('btn-delete').style.display = isAdd ? 'none' : 'block';
-            
-            if (!isAdd) {
-                var a = apps[index];
-                document.getElementById('name').value = a.name; document.getElementById('url').value = a.url;
-                document.getElementById('preset').value = a.presetID || ""; document.getElementById('ua').value = a.ua || "default";
-            } else { document.getElementById('name').value = ""; document.getElementById('url').value = ""; }
+            editIndex = index; var isAdd = (index === -1 || index >= apps.length);
+            document.getElementById('modal-title').innerText = isAdd ? "Add App" : "Edit App"; document.getElementById('btn-delete').style.display = isAdd ? 'none' : 'block';
+            if (!isAdd) { var a = apps[index]; document.getElementById('name').value = a.name; document.getElementById('url').value = a.url; document.getElementById('preset').value = a.presetID || ""; document.getElementById('ua').value = a.ua || "default"; } 
+            else { document.getElementById('name').value = ""; document.getElementById('url').value = ""; }
             document.getElementById('modal').style.display='flex'; document.getElementById('name').focus(); 
         }
-
         function closeModal() { document.getElementById('modal').style.display='none'; }
-        
         function save() {
             var name=document.getElementById('name').value; var url=document.getElementById('url').value;
-            if(name && url) {
-                var appObj = {name:name, url:url, presetID:document.getElementById('preset').value, ua:document.getElementById('ua').value};
-                if (editIndex > -1 && editIndex < apps.length) apps[editIndex] = appObj; else { apps.push(appObj); selectedIndex = apps.length-1; }
-                localStorage.setItem('tp_apps', JSON.stringify(apps));
-                closeModal(); render();
-            }
+            if(name && url) { var appObj = {name:name, url:url, presetID:document.getElementById('preset').value, ua:document.getElementById('ua').value}; if (editIndex > -1 && editIndex < apps.length) apps[editIndex] = appObj; else { apps.push(appObj); selectedIndex = apps.length-1; } localStorage.setItem('tp_apps', JSON.stringify(apps)); closeModal(); render(); }
         }
-        
         function deleteApp() { if(editIndex > -1 && confirm("Delete?")) { apps.splice(editIndex, 1); localStorage.setItem('tp_apps', JSON.stringify(apps)); selectedIndex=Math.max(0,editIndex-1); closeModal(); render(); } }
         function showToast(msg) { var t=document.getElementById('toast'); t.innerText=msg; t.style.opacity=1; setTimeout(function(){t.style.opacity=0;},5000); }
         init();

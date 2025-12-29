@@ -1,34 +1,34 @@
-# TizenPortal (v0.2.1 Alpha)
+# TizenPortal (v0.2.4)
 
 **A Universal Web App Launcher & OS Replacement Overlay for Samsung Tizen TVs.**
 
-TizenPortal enables you to run modern, self-hosted web applications (Audiobookshelf, Jellyfin, Home Assistant) on older Samsung TVs (2016-2020) running outdated Chromium engines (Chrome 63/69).
+TizenPortal enables you to run modern, self-hosted web applications (Audiobookshelf, Jellyfin, Home Assistant) on older Samsung TVs (2016-2020) running outdated Chromium engines (Chrome 47-69).
 
-It is not just a launcher; it acts as an **injection middleware**, wrapping your apps in a modern compatibility layer that adds a Virtual Mouse, a Debug Console, User Agent spoofing, and system-level shortcuts.
+It is not just a launcher; it acts as an **injection middleware**, wrapping your apps in a modern compatibility layer that adds a Virtual Mouse, a Debug Console, User Agent spoofing, and "Rescue Stylesheets" to fix broken layouts.
 
-## 🚀 v0.2.1 Highlights: "The Tooling Update"
+## 🚀 v0.2.4 Highlights: "The Rescue Update"
 
-* **System Sidekick:** A slide-out sidebar menu (Blue Button) for quick access to system tools while in-app.
-* **Workspace Mode:** Maximize the sidebar to view full-screen debug logs and inspect the raw HTML source code of running apps.
-* **Robust Input:** Rewritten input driver with "Edge Scrolling" (Auto-Pan) for the Virtual Mouse and a "Hard Focus" loop to prevent the remote from disconnecting.
-* **Legacy Engine Support:** Entire codebase rewritten in **ES5** (no Classes, no `?.` chaining) to guarantee injection works on Tizen 4.0 and 5.0.
+* **ABS Rescue Mode:** A specialized CSS preset for **Audiobookshelf** that manually reconstructs the broken "Tailwind CSS" layout. It forces a grid view, fixes invisible text, and hides broken navigation bars on older engines that lack CSS Variable support.
+* **Icon Jail:** Fixed a critical bug where broken favicons would expand to fill the entire screen. All icons are now strictly constrained to their grid slots.
+* **Legacy Engine Core:** The entire injector codebase has been rewritten in **pure ES5** (no Classes, no `?.` chaining), ensuring compatibility with Tizen 3.0 and 4.0 devices.
+* **Smart Fallbacks:** If an app's icon fails to load (common with local IPs), it automatically swaps to a generic FontAwesome icon (Book, Play, Home, etc.).
 
 ## ✨ Features
 
 ### 🖥️ The Launcher
 
-* **Manual Grid Navigation:** Custom focus engine ensuring arrow keys always work, even if the browser loses state.
+* **Manual Grid Navigation:** A custom focus engine ensures arrow keys always work, even if the browser loses focus state.
 * **Edit Mode:** Long-press **ENTER** on any app to Edit or Delete it.
-* **Smart State:** App list updates instantly without reloading the page, preventing TizenBrew from killing the remote connection.
+* **Smart State:** The app list updates instantly in-place without reloading the page, preventing the TV remote connection from dropping.
 
-### 🛠️ The Injector (Overlay)
+### 🛠️ The Injector (Sidekick Overlay)
 
 Once an app launches, TizenPortal injects a "Sidekick" overlay that provides:
 
-* **User Agent Spoofing:** Force apps to load in **Mobile Mode** (faster, single-column) or **Desktop Mode** (feature complete).
+* **System Sidekick:** A slide-out sidebar menu (Blue Button) for quick access to system tools.
 * **Virtual Mouse (Green Key):** A cursor for apps that don't support TV remotes. Move the cursor to the screen edge to auto-scroll the page.
+* **View Source:** Dumps the running application's HTML source code to the on-screen console, allowing you to debug layout issues directly on the TV.
 * **Aspect Ratio Toggle:** Force video players to Fit, Fill, or Stretch to remove black bars.
-* **View Source:** Dumps the running application's HTML source code to the on-screen console for debugging CSS issues.
 
 ## 📺 Installation
 
@@ -41,16 +41,16 @@ You must have **TizenBrew** installed on your Samsung TV.
 1. Open **TizenBrew**.
 2. Navigate to the **Folder Icon** (Module Manager).
 3. Select **Add GitHub Module**.
-4. Enter the repository tag: `alexnolan/tizenportal@021`
+4. Enter the repository tag: `alexnolan/tizenportal@024`
 5. **Launch.**
 
-*(Note: Using the `@021` tag is recommended to bypass CDN caching issues).*
+*(Note: Use the `@024` tag. Do not include a 'v').*
 
 ## 🕹 Controls
 
 | Button | Context | Function |
 | --- | --- | --- |
-| **Arrows** | Global | Navigate / Move Mouse |
+| **Arrows** | Global | Navigate / Move Mouse / Scroll Logs |
 | **Enter** | Launcher | Launch App |
 | **Enter (Hold 1s)** | Launcher | **Edit / Delete App** |
 | **Enter** | In-App | Click / Select |
@@ -58,7 +58,7 @@ You must have **TizenBrew** installed on your Samsung TV.
 | **🟢 GREEN** | Global | **Toggle Virtual Mouse** |
 | **🟡 YELLOW** | Global | **Exit to Launcher** (Home) |
 | **🔵 BLUE** | Global | **Open Sidekick Menu** |
-| **Back** | Global | Back / Close Menu |
+| **Back** | Global | Back / Close Menu / Exit Console Focus |
 
 ## ⚙️ Configuration
 
@@ -66,34 +66,37 @@ You must have **TizenBrew** installed on your Samsung TV.
 
 1. Select **"Add App"** in the grid.
 2. **Name:** Label for the card.
-3. **URL:** Your local (or any other) IP/FQDN:PORT (e.g., `http://192.168.1.50:8123`).
-4. **Preset:** Applies CSS fixes for specific apps (Audiobookshelf, Jellyfin).
+3. **URL:** Your local IP (e.g., `http://192.168.1.50:8123`).
+4. **Preset:** Critical for fixing specific apps.
+* `Audiobookshelf`: Applies the **v0.2.4 Rescue Stylesheet** (Fixes black screen/broken layout).
+* `Jellyfin`: Enhances focus visibility.
+
+
 5. **Device Profile (UA):**
 * *Default:* TV Native.
-* *Mobile:* Forces Android/Touch layout (Recommended for slow TVs or known fixes).
-* *Desktop:* Forces Windows/PC layout.
+* *Mobile:* Forces Android/Touch layout (Recommended for slow TVs).
 
 
 
 ## 🐛 Debugging
 
-If an app fails to load or looks broken:
+If an app looks broken or "black screen":
 
 1. Press **BLUE** to open the Sidekick.
-2. Select **"Logs"** to see JavaScript errors.
-3. Select **"Maximize"** to view logs full-screen.
-4. Select **"View Source"** to capture the current DOM state.
+2. Select **"Maximize"** to expand the window.
+3. Select **"View Source"** to capture the current DOM state.
+4. Use **Arrow Keys** to scroll through the source code.
 
 ## 🏗 Architecture
 
-* **Zero-Dependency:** Written in pure, vanilla ES5 JavaScript. No Webpack, no Babel, no npm required for the runtime.
-* **URL Injection:** Configuration is passed to the injector via Base64-encoded URL parameters (`?tp=...`), ensuring settings survive cross-origin redirects from GitHub Pages to Local HTTP.
-* **Session Persistence:** Config is backed up to `sessionStorage`, allowing you to reload the page (Red Button) without crashing the app.
+* **Zero-Dependency:** Written in pure, vanilla ES5 JavaScript.
+* **URL Injection:** Configuration is passed via Base64-encoded URL parameters (`?tp=...`), ensuring settings survive redirects.
+* **Session Persistence:** Config is backed up to `sessionStorage`, allowing you to reload the page without crashing the app.
 
 ## ⚠️ Known Issues
 
-* **Video Players:** Some custom video players (like YouTube's TV client) may hijack the key events, preventing the Sidekick from opening. Use the **Virtual Mouse** to navigate out of them.
-* **HTTP/HTTPS:** The Launcher is hosted on HTTPS (GitHub), but most self-hosted apps are HTTP. The browser handles this transition fine, but `window.name` data is often cleared for security, which is why we use URL Parameter injection.
+* **HTTPS/HTTP:** The Launcher is hosted on HTTPS (GitHub), but your apps are likely HTTP. Tizen handles this fine, but favicon fetching for local IPs will fail (handled by our Smart Fallback icons).
+* **Video Players:** Some apps (YouTube) hijack input keys. Use the **Virtual Mouse** (Green Button) to regain control.
 
 ## 📄 License
 
