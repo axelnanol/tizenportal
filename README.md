@@ -41,10 +41,10 @@ You must have **TizenBrew** installed on your Samsung TV.
 1. Open **TizenBrew**.
 2. Navigate to the **Folder Icon** (Module Manager).
 3. Select **Add GitHub Module**.
-4. Enter the repository tag: `alexnolan/tizenportal@024`
+4. Enter the repository tag: `alexnolan/tizenportal@025`
 5. **Launch.**
 
-*(Note: Use the `@024` tag. Do not include a 'v').*
+*(Note: Use the `@025` tag. Do not include a 'v').*
 
 ## 🕹 Controls
 
