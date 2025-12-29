@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal v0.1.4</title>
+    <title>TizenPortal v0.1.5</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         
@@ -20,7 +20,7 @@
         .card img { width: 50px; height: 50px; object-fit: contain; }
         .card i { font-size: 40px; color: #888; }
         
-        /* THE ACTIVE STATE (Manual Focus) */
+        /* ACTIVE STATE */
         .card.active { 
             border-color: #FFD700; background: #333; opacity: 1;
             transform: scale(1.05); z-index: 10; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
@@ -38,13 +38,16 @@
         .btn-row { display: flex; gap: 15px; margin-top: 10px; }
         button { flex: 1; padding: 15px; background: #333; color: white; border: 1px solid #555; font-size: 16px; font-weight: bold; }
         button.primary { background: #FFD700; color: black; border-color: #FFD700; }
+
+        /* KEY DEBUGGER */
+        #key-debug { position: fixed; bottom: 10px; right: 10px; font-family: monospace; color: #444; font-size: 12px; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
     <header>
-        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.4</span></h1>
+        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.5</span></h1>
     </header>
     
     <div id="grid" class="grid"></div>
@@ -66,9 +69,26 @@
             <button onclick="deleteApp()" style="margin-top:10px; background:#500; border:none;">Delete App</button>
         </div>
     </div>
+    
+    <div id="key-debug">Last Key: None</div>
 
     <script>
-        // --- 1. DATA & PRESETS ---
+        // --- 1. TIZEN KEY REGISTRATION (THE FIX) ---
+        function registerKeys() {
+            if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
+                const keys = ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", "MediaPlay", "MediaPause", "MediaStop", "MediaFastForward", "MediaRewind"];
+                keys.forEach(k => {
+                    try {
+                        tizen.tvinputdevice.registerKey(k);
+                        console.log("Registered:", k);
+                    } catch(e) { console.error("Key Reg Fail:", k); }
+                });
+            } else {
+                console.warn("Tizen API not found (Browser Mode?)");
+            }
+        }
+
+        // --- 2. DATA & PRESETS ---
         const PRESETS = {
             "__CORE__": {
                 "css": "img, svg, video { max-width: 100% !important; height: auto !important; } :focus { outline: 5px solid #FFD700 !important; } ::-webkit-scrollbar { display: none; }",
@@ -83,11 +103,11 @@
         };
 
         let apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
-        let selectedIndex = 0; // MANUAL SELECTION TRACKER
+        let selectedIndex = 0; 
 
-        // --- 2. RENDER & NAV ---
+        // --- 3. RENDER & NAV ---
         function init() {
-            // Fill Select
+            registerKeys(); // Call immediately
             const sel = document.getElementById('preset');
             Object.keys(PRESETS).forEach(k => { if(k!=='__CORE__') sel.innerHTML+=`<option value="${k}">${PRESETS[k].name}</option>`; });
             render();
@@ -95,21 +115,15 @@
 
         function render() {
             const g = document.getElementById('grid'); g.innerHTML = '';
-            
-            // App Cards
             apps.forEach((a, i) => {
                 const d = document.createElement('div');
                 d.className = 'card';
                 d.innerHTML = `<img src="https://s2.googleusercontent.com/s2/favicons?domain_url=${encodeURIComponent(a.url)}&sz=64"><span>${a.name}</span>`;
                 g.appendChild(d);
             });
-
-            // Add Button
-            const add = document.createElement('div'); 
-            add.className = 'card add';
+            const add = document.createElement('div'); add.className = 'card add';
             add.innerHTML = `<i class="fas fa-plus"></i><span>Add App</span>`;
             g.appendChild(add);
-
             updateSelection();
         }
 
@@ -117,65 +131,57 @@
             const cards = document.querySelectorAll('.card');
             if (selectedIndex >= cards.length) selectedIndex = cards.length - 1;
             if (selectedIndex < 0) selectedIndex = 0;
-
             cards.forEach((c, i) => {
                 if (i === selectedIndex) c.classList.add('active');
                 else c.classList.remove('active');
             });
         }
 
-        // --- 3. INPUT HANDLING (THE FIX) ---
+        // --- 4. INPUT HANDLING ---
         document.addEventListener('keydown', (e) => {
             const k = e.keyCode;
+            document.getElementById('key-debug').innerText = "Last Key: " + k;
+
+            // COLOR KEYS (Test if they work in launcher)
+            if(k === 403) alert("Red Key Works!"); 
+
             const modal = document.getElementById('modal').style.display === 'flex';
             const cards = document.querySelectorAll('.card');
             const cols = Math.floor(document.getElementById('grid').offsetWidth / 250) || 3;
 
-            // IF MODAL IS OPEN, LET BROWSER HANDLE INPUT (TAB/ENTER)
             if(modal) {
                 if(k === 10009 || k === 27) closeModal();
                 return;
             }
 
-            // GRID NAVIGATION
-            if (k === 37) selectedIndex--; // Left
-            if (k === 39) selectedIndex++; // Right
-            if (k === 38) selectedIndex -= cols; // Up
-            if (k === 40) selectedIndex += cols; // Down
-            
-            // Wrap logic (Optional, keeping it simple for now: clamp)
-            if (selectedIndex < 0) selectedIndex = 0;
-            if (selectedIndex >= cards.length) selectedIndex = cards.length - 1;
+            if (k === 37) selectedIndex--; 
+            if (k === 39) selectedIndex++; 
+            if (k === 38) selectedIndex -= cols; 
+            if (k === 40) selectedIndex += cols; 
 
             if ([37,38,39,40].includes(k)) {
                 e.preventDefault();
                 updateSelection();
             }
 
-            // ENTER (Launch / Open Modal)
             if (k === 13) {
-                const isAddBtn = (selectedIndex === cards.length - 1); // Last item is always Add
+                const isAddBtn = (selectedIndex === cards.length - 1);
                 if (isAddBtn) openModal();
                 else launch(apps[selectedIndex]);
             }
         });
 
-        // --- 4. LAUNCH LOGIC (URL PAYLOAD) ---
         function launch(app) {
             const core = PRESETS['__CORE__'];
             const preset = PRESETS[app.presetID] || {};
-            
             const payload = {
                 css: (core.css||'') + '\n' + (preset.css||''),
                 js: (core.js||'') + '\n' + (preset.js||''),
                 ua: UA_STRINGS[app.ua] || null
             };
             
-            // ENCODE PAYLOAD INTO URL
             const json = JSON.stringify(payload);
-            const b64 = btoa(json); // Base64 Encode
-            
-            // Append ?tp=...
+            const b64 = btoa(json);
             const separator = app.url.includes('?') ? '&' : '?';
             const target = app.url + separator + 'tp=' + b64;
             
@@ -183,13 +189,8 @@
         }
 
         // --- 5. MODAL LOGIC ---
-        function openModal() { 
-            document.getElementById('modal').style.display='flex'; 
-            document.getElementById('name').focus(); 
-        }
-        function closeModal() { 
-            document.getElementById('modal').style.display='none'; 
-        }
+        function openModal() { document.getElementById('modal').style.display='flex'; document.getElementById('name').focus(); }
+        function closeModal() { document.getElementById('modal').style.display='none'; }
         function save() {
             const name = document.getElementById('name').value;
             const url = document.getElementById('url').value;
@@ -201,10 +202,7 @@
                 location.reload();
             }
         }
-        function deleteApp() {
-             // Deletes the LAST app (Simplistic for Alpha)
-             apps.pop(); localStorage.setItem('tp_apps', JSON.stringify(apps)); location.reload();
-        }
+        function deleteApp() { apps.pop(); localStorage.setItem('tp_apps', JSON.stringify(apps)); location.reload(); }
 
         init();
     </script>
