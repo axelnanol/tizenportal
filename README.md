@@ -1,4 +1,4 @@
-# TizenPortal (v0.2.7)
+# TizenPortal (v0.2.8)
 
 **A Universal Web App Launcher & OS Replacement Overlay for Samsung Tizen TVs.**
 
@@ -6,7 +6,7 @@ TizenPortal enables you to run modern, self-hosted web applications (Audiobooksh
 
 It is not just a launcher; it acts as an **injection middleware**, wrapping your apps in a modern compatibility layer that adds a Virtual Mouse, a Debug Console, User Agent spoofing, and "Rescue Stylesheets" to fix broken layouts.
 
-## 🚀 v0.2.7 Highlights: "The Rescue Update"
+## 🚀 v0.2.8 Highlights: "The Rescue Update"
 
 * **ABS Rescue Mode:** A specialized CSS preset for **Audiobookshelf** that manually reconstructs the broken "Tailwind CSS" layout. It forces a grid view, fixes invisible text, and hides broken navigation bars on older engines that lack CSS Variable support.
 * **Icon Jail:** Fixed a critical bug where broken favicons would expand to fill the entire screen. All icons are now strictly constrained to their grid slots.

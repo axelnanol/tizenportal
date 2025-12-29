@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 027</title>
+    <title>TizenPortal 028</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">027</span></h1></header>
+    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">028</span></h1></header>
     <div id="grid" class="grid"></div>
     <div id="toast">Long Press Enter to Edit</div>
     <div id="modal">
@@ -56,34 +56,35 @@
                 "js": "window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}}};window.TizenUtils.keepAwake();" 
             },
             
-            // --- ABS FIX 027 (Scoped Green Mode) ---
+            // --- ABS FIX 028 (Global Red) ---
             "abs": { 
                 "name": "Audiobookshelf", 
                 "css": `
-                    /* TARGET ONLY APP CONTAINER */
-                    #__nuxt, #__layout { 
-                        background: #003300 !important; /* DARK GREEN */
-                        color: #ddd !important; 
-                        min-height: 100vh !important;
+                    /* 1. FORCE GLOBAL VISIBILITY */
+                    * { opacity: 1 !important; visibility: visible !important; }
+                    
+                    /* 2. BACKGROUND & TEXT */
+                    html, body { 
+                        background: #330000 !important; /* DARK RED */
+                        color: #ffffff !important; 
+                        height: 100vh !important; 
+                        width: 100vw !important; 
                         overflow-y: auto !important; 
-                        opacity: 1 !important; 
-                        visibility: visible !important; 
-                        display: block !important; 
+                        display: block !important;
                     }
                     
-                    /* REBUILD GRID */
+                    /* 3. REBUILD GRID */
                     .library-item, .card, .shelf-item { 
                         display: inline-block !important; 
                         width: 140px !important; 
                         height: 260px !important; 
                         margin: 15px !important; 
                         vertical-align: top !important; 
-                        position: relative !important;
                         background: #222 !important; 
                         border: 1px solid #444 !important; 
                     }
                     
-                    /* IMAGES */
+                    /* 4. IMAGES */
                     .library-item img, .card img { 
                         height: 200px !important; 
                         width: 100% !important; 
@@ -91,15 +92,15 @@
                         display: block !important; 
                     }
                     
-                    /* FOCUS */
+                    /* 5. FOCUS */
                     .library-item:focus, .card:focus { 
                         outline: 4px solid #FFD700 !important; 
                         transform: scale(1.1); 
-                        z-index: 5000 !important; /* Lower than menu */
+                        z-index: 9999 !important; 
                         background: #333 !important; 
                     }
                     
-                    /* HIDE NAV */
+                    /* 6. HIDE NAV */
                     nav, aside, .app-bar-and-toolbar, .shelf-bg { display: none !important; }
                     .flex, .flex-row { display: block !important; }
                 `,
