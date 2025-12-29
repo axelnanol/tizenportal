@@ -8,11 +8,10 @@
             return (typeof a === 'object' ? JSON.stringify(a) : String(a));
         }).join(' ');
         logs.unshift('[' + type + '] ' + msg);
-        if (logs.length > 50) logs.pop();
+        if (logs.length > 200) logs.pop(); // Increased log buffer for Source View
         if (window.TP && window.TP.ui) window.TP.ui.updateConsole();
     }
     
-    // Override Console
     var origLog = console.log;
     console.log = function() { log('INF', arguments); origLog.apply(console, arguments); };
     console.error = function() { log('ERR', arguments); };
@@ -23,7 +22,6 @@
         homeUrl: 'https://alexnolan.github.io/tizenportal/dist/index.html',
         load: function() {
             try {
-                // URL Param
                 var m = window.location.href.match(/[?&]tp=([^&]+)/);
                 if (m && m[1]) {
                     var j = atob(m[1]);
@@ -33,54 +31,49 @@
                     console.log("[TP] Config loaded via URL");
                     return true;
                 }
-                // Storage
                 var s = sessionStorage.getItem('tp_conf');
-                if (s) {
-                    this.payload = JSON.parse(s);
-                    console.log("[TP] Config loaded via Storage");
-                    return true;
-                }
+                if (s) { this.payload = JSON.parse(s); console.log("[TP] Config via Storage"); return true; }
             } catch(e) { console.error("Config Fail", e); }
             return false;
         },
         apply: function() {
             if (!this.payload) return false;
-            // UA
-            if (this.payload.ua) {
-                try { Object.defineProperty(navigator, 'userAgent', { get: function(){ return Config.payload.ua; } }); } catch(e){}
-            }
-            // CSS
-            if (this.payload.css) {
-                var s = document.createElement('style');
-                s.textContent = this.payload.css;
-                document.head.appendChild(s);
-            }
-            // JS
-            if (this.payload.js) {
-                try { new Function(this.payload.js)(); } catch(e){}
-            }
+            if (this.payload.ua) { try { Object.defineProperty(navigator, 'userAgent', { get: function(){ return Config.payload.ua; } }); } catch(e){} }
+            if (this.payload.css) { var s=document.createElement('style'); s.textContent=this.payload.css; document.head.appendChild(s); }
+            if (this.payload.js) { try { new Function(this.payload.js)(); } catch(e){} }
             return true;
         }
     };
 
-    // --- UI (SIDEBAR) ---
+    // --- UI (SIDEBAR v0.2) ---
     var UI = {
         open: false,
+        maximized: false,
         idx: 0,
         items: [
             { l: "🏠 Exit Home", fn: function(){ window.location.href = Config.homeUrl; }, c:"#FFD700" },
             { l: "🔄 Reload", fn: function(){ window.location.reload(); }, c:"#fff" },
             { l: "🖱️ Mouse", fn: function(){ Input.toggleMouse(); }, c:"#fff" },
             { l: "📐 Aspect", fn: function(){ Input.toggleAspect(); }, c:"#fff" },
+            { l: "🔲 Maximize", fn: function(){ UI.toggleMax(); }, c:"#0ff" },
+            { l: "🔍 View Source", fn: function(){ UI.viewSource(); }, c:"#0ff" },
             { l: "📜 Logs", fn: function(){ UI.toggleConsole(); }, c:"#aaa" }
         ],
         init: function() {
-            var css = "#tp-b{position:fixed;top:0;right:-300px;width:280px;bottom:0;background:#111;border-left:2px solid #333;z-index:2147483647;transition:right 0.2s;font-family:sans-serif;display:flex;flex-direction:column}#tp-b.open{right:0;box-shadow:-10px 0 50px rgba(0,0,0,0.8)}.tp-i{padding:15px;color:#fff;cursor:pointer;border-bottom:1px solid #222}.tp-i.active{background:#FFD700;color:#000;font-weight:bold}#tp-c{height:30%;background:#000;color:#0f0;font-family:monospace;font-size:11px;padding:5px;overflow:y:auto;display:none}.tp-t{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px;border:1px solid #FFD700;opacity:0;transition:opacity 0.5s;z-index:2147483647;pointer-events:none}";
+            var css = "" +
+                "#tp-b { position:fixed; top:0; right:-300px; width:280px; bottom:0; background:#111; border-left:2px solid #333; z-index:2147483647; transition:right 0.2s, width 0.2s; font-family:sans-serif; display:flex; flex-direction:column; }" +
+                "#tp-b.open { right:0; box-shadow:-10px 0 50px rgba(0,0,0,0.8); }" +
+                "#tp-b.max { width: 95%; border-left: none; }" +
+                ".tp-i { padding:12px; color:#fff; cursor:pointer; border-bottom:1px solid #222; font-size:16px; }" +
+                ".tp-i.active { background:#FFD700; color:#000; font-weight:bold; }" +
+                "#tp-c { flex:1; background:#000; color:#0f0; font-family:monospace; font-size:12px; padding:10px; overflow-y:auto; display:none; border-top:1px solid #444; white-space:pre-wrap; word-break:break-all; }" +
+                "#tp-b.max #tp-c { font-size: 14px; display: block; height: auto; }" +
+                ".tp-t { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px; border:1px solid #FFD700; opacity:0; transition:opacity 0.5s; z-index:2147483647; pointer-events:none; }";
+            
             var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
             
             var d = document.createElement('div'); d.id='tp-b';
-            var html = '<div style="padding:15px;background:#222;color:#FFD700;font-weight:bold">TizenPortal v0.1.11</div><div style="flex:1;overflow-y:auto" id="tp-l"></div><div id="tp-c"></div>';
-            d.innerHTML = html;
+            d.innerHTML = '<div style="padding:15px;background:#222;color:#FFD700;font-weight:bold">TizenPortal v0.2.0</div><div style="flex-shrink:0;overflow-y:auto;max-height:50%" id="tp-l"></div><div id="tp-c"></div>';
             document.body.appendChild(d);
 
             var l = document.getElementById('tp-l');
@@ -89,13 +82,44 @@
                 el.onclick = function() { UI.idx=i; UI.upd(); item.fn(); };
                 l.appendChild(el);
             });
-            
             var t = document.createElement('div'); t.className='tp-t'; t.id='tp-toast'; document.body.appendChild(t);
         },
         toggle: function() {
             this.open = !this.open;
-            document.getElementById('tp-b').className = this.open ? 'open' : '';
+            var el = document.getElementById('tp-b');
+            el.className = this.open ? (this.maximized ? 'open max' : 'open') : '';
             this.upd();
+        },
+        toggleMax: function() {
+            this.maximized = !this.maximized;
+            var el = document.getElementById('tp-b');
+            el.className = this.open ? (this.maximized ? 'open max' : 'open') : '';
+            // Auto-open console when maxed
+            var c = document.getElementById('tp-c');
+            if(this.maximized) c.style.display='block';
+        },
+        toggleConsole: function() { 
+            var c = document.getElementById('tp-c');
+            c.style.display = (c.style.display==='block') ? 'none' : 'block';
+            this.updateConsole();
+        },
+        viewSource: function() {
+            var html = document.documentElement.outerHTML;
+            // Simple escaping
+            html = html.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            
+            var c = document.getElementById('tp-c');
+            c.style.display = 'block';
+            c.innerHTML = '<div style="color:#0ff;border-bottom:1px solid #fff;margin-bottom:10px">--- SOURCE CAPTURE ---</div>' + html;
+            
+            if (!this.maximized) this.toggleMax(); // Auto maximize to see it
+        },
+        updateConsole: function() {
+            var c = document.getElementById('tp-c');
+            // Don't overwrite if viewing source (simple check: does it start with [?)
+            if(c && c.style.display==='block' && c.innerHTML.indexOf('SOURCE CAPTURE') === -1) {
+                c.innerHTML = logs.map(function(l){ return '<div>'+l.replace(/</g,'&lt;')+'</div>'; }).join('');
+            }
         },
         nav: function(d) {
             if(!this.open) return;
@@ -107,24 +131,10 @@
         exe: function() { if(this.open) this.items[this.idx].fn(); },
         upd: function() {
             var els = document.querySelectorAll('.tp-i');
-            for(var i=0; i<els.length; i++) {
-                els[i].className = (i===this.idx) ? 'tp-i active' : 'tp-i';
-            }
-        },
-        toggleConsole: function() { 
-            var c = document.getElementById('tp-c');
-            c.style.display = (c.style.display==='block') ? 'none' : 'block';
-            this.updateConsole();
-        },
-        updateConsole: function() {
-            var c = document.getElementById('tp-c');
-            if(c && c.style.display==='block') {
-                c.innerHTML = logs.map(function(l){ return '<div>'+l.replace(/</g,'&lt;')+'</div>'; }).join('');
-            }
+            for(var i=0; i<els.length; i++) els[i].className = (i===this.idx) ? 'tp-i active' : 'tp-i';
         },
         toast: function(m) {
-            var t = document.getElementById('tp-toast');
-            t.innerText = m; t.style.opacity = 1;
+            var t = document.getElementById('tp-toast'); t.innerText = m; t.style.opacity = 1;
             setTimeout(function(){ t.style.opacity=0; }, 3000);
         }
     };
@@ -133,7 +143,6 @@
     var Input = {
         mouse: false, x: window.innerWidth/2, y: window.innerHeight/2, cursor: null,
         init: function() {
-            // Aggressive Key Registration Loop
             var attempts = 0;
             var regInterval = setInterval(function() {
                 if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
@@ -141,31 +150,25 @@
                         try { tizen.tvinputdevice.registerKey(k); } catch(e){}
                     });
                     attempts++;
-                    if(attempts > 5) clearInterval(regInterval); // Stop after 5s
+                    if(attempts > 5) clearInterval(regInterval);
                 }
             }, 1000);
-
             document.addEventListener('keydown', this.key.bind(this), true);
             setInterval(this.loop.bind(this), 50);
         },
         key: function(e) {
             var k = e.keyCode;
-            
-            // Sidebar
             if (UI.open) {
                 if (k===38) UI.nav('u'); if (k===40) UI.nav('d');
                 if (k===13) UI.exe();
                 if ([37,406,10009,27].indexOf(k) > -1) UI.toggle();
                 e.preventDefault(); e.stopPropagation(); return;
             }
-
-            // Shortcuts
             if (k===406) { UI.toggle(); e.preventDefault(); return; } // Blue
             if (k===403) { window.location.reload(); e.preventDefault(); return; } // Red
             if (k===404) { this.toggleMouse(); e.preventDefault(); return; } // Green
             if (k===405) { window.location.href = Config.homeUrl; e.preventDefault(); return; } // Yellow
 
-            // Mouse
             if (this.mouse) {
                 if (k===37) this.x-=25; if (k===38) this.y-=25;
                 if (k===39) this.x+=25; if (k===40) this.y+=25;
@@ -197,38 +200,18 @@
             UI.toast(this.mouse ? "Mouse ON" : "Mouse OFF");
         },
         draw: function() {
-            if (this.cursor) {
-                this.cursor.style.left = (this.x-10)+'px';
-                this.cursor.style.top = (this.y-10)+'px';
-            }
+            if (this.cursor) { this.cursor.style.left = (this.x-10)+'px'; this.cursor.style.top = (this.y-10)+'px'; }
         },
-        click: function() {
-            var el = document.elementFromPoint(this.x, this.y);
-            if(el) { el.click(); el.focus(); }
-        },
+        click: function() { var el = document.elementFromPoint(this.x, this.y); if(el) { el.click(); el.focus(); } },
         toggleAspect: function() {
-            // Simplified Aspect Logic for ES5
-            UI.toast("Aspect Toggle Triggered");
+            UI.toast("Aspect Toggle");
             var v = document.querySelector('video');
             if(v) v.style.objectFit = (v.style.objectFit === 'cover') ? 'contain' : 'cover';
         }
     };
 
-    // --- BOOT ---
     window.TP = { ui: UI, input: Input };
-    
-    // Init
-    var loaded = Config.load();
-    Config.apply();
-
-    var ready = function() {
-        UI.init();
-        Input.init();
-        if(loaded) UI.toast("TizenPortal Active");
-        else UI.toast("No Config");
-    };
-
-    if (document.body) ready();
-    else document.addEventListener('DOMContentLoaded', ready);
-
+    var loaded = Config.load(); Config.apply();
+    var ready = function() { UI.init(); Input.init(); if(loaded) UI.toast("TizenPortal v0.2.0"); else UI.toast("No Config"); };
+    if (document.body) ready(); else document.addEventListener('DOMContentLoaded', ready);
 })();

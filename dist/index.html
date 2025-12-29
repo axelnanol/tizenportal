@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal v0.1.11</title>
+    <title>TizenPortal v0.2.0</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         
@@ -11,7 +11,6 @@
         
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 30px; }
         
-        /* CARD STYLES */
         .card { 
             background: #1a1a1a; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; 
             border: 4px solid transparent; border-radius: 8px; font-weight: bold; font-size: 20px; 
@@ -19,7 +18,6 @@
         }
         .card img { width: 50px; height: 50px; object-fit: contain; }
         
-        /* VISUAL FOCUS STATE */
         .card.active, .card:focus { 
             border-color: #FFD700; background: #333; opacity: 1;
             transform: scale(1.05); z-index: 10; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
@@ -29,7 +27,6 @@
         .add { border: 4px dashed #333; color: #666; }
         .add.active { border-color: #FFD700; color: #fff; }
 
-        /* MODAL */
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; z-index: 100; }
         .box { background: #222; padding: 40px; width: 600px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #555; }
         input, select { padding: 15px; background: #111; color: white; border: 1px solid #444; width: 100%; font-size: 18px; }
@@ -46,7 +43,7 @@
 <body>
 
     <header>
-        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.11</span></h1>
+        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.2.0</span></h1>
     </header>
     
     <div id="grid" class="grid"></div>
@@ -84,28 +81,19 @@
         var selectedIndex = 0;
         var editIndex = -1;
         var pressTimer = null;
-        var longPressTriggered = false;
 
         function init() {
-            // Register Keys Safe
             if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
                 var keys = ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", "MediaPlay", "MediaPause"];
-                for (var i = 0; i < keys.length; i++) {
-                    try { tizen.tvinputdevice.registerKey(keys[i]); } catch(e){}
-                }
+                for (var i = 0; i < keys.length; i++) { try { tizen.tvinputdevice.registerKey(keys[i]); } catch(e){} }
             }
-            
-            // Populate UI
             var selP = document.getElementById('preset');
             Object.keys(PRESETS).forEach(function(k) { if(k!=='__CORE__') selP.innerHTML+='<option value="'+k+'">'+PRESETS[k].name+'</option>'; });
-            
             var selU = document.getElementById('ua');
             USER_AGENTS.forEach(function(u) { selU.innerHTML+='<option value="'+u.id+'">'+u.name+'</option>'; });
 
             render();
             showToast("Long Press Enter to Edit");
-            
-            // HARD FOCUS LOOP (The Fix for Focus Loss)
             setInterval(enforceFocus, 200);
         }
 
@@ -113,8 +101,7 @@
             var g = document.getElementById('grid'); g.innerHTML = '';
             apps.forEach(function(a, i) {
                 var d = document.createElement('div');
-                d.className = 'card';
-                d.tabIndex = 0; // Make focusable
+                d.className = 'card'; d.tabIndex = 0;
                 d.innerHTML = '<img src="https://s2.googleusercontent.com/s2/favicons?domain_url='+encodeURIComponent(a.url)+'&sz=64"><span>'+a.name+'</span>';
                 g.appendChild(d);
             });
@@ -128,79 +115,41 @@
             var cards = document.querySelectorAll('.card');
             if (selectedIndex >= cards.length) selectedIndex = cards.length - 1;
             if (selectedIndex < 0) selectedIndex = 0;
-            
             for (var i = 0; i < cards.length; i++) {
-                if (i === selectedIndex) {
-                    cards[i].classList.add('active');
-                    cards[i].focus(); // Direct Focus
-                } else {
-                    cards[i].classList.remove('active');
-                }
+                if (i === selectedIndex) { cards[i].classList.add('active'); cards[i].focus(); } 
+                else { cards[i].classList.remove('active'); }
             }
         }
 
         function enforceFocus() {
             if(document.getElementById('modal').style.display === 'flex') return;
             var cards = document.querySelectorAll('.card');
-            if(cards[selectedIndex] && document.activeElement !== cards[selectedIndex]) {
-                cards[selectedIndex].focus();
-            }
+            if(cards[selectedIndex] && document.activeElement !== cards[selectedIndex]) cards[selectedIndex].focus();
         }
 
-        // --- INPUT ---
         document.addEventListener('keydown', function(e) {
             var k = e.keyCode;
-            if(document.getElementById('modal').style.display === 'flex') {
-                if(k === 10009 || k === 27) closeModal();
-                return;
-            }
-
+            if(document.getElementById('modal').style.display === 'flex') { if(k===10009||k===27) closeModal(); return; }
             var cols = Math.floor(document.getElementById('grid').offsetWidth / 250) || 3;
-            if (k === 37) selectedIndex--; 
-            if (k === 39) selectedIndex++; 
-            if (k === 38) selectedIndex -= cols; 
-            if (k === 40) selectedIndex += cols; 
-
-            if ([37,38,39,40].includes(k)) { 
-                e.preventDefault(); 
-                updateSelection(); 
-            }
-
-            // Long Press Logic
-            if (k === 13 && !pressTimer) {
-                longPressTriggered = false;
-                pressTimer = setTimeout(function() {
-                    longPressTriggered = true;
-                    openModal(selectedIndex);
-                }, 800);
-            }
+            if (k===37) selectedIndex--; if (k===39) selectedIndex++; 
+            if (k===38) selectedIndex-=cols; if (k===40) selectedIndex+=cols; 
+            if ([37,38,39,40].includes(k)) { e.preventDefault(); updateSelection(); }
+            if (k===13 && !pressTimer) { pressTimer = setTimeout(function() { pressTimer=null; openModal(selectedIndex); }, 800); }
         });
 
         document.addEventListener('keyup', function(e) {
             if (e.keyCode === 13) {
-                if (pressTimer) {
-                    clearTimeout(pressTimer);
-                    pressTimer = null;
-                }
-                if (!longPressTriggered) {
-                    var cards = document.querySelectorAll('.card');
-                    if (selectedIndex === cards.length - 1) openModal(-1);
-                    else launch(apps[selectedIndex]);
+                if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; 
+                    if (selectedIndex === document.querySelectorAll('.card').length-1) openModal(-1); else launch(apps[selectedIndex]); 
                 }
             }
         });
 
-        // --- LAUNCH & MODAL ---
         function launch(app) {
             var core = PRESETS['__CORE__'];
             var preset = PRESETS[app.presetID] || {};
             var uaObj = USER_AGENTS.find(function(u){ return u.id === app.ua }) || USER_AGENTS[0];
-            
-            var payload = {
-                css: (core.css||'') + '\n' + (preset.css||''),
-                js: (core.js||'') + '\n' + (preset.js||''),
-                ua: uaObj.str
-            };
+            var payload = { css: (core.css||'')+'\n'+(preset.css||''), js: (core.js||'')+'\n'+(preset.js||''), ua: uaObj.str };
             var b64 = btoa(JSON.stringify(payload));
             var sep = app.url.indexOf('?') > -1 ? '&' : '?';
             window.location.href = app.url + sep + 'tp=' + b64;
@@ -211,60 +160,26 @@
             var isAdd = (index === -1 || index >= apps.length);
             document.getElementById('modal-title').innerText = isAdd ? "Add App" : "Edit App";
             document.getElementById('btn-delete').style.display = isAdd ? 'none' : 'block';
-            
             if (!isAdd) {
                 var a = apps[index];
-                document.getElementById('name').value = a.name;
-                document.getElementById('url').value = a.url;
-                document.getElementById('preset').value = a.presetID || "";
-                document.getElementById('ua').value = a.ua || "default";
-            } else {
-                document.getElementById('name').value = "";
-                document.getElementById('url').value = "";
-            }
-            document.getElementById('modal').style.display='flex'; 
-            document.getElementById('name').focus(); 
+                document.getElementById('name').value = a.name; document.getElementById('url').value = a.url;
+                document.getElementById('preset').value = a.presetID || ""; document.getElementById('ua').value = a.ua || "default";
+            } else { document.getElementById('name').value = ""; document.getElementById('url').value = ""; }
+            document.getElementById('modal').style.display='flex'; document.getElementById('name').focus(); 
         }
 
         function closeModal() { document.getElementById('modal').style.display='none'; }
-
         function save() {
-            var name = document.getElementById('name').value;
-            var url = document.getElementById('url').value;
-            var presetID = document.getElementById('preset').value;
-            var ua = document.getElementById('ua').value;
-
+            var name=document.getElementById('name').value; var url=document.getElementById('url').value;
             if(name && url) {
-                var appObj = {name:name, url:url, presetID:presetID, ua:ua};
-                if (editIndex > -1 && editIndex < apps.length) {
-                    apps[editIndex] = appObj;
-                } else {
-                    apps.push(appObj);
-                    selectedIndex = apps.length - 1;
-                }
+                var appObj = {name:name, url:url, presetID:document.getElementById('preset').value, ua:document.getElementById('ua').value};
+                if (editIndex > -1 && editIndex < apps.length) apps[editIndex] = appObj; else { apps.push(appObj); selectedIndex = apps.length-1; }
                 localStorage.setItem('tp_apps', JSON.stringify(apps));
-                closeModal();
-                render(); // In-place update
+                closeModal(); render();
             }
         }
-
-        function deleteApp() { 
-            if(editIndex > -1 && confirm("Delete?")) {
-                apps.splice(editIndex, 1);
-                localStorage.setItem('tp_apps', JSON.stringify(apps));
-                selectedIndex = Math.max(0, editIndex - 1);
-                closeModal();
-                render(); 
-            }
-        }
-
-        function showToast(msg) {
-            var t = document.getElementById('toast');
-            t.innerText = msg;
-            t.style.opacity = 1; 
-            setTimeout(function(){ t.style.opacity=0; }, 5000);
-        }
-
+        function deleteApp() { if(editIndex > -1 && confirm("Delete?")) { apps.splice(editIndex, 1); localStorage.setItem('tp_apps', JSON.stringify(apps)); selectedIndex=Math.max(0,editIndex-1); closeModal(); render(); } }
+        function showToast(msg) { var t=document.getElementById('toast'); t.innerText=msg; t.style.opacity=1; setTimeout(function(){t.style.opacity=0;},5000); }
         init();
     </script>
 </body>
