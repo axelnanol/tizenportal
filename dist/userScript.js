@@ -42,15 +42,25 @@
         }
         load() {
             try {
+                // 1. URL Param
                 const match = window.location.href.match(/[?&]tp=([^&]+)/);
                 if (match && match[1]) {
                     const json = atob(match[1]);
                     this.payload = JSON.parse(json);
+                    sessionStorage.setItem('tp_payload_backup', json); // Persist
                     const cleanUrl = window.location.href.replace(/[?&]tp=[^&]+/, '');
                     window.history.replaceState({}, document.title, cleanUrl);
                     console.log("[TP] Config loaded from URL.");
                     return;
                 }
+                // 2. Session Backup
+                const backup = sessionStorage.getItem('tp_payload_backup');
+                if (backup) {
+                    this.payload = JSON.parse(backup);
+                    console.log("[TP] Config restored from SessionStorage.");
+                    return;
+                }
+                // 3. Legacy window.name
                 if (window.name && window.name.includes('tp_payload')) {
                     this.payload = JSON.parse(window.name);
                 }
@@ -74,7 +84,7 @@
     }
 
     // ==========================================
-    // MODULE: INPUT (Auto-Pan & Priority Fix)
+    // MODULE: INPUT (Strict Clamping & Yellow Home)
     // ==========================================
     class InputManager {
         constructor() {
@@ -82,12 +92,11 @@
             this.cursor = null;
             this.x = window.innerWidth / 2;
             this.y = window.innerHeight / 2;
-            this.scrollSpeed = 15;
             this.init();
         }
 
         init() {
-            // Still good practice to register keys even if some work
+            // Register Keys
             if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
                 const keys = ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue"];
                 keys.forEach(k => { try { tizen.tvinputdevice.registerKey(k); } catch(e){} });
@@ -95,38 +104,28 @@
 
             document.addEventListener('keydown', (e) => this.handleKeyDown(e), true);
             document.addEventListener('keyup', (e) => this.handleKeyUp(e), true);
+
+            // Scroll Loop (50ms)
+            setInterval(() => this.scrollLoop(), 50); 
         }
 
         handleKeyDown(e) {
             const k = e.keyCode;
 
-            // --- 1. GLOBAL SHORTCUTS (HIGHEST PRIORITY) ---
-            
+            // --- GLOBAL SHORTCUTS ---
             // Green (404) = Mouse Toggle
-            if (k === 404) { 
-                this.toggleMouse(); 
-                e.preventDefault(); 
-                return; 
-            }
-            // Blue (406) = HUD Toggle
-            if (k === 406) { 
-                window.TP.hud.toggle(); 
-                e.preventDefault(); 
-                return; 
-            }
+            if (k === 404) { this.toggleMouse(); e.preventDefault(); return; }
+            // Blue (406) = HUD
+            if (k === 406) { window.TP.hud.toggle(); e.preventDefault(); return; }
             // Red (403) = Reload
-            if (k === 403) { 
-                window.location.reload(); 
-                e.preventDefault(); 
-                return; 
-            }
-            // Back (10009 / Esc)
-            if (k === 10009 || k === 27) { 
-                window.TP.hud.handleBackPress(true); 
-                // Don't return yet, HUD might not consume it if closed
-            }
+            if (k === 403) { window.location.reload(); e.preventDefault(); return; }
+            // Yellow (405) = EXIT TO LAUNCHER
+            if (k === 405) { window.location.href = window.TP.config.homeUrl; e.preventDefault(); return; }
+            
+            // Back (10009/Esc)
+            if (k === 10009 || k === 27) { window.TP.hud.handleBackPress(true); }
 
-            // --- 2. MOUSE MODE (Consumes Arrows/Enter) ---
+            // --- MOUSE MODE ---
             if (this.mouseMode) {
                 const step = 25;
                 if (k === 37) this.x -= step;
@@ -135,12 +134,12 @@
                 if (k === 40) this.y += step;
                 if (k === 13) this.click();
 
-                this.updateCursor();
-                
-                // Prevent default scrolling only if we handled the move
+                // Update Visuals (Clamp happens inside here)
+                this.updateCursorVisuals();
+
+                // Block default arrows/enter
                 if ([37,38,39,40,13].includes(k)) {
-                    e.preventDefault();
-                    e.stopPropagation();
+                    e.preventDefault(); e.stopPropagation();
                 }
             }
         }
@@ -151,34 +150,49 @@
             }
         }
 
+        scrollLoop() {
+            if (!this.mouseMode) return;
+            
+            const h = window.innerHeight;
+            const margin = 60; 
+            const speed = 20;
+
+            if (this.y >= h - margin) window.scrollBy(0, speed);
+            else if (this.y <= margin) window.scrollBy(0, -speed);
+            
+            // Re-clamp in case scroll changed relative position or we drifted
+            this.clampCursor();
+            this.updateCursorVisuals();
+        }
+
         toggleMouse() {
             this.mouseMode = !this.mouseMode;
             if (!this.cursor) {
                 this.cursor = document.createElement('div');
-                this.cursor.style.cssText = 'position:fixed;width:24px;height:24px;background:rgba(255,0,0,0.8);border:2px solid #fff;border-radius:50%;z-index:2147483647;pointer-events:none;display:none;box-shadow:0 0 10px #000;transition:transform 0.1s, background-color 0.2s;';
+                this.cursor.style.cssText = 'position:fixed;width:24px;height:24px;background:rgba(255,0,0,0.8);border:2px solid #fff;border-radius:50%;z-index:2147483647;pointer-events:none;display:none;box-shadow:0 0 10px #000;transition:transform 0.1s;';
                 document.body.appendChild(this.cursor);
             }
             this.cursor.style.display = this.mouseMode ? 'block' : 'none';
-            this.updateCursor();
+            
+            // Center cursor on enable
+            if(this.mouseMode) {
+                this.x = window.innerWidth/2;
+                this.y = window.innerHeight/2;
+            }
+            this.updateCursorVisuals();
             window.TP.ui.toast(this.mouseMode ? "Mouse Mode ON" : "Mouse Mode OFF", "#0055aa");
         }
 
-        updateCursor() {
-            // EDGE SCROLLING LOGIC
-            const h = window.innerHeight;
-            const scrollMargin = 60; // Distance from edge to trigger scroll
+        clampCursor() {
+             // Strict Clamping: 0 to Max Dimensions
+             this.x = Math.max(0, Math.min(window.innerWidth, this.x));
+             this.y = Math.max(0, Math.min(window.innerHeight, this.y));
+        }
 
-            if (this.y > h - scrollMargin) {
-                window.scrollBy(0, this.scrollSpeed);
-            } else if (this.y < scrollMargin) {
-                window.scrollBy(0, -this.scrollSpeed);
-            }
-
-            // Clamp cursor to screen
-            this.x = Math.max(0, Math.min(window.innerWidth, this.x));
-            this.y = Math.max(0, Math.min(h, this.y));
-
+        updateCursorVisuals() {
+            this.clampCursor(); // Ensure valid before drawing
             if (this.cursor) {
+                // Offset by 12px so coordinates represent the CENTER of the dot
                 this.cursor.style.left = (this.x - 12) + 'px';
                 this.cursor.style.top = (this.y - 12) + 'px';
             }
@@ -186,20 +200,10 @@
 
         click() {
             const el = document.elementFromPoint(this.x, this.y);
-            if (el) { 
-                el.click(); 
-                el.focus(); 
-                console.log("[TP] Clicked:", el.tagName);
-            }
-            
-            // Visual Feedback (Flash White)
+            if (el) { el.click(); el.focus(); }
             if (this.cursor) {
-                this.cursor.style.background = '#fff';
                 this.cursor.style.transform = "scale(0.8)";
-                setTimeout(() => {
-                    this.cursor.style.background = 'rgba(255,0,0,0.8)';
-                    this.cursor.style.transform = "scale(1)";
-                }, 150);
+                setTimeout(() => this.cursor.style.transform = "scale(1)", 150);
             }
         }
     }
@@ -241,7 +245,7 @@
             d.innerHTML = `
                 <div id="tp-hud">
                     <div id="tp-header">
-                        <div style="font-weight:bold;color:#FFD700;">TizenPortal v0.1.6</div>
+                        <div style="font-weight:bold;color:#FFD700;">TizenPortal v0.1.7</div>
                         <div id="tp-tabs">
                             <div class="tp-tab active" onclick="window.TP.hud.switch('menu')">MENU</div>
                             <div class="tp-tab" onclick="window.TP.hud.switch('console')">CONSOLE</div>
@@ -250,9 +254,15 @@
                     <div id="tp-content">
                         <div id="panel-menu" class="tp-panel active">
                             <div id="tp-controls">
-                                <button onclick="window.location.href=window.TP.config.homeUrl">🏠 Exit</button>
-                                <button onclick="window.location.reload()">🔄 Reload</button>
-                                <button onclick="window.TP.hud.toggle()">❌ Close</button>
+                                <button onclick="window.location.href=window.TP.config.homeUrl">🏠 Exit to Launcher (Yellow)</button>
+                                <button onclick="window.location.reload()">🔄 Reload (Red)</button>
+                                <button onclick="window.TP.hud.toggle()">❌ Close HUD (Blue)</button>
+                            </div>
+                            <div style="margin-top:20px; color:#aaa; font-size:14px; line-height:1.6;">
+                                🔴 Red: Reload Page<br>
+                                🟢 Green: Toggle Mouse<br>
+                                🟡 Yellow: Back to Launcher<br>
+                                🔵 Blue: Toggle HUD
                             </div>
                         </div>
                         <div id="panel-console" class="tp-panel"></div>
@@ -289,7 +299,6 @@
                 this.backTimer=null; 
                 if(this.visible) this.toggle(); 
                 else if(!window.TP.input.mouseMode) {
-                    // Only do browser back if mouse mode is OFF
                     if(window.location.pathname!=='/') window.history.back();
                 }
             }
@@ -305,8 +314,9 @@
         ui: new UI(),
     };
     
+    // Apply Config & Show Result
     const success = window.TP.config.apply();
-    window.TP.ui.toast(success ? "Injected via URL" : "No Config", success ? "#008800" : "#aa6600");
+    if(success) window.TP.ui.toast("TizenPortal Active", "#008800");
 
     const onReady = () => {
         window.TP.hud = new HUD();
