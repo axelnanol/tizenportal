@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 038</title>
+    <title>TizenPortal 040</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">038</span></h1></header>
+    <header><h1>TizenPortal <span style="font-size:14px; color:#666;">040</span></h1></header>
     <div id="grid" class="grid"></div>
     <div id="toast">Long Press Enter to Edit</div>
     <div id="modal">
@@ -56,144 +56,60 @@
                 "js": "window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}}};window.TizenUtils.keepAwake();" 
             },
             
-            // --- ABS FIX 038 (Styled Lifeboat) ---
+            // --- ABS LIFEBOAT (v039/040) ---
             "abs": { 
                 "name": "Audiobookshelf", 
                 "css": `
-                    /* 1. HIDE BROKEN APP */
                     #__nuxt, #__layout { display: none !important; opacity: 0 !important; }
-                    
-                    /* 2. LIFEBOAT CONTAINER (Dark Gradient) */
-                    body { 
-                        background: linear-gradient(135deg, #1f1f1f 0%, #333 100%) !important; 
-                        margin: 0 !important; 
-                        padding: 20px !important; 
-                        overflow-y: auto !important; 
-                        color: #fff !important;
-                    }
-                    #tp-lifeboat { 
-                        display: block !important; 
-                        width: 100% !important; 
-                        padding-bottom: 50px;
-                    }
-                    
-                    /* 3. RESCUED HEADINGS */
-                    .tp-rescued-heading {
-                        display: block !important;
-                        width: 100% !important;
-                        color: #FFD700 !important; /* Gold */
-                        font-size: 24px !important;
-                        margin: 30px 0 15px 10px !important;
-                        border-bottom: 1px solid #555 !important;
-                        padding-bottom: 5px !important;
-                        font-family: "Segoe UI", sans-serif !important;
-                        text-align: left !important;
-                        clear: both !important;
-                    }
-
-                    /* 4. RESCUED CARDS */
-                    .tp-rescued-card {
-                        display: inline-block !important;
-                        width: 160px !important;
-                        height: 280px !important;
-                        margin: 15px !important;
-                        background: #2a2a2a !important; /* Dark Grey Card */
-                        border: 1px solid #444 !important;
-                        border-radius: 8px !important;
-                        vertical-align: top !important;
-                        position: relative !important;
-                        cursor: pointer !important;
-                        overflow: hidden !important;
-                        transition: transform 0.2s;
-                    }
-                    
-                    /* 5. CARD CONTENT STYLES */
-                    .tp-rescued-card img {
-                        width: 100% !important;
-                        height: 160px !important;
-                        object-fit: cover !important;
-                        display: block !important;
-                        border-bottom: 1px solid #444 !important;
-                    }
-                    
-                    /* Force Text Visibility */
-                    .tp-rescued-card p, .tp-rescued-card span, .tp-rescued-card div {
-                        color: #e0e0e0 !important;
-                        font-family: sans-serif !important;
-                        font-size: 14px !important;
-                        line-height: 1.2 !important;
-                        background: transparent !important;
-                    }
-                    
-                    /* Reveal Hidden Titles (e.g. Hover Titles) */
-                    .tp-rescued-card [cy-id="hoveringDisplayTitle"], 
-                    .tp-rescued-card [cy-id="textInline"] {
-                        opacity: 1 !important;
-                        visibility: visible !important;
-                        position: relative !important; 
-                        top: auto !important; left: auto !important;
-                        padding: 8px !important;
-                        height: auto !important;
-                        width: 100% !important;
-                        display: block !important;
-                    }
-
-                    /* 6. FOCUS STATE */
-                    .tp-rescued-card:focus {
-                        outline: 4px solid #FFD700 !important;
-                        transform: scale(1.1);
-                        z-index: 9999;
-                        background: #444 !important;
-                        box-shadow: 0 0 20px rgba(0,0,0,0.8) !important;
-                    }
+                    body { background-image: url('/audiobookshelf/_nuxt/img/wood_default.6d366e7.jpg') !important; background-repeat: repeat !important; background-color: #222 !important; margin: 0 !important; padding: 20px !important; overflow-y: auto !important; font-family: sans-serif !important; color: #fff !important; }
+                    #tp-lifeboat { display: block !important; width: 100% !important; padding-bottom: 50px; margin-top: 70px; }
+                    #tp-navbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #b8860b; display: flex; align-items: center; padding: 0 20px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+                    .tp-nav-item { color: #ddd; font-size: 18px; margin-right: 20px; cursor: pointer; padding: 10px; border: 1px solid transparent; }
+                    .tp-nav-item:focus, .tp-nav-item:hover { color: #FFD700; border-color: #FFD700; background: #333; outline: none; }
+                    .tp-shelf-title { color: #FFD700 !important; font-size: 24px !important; font-weight: bold; text-shadow: 2px 2px 4px #000; border-bottom: 2px solid rgba(255,215,0,0.3); padding-bottom: 5px; margin-top: 40px; margin-bottom: 15px; clear: both; }
+                    .tp-rescued-card { display: inline-block !important; width: 160px !important; min-height: 240px !important; margin: 15px !important; vertical-align: top !important; position: relative !important; cursor: pointer !important; background: rgba(0,0,0,0.5) !important; box-shadow: 3px 3px 10px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.1s; }
+                    .tp-rescued-card img { width: 100% !important; height: 160px !important; object-fit: cover !important; display: block !important; }
+                    .tp-rescued-card p, .tp-rescued-card span, .tp-rescued-card div { color: #fff !important; text-shadow: 1px 1px 2px #000 !important; font-size: 13px !important; line-height: 1.2 !important; background: transparent !important; }
+                    .tp-rescued-card [cy-id="hoveringDisplayTitle"], .tp-rescued-card [cy-id="textInline"] { opacity: 1 !important; visibility: visible !important; position: relative !important; top: auto !important; left: auto !important; padding: 5px !important; width: 100% !important; height: auto !important; background: none !important; display: block !important; }
+                    .tp-rescued-card:focus { outline: 4px solid #FFD700 !important; transform: scale(1.1); z-index: 5000; background: #000 !important; }
                 `,
                 "js": `
                     setInterval(function() {
                         var boat = document.getElementById('tp-lifeboat');
                         if (!boat) {
-                            boat = document.createElement('div');
-                            boat.id = 'tp-lifeboat';
-                            document.body.appendChild(boat);
+                            var nav = document.createElement('div'); nav.id = 'tp-navbar';
+                            var homeBtn = document.createElement('div'); homeBtn.className='tp-nav-item'; homeBtn.innerText='🏠 Home'; homeBtn.tabIndex=0; homeBtn.onclick = function(){ window.location.href = '/audiobookshelf/'; };
+                            nav.appendChild(homeBtn); document.body.appendChild(nav);
+                            boat = document.createElement('div'); boat.id = 'tp-lifeboat'; document.body.appendChild(boat);
                         }
-
-                        // Hide original
-                        var app = document.getElementById('__nuxt');
-                        if(app) app.style.display = 'none';
-
-                        // SCANNER: Look for Headings and Books together
-                        var items = document.querySelectorAll('.categoryPlacard, [id^="book-card-"]');
-
-                        for (var i = 0; i < items.length; i++) {
-                            var original = items[i];
-                            var id = 'tp-rescue-' + i;
-
-                            if (!document.getElementById(id)) {
-                                // 1. RESCUE HEADING
-                                if (original.classList.contains('categoryPlacard')) {
-                                    var h2 = document.createElement('h2');
-                                    h2.innerText = original.innerText.trim();
-                                    h2.className = 'tp-rescued-heading';
-                                    h2.id = id;
-                                    boat.appendChild(h2);
-                                }
-                                // 2. RESCUE BOOK
-                                else {
-                                    var clone = original.cloneNode(true);
-                                    clone.id = id;
-                                    clone.className = 'tp-rescued-card';
-                                    clone.setAttribute('tabindex', '0');
-                                    
-                                    // Event Proxy
-                                    (function(orig) {
-                                        clone.addEventListener('click', function(e) { e.stopPropagation(); orig.click(); });
-                                        clone.addEventListener('keydown', function(e) { if(e.keyCode === 13) { e.stopPropagation(); e.preventDefault(); orig.click(); } });
-                                    })(original);
-
-                                    boat.appendChild(clone);
+                        var app = document.getElementById('__nuxt'); if(app) app.style.display = 'none';
+                        var containers = document.querySelectorAll('div.relative');
+                        for (var i=0; i<containers.length; i++) {
+                            var cont = containers[i];
+                            var placard = cont.querySelector('.categoryPlacard');
+                            if (placard) {
+                                var text = placard.innerText.trim();
+                                var headerId = 'tp-head-' + i;
+                                if (!document.getElementById(headerId) && text.length > 0) {
+                                    var h = document.createElement('div'); h.className = 'tp-shelf-title'; h.innerText = text; h.id = headerId; boat.appendChild(h);
+                                } continue;
+                            }
+                            var books = cont.querySelectorAll('[id^="book-card-"]');
+                            if (books.length > 0) {
+                                for (var b=0; b<books.length; b++) {
+                                    var original = books[b];
+                                    var bookId = 'tp-book-' + i + '-' + b;
+                                    if (!document.getElementById(bookId)) {
+                                        var clone = original.cloneNode(true); clone.id = bookId; clone.className = 'tp-rescued-card'; clone.setAttribute('tabindex', '0');
+                                        var link = original.closest('a') || original.querySelector('a');
+                                        if (link && link.href) { clone.onclick = function() { window.location.href = link.href; }; clone.onkeydown = function(e) { if(e.keyCode===13) window.location.href = link.href; }; } 
+                                        else { clone.onclick = function() { original.click(); }; clone.onkeydown = function(e) { if(e.keyCode===13) original.click(); }; }
+                                        boat.appendChild(clone);
+                                    }
                                 }
                             }
                         }
-                    }, 2000);
+                    }, 2500);
                 ` 
             },
             

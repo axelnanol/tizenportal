@@ -32,21 +32,25 @@
     };
 
     var UI = {
-        open: false, maximized: false, idx: 0, consoleFocused: false,
+        open: false, maximized: false, idx: 0, contentMode: 'none', // 'none', 'logs', 'source'
         items: [
             { l: "🏠 Exit Home", fn: function(){ window.location.href = Config.homeUrl; }, c:"#FFD700" },
+            { l: "⬅️ Back", fn: function(){ window.history.back(); }, c:"#0f0" },
+            { l: "➡️ Forward", fn: function(){ window.history.forward(); }, c:"#0f0" },
             { l: "🔄 Reload", fn: function(){ window.location.reload(); }, c:"#fff" },
+            { l: "🌐 URL", fn: function(){ var u = prompt("Go to URL:", window.location.href); if(u) window.location.href=u; }, c:"#0f0" },
             { l: "🖱️ Mouse", fn: function(){ Input.toggleMouse(); }, c:"#fff" },
             { l: "📐 Aspect", fn: function(){ Input.toggleAspect(); }, c:"#fff" },
             { l: "🔲 Maximize", fn: function(){ UI.toggleMax(); }, c:"#0ff" },
-            { l: "🔍 Source", fn: function(){ UI.viewSource(); }, c:"#0ff" },
-            { l: "📜 Logs", fn: function(){ UI.toggleConsole(); }, c:"#aaa" }
+            { l: "🔍 Source", fn: function(){ UI.setMode('source'); }, c:"#0ff" },
+            { l: "📜 Logs", fn: function(){ UI.setMode('logs'); }, c:"#aaa" }
         ],
         init: function() {
             var css = "" +
                 "#tp-b { position:fixed; top:0; right:-300px; width:280px; bottom:0; background:#111; border-left:2px solid #333; z-index:2147483647 !important; transition:right 0.2s, width 0.2s; font-family:sans-serif; display:flex; flex-direction:column; }" +
                 "#tp-b.open { right:0; box-shadow:-10px 0 50px rgba(0,0,0,0.8); }" +
                 "#tp-b.max { width: 95%; border-left: none; }" +
+                "#tp-h { padding:10px; background:#222; border-bottom:1px solid #444; font-size:12px; color:#888; word-break:break-all; }" +
                 ".tp-i { padding:12px; color:#fff; cursor:pointer; border-bottom:1px solid #222; font-size:16px; }" +
                 ".tp-i.active { background:#FFD700; color:#000; font-weight:bold; }" +
                 "#tp-c { flex:1; background:#000; color:#0f0; font-family:monospace; font-size:12px; padding:10px; overflow-y:auto; display:none; border-top:1px solid #444; white-space:pre-wrap; word-break:break-all; outline:none; }" +
@@ -56,7 +60,10 @@
             
             var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
             var d = document.createElement('div'); d.id='tp-b';
-            d.innerHTML = '<div style="padding:15px;background:#222;color:#FFD700;font-weight:bold">TizenPortal 030</div><div style="flex-shrink:0;overflow-y:auto;max-height:50%" id="tp-l"></div><div id="tp-c" tabindex="0"></div>';
+            d.innerHTML = '<div style="padding:15px;background:#222;color:#FFD700;font-weight:bold">TizenPortal 040</div>' +
+                          '<div id="tp-h">'+window.location.pathname+'</div>' +
+                          '<div style="flex-shrink:0;overflow-y:auto;max-height:60%" id="tp-l"></div>' +
+                          '<div id="tp-c" tabindex="0"></div>';
             document.body.appendChild(d);
 
             var l = document.getElementById('tp-l');
@@ -66,33 +73,51 @@
             });
             var t = document.createElement('div'); t.className='tp-t'; t.id='tp-toast'; document.body.appendChild(t);
         },
-        toggle: function() { this.open = !this.open; document.getElementById('tp-b').className = this.open ? (this.maximized ? 'open max' : 'open') : ''; this.upd(); },
-        toggleMax: function() { this.maximized = !this.maximized; document.getElementById('tp-b').className = this.open ? (this.maximized ? 'open max' : 'open') : ''; if(this.maximized) document.getElementById('tp-c').style.display='block'; },
-        
-        toggleConsole: function() { 
+        toggle: function() { 
+            this.open = !this.open; 
+            document.getElementById('tp-b').className = this.open ? (this.maximized ? 'open max' : 'open') : ''; 
+            if(!this.open) this.setMode('none'); // Close content when closing menu
+            this.upd(); 
+        },
+        toggleMax: function() { 
+            this.maximized = !this.maximized; 
+            document.getElementById('tp-b').className = this.open ? (this.maximized ? 'open max' : 'open') : ''; 
+            if(this.maximized && this.contentMode === 'none') this.setMode('logs'); // Default to logs on max
+        },
+        setMode: function(mode) {
+            this.contentMode = mode;
             var c = document.getElementById('tp-c');
-            c.style.display = (c.style.display==='block') ? 'none' : 'block';
-            this.updateConsole();
-            if(c.style.display === 'block') this.enterConsoleFocus();
+            c.innerHTML = ''; // Memory Nuke
+            
+            if (mode === 'none') {
+                c.style.display = 'none';
+                if(this.maximized) this.toggleMax();
+            } else {
+                c.style.display = 'block';
+                if(!this.maximized) this.toggleMax();
+                if(mode === 'logs') this.updateConsole();
+                if(mode === 'source') this.viewSource();
+                this.enterConsoleFocus();
+            }
         },
         viewSource: function() {
             var html = document.documentElement.outerHTML.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            var c = document.getElementById('tp-c'); c.style.display = 'block';
-            c.innerHTML = '<div style="color:#0ff;border-bottom:1px solid #fff;margin-bottom:10px">--- SOURCE ---</div>' + html;
-            if (!this.maximized) this.toggleMax();
-            this.enterConsoleFocus();
-        },
-        enterConsoleFocus: function() { this.consoleFocused = true; var c = document.getElementById('tp-c'); c.classList.add('focused'); c.focus(); this.toast("Scroll with Arrows / Back to Exit"); },
-        exitConsoleFocus: function() { this.consoleFocused = false; var c = document.getElementById('tp-c'); c.classList.remove('focused'); },
-        updateConsole: function() {
             var c = document.getElementById('tp-c');
-            if(c && c.style.display==='block' && c.innerHTML.indexOf('--- SOURCE') === -1) {
-                c.innerHTML = logs.map(function(l){ return '<div>'+l.replace(/</g,'&lt;')+'</div>'; }).join('');
-            }
+            c.innerHTML = '<div style="color:#0ff;border-bottom:1px solid #fff;margin-bottom:10px">--- SOURCE ---</div>' + html;
+        },
+        enterConsoleFocus: function() { var c = document.getElementById('tp-c'); c.classList.add('focused'); c.focus(); this.toast("Scroll / Back to Exit"); },
+        exitConsoleFocus: function() { 
+            var c = document.getElementById('tp-c'); c.classList.remove('focused'); 
+            this.setMode('none'); // Close window on back
+        },
+        updateConsole: function() {
+            if(this.contentMode !== 'logs') return;
+            var c = document.getElementById('tp-c');
+            c.innerHTML = logs.map(function(l){ return '<div>'+l.replace(/</g,'&lt;')+'</div>'; }).join('');
         },
         nav: function(d) {
             if(!this.open) return;
-            if(this.consoleFocused) {
+            if(this.contentMode !== 'none') {
                 var c = document.getElementById('tp-c');
                 if(d==='u') c.scrollTop -= 40; if(d==='d') c.scrollTop += 40; return;
             }
@@ -100,7 +125,7 @@
             if(this.idx < 0) this.idx = this.items.length - 1; if(this.idx >= this.items.length) this.idx = 0;
             this.upd();
         },
-        exe: function() { if(this.open && !this.consoleFocused) this.items[this.idx].fn(); },
+        exe: function() { if(this.open && this.contentMode === 'none') this.items[this.idx].fn(); },
         upd: function() { var els = document.querySelectorAll('.tp-i'); for(var i=0; i<els.length; i++) els[i].className = (i===this.idx) ? 'tp-i active' : 'tp-i'; },
         toast: function(m) { var t = document.getElementById('tp-toast'); t.innerText = m; t.style.opacity = 1; setTimeout(function(){ t.style.opacity=0; }, 3000); }
     };
@@ -108,7 +133,6 @@
     var Input = {
         mouse: false, x: window.innerWidth/2, y: window.innerHeight/2, cursor: null,
         init: function() {
-            // RE-BIND KEYS FOREVER (Heartbeat)
             setInterval(function() {
                 if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
                     ["ColorF0Red","ColorF1Green","ColorF2Yellow","ColorF3Blue","MediaPlay","MediaPause"].forEach(function(k){ try { tizen.tvinputdevice.registerKey(k); } catch(e){} });
@@ -122,16 +146,16 @@
             if (UI.open) {
                 if (k===38) UI.nav('u'); if (k===40) UI.nav('d');
                 if ([10009, 27, 37].indexOf(k) > -1) {
-                    if (UI.consoleFocused) UI.exitConsoleFocus(); 
+                    if (UI.contentMode !== 'none') UI.exitConsoleFocus(); 
                     else UI.toggle(); 
                     e.preventDefault(); e.stopPropagation(); return;
                 }
                 if (k===13) UI.exe(); if (k===406) UI.toggle(); e.preventDefault(); e.stopPropagation(); return;
             }
-            if (k===406) { UI.toggle(); e.preventDefault(); return; } // Blue
-            if (k===403) { window.location.reload(); e.preventDefault(); return; } // Red
-            if (k===404) { this.toggleMouse(); e.preventDefault(); return; } // Green
-            if (k===405) { window.location.href = Config.homeUrl; e.preventDefault(); return; } // Yellow
+            if (k===406) { UI.toggle(); e.preventDefault(); return; } 
+            if (k===403) { window.location.reload(); e.preventDefault(); return; } 
+            if (k===404) { this.toggleMouse(); e.preventDefault(); return; } 
+            if (k===405) { window.location.href = Config.homeUrl; e.preventDefault(); return; } 
 
             if (this.mouse) {
                 if (k===37) this.x-=25; if (k===38) this.y-=25; if (k===39) this.x+=25; if (k===40) this.y+=25;
@@ -159,6 +183,6 @@
 
     window.TP = { ui: UI, input: Input };
     var loaded = Config.load(); Config.apply();
-    var ready = function() { UI.init(); Input.init(); if(loaded) UI.toast("TizenPortal 030"); else UI.toast("No Config"); };
+    var ready = function() { UI.init(); Input.init(); if(loaded) UI.toast("TizenPortal 040"); else UI.toast("No Config"); };
     if (document.body) ready(); else document.addEventListener('DOMContentLoaded', ready);
 })();
