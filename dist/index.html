@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal v0.1.8</title>
+    <title>TizenPortal v0.1.9</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         
@@ -29,22 +29,24 @@
 
         /* MODAL */
         #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); align-items: center; justify-content: center; z-index: 100; }
-        .box { background: #222; padding: 40px; width: 500px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #555; }
+        .box { background: #222; padding: 40px; width: 600px; display: flex; flex-direction: column; gap: 15px; border: 2px solid #555; }
         input, select { padding: 15px; background: #111; color: white; border: 1px solid #444; width: 100%; font-size: 18px; }
         input:focus, select:focus, button:focus { border-color: #FFD700; outline: none; }
         
+        label { color: #888; font-size: 12px; margin-bottom: -10px; text-transform: uppercase; letter-spacing: 1px; }
+
         .btn-row { display: flex; gap: 15px; margin-top: 10px; }
         button { flex: 1; padding: 15px; background: #333; color: white; border: 1px solid #555; font-size: 16px; font-weight: bold; }
         button.primary { background: #FFD700; color: black; border-color: #FFD700; }
         
-        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.5s; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.5s; pointer-events: none; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
     <header>
-        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.8</span></h1>
+        <h1>TizenPortal <span style="font-size:14px; color:#666;">v0.1.9</span></h1>
     </header>
     
     <div id="grid" class="grid"></div>
@@ -53,14 +55,16 @@
     <div id="modal">
         <div class="box">
             <h2 id="modal-title">Add App</h2>
-            <input type="text" id="name" placeholder="App Name" autocomplete="off">
-            <input type="url" id="url" placeholder="http://192.168.1.X:PORT" autocomplete="off">
-            <select id="preset"><option value="">-- No Preset --</option></select>
-            <select id="ua">
-                <option value="default">TV (Default)</option>
-                <option value="desktop">PC (Desktop Mode)</option>
-            </select>
-            <div class="btn-row">
+            <label>Name</label>
+            <input type="text" id="name" placeholder="My App" autocomplete="off">
+            <label>URL (Local IP)</label>
+            <input type="url" id="url" placeholder="http://192.168.1.50:8123" autocomplete="off">
+            
+            <label>Compatibility Preset</label>
+            <select id="preset"><option value="">-- None (Raw) --</option></select>
+            
+            <label>Device Spoofing (User Agent)</label>
+            <select id="ua"></select> <div class="btn-row">
                 <button onclick="closeModal()">Cancel</button>
                 <button onclick="save()" class="primary">Save</button>
             </div>
@@ -69,35 +73,53 @@
     </div>
 
     <script>
-        // --- 1. SETUP ---
+        // --- 1. CONFIGURATION LIBRARIES ---
+        
         const PRESETS = {
             "__CORE__": {
                 "css": "img, svg, video { max-width: 100% !important; height: auto !important; } :focus { outline: 5px solid #FFD700 !important; } ::-webkit-scrollbar { display: none; }",
                 "js": "window.TizenUtils={keepAwake:()=>{try{const v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v);}catch(e){}}};window.TizenUtils.keepAwake();"
             },
             "abs": { "name": "Audiobookshelf", "css": ".flex { gap: 0 !important; }", "js": "" },
-            "jellyfin": { "name": "Jellyfin", "css": ":focus-visible { outline: 4px solid #FFD700 !important; }", "js": "" }
+            "jellyfin": { "name": "Jellyfin", "css": ":focus-visible { outline: 4px solid #FFD700 !important; }", "js": "" },
+            "ha": { "name": "Home Assistant", "css": "app-header { display: none !important; }", "js": "" }
         };
-        const UA_STRINGS = { "desktop": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36" };
+
+        // THE EXPANDED UA LIST
+        const USER_AGENTS = [
+            { id: "default", name: "📺 Tizen (Default)", str: null },
+            { id: "mobile",  name: "📱 Mobile (Android)", str: "Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36" },
+            { id: "tablet",  name: "💊 Tablet (iPad)",    str: "Mozilla/5.0 (iPad; CPU OS 13_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/87.0.4280.77 Mobile/15E148 Safari/604.1" },
+            { id: "desktop", name: "💻 Desktop (PC)",     str: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" },
+            { id: "googletv",name: "🎬 Google TV",        str: "Mozilla/5.0 (Linux; Android 10; Chromecast) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.152 Safari/537.36" }
+        ];
 
         let apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
         let selectedIndex = 0; 
-        let editIndex = -1; // -1 = Add Mode
+        let editIndex = -1;
         let enterTimer = null;
 
         function init() {
-            // Keys
+            // Register Keys
             if (typeof tizen !== 'undefined' && tizen.tvinputdevice) {
                 ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", "MediaPlay", "MediaPause"].forEach(k => {
                     try { tizen.tvinputdevice.registerKey(k); } catch(e){}
                 });
             }
             
-            const sel = document.getElementById('preset');
-            Object.keys(PRESETS).forEach(k => { if(k!=='__CORE__') sel.innerHTML+=`<option value="${k}">${PRESETS[k].name}</option>`; });
+            // Populate Presets
+            const selPreset = document.getElementById('preset');
+            Object.keys(PRESETS).forEach(k => { if(k!=='__CORE__') selPreset.innerHTML+=`<option value="${k}">${PRESETS[k].name}</option>`; });
+            
+            // Populate UAs
+            const selUA = document.getElementById('ua');
+            USER_AGENTS.forEach(u => {
+                selUA.innerHTML += `<option value="${u.id}">${u.name}</option>`;
+            });
+
             render();
             
-            // Show hint
+            // Hint Toast
             const t = document.getElementById('toast');
             t.style.opacity = 1; setTimeout(()=>t.style.opacity=0, 5000);
         }
@@ -126,7 +148,7 @@
             });
         }
 
-        // --- 2. INPUT ---
+        // --- INPUT & NAV ---
         document.addEventListener('keydown', (e) => {
             const k = e.keyCode;
             if(document.getElementById('modal').style.display === 'flex') {
@@ -135,24 +157,20 @@
             }
 
             const cols = Math.floor(document.getElementById('grid').offsetWidth / 250) || 3;
-            
             if (k === 37) selectedIndex--; 
             if (k === 39) selectedIndex++; 
             if (k === 38) selectedIndex -= cols; 
             if (k === 40) selectedIndex += cols; 
 
-            if ([37,38,39,40].includes(k)) {
-                e.preventDefault();
-                updateSelection();
-            }
+            if ([37,38,39,40].includes(k)) { e.preventDefault(); updateSelection(); }
 
-            // LONG PRESS ENTER LOGIC
+            // Long Press Enter
             if (k === 13) {
                 if (!enterTimer) {
                     enterTimer = setTimeout(() => {
                         enterTimer = null;
-                        openModal(selectedIndex); // EDIT MODE
-                    }, 800); // 800ms hold
+                        openModal(selectedIndex);
+                    }, 800);
                 }
             }
         });
@@ -160,35 +178,34 @@
         document.addEventListener('keyup', (e) => {
             if (e.keyCode === 13) {
                 if (enterTimer) {
-                    // Timer still running = Short Press
-                    clearTimeout(enterTimer);
-                    enterTimer = null;
-                    
+                    clearTimeout(enterTimer); enterTimer = null;
                     const cards = document.querySelectorAll('.card');
-                    if (selectedIndex === cards.length - 1) openModal(-1); // Add
+                    if (selectedIndex === cards.length - 1) openModal(-1);
                     else launch(apps[selectedIndex]);
                 }
             }
         });
 
-        // --- 3. MODAL & LOGIC ---
+        // --- LAUNCH LOGIC ---
         function launch(app) {
             const core = PRESETS['__CORE__'];
             const preset = PRESETS[app.presetID] || {};
+            const uaObj = USER_AGENTS.find(u => u.id === app.ua) || USER_AGENTS[0];
+            
             const payload = {
                 css: (core.css||'') + '\n' + (preset.css||''),
                 js: (core.js||'') + '\n' + (preset.js||''),
-                ua: UA_STRINGS[app.ua] || null
+                ua: uaObj.str // Pass the actual string
             };
             const b64 = btoa(JSON.stringify(payload));
             const sep = app.url.includes('?') ? '&' : '?';
             window.location.href = app.url + sep + 'tp=' + b64;
         }
 
+        // --- MODAL ---
         function openModal(index) { 
             editIndex = index;
             const isAdd = (index === -1 || index >= apps.length);
-            
             document.getElementById('modal-title').innerText = isAdd ? "Add App" : "Edit App";
             document.getElementById('btn-delete').style.display = isAdd ? 'none' : 'block';
             
@@ -202,7 +219,6 @@
                 document.getElementById('name').value = "";
                 document.getElementById('url').value = "";
             }
-
             document.getElementById('modal').style.display='flex'; 
             document.getElementById('name').focus(); 
         }
@@ -217,23 +233,18 @@
 
             if(name && url) {
                 const appObj = {name, url, presetID, ua};
-                if (editIndex > -1 && editIndex < apps.length) {
-                    apps[editIndex] = appObj; // Update
-                } else {
-                    apps.push(appObj); // Add
-                }
+                if (editIndex > -1 && editIndex < apps.length) apps[editIndex] = appObj;
+                else apps.push(appObj);
                 localStorage.setItem('tp_apps', JSON.stringify(apps));
                 location.reload();
             }
         }
 
         function deleteApp() { 
-            if(editIndex > -1) {
-                if(confirm("Delete this app?")) {
-                    apps.splice(editIndex, 1);
-                    localStorage.setItem('tp_apps', JSON.stringify(apps));
-                    location.reload();
-                }
+            if(editIndex > -1 && confirm("Delete this app?")) {
+                apps.splice(editIndex, 1);
+                localStorage.setItem('tp_apps', JSON.stringify(apps));
+                location.reload();
             }
         }
 
