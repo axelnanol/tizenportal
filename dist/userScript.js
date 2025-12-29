@@ -73,7 +73,7 @@
             var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
             
             var d = document.createElement('div'); d.id='tp-b';
-            d.innerHTML = '<div style="padding:15px;background:#222;color:#FFD700;font-weight:bold">TizenPortal v0.2.0</div><div style="flex-shrink:0;overflow-y:auto;max-height:50%" id="tp-l"></div><div id="tp-c"></div>';
+            d.innerHTML = '<div style="padding:15px;background:#222;color:#FFD700;font-weight:bold">TizenPortal v0.2.1</div><div style="flex-shrink:0;overflow-y:auto;max-height:50%" id="tp-l"></div><div id="tp-c"></div>';
             document.body.appendChild(d);
 
             var l = document.getElementById('tp-l');
@@ -212,6 +212,6 @@
 
     window.TP = { ui: UI, input: Input };
     var loaded = Config.load(); Config.apply();
-    var ready = function() { UI.init(); Input.init(); if(loaded) UI.toast("TizenPortal v0.2.0"); else UI.toast("No Config"); };
+    var ready = function() { UI.init(); Input.init(); if(loaded) UI.toast("TizenPortal v0.2.1"); else UI.toast("No Config"); };
     if (document.body) ready(); else document.addEventListener('DOMContentLoaded', ready);
 })();

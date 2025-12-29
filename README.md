@@ -1,4 +1,4 @@
-# TizenPortal (v0.2.0 Alpha)
+# TizenPortal (v0.2.1 Alpha)
 
 **A Universal Web App Launcher & OS Replacement Overlay for Samsung Tizen TVs.**
 
@@ -6,7 +6,7 @@ TizenPortal enables you to run modern, self-hosted web applications (Audiobooksh
 
 It is not just a launcher; it acts as an **injection middleware**, wrapping your apps in a modern compatibility layer that adds a Virtual Mouse, a Debug Console, User Agent spoofing, and system-level shortcuts.
 
-## 🚀 v0.2.0 Highlights: "The Tooling Update"
+## 🚀 v0.2.1 Highlights: "The Tooling Update"
 
 * **System Sidekick:** A slide-out sidebar menu (Blue Button) for quick access to system tools while in-app.
 * **Workspace Mode:** Maximize the sidebar to view full-screen debug logs and inspect the raw HTML source code of running apps.
@@ -41,10 +41,10 @@ You must have **TizenBrew** installed on your Samsung TV.
 1. Open **TizenBrew**.
 2. Navigate to the **Folder Icon** (Module Manager).
 3. Select **Add GitHub Module**.
-4. Enter the repository tag: `alexnolan/tizenportal@v0.2.0`
+4. Enter the repository tag: `alexnolan/tizenportal@021`
 5. **Launch.**
 
-*(Note: Using the `@v0.2.0` tag is recommended to bypass CDN caching issues).*
+*(Note: Using the `@021` tag is recommended to bypass CDN caching issues).*
 
 ## 🕹 Controls
 
@@ -66,11 +66,11 @@ You must have **TizenBrew** installed on your Samsung TV.
 
 1. Select **"Add App"** in the grid.
 2. **Name:** Label for the card.
-3. **URL:** Your local IP (e.g., `http://192.168.1.50:8123`).
+3. **URL:** Your local (or any other) IP/FQDN:PORT (e.g., `http://192.168.1.50:8123`).
 4. **Preset:** Applies CSS fixes for specific apps (Audiobookshelf, Jellyfin).
 5. **Device Profile (UA):**
 * *Default:* TV Native.
-* *Mobile:* Forces Android/Touch layout (Recommended for slow TVs).
+* *Mobile:* Forces Android/Touch layout (Recommended for slow TVs or known fixes).
 * *Desktop:* Forces Windows/PC layout.
 
 
