@@ -281,8 +281,7 @@
         function launch(app) {
             var core = PRESETS['__CORE__']; var preset = PRESETS[app.presetID] || {}; var uaObj = USER_AGENTS.find(function(u){ return u.id === app.ua }) || USER_AGENTS[0];
             var payload = { css: (core.css||'')+'\n'+(preset.css||''), js: (core.js||'')+'\n'+(preset.js||''), ua: uaObj.str };
-            window.name = 'TP_CONFIG=' + btoa(JSON.stringify(payload));
-            window.location.href = app.url;
+            window.location.href = app.url + '#tp=' + btoa(JSON.stringify(payload));
         }
 
         function openModal(index) { 
