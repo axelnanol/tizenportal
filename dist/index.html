@@ -255,9 +255,25 @@
                 d.innerHTML = box + '<span>'+a.name+'</span>';
                 g.appendChild(d);
             });
+            
+            var clear = document.createElement('div'); clear.className = 'card'; clear.tabIndex = 0;
+            clear.style.borderColor = '#500'; 
+            clear.innerHTML = '<div class="icon-box"><i class="fas fa-trash-alt" style="display:block;color:#a00"></i></div><span style="color:#a00">Clear Cache</span>';
+            clear.onclick = function() { clearCache(); };
+            clear.onkeydown = function(e) { if(e.keyCode===13) clearCache(); };
+            g.appendChild(clear);
+
             var add = document.createElement('div'); add.className = 'card add'; add.tabIndex = 0;
             add.innerHTML = '<i class="fas fa-plus"></i><span>Add App</span>'; g.appendChild(add);
             updateSelection();
+        }
+
+        function clearCache() {
+            if(confirm("Clear all cached data (TP Config)?")) {
+                localStorage.removeItem('tp_conf');
+                sessionStorage.removeItem('tp_conf');
+                window.location.reload();
+            }
         }
 
         function updateSelection() {
