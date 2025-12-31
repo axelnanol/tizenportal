@@ -51,19 +51,164 @@
     </div>
 
     <script id="abs-css" type="text/template">
-body{background-color:#222!important;margin:0!important;padding:20px!important;overflow-y:auto!important;font-family:sans-serif!important;color:#fff!important}#__nuxt{display:none!important;opacity:0!important}#tp-lifeboat{display:block;width:100%;padding-bottom:50px;margin-top:70px}#tp-navbar{position:fixed;top:0;left:0;right:0;height:60px;background:rgba(0,0,0,0.9);border-bottom:2px solid #b8860b;display:flex;align-items:center;padding:0 20px;z-index:10000;box-shadow:0 5px 15px rgba(0,0,0,0.5)}.tp-nav-item{color:#ddd;font-size:18px;margin-right:20px;cursor:pointer;padding:10px;border:1px solid transparent}.tp-nav-item:focus,.tp-nav-item:hover{color:#FFD700;border-color:#FFD700;background:#333;outline:none}
+        /* 1. GLOBAL BASICS */
+        body { 
+            background-color: #222 !important; 
+            margin: 0 !important; padding: 20px !important; 
+            overflow-y: auto !important; 
+            font-family: sans-serif !important; 
+            color: #fff !important; 
+        }
+
+        /* 3. LIFEBOAT MODE (Default) */
+        /* We hide the broken app unless we are in form mode. 
+           NOTE: Chrome 47 does not support complex :not(.class *) selectors, so we hide by default.
+           The .tp-form-mode #__nuxt rule above will override this due to higher specificity. */
+        #__nuxt { display: none !important; opacity: 0 !important; }
+        
+        #tp-lifeboat { display: block; width: 100%; padding-bottom: 50px; margin-top: 70px; }
+        #tp-navbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #b8860b; display: flex; align-items: center; padding: 0 20px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .tp-nav-item { color: #ddd; font-size: 18px; margin-right: 20px; cursor: pointer; padding: 10px; border: 1px solid transparent; }
+        .tp-nav-item:focus, .tp-nav-item:hover { color: #FFD700; border-color: #FFD700; background: #333; outline: none; }
     </script>
     
     <script id="abs-js" type="text/template">
-setInterval(function(){var boat=document.getElementById('tp-lifeboat');var nav=document.getElementById('tp-navbar');var loader=document.getElementById('nuxt-loading');if(loader&&loader.style.display!=='none'&&loader.style.visibility!=='hidden'&&getComputedStyle(loader).opacity!=='0'){return}if(!boat){nav=document.createElement('div');nav.id='tp-navbar';var homeUrl='/';if(window.__NUXT__&&window.__NUXT__.config&&window.__NUXT__.config.routerBasePath){homeUrl=window.__NUXT__.config.routerBasePath}var bgImg='';var bgEl=document.querySelector('.bg-bg-background')||document.getElementById('__nuxt')||document.body;if(bgEl){var style=window.getComputedStyle(bgEl);if(style&&style.backgroundImage&&style.backgroundImage!=='none'){bgImg=style.backgroundImage}}if(bgImg){document.body.style.backgroundImage=bgImg;document.body.style.backgroundRepeat='repeat';document.body.style.backgroundSize='auto'}var homeBtn=document.createElement('div');homeBtn.className='tp-nav-item';homeBtn.innerText='Home';homeBtn.tabIndex=0;homeBtn.onclick=function(){TizenUtils.navigate(homeUrl)};homeBtn.onkeydown=function(e){if(e.keyCode===13)TizenUtils.navigate(homeUrl)};nav.appendChild(homeBtn);document.body.appendChild(nav);boat=document.createElement('div');boat.id='tp-lifeboat';document.body.appendChild(boat)}if(window.TizenUtils&&window.TizenUtils.handleLogin(boat,'Audiobookshelf')){}if(nav&&nav.children.length<6){var links=document.querySelectorAll('aside a, nav a, .sidebar a, [role="navigation"] a');var existing={};for(var k=0;k<nav.children.length;k++)existing[nav.children[k].textContent]=true;for(var n=0;n<links.length;n++){var l=links[n];var txt=l.textContent.trim();if(txt&&txt.length>2&&!existing[txt]&&l.href&&l.href.indexOf('javascript')===-1){(function(t,u){var btn=document.createElement('div');btn.className='tp-nav-item';btn.innerText=t;btn.tabIndex=0;btn.onclick=function(){TizenUtils.navigate(u)};btn.onkeydown=function(e){if(e.keyCode===13)TizenUtils.navigate(u)};nav.appendChild(btn)})(txt,l.href);existing[txt]=true;if(Object.keys(existing).length>=6)break}}}var containers=document.querySelectorAll('div.relative');for(var i=0;i<containers.length;i++){var cont=containers[i];var placard=cont.querySelector('.categoryPlacard');if(placard){var text=placard.textContent.trim();var headerId='tp-head-'+i;if(!document.getElementById(headerId)&&text.length>0){var h=document.createElement('div');h.className='tp-shelf-title';h.innerText=text;h.id=headerId;boat.appendChild(h)}continue}var books=cont.querySelectorAll('[id^="book-card-"]');if(books.length>0){for(var b=0;b<books.length;b++){var original=books[b];var bookId='tp-book-'+i+'-'+b;if(!document.getElementById(bookId)){var clone=original.cloneNode(true);clone.id=bookId;clone.className='tp-rescued-card';clone.setAttribute('tabindex','0');var img=clone.querySelector('img');if(img){img.removeAttribute('class');img.removeAttribute('style');var src=img.getAttribute('src')||img.getAttribute('data-src');if(src)img.src=src}var link=original.closest('a')||original.querySelector('a');if(link&&link.href){(function(l){clone.onclick=function(){TizenUtils.navigate(l)};clone.onkeydown=function(e){if(e.keyCode===13)TizenUtils.navigate(l)}})(link.href)}else{(function(orig){clone.onclick=function(){orig.click()};clone.onkeydown=function(e){if(e.keyCode===13)orig.click()}})(original)}boat.appendChild(clone)}}}}},2000);
+        setInterval(function() {
+            var boat = document.getElementById('tp-lifeboat');
+            var nav = document.getElementById('tp-navbar');
+            
+            // 0. WAIT FOR NUXT LOAD (Don't scrape while loading spinner is visible)
+            var loader = document.getElementById('nuxt-loading');
+            if(loader && loader.style.display !== 'none' && loader.style.visibility !== 'hidden' && getComputedStyle(loader).opacity !== '0') {
+                return; 
+            }
+
+            // A. CREATE LIFEBOAT IF MISSING
+            if (!boat) {
+                nav = document.createElement('div'); nav.id = 'tp-navbar';
+                
+                // Dynamic Home URL from Nuxt Config
+                var homeUrl = '/';
+                if(window.__NUXT__ && window.__NUXT__.config && window.__NUXT__.config.routerBasePath) {
+                    homeUrl = window.__NUXT__.config.routerBasePath;
+                }
+
+                // Dynamic Background Image
+                var bgImg = '';
+                var bgEl = document.querySelector('.bg-bg-background') || document.getElementById('__nuxt') || document.body;
+                if(bgEl) {
+                    var style = window.getComputedStyle(bgEl);
+                    if(style && style.backgroundImage && style.backgroundImage !== 'none') {
+                        bgImg = style.backgroundImage;
+                    }
+                }
+                if(bgImg) {
+                    document.body.style.backgroundImage = bgImg;
+                    document.body.style.backgroundRepeat = 'repeat';
+                    document.body.style.backgroundSize = 'auto'; // Reset cover/contain if needed for pattern
+                }
+
+                // Add Home Button manually as anchor
+                var homeBtn = document.createElement('div'); homeBtn.className='tp-nav-item'; 
+                homeBtn.innerText='Home'; homeBtn.tabIndex=0; 
+                homeBtn.onclick = function(){ TizenUtils.navigate(homeUrl); };
+                homeBtn.onkeydown = function(e){ if(e.keyCode===13) TizenUtils.navigate(homeUrl); };
+                nav.appendChild(homeBtn); 
+                
+                document.body.appendChild(nav);
+                boat = document.createElement('div'); boat.id = 'tp-lifeboat'; document.body.appendChild(boat);
+            }
+
+            // B. CHECK FOR FORMS & INPUTS
+            if (window.TizenUtils && window.TizenUtils.handleLogin(boat, 'Audiobookshelf')) {
+                 
+            }
+
+            // C. EXTRACT NAV LINKS (Dynamic Appbar)
+            // We look for links in likely sidebar locations
+            if (nav && nav.children.length < 6) { 
+                var links = document.querySelectorAll('aside a, nav a, .sidebar a, [role="navigation"] a');
+                var existing = {};
+                // Use textContent for reading, innerText is okay for setting but let's match
+                for(var k=0; k<nav.children.length; k++) existing[nav.children[k].textContent] = true;
+                
+                for(var n=0; n<links.length; n++) {
+                    var l = links[n];
+                    var txt = l.textContent.trim(); // CHANGED: innerText -> textContent
+                    if(txt && txt.length > 2 && !existing[txt] && l.href && l.href.indexOf('javascript')===-1) {
+                         (function(t, u){
+                             var btn = document.createElement('div'); btn.className='tp-nav-item'; 
+                             btn.innerText=t; btn.tabIndex=0; 
+                             btn.onclick = function(){ TizenUtils.navigate(u); }; 
+                             btn.onkeydown = function(e){ if(e.keyCode===13) TizenUtils.navigate(u); };
+                             nav.appendChild(btn);
+                         })(txt, l.href);
+                         existing[txt] = true;
+                         if(Object.keys(existing).length >= 6) break;
+                    }
+                }
+            }
+
+            // D. EXTRACT BOOKS
+            var containers = document.querySelectorAll('div.relative');
+            for (var i=0; i<containers.length; i++) {
+                var cont = containers[i];
+                
+                // 1. Headings
+                var placard = cont.querySelector('.categoryPlacard');
+                if (placard) {
+                    var text = placard.textContent.trim(); // CHANGED: innerText -> textContent
+                    var headerId = 'tp-head-' + i;
+                    if (!document.getElementById(headerId) && text.length > 0) {
+                        var h = document.createElement('div'); h.className = 'tp-shelf-title'; h.innerText = text; h.id = headerId; boat.appendChild(h);
+                    } continue;
+                }
+                
+                // 2. Books
+                var books = cont.querySelectorAll('[id^="book-card-"]');
+                if (books.length > 0) {
+                    for (var b=0; b<books.length; b++) {
+                        var original = books[b];
+                        var bookId = 'tp-book-' + i + '-' + b;
+                        if (!document.getElementById(bookId)) {
+                            var clone = original.cloneNode(true); 
+                            clone.id = bookId; clone.className = 'tp-rescued-card'; clone.setAttribute('tabindex', '0');
+                            
+                            // CLEAN THE IMAGE
+                            var img = clone.querySelector('img');
+                            if(img) {
+                                img.removeAttribute('class'); 
+                                img.removeAttribute('style'); 
+                                var src = img.getAttribute('src') || img.getAttribute('data-src');
+                                if(src) img.src = src; 
+                            }
+
+                            // FIX CLICKS
+                            var link = original.closest('a') || original.querySelector('a');
+                            if (link && link.href) { 
+                                (function(l) {
+                                    clone.onclick = function() { TizenUtils.navigate(l); }; 
+                                    clone.onkeydown = function(e) { if(e.keyCode===13) TizenUtils.navigate(l); };
+                                })(link.href);
+                            } else { 
+                                (function(orig) {
+                                    clone.onclick = function() { orig.click(); }; 
+                                    clone.onkeydown = function(e) { if(e.keyCode===13) orig.click(); };
+                                })(original);
+                            }
+                            boat.appendChild(clone);
+                        }
+                    }
+                }
+            }
+        }, 2000);
     </script>
 
     <script>
         var PRESETS = {
             "__CORE__": { 
                 "css": "img,svg,video{max-width:100%!important;height:auto!important}:focus{outline:5px solid #FFD700!important}::-webkit-scrollbar{display:none}#tp-proxy-form{background:#222;border:2px solid #FFD700;padding:40px;max-width:500px;margin:100px auto;border-radius:10px;text-align:center;box-shadow:0 0 20px rgba(0,0,0,0.8)}.tp-input{display:block;width:90%;margin:15px auto;padding:15px;font-size:20px;background:#fff;color:#000;border:none;border-radius:5px}.tp-btn{display:block;width:90%;margin:20px auto;padding:15px;font-size:20px;background:#FFD700;color:#000;font-weight:bold;cursor:pointer;border:none;border-radius:5px}.tp-btn:focus,.tp-input:focus{outline:4px solid #fff}.tp-shelf-title{color:#FFD700!important;font-size:24px!important;font-weight:bold;text-shadow:2px 2px 4px #000;border-bottom:2px solid rgba(255,215,0,0.3);padding-bottom:5px;margin-top:40px;margin-bottom:15px;clear:both}.tp-rescued-card{display:inline-block!important;width:160px!important;min-height:240px!important;margin:15px!important;vertical-align:top!important;position:relative!important;cursor:pointer!important;background:rgba(0,0,0,0.5)!important;box-shadow:3px 3px 10px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);transition:transform 0.1s;transform:translateZ(0)}.tp-rescued-card img{width:100%!important;height:160px!important;object-fit:cover!important;display:block!important;opacity:1!important;visibility:visible!important;max-width:100%!important}.tp-rescued-card p,.tp-rescued-card span,.tp-rescued-card div{color:#fff!important;text-shadow:1px 1px 2px #000!important;font-size:13px!important;line-height:1.2!important;background:transparent!important}.tp-rescued-card:focus{outline:4px solid #FFD700!important;transform:scale(1.1) translateZ(0);z-index:5000;background:#000!important}", 
-                "js": "if(!Element.prototype.closest){Element.prototype.closest=function(s){var el=this;do{if(el.matches(s))return el;el=el.parentElement||el.parentNode}while(el!==null&&el.nodeType===1);return null}}window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}},getParam:function(n){var r=new RegExp('[\\\\?&]'+n+'=([^&#]*)').exec(location.search);return r===null?'':decodeURIComponent(r[1])},navigate:function(u){if(!u)return;var t=this.getParam('tp');if(t&&u.indexOf('tp=')===-1)u+=(u.indexOf('?')>-1?'&':'?')+'tp='+t;window.location.href=u},handleLogin:function(cont,title){var isVis=function(e){return e.offsetParent!==null&&e.style.display!=='none'&&e.style.visibility!=='hidden'};var inputs=document.querySelectorAll('input,textarea,select,button');var hasVis=false;for(var k=0;k<inputs.length;k++)if(isVis(inputs[k])){hasVis=true;break}if(!hasVis)return false;var p=document.getElementById('tp-proxy-form');if(!p){p=document.createElement('div');p.id='tp-proxy-form';p.style.marginBottom='30px';p.style.borderBottom='2px solid #333';if(cont){if(cont.firstChild)cont.insertBefore(p,cont.firstChild);else cont.appendChild(p)}}var els=document.querySelectorAll('input,textarea,select,button');for(var i=0;i<els.length;i++){var o=els[i];if(!isVis(o)||o.hasAttribute('data-tp-pxy'))continue;o.setAttribute('data-tp-pxy','1');var wrapper=document.createElement('div');wrapper.style.margin='10px 0';if(o.tagName==='BUTTON'||(o.tagName==='INPUT'&&(o.type==='submit'||o.type==='button'))){var b=document.createElement('button');b.innerText=o.innerText||o.value||'Submit';b.className='tp-btn';b.tabIndex=0;b.onclick=function(){o.click()};wrapper.appendChild(b)}else{var n=document.createElement(o.tagName==='TEXTAREA'?'textarea':'input');if(o.tagName==='INPUT')n.type=o.type;n.className='tp-input';n.placeholder=o.placeholder||o.name||'';n.value=o.value;n.tabIndex=0;(function(orig,pxy){pxy.oninput=function(){orig.value=pxy.value;orig.dispatchEvent(new Event('input'));orig.dispatchEvent(new Event('change'))};pxy.onkeydown=function(e){if(e.keyCode===38||e.keyCode===40){e.preventDefault();var all=Array.from(document.querySelectorAll('#tp-proxy-form .tp-input, #tp-proxy-form .tp-btn'));var idx=all.indexOf(pxy);if(e.keyCode===38&&idx>0)all[idx-1].focus();if(e.keyCode===40&&idx<all.length-1)all[idx+1].focus()}if(e.keyCode===10009||e.keyCode===27){e.preventDefault();pxy.blur()}if(e.keyCode===13&&orig.form){var s=orig.form.querySelector('button[type=\"submit\"]');if(s)s.click()}}})(o,n);wrapper.appendChild(n)}p.appendChild(wrapper)}return true}};"
-            },if(!p){if(cont)cont.innerHTML='';p=document.createElement('div');p.id='tp-proxy-form';var h=document.createElement('h2');h.innerText='Login to '+(title||'App');h.style.color='#FFD700';p.appendChild(h);var inps=document.querySelectorAll('input');for(var i=0;i<inps.length;i++){var o=inps[i];if(o.type==='hidden'||o.style.display==='none')continue;var n=document.createElement('input');n.type=o.type;n.placeholder=o.placeholder||(o.type==='password'?'Password':'Username');n.className='tp-input';n.tabIndex=0;(function(orig,pxy){pxy.oninput=function(){orig.value=pxy.value;var e=document.createEvent('HTMLEvents');e.initEvent('input',true,true);orig.dispatchEvent(e)};pxy.onkeydown=function(k){if(k.keyCode===13){var b=document.getElementById('tp-proxy-btn');if(b)b.click()}}})(o,n);p.appendChild(n)}var btn=document.querySelector('button[type=\"submit\"]')||document.querySelector('button.submit')||document.querySelector('form button');if(btn){var b=document.createElement('button');b.id='tp-proxy-btn';b.innerText=btn.innerText||'Login';b.className='tp-btn';b.tabIndex=0;b.onclick=function(){btn.click()};p.appendChild(b)}if(cont)cont.appendChild(p)}return true}else{if(p){p.parentNode.removeChild(p);if(cont)cont.innerHTML=''}return false}}};window.TizenUtils.keepAwake();" 
+                "js": "if(!Element.prototype.closest){Element.prototype.closest=function(s){var el=this;do{if(el.matches(s))return el;el=el.parentElement||el.parentNode}while(el!==null&&el.nodeType===1);return null}}window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}}, getParam:function(n){var r=new RegExp('[\\\\?&]'+n+'=([^&#]*)').exec(location.search);return r===null?'':decodeURIComponent(r[1])}, navigate:function(u){if(!u)return;var t=this.getParam('tp');if(t&&u.indexOf('tp=')===-1)u+=(u.indexOf('?')>-1?'&':'?')+'tp='+t;window.location.href=u}, handleLogin:function(cont, title){var isVis=function(e){return e.offsetParent!==null&&e.style.display!=='none'&&e.style.visibility!=='hidden'};var inputs=document.querySelectorAll('input,textarea,select,button');var hasVis=false;for(var k=0;k<inputs.length;k++)if(isVis(inputs[k])){hasVis=true;break}if(!hasVis)return false;var p=document.getElementById('tp-proxy-form');if(!p){p=document.createElement('div');p.id='tp-proxy-form';p.style.marginBottom='30px';p.style.borderBottom='2px solid #333';if(cont){if(cont.firstChild)cont.insertBefore(p,cont.firstChild);else cont.appendChild(p)}}var els=document.querySelectorAll('input,textarea,select,button');for(var i=0;i<els.length;i++){var o=els[i];if(!isVis(o)||o.hasAttribute('data-tp-pxy'))continue;o.setAttribute('data-tp-pxy','1');var wrapper=document.createElement('div');wrapper.style.margin='10px 0';if(o.tagName==='BUTTON'||(o.tagName==='INPUT'&&(o.type==='submit'||o.type==='button'))){var b=document.createElement('button');b.innerText=o.innerText||o.value||'Submit';b.className='tp-btn';b.tabIndex=0;b.onclick=function(){o.click()};wrapper.appendChild(b)}else{var n=document.createElement(o.tagName==='TEXTAREA'?'textarea':'input');if(o.tagName==='INPUT')n.type=o.type;n.className='tp-input';n.placeholder=o.placeholder||o.name||'';n.value=o.value;n.tabIndex=0;(function(orig,pxy){pxy.oninput=function(){orig.value=pxy.value;orig.dispatchEvent(new Event('input'));orig.dispatchEvent(new Event('change'))};pxy.onkeydown=function(e){if(e.keyCode===38||e.keyCode===40){e.preventDefault();var all=Array.from(document.querySelectorAll('#tp-proxy-form .tp-input, #tp-proxy-form .tp-btn'));var idx=all.indexOf(pxy);if(e.keyCode===38&&idx>0)all[idx-1].focus();if(e.keyCode===40&&idx<all.length-1)all[idx+1].focus()}if(e.keyCode===10009||e.keyCode===27){e.preventDefault();pxy.blur()}if(e.keyCode===13&&orig.form){var s=orig.form.querySelector('button[type=\"submit\"]');if(s)s.click()}}})(o,n);wrapper.appendChild(n)}p.appendChild(wrapper)}return true},if(!p){if(cont)cont.innerHTML='';p=document.createElement('div');p.id='tp-proxy-form';var h=document.createElement('h2');h.innerText='Login to '+(title||'App');h.style.color='#FFD700';p.appendChild(h);var inps=document.querySelectorAll('input');for(var i=0;i<inps.length;i++){var o=inps[i];if(o.type==='hidden'||o.style.display==='none')continue;var n=document.createElement('input');n.type=o.type;n.placeholder=o.placeholder||(o.type==='password'?'Password':'Username');n.className='tp-input';n.tabIndex=0;(function(orig,pxy){pxy.oninput=function(){orig.value=pxy.value;var e=document.createEvent('HTMLEvents');e.initEvent('input',true,true);orig.dispatchEvent(e)};pxy.onkeydown=function(k){if(k.keyCode===13){var b=document.getElementById('tp-proxy-btn');if(b)b.click()}}})(o,n);p.appendChild(n)}var btn=document.querySelector('button[type=\"submit\"]')||document.querySelector('button.submit')||document.querySelector('form button');if(btn){var b=document.createElement('button');b.id='tp-proxy-btn';b.innerText=btn.innerText||'Login';b.className='tp-btn';b.tabIndex=0;b.onclick=function(){btn.click()};p.appendChild(b)}if(cont)cont.appendChild(p)}return true}else{if(p){p.parentNode.removeChild(p);if(cont)cont.innerHTML=''}return false}}};window.TizenUtils.keepAwake();" 
             },
             "abs": { "name": "Audiobookshelf", "css": "", "js": "" },
             "jellyfin": { "name": "Jellyfin", "css": ":focus-visible{outline:4px solid #FFD700!important}", "js": "" }
@@ -71,18 +216,8 @@ setInterval(function(){var boat=document.getElementById('tp-lifeboat');var nav=d
         
         var USER_AGENTS = [
             { id: "default", name: "📺 Tizen (Default)", str: null },
-            { id: "tizen55", name: "📺 Tizen 5.5 (Samsung TV)", str: "Mozilla/5.0 (SMART-TV; LINUX; Tizen 5.5) AppleWebKit/537.3 (KHTML, like Gecko) SamsungBrowser/3.0 Chrome/69.0.3497.100 TV Safari/537.3" },
-            { id: "webos6",  name: "📺 WebOS 6 (LG TV)", str: "Mozilla/5.0 (Web0S; Linux/SmartTV) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.79 Safari/537.36 WebAppManager" },
-            { id: "ps5",     name: "🎮 PlayStation 5", str: "Mozilla/5.0 (PlayStation; PlayStation 5/2.26) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0 Safari/605.1.15" },
-            { id: "xbox",    name: "🎮 Xbox Series X", str: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox Series X) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36 Edge/20.02" },
-            { id: "androidtv", name: "📺 Android TV", str: "Mozilla/5.0 (Linux; Android 11; BRAVIA 4K VH2 Build/RTM1.211027.135; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/96.0.4664.104 Mobile Safari/537.36" },
-            { id: "chromecast", name: "📺 Chromecast", str: "Mozilla/5.0 (CrKey armv7l 1.5.179775) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.0 Safari/537.36" },
-            { id: "desktop_win", name: "💻 Desktop (Windows)", str: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
-            { id: "desktop_mac", name: "💻 Desktop (Mac)", str: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
-            { id: "desktop_linux", name: "💻 Desktop (Linux)", str: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
-            { id: "iphone",  name: "📱 iPhone", str: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" },
-            { id: "ipad",    name: "📱 iPad", str: "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" },
-            { id: "mobile_android", name: "📱 Android Mobile", str: "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" }
+            { id: "mobile",  name: "📱 Mobile (Android)", str: "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36" },
+            { id: "desktop", name: "💻 Desktop (PC)",     str: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36" }
         ];
         
         var apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
