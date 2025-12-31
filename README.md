@@ -1,103 +1,57 @@
-# TizenPortal (v0.2.9)
+# TizenPortal Project Context & Instructions (v0.4.5 - COMPLETED)
 
-**A Universal Web App Launcher & OS Replacement Overlay for Samsung Tizen TVs.**
+**Role:** You are the Lead Developer for **TizenPortal**, a specialized web launcher and compatibility layer designed for legacy Samsung Smart TVs (Targeting specifically Tizen 5.0, but also aiming to assist with 3.0-recent versions too) running outdated Chromium engines (Chrome 47-69).
 
-TizenPortal enables you to run modern, self-hosted web applications (Audiobookshelf, Jellyfin, Home Assistant) on older Samsung TVs (2016-2020) running outdated Chromium engines (Chrome 47-69).
+**Project Goal:** To run modern self-hosted web apps (specifically **Audiobookshelf**, Jellyfin, etc.) on these old TVs by injecting "Rescue Scripts" that fix broken layouts, provide navigation, and replace incompatible UI elements.
 
-It is not just a launcher; it acts as an **injection middleware**, wrapping your apps in a modern compatibility layer that adds a Virtual Mouse, a Debug Console, User Agent spoofing, and "Rescue Stylesheets" to fix broken layouts.
+## 1. Core Architecture
 
-## 🚀 v0.2.9 Highlights: "The Rescue Update"
+The project consists of two files hosted on GitHub Pages:
 
-* **ABS Rescue Mode:** A specialized CSS preset for **Audiobookshelf** that manually reconstructs the broken "Tailwind CSS" layout. It forces a grid view, fixes invisible text, and hides broken navigation bars on older engines that lack CSS Variable support.
-* **Icon Jail:** Fixed a critical bug where broken favicons would expand to fill the entire screen. All icons are now strictly constrained to their grid slots.
-* **Legacy Engine Core:** The entire injector codebase has been rewritten in **pure ES5** (no Classes, no `?.` chaining), ensuring compatibility with Tizen 3.0 and 4.0 devices.
-* **Smart Fallbacks:** If an app's icon fails to load (common with local IPs), it automatically swaps to a generic FontAwesome icon (Book, Play, Home, etc.).
+1. **`dist/index.html` (The Launcher):**
+    * A static grid of apps stored in `localStorage`.
+    * **Mechanism:** When launching an app, it generates a JSON payload containing specific CSS and JS fixes. It Base64 encodes this payload and appends it to the target URL: `target_url?tp=PAYLOAD`.
+    * **Presets:** Contains app-specific "Rescue Strategies" (e.g., the ABS Lifeboat).
 
-## ✨ Features
+2. **`dist/userScript.js` (The Injector):**
+    * A script loaded by the target app (via TizenBrew/Tampermonkey).
+    * **Mechanism:** It reads the `?tp=` payload from the URL, decodes it, and executes the injected CSS/JS.
 
-### 🖥️ The Launcher
+## 2. Status: v0.4.5 (Audiobookshelf "Hybrid Rescue" Complete)
 
-* **Manual Grid Navigation:** A custom focus engine ensures arrow keys always work, even if the browser loses focus state.
-* **Edit Mode:** Long-press **ENTER** on any app to Edit or Delete it.
-* **Smart State:** The app list updates instantly in-place without reloading the page, preventing the TV remote connection from dropping.
+We have successfully implemented the "Hybrid Rescue" strategy for Audiobookshelf (ABS), ensuring compatibility with Tizen 3.0 (Chrome 47).
 
-### 🛠️ The Injector (Sidekick Overlay)
+### Key Features Implemented:
 
-Once an app launches, TizenPortal injects a "Sidekick" overlay that provides:
+*   **Hybrid Mode:** 
+    *   **Form Mode:** Detects login screens, hides the Lifeboat, and displays the original app (with high-contrast CSS overrides) or a **Proxy Form** (custom rendered form syncing to hidden inputs).
+    *   **Lifeboat Mode:** Detects logged-in state, hides the original app (`display: none`), and renders a custom TV-friendly grid.
+*   **Proxy Form:** A fully rendered login UI that mirrors the original form's inputs and button, bypassing layout issues on the login screen.
+*   **Persistent Navigation:** Links in the Lifeboat use `TizenUtils.navigate()` to append the `?tp=` payload to the target URL, ensuring the Rescue Script survives page reloads.
+*   **Dynamic Appbar:** Scrapes the hidden app's sidebar/navigation to build a working top bar in the Lifeboat.
+*   **Nuxt.js Compatibility:**
+    *   Uses `textContent` to scrape hidden DOM elements (fixing empty strings from `innerText`).
+    *   Detects `window.__NUXT__.config.routerBasePath` for correct "Home" button linking.
+    *   Waits for `#nuxt-loading` to disappear before scraping.
+*   **Global Core:**
+    *   Common styles (Cards, Headers, Proxy Form) moved to `__CORE__` preset.
+    *   JS Utilities (`navigate`, `handleLogin`, `closest` polyfill) moved to `__CORE__` preset.
+    *   Hardware acceleration (`translateZ(0)`) added for smoother scrolling.
 
-* **System Sidekick:** A slide-out sidebar menu (Blue Button) for quick access to system tools.
-* **Virtual Mouse (Green Key):** A cursor for apps that don't support TV remotes. Move the cursor to the screen edge to auto-scroll the page.
-* **View Source:** Dumps the running application's HTML source code to the on-screen console, allowing you to debug layout issues directly on the TV.
-* **Aspect Ratio Toggle:** Force video players to Fit, Fill, or Stretch to remove black bars.
+## 3. Deployment & Versioning
 
-## 📺 Installation
+**Crucial Note for TizenBrew:** TizenBrew relies on CDN caching, which means updates to the `master` branch might not propagate to the TV immediately. To force an update on the test TV:
 
-### Prerequisites
+1.  **Tag the Release:** Bump the Git tag for every deployment (e.g., `git tag 045`).
+2.  **Update Module:** On the TV's TizenBrew interface:
+    *   Add the new module using the specific tag: `alexnolan/tizenportal@045`.
+    *   **Delete** the old module (e.g., `@044`) to ensure no cached assets conflict.
 
-You must have **TizenBrew** installed on your Samsung TV.
+## 4. Next Steps (v0.5.0)
 
-### Install TizenPortal
+*   **Jellyfin Preset:** Implement a similar "Rescue Strategy" for Jellyfin, leveraging the new Global Core utilities.
+*   **Video Player:** Investigate replacing the native web player with a custom Tizen-compatible video player interface if necessary.
+*   **Remote Control:** Polish remote control key handling (Back, Play/Pause) for the Lifeboat interface.
 
-1. Open **TizenBrew**.
-2. Navigate to the **Folder Icon** (Module Manager).
-3. Select **Add GitHub Module**.
-4. Enter the repository tag: `alexnolan/tizenportal@025`
-5. **Launch.**
-
-*(Note: Use the `@025` tag. Do not include a 'v').*
-
-## 🕹 Controls
-
-| Button | Context | Function |
-| --- | --- | --- |
-| **Arrows** | Global | Navigate / Move Mouse / Scroll Logs |
-| **Enter** | Launcher | Launch App |
-| **Enter (Hold 1s)** | Launcher | **Edit / Delete App** |
-| **Enter** | In-App | Click / Select |
-| **🔴 RED** | Global | **Force Reload** (Preserves Config) |
-| **🟢 GREEN** | Global | **Toggle Virtual Mouse** |
-| **🟡 YELLOW** | Global | **Exit to Launcher** (Home) |
-| **🔵 BLUE** | Global | **Open Sidekick Menu** |
-| **Back** | Global | Back / Close Menu / Exit Console Focus |
-
-## ⚙️ Configuration
-
-### Adding an App
-
-1. Select **"Add App"** in the grid.
-2. **Name:** Label for the card.
-3. **URL:** Your local IP (e.g., `http://192.168.1.50:8123`).
-4. **Preset:** Critical for fixing specific apps.
-* `Audiobookshelf`: Applies the **v0.2.4 Rescue Stylesheet** (Fixes black screen/broken layout).
-* `Jellyfin`: Enhances focus visibility.
-
-
-5. **Device Profile (UA):**
-* *Default:* TV Native.
-* *Mobile:* Forces Android/Touch layout (Recommended for slow TVs).
-
-
-
-## 🐛 Debugging
-
-If an app looks broken or "black screen":
-
-1. Press **BLUE** to open the Sidekick.
-2. Select **"Maximize"** to expand the window.
-3. Select **"View Source"** to capture the current DOM state.
-4. Use **Arrow Keys** to scroll through the source code.
-
-## 🏗 Architecture
-
-* **Zero-Dependency:** Written in pure, vanilla ES5 JavaScript.
-* **URL Injection:** Configuration is passed via Base64-encoded URL parameters (`?tp=...`), ensuring settings survive redirects.
-* **Session Persistence:** Config is backed up to `sessionStorage`, allowing you to reload the page without crashing the app.
-
-## ⚠️ Known Issues
-
-* **HTTPS/HTTP:** The Launcher is hosted on HTTPS (GitHub), but your apps are likely HTTP. Tizen handles this fine, but favicon fetching for local IPs will fail (handled by our Smart Fallback icons).
-* **Video Players:** Some apps (YouTube) hijack input keys. Use the **Virtual Mouse** (Green Button) to regain control.
-
-## 📄 License
-
-MIT License.
+**Current Action:**
+v0.4.5 is complete. The codebase is ready for testing or deployment.
