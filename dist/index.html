@@ -190,11 +190,16 @@
             setupMutationObserver: function() {
                 var self = this;
                 this.observer = new MutationObserver(function(mutations) {
-                    // Check if page is loading
-                    var loader = document.getElementById('nuxt-loading');
-                    if (loader && getComputedStyle(loader).opacity !== '0') return;
-                    
-                    self.detectAndRender();
+                    try {
+                        // Check if page is loading
+                        var loader = document.getElementById('nuxt-loading');
+                        if (loader && getComputedStyle(loader).opacity !== '0') return;
+                        
+                        self.detectAndRender();
+                    } catch(e) {
+                        self.log('Observer error: ' + (e.message || 'unknown'));
+                        console.error('[TP ABS] Observer error:', e);
+                    }
                 });
                 
                 this.observer.observe(document.body, {
@@ -202,37 +207,47 @@
                     subtree: true,
                     attributes: false
                 });
+                this.log('MutationObserver active');
             },
             
             detectAndRender: function() {
-                if (this.state !== 'DETECT_PAGE' && this.state !== 'READY') return;
-                
-                // Detect if we're on a login page or content page
-                var hasBooks = document.querySelectorAll('[id^="book-card-"]').length > 0;
-                var hasInputs = this.getVisibleInputs().length > 0;
-                
-                // Books take priority - if we have books, show content (not login form)
-                if (hasBooks) {
-                    if (this.mode !== 'content') {
-                        this.boat.innerHTML = ''; // Clear form if we switch to content mode
-                        this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
-                        this.mode = 'content';
+                try {
+                    if (this.state !== 'DETECT_PAGE' && this.state !== 'READY') return;
+                    
+                    // Detect if we're on a login page or content page
+                    var hasBooks = document.querySelectorAll('[id^="book-card-"]').length > 0;
+                    var hasInputs = this.getVisibleInputs().length > 0;
+                    
+                    this.log('Detect: books=' + hasBooks + ' inputs=' + hasInputs);
+                    
+                    // Books take priority - if we have books, show content (not login form)
+                    if (hasBooks) {
+                        if (this.mode !== 'content') {
+                            this.boat.innerHTML = ''; // Clear form if we switch to content mode
+                            this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
+                            this.mode = 'content';
+                            this.log('Switched to content mode');
+                        }
+                        this.renderContent();
+                        this.state = 'READY';
+                        // Toggle visibility based on content
+                        if (this.boat.childElementCount > 0) {
+                            document.body.classList.add('tp-lifeboat-active');
+                        }
+                    } else if (hasInputs) {
+                        // Only show login form if NO books exist
+                        if (this.mode !== 'form') {
+                            this.boat.innerHTML = ''; // Clear content if we switch to form mode
+                            this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
+                            this.mode = 'form';
+                            this.log('Switched to form mode');
+                        }
+                        this.renderLoginForm();
+                        this.state = 'READY';
                     }
-                    this.renderContent();
-                    this.state = 'READY';
-                    // Toggle visibility based on content
-                    if (this.boat.childElementCount > 0) {
-                        document.body.classList.add('tp-lifeboat-active');
-                    }
-                } else if (hasInputs) {
-                    // Only show login form if NO books exist
-                    if (this.mode !== 'form') {
-                        this.boat.innerHTML = ''; // Clear content if we switch to form mode
-                        this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
-                        this.mode = 'form';
-                    }
-                    this.renderLoginForm();
-                    this.state = 'READY';
+                } catch(e) {
+                    this.log('detectAndRender error: ' + (e.message || 'unknown'));
+                    console.error('[TP ABS] detectAndRender error:', e);
                 }
             },
             
@@ -257,115 +272,126 @@
             },
             
             renderContent: function() {
-                if (this.mode !== 'content') return; // Not in content mode
-                
-                // Extract navigation toolbar if exists
-                if (!this.cache.processedNav) {
-                    var toolbars = document.querySelectorAll('[role="toolbar"]');
-                    for (var t = 0; t < toolbars.length; t++) {
-                        var toolbar = toolbars[t];
-                        var links = toolbar.querySelectorAll('a, button[href], [onclick]');
-                        for (var l = 0; l < links.length; l++) {
-                            var link = links[l];
-                            var text = link.textContent.trim();
-                            if (text && text.length > 0 && text.length < 30 && !document.getElementById('tp-nav-' + l)) {
-                                var navItem = document.createElement('div');
-                                navItem.className = 'tp-nav-item';
-                                navItem.innerText = text;
-                                navItem.id = 'tp-nav-' + l;
-                                navItem.tabIndex = 0;
-                                var href = link.href || link.getAttribute('href');
-                                if (href) {
-                                    (function(url) {
-                                        navItem.onclick = function() { TizenUtils.navigate(url); };
-                                        navItem.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(url); };
-                                    })(href);
-                                } else {
-                                    (function(orig) {
-                                        navItem.onclick = function() { orig.click(); };
-                                        navItem.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
-                                    })(link);
+                try {
+                    if (this.mode !== 'content') return; // Not in content mode
+                    
+                    this.log('renderContent starting');
+                    
+                    // Extract navigation toolbar if exists
+                    if (!this.cache.processedNav) {
+                        this.log('Extracting navigation');
+                        var toolbars = document.querySelectorAll('[role="toolbar"]');
+                        this.log('Found ' + toolbars.length + ' toolbars');
+                        for (var t = 0; t < toolbars.length; t++) {
+                            var toolbar = toolbars[t];
+                            var links = toolbar.querySelectorAll('a, button[href], [onclick]');
+                            for (var l = 0; l < links.length; l++) {
+                                var link = links[l];
+                                var text = link.textContent.trim();
+                                if (text && text.length > 0 && text.length < 30 && !document.getElementById('tp-nav-' + l)) {
+                                    var navItem = document.createElement('div');
+                                    navItem.className = 'tp-nav-item';
+                                    navItem.innerText = text;
+                                    navItem.id = 'tp-nav-' + l;
+                                    navItem.tabIndex = 0;
+                                    var href = link.href || link.getAttribute('href');
+                                    if (href) {
+                                        (function(url) {
+                                            navItem.onclick = function() { TizenUtils.navigate(url); };
+                                            navItem.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(url); };
+                                        })(href);
+                                    } else {
+                                        (function(orig) {
+                                            navItem.onclick = function() { orig.click(); };
+                                            navItem.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                                        })(link);
+                                    }
+                                    this.nav.appendChild(navItem);
                                 }
-                                this.nav.appendChild(navItem);
                             }
                         }
+                        this.cache.processedNav = true;
                     }
-                    this.cache.processedNav = true;
+                    
+                    this.log('Extracting books');
+                    // Find all category sections (each has a placard + book row)
+                    var categorySections = document.querySelectorAll('.categorizedBookshelfRow');
+                    this.log('Found ' + categorySections.length + ' category sections');
+                    var bookCount = 0;
+                    
+                    for (var i = 0; i < categorySections.length; i++) {
+                        var section = categorySections[i];
+                        var sectionId = 'tp-section-' + i;
+                        
+                        // Find the category placard (header) for this section
+                        // It's typically a sibling or in a parent's sibling
+                        var placard = null;
+                        var parent = section.parentElement;
+                        if (parent && parent.parentElement) {
+                            placard = parent.parentElement.querySelector('.categoryPlacard');
+                        }
+                        
+                        // Render category header if found and not already processed
+                        if (placard && !this.cache.processedHeadings[sectionId]) {
+                            var text = placard.textContent.trim();
+                            if (text.length > 0) {
+                                var h = document.createElement('div');
+                                h.className = 'tp-shelf-title';
+                                h.innerText = text;
+                                h.id = sectionId + '-header';
+                                this.boat.appendChild(h);
+                                this.cache.processedHeadings[sectionId] = true;
+                            }
+                        }
+                        
+                        // Extract books from this section
+                        var books = section.querySelectorAll('[id^="book-card-"]');
+                        for (var b = 0; b < books.length; b++) {
+                            var original = books[b];
+                            var bookId = 'tp-book-' + i + '-' + b;
+                            
+                            if (this.cache.processedBooks[bookId]) continue; // Already processed
+                            
+                            var clone = original.cloneNode(true);
+                            clone.id = bookId;
+                            clone.className = 'tp-rescued-card';
+                            clone.setAttribute('tabindex', '0');
+                            
+                            // Clean image - look for cy-id="coverImage"
+                            var img = clone.querySelector('img[cy-id="coverImage"]') || clone.querySelector('img');
+                            if (img) {
+                                img.removeAttribute('class');
+                                img.removeAttribute('style');
+                                var src = img.getAttribute('src') || img.getAttribute('data-src');
+                                if (src) img.src = src;
+                            }
+                            
+                            // Attach click handler
+                            var link = original.closest('a') || original.querySelector('a');
+                            if (link && link.href) {
+                                (function(href, el) {
+                                    el.onclick = function() { TizenUtils.navigate(href); };
+                                    el.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(href); };
+                                })(link.href, clone);
+                            } else {
+                                // If no link, attach click to original card
+                                (function(orig, el) {
+                                    el.onclick = function() { orig.click(); };
+                                    el.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                                })(original, clone);
+                            }
+                            
+                            this.boat.appendChild(clone);
+                            this.cache.processedBooks[bookId] = true;
+                            bookCount++;
+                        }
+                    }
+                    
+                    this.log('Rendered ' + bookCount + ' books in ' + categorySections.length + ' categories');
+                } catch(e) {
+                    this.log('renderContent error: ' + (e.message || 'unknown'));
+                    console.error('[TP ABS] renderContent error:', e);
                 }
-                
-                // Find all category sections (each has a placard + book row)
-                var categorySections = document.querySelectorAll('.categorizedBookshelfRow');
-                var bookCount = 0;
-                
-                for (var i = 0; i < categorySections.length; i++) {
-                    var section = categorySections[i];
-                    var sectionId = 'tp-section-' + i;
-                    
-                    // Find the category placard (header) for this section
-                    // It's typically a sibling or in a parent's sibling
-                    var placard = null;
-                    var parent = section.parentElement;
-                    if (parent && parent.parentElement) {
-                        placard = parent.parentElement.querySelector('.categoryPlacard');
-                    }
-                    
-                    // Render category header if found and not already processed
-                    if (placard && !this.cache.processedHeadings[sectionId]) {
-                        var text = placard.textContent.trim();
-                        if (text.length > 0) {
-                            var h = document.createElement('div');
-                            h.className = 'tp-shelf-title';
-                            h.innerText = text;
-                            h.id = sectionId + '-header';
-                            this.boat.appendChild(h);
-                            this.cache.processedHeadings[sectionId] = true;
-                        }
-                    }
-                    
-                    // Extract books from this section
-                    var books = section.querySelectorAll('[id^="book-card-"]');
-                    for (var b = 0; b < books.length; b++) {
-                        var original = books[b];
-                        var bookId = 'tp-book-' + i + '-' + b;
-                        
-                        if (this.cache.processedBooks[bookId]) continue; // Already processed
-                        
-                        var clone = original.cloneNode(true);
-                        clone.id = bookId;
-                        clone.className = 'tp-rescued-card';
-                        clone.setAttribute('tabindex', '0');
-                        
-                        // Clean image - look for cy-id="coverImage"
-                        var img = clone.querySelector('img[cy-id="coverImage"]') || clone.querySelector('img');
-                        if (img) {
-                            img.removeAttribute('class');
-                            img.removeAttribute('style');
-                            var src = img.getAttribute('src') || img.getAttribute('data-src');
-                            if (src) img.src = src;
-                        }
-                        
-                        // Attach click handler
-                        var link = original.closest('a') || original.querySelector('a');
-                        if (link && link.href) {
-                            (function(href, el) {
-                                el.onclick = function() { TizenUtils.navigate(href); };
-                                el.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(href); };
-                            })(link.href, clone);
-                        } else {
-                            // If no link, attach click to original card
-                            (function(orig, el) {
-                                el.onclick = function() { orig.click(); };
-                                el.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
-                            })(original, clone);
-                        }
-                        
-                        this.boat.appendChild(clone);
-                        this.cache.processedBooks[bookId] = true;
-                        bookCount++;
-                    }
-                }
-                
-                this.log('Rendered ' + bookCount + ' books in ' + categorySections.length + ' categories');
             }
         };
         
