@@ -64,7 +64,7 @@
         /* We hide the broken app unless we are in form mode. 
            NOTE: Chrome 47 does not support complex :not(.class *) selectors, so we hide by default.
            The .tp-form-mode #__nuxt rule above will override this due to higher specificity. */
-        #__nuxt { 
+        .tp-lifeboat-active #__nuxt { 
             opacity: 0.001 !important; 
             pointer-events: none !important; 
             position: fixed !important; 
@@ -80,6 +80,19 @@
     </script>
     
     <script id="abs-js" type="text/template">
+        var tpBanner = function(msg){
+            try {
+                var b = document.getElementById('tp-debug');
+                if(!b){
+                    b = document.createElement('div'); b.id='tp-debug';
+                    b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:rgba(0,0,0,0.8);color:#FFD700;font-size:14px;font-family:sans-serif;padding:6px 10px;pointer-events:none;text-align:left;';
+                    document.body.appendChild(b);
+                }
+                b.textContent = '[TP ABS] ' + msg;
+            } catch(e){}
+        };
+        var tpDiag = function(m){ try { console.log('[TP ABS] '+m); tpBanner(m); } catch(e){} };
+        var tpLast = { child:-1, hide:null, login:null, loader:null, books:-1 };
         setInterval(function() {
             var boat = document.getElementById('tp-lifeboat');
             var nav = document.getElementById('tp-navbar');
@@ -87,8 +100,10 @@
             // 0. WAIT FOR NUXT LOAD (Don't scrape while loading spinner is visible)
             var loader = document.getElementById('nuxt-loading');
             if(loader && loader.style.display !== 'none' && loader.style.visibility !== 'hidden' && getComputedStyle(loader).opacity !== '0') {
+                if(tpLast.loader !== true) { tpDiag('Waiting for Nuxt loader'); tpLast.loader = true; }
                 return; 
             }
+            if(tpLast.loader !== false) { tpDiag('Nuxt loader cleared'); tpLast.loader = false; }
 
             // A. CREATE LIFEBOAT IF MISSING
             if (!boat) {
@@ -124,12 +139,15 @@
                 
                 document.body.appendChild(nav);
                 boat = document.createElement('div'); boat.id = 'tp-lifeboat'; document.body.appendChild(boat);
+                tpDiag('Lifeboat and navbar created');
             }
 
             // B. CHECK FOR FORMS & INPUTS
+            var loginOk = false;
             if (window.TizenUtils && window.TizenUtils.handleLogin(boat, 'Audiobookshelf')) {
-                 
+                loginOk = true;
             }
+            if(tpLast.login !== loginOk) { tpDiag('handleLogin=' + loginOk); tpLast.login = loginOk; }
 
             // C. EXTRACT NAV LINKS (Dynamic Appbar)
             // We look for links in likely sidebar locations
@@ -158,6 +176,7 @@
 
             // D. EXTRACT BOOKS
             var containers = document.querySelectorAll('div.relative');
+            var addedBooks = 0;
             for (var i=0; i<containers.length; i++) {
                 var cont = containers[i];
                 
@@ -204,9 +223,20 @@
                                 })(original);
                             }
                             boat.appendChild(clone);
+                            addedBooks++;
                         }
                     }
                 }
+            }
+
+            if(tpLast.books !== addedBooks) { tpDiag('Books added in pass=' + addedBooks); tpLast.books = addedBooks; }
+
+            // E. TOGGLE HOST VISIBILITY ONLY WHEN RESCUED CONTENT EXISTS
+            if (boat) {
+                var shouldHide = boat.childElementCount > 0;
+                if (shouldHide) document.body.classList.add('tp-lifeboat-active');
+                else document.body.classList.remove('tp-lifeboat-active');
+                if(tpLast.hide !== shouldHide) { tpDiag('Hide host=' + shouldHide + ' (children=' + boat.childElementCount + ')'); tpLast.hide = shouldHide; }
             }
         }, 2000);
     </script>
