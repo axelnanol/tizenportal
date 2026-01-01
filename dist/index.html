@@ -256,7 +256,7 @@
                         '[class*="bookCard"]',
                         '[class*="book-card"]',
                         '[class*="itemCard"]',
-                        '[data-cy*="book"]',
+                        '[cy-id="coverImage"]', // Audiobookshelf uses cy-id
                         'div[class*="rounded"][class*="overflow"]' // Generic card pattern
                     ];
                     
@@ -386,7 +386,6 @@
                     }
                     
                     this.log('Extracting books');
-                    // Find all category sections (each has a placard + book row)
                     var categorySections = document.querySelectorAll('.categorizedBookshelfRow');
                     this.log('Found ' + categorySections.length + ' category sections');
                     var bookCount = 0;
@@ -396,7 +395,6 @@
                         var sectionId = 'tp-section-' + i;
                         
                         // Find the category placard (header) for this section
-                        // It's typically a sibling or in a parent's sibling
                         var placard = null;
                         var parent = section.parentElement;
                         if (parent && parent.parentElement) {
@@ -416,20 +414,34 @@
                             }
                         }
                         
-                        // Extract books from this section using the working selector
-                        var books = section.querySelectorAll(bookSelector);
+                        // Extract books from this section
+                        var books;
+                        if (bookSelector === '[cy-id="coverImage"]') {
+                            // For cy-id selector, find the cover images and walk up to card parent
+                            var covers = section.querySelectorAll('[cy-id="coverImage"]');
+                            books = [];
+                            for (var c = 0; c < covers.length; c++) {
+                                var card = covers[c].closest('div[class*="rounded"]') || covers[c].closest('div');
+                                if (card && books.indexOf(card) === -1) {
+                                    books.push(card);
+                                }
+                            }
+                        } else {
+                            books = section.querySelectorAll(bookSelector);
+                        }
+                        
                         for (var b = 0; b < books.length; b++) {
                             var original = books[b];
                             var bookId = 'tp-book-' + i + '-' + b;
                             
-                            if (this.cache.processedBooks[bookId]) continue; // Already processed
+                            if (this.cache.processedBooks[bookId]) continue;
                             
                             var clone = original.cloneNode(true);
                             clone.id = bookId;
                             clone.className = 'tp-rescued-card';
                             clone.setAttribute('tabindex', '0');
                             
-                            // Clean image - look for cy-id="coverImage"
+                            // Clean image
                             var img = clone.querySelector('img[cy-id="coverImage"]') || clone.querySelector('img');
                             if (img) {
                                 img.removeAttribute('class');
@@ -446,7 +458,6 @@
                                     el.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(href); };
                                 })(link.href, clone);
                             } else {
-                                // If no link, attach click to original card
                                 (function(orig, el) {
                                     el.onclick = function() { orig.click(); };
                                     el.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
