@@ -190,6 +190,7 @@
             setupMutationObserver: function() {
                 var self = this;
                 var callCount = 0;
+                var logged = false;
                 this.observer = new MutationObserver(function(mutations) {
                     try {
                         callCount++;
@@ -202,13 +203,27 @@
                             return;
                         }
                         
+                        // First time we get past loader, dump everything
+                        if (!logged) {
+                            logged = true;
+                            var allIds = document.querySelectorAll('[id]');
+                            var bookIds = [];
+                            for (var i = 0; i < allIds.length; i++) {
+                                var id = allIds[i].id;
+                                if (id.indexOf('book') > -1 || id.indexOf('card') > -1) {
+                                    bookIds.push(id);
+                                }
+                            }
+                            self.log('Found IDs with book/card: ' + (bookIds.length > 0 ? bookIds.slice(0, 3).join(',') : 'NONE'));
+                        }
+                        
                         // Aggressive debugging: log what we're finding
                         var booksBySelector = document.querySelectorAll('[id^="book-card-"]').length;
-                        var cardsByClass = document.querySelectorAll('[class*="card"]').length;
-                        var allDivs = document.querySelectorAll('div').length;
+                        var allBooks = document.querySelectorAll('[id*="book"]');
+                        var allCards = document.querySelectorAll('[id*="card"]');
                         
-                        if (booksBySelector === 0 && cardsByClass > 0 && callCount % 5 === 0) {
-                            self.log('DEBUG: books=0 but found ' + cardsByClass + ' .card divs, ' + allDivs + ' total divs');
+                        if (booksBySelector === 0 && callCount % 5 === 0) {
+                            self.log('selector [id^="book-card-"]=0 | [id*="book"]=' + allBooks.length + ' [id*="card"]=' + allCards.length);
                         }
                         
                         self.detectAndRender();
