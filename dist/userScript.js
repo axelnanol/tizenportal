@@ -116,7 +116,7 @@
             
             var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
             var d = document.createElement('div'); d.id='tp-b'; d.className='unfocused';
-            d.innerHTML = '<div id="tp-h">TizenPortal 047</div>' +
+            d.innerHTML = '<div id="tp-h">TizenPortal 0.5.0</div>' +
                           '<div id="tp-l"></div>' +
                           '<div id="tp-c" tabindex="0"></div>';
             document.body.appendChild(d);
@@ -295,7 +295,7 @@
         UI.init(); 
         Input.init(); 
         if(loaded) { 
-            UI.toast("TizenPortal 050"); 
+            UI.toast("TizenPortal 0501"); 
         } else { 
             UI.toast("No Config"); 
             tpHud('No payload found'); 
