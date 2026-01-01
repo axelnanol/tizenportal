@@ -250,25 +250,44 @@
                 try {
                     if (this.state !== 'DETECT_PAGE' && this.state !== 'READY') return;
                     
-                    // Detect if we're on a login page or content page
-                    var hasBooks = document.querySelectorAll('[id^="book-card-"]').length > 0;
+                    // Try multiple selectors to find books
+                    var bookSelectors = [
+                        '[id^="book-card-"]',
+                        '[class*="bookCard"]',
+                        '[class*="book-card"]',
+                        '[class*="itemCard"]',
+                        '[data-cy*="book"]',
+                        'div[class*="rounded"][class*="overflow"]' // Generic card pattern
+                    ];
+                    
+                    var hasBooks = false;
+                    var bookCount = 0;
+                    var workingSelector = null;
+                    
+                    for (var s = 0; s < bookSelectors.length; s++) {
+                        var count = document.querySelectorAll(bookSelectors[s]).length;
+                        if (count > 0) {
+                            hasBooks = true;
+                            bookCount = count;
+                            workingSelector = bookSelectors[s];
+                            break;
+                        }
+                    }
+                    
                     var hasInputs = this.getVisibleInputs().length > 0;
-                    var allEls = document.querySelectorAll('[id^="book-card-"], input, textarea, select, button').length;
-                    var cardEls = document.querySelectorAll('[class*="card"]').length;
-                    var bookCount = document.querySelectorAll('[id^="book-card-"]').length;
                     
                     // Log full details
-                    this.log('Detect: books=' + bookCount + ' inputs=' + (hasInputs ? 'Y' : 'N') + ' els=' + allEls + ' .card=' + cardEls);
+                    this.log('Detect: books=' + bookCount + ' selector=' + (workingSelector || 'none') + ' inputs=' + (hasInputs ? 'Y' : 'N'));
                     
                     // Books take priority - if we have books, show content (not login form)
                     if (hasBooks) {
                         if (this.mode !== 'content') {
                             this.boat.innerHTML = ''; // Clear form if we switch to content mode
-                            this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
+                            this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false, bookSelector: workingSelector };
                             this.mode = 'content';
                             this.log('→ content mode');
                         }
-                        this.renderContent();
+                        this.renderContent(workingSelector);
                         this.state = 'READY';
                         // Toggle visibility based on content
                         if (this.boat.childElementCount > 0) {
@@ -321,11 +340,14 @@
                 }
             },
             
-            renderContent: function() {
+            renderContent: function(bookSelector) {
                 try {
                     if (this.mode !== 'content') return; // Not in content mode
                     
-                    this.log('renderContent starting');
+                    // Use passed selector or fall back to cache or default
+                    bookSelector = bookSelector || this.cache.bookSelector || '[id^="book-card-"]';
+                    
+                    this.log('renderContent with selector: ' + bookSelector);
                     
                     // Extract navigation toolbar if exists
                     if (!this.cache.processedNav) {
@@ -394,8 +416,8 @@
                             }
                         }
                         
-                        // Extract books from this section
-                        var books = section.querySelectorAll('[id^="book-card-"]');
+                        // Extract books from this section using the working selector
+                        var books = section.querySelectorAll(bookSelector);
                         for (var b = 0; b < books.length; b++) {
                             var original = books[b];
                             var bookId = 'tp-book-' + i + '-' + b;
