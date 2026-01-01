@@ -189,11 +189,27 @@
             
             setupMutationObserver: function() {
                 var self = this;
+                var callCount = 0;
                 this.observer = new MutationObserver(function(mutations) {
                     try {
+                        callCount++;
                         // Check if page is loading
                         var loader = document.getElementById('nuxt-loading');
-                        if (loader && getComputedStyle(loader).opacity !== '0') return;
+                        var loaderOpacity = loader ? getComputedStyle(loader).opacity : 'N/A';
+                        
+                        if (loader && loaderOpacity !== '0') {
+                            if (callCount % 10 === 0) self.log('Loading... opacity=' + loaderOpacity);
+                            return;
+                        }
+                        
+                        // Aggressive debugging: log what we're finding
+                        var booksBySelector = document.querySelectorAll('[id^="book-card-"]').length;
+                        var cardsByClass = document.querySelectorAll('[class*="card"]').length;
+                        var allDivs = document.querySelectorAll('div').length;
+                        
+                        if (booksBySelector === 0 && cardsByClass > 0 && callCount % 5 === 0) {
+                            self.log('DEBUG: books=0 but found ' + cardsByClass + ' .card divs, ' + allDivs + ' total divs');
+                        }
                         
                         self.detectAndRender();
                     } catch(e) {
@@ -217,8 +233,12 @@
                     // Detect if we're on a login page or content page
                     var hasBooks = document.querySelectorAll('[id^="book-card-"]').length > 0;
                     var hasInputs = this.getVisibleInputs().length > 0;
+                    var allEls = document.querySelectorAll('[id^="book-card-"], input, textarea, select, button').length;
+                    var cardEls = document.querySelectorAll('[class*="card"]').length;
+                    var bookCount = document.querySelectorAll('[id^="book-card-"]').length;
                     
-                    this.log('Detect: books=' + hasBooks + ' inputs=' + hasInputs);
+                    // Log full details
+                    this.log('Detect: books=' + bookCount + ' inputs=' + (hasInputs ? 'Y' : 'N') + ' els=' + allEls + ' .card=' + cardEls);
                     
                     // Books take priority - if we have books, show content (not login form)
                     if (hasBooks) {
@@ -226,7 +246,7 @@
                             this.boat.innerHTML = ''; // Clear form if we switch to content mode
                             this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
                             this.mode = 'content';
-                            this.log('Switched to content mode');
+                            this.log('→ content mode');
                         }
                         this.renderContent();
                         this.state = 'READY';
@@ -240,10 +260,16 @@
                             this.boat.innerHTML = ''; // Clear content if we switch to form mode
                             this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
                             this.mode = 'form';
-                            this.log('Switched to form mode');
+                            this.log('→ form mode');
                         }
                         this.renderLoginForm();
                         this.state = 'READY';
+                    } else if (this.state === 'READY' && !this.mode) {
+                        // Fallback: if we're stuck with no books and no inputs, show the original app
+                        this.log('FALLBACK: revealing original app');
+                        document.body.classList.remove('tp-lifeboat-active');
+                        this.boat.innerHTML = '';
+                        this.mode = 'fallback';
                     }
                 } catch(e) {
                     this.log('detectAndRender error: ' + (e.message || 'unknown'));
@@ -255,8 +281,12 @@
                 var all = document.querySelectorAll('input, textarea, select, button');
                 var visible = [];
                 for (var i = 0; i < all.length; i++) {
-                    if (all[i].offsetParent !== null && all[i].style.display !== 'none' && all[i].style.visibility !== 'hidden') {
-                        visible.push(all[i]);
+                    var el = all[i];
+                    // Check for obvious non-visible states (but be lenient on offsetParent)
+                    if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
+                    // Accept if offsetParent valid OR element is in viewport
+                    if (el.offsetParent !== null || el.getBoundingClientRect().height > 0) {
+                        visible.push(el);
                     }
                 }
                 return visible;
