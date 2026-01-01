@@ -115,15 +115,28 @@
                     homeUrl = window.__NUXT__.config.routerBasePath;
                 }
 
-                // Dynamic Background Image
+                // Dynamic Background Image - check multiple possible containers
                 var bgImg = '';
                 var bgColor = '';
-                var bgEl = document.querySelector('.bg-bg-background') || document.getElementById('__nuxt') || document.body;
-                if(bgEl) {
+                var searchEls = [
+                    document.querySelector('.bg-bg-background'),
+                    document.querySelector('[class*="background"]'),
+                    document.querySelector('[class*="bg"]'),
+                    document.querySelector('[style*="background"]'),
+                    document.getElementById('__nuxt'),
+                    document.body
+                ];
+                for(var s=0; s<searchEls.length; s++) {
+                    var bgEl = searchEls[s];
+                    if(!bgEl) continue;
                     var style = window.getComputedStyle(bgEl);
-                    if(style) {
-                        if(style.backgroundImage && style.backgroundImage !== 'none') bgImg = style.backgroundImage;
-                        if(style.backgroundColor && style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent') bgColor = style.backgroundColor;
+                    if(style && style.backgroundImage && style.backgroundImage !== 'none') {
+                        bgImg = style.backgroundImage;
+                        tpDiag('Background found: ' + bgImg.substring(0,50));
+                        break;
+                    }
+                    if(style && style.backgroundColor && style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent' && !bgColor) {
+                        bgColor = style.backgroundColor;
                     }
                 }
                 if(bgImg) {
@@ -132,6 +145,7 @@
                     document.body.style.backgroundSize = 'cover';
                     document.body.style.backgroundPosition = 'center';
                     document.body.style.backgroundAttachment = 'fixed';
+                    tpDiag('Applied background image');
                 } else if(bgColor) {
                     document.body.style.backgroundColor = bgColor;
                 }
@@ -298,6 +312,10 @@
                 var iconHTML = '<i class="fas '+iconClass+'"></i>';
                 var box = '<div class="icon-box">' + imgHTML + iconHTML + '</div>';
                 d.innerHTML = box + '<span>'+a.name+'</span>';
+                (function(app) {
+                    d.onclick = function() { launch(app); };
+                    d.onkeydown = function(e) { if(e.keyCode===13) launch(app); };
+                })(a);
                 g.appendChild(d);
             });
             
@@ -331,7 +349,24 @@
 
         document.addEventListener('keydown', function(e) {
             var k = e.keyCode;
-            if(document.getElementById('modal').style.display === 'flex') { if(k===10009||k===27) closeModal(); return; }
+            var modal = document.getElementById('modal');
+            if(modal.style.display === 'flex') { 
+                // Handle text field navigation and break-out in modal
+                var isTextInput = (document.activeElement && ((document.activeElement.tagName === 'INPUT' && document.activeElement.type !== 'button' && document.activeElement.type !== 'submit') || document.activeElement.tagName === 'TEXTAREA'));
+                if (isTextInput) {
+                    if (k === 10009 || k === 27) { document.activeElement.blur(); e.preventDefault(); return; }
+                    if (k === 38 || k === 40) {
+                        var inputs = Array.prototype.slice.call(modal.querySelectorAll('input, textarea, button, select'));
+                        var idx = inputs.indexOf(document.activeElement);
+                        if (k === 38 && idx > 0) { inputs[idx-1].focus(); e.preventDefault(); }
+                        if (k === 40 && idx < inputs.length - 1) { inputs[idx+1].focus(); e.preventDefault(); }
+                        return;
+                    }
+                    return; // Allow left/right editing
+                }
+                if (k === 10009 || k === 27) { closeModal(); return; }
+                return;
+            }
             var cols = Math.floor(document.getElementById('grid').offsetWidth / 250) || 3;
             if (k===37) selectedIndex--; if (k===39) selectedIndex++; if (k===38) selectedIndex-=cols; if (k===40) selectedIndex+=cols; 
             if ([37,38,39,40].indexOf(k) > -1) { e.preventDefault(); updateSelection(); }

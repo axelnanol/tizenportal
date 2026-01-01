@@ -89,7 +89,7 @@
                 ".tp-t { position:fixed; top:20px; left:50%; transform:translateX(-50%); background:#222; color:#fff; padding:10px; border:1px solid #FFD700; opacity:0; transition:opacity 0.5s; z-index:2147483647 !important; pointer-events:none; }";
             
             var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
-            var d = document.createElement('div'); d.id='tp-b'; d.className='focused';
+            var d = document.createElement('div'); d.id='tp-b'; d.className='unfocused';
             d.innerHTML = '<div id="tp-h">TizenPortal 047</div>' +
                           '<div id="tp-l"></div>' +
                           '<div id="tp-c" tabindex="0"></div>';
