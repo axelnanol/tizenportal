@@ -86,7 +86,7 @@
             boat: null,
             nav: null,
             observer: null,
-            cache: { processedBooks: {}, processedHeadings: {} },
+            cache: { processedBooks: {}, processedHeadings: {}, processedNav: false },
             ui: { debugBanner: null },
             mode: null, // 'form' or 'content'
             
@@ -215,7 +215,7 @@
                 if (hasBooks) {
                     if (this.mode !== 'content') {
                         this.boat.innerHTML = ''; // Clear form if we switch to content mode
-                        this.cache = { processedBooks: {}, processedHeadings: {} };
+                        this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
                         this.mode = 'content';
                     }
                     this.renderContent();
@@ -228,7 +228,7 @@
                     // Only show login form if NO books exist
                     if (this.mode !== 'form') {
                         this.boat.innerHTML = ''; // Clear content if we switch to form mode
-                        this.cache = { processedBooks: {}, processedHeadings: {} };
+                        this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
                         this.mode = 'form';
                     }
                     this.renderLoginForm();
@@ -259,30 +259,71 @@
             renderContent: function() {
                 if (this.mode !== 'content') return; // Not in content mode
                 
-                var containers = document.querySelectorAll('div.relative');
+                // Extract navigation toolbar if exists
+                if (!this.cache.processedNav) {
+                    var toolbars = document.querySelectorAll('[role="toolbar"]');
+                    for (var t = 0; t < toolbars.length; t++) {
+                        var toolbar = toolbars[t];
+                        var links = toolbar.querySelectorAll('a, button[href], [onclick]');
+                        for (var l = 0; l < links.length; l++) {
+                            var link = links[l];
+                            var text = link.textContent.trim();
+                            if (text && text.length > 0 && text.length < 30 && !document.getElementById('tp-nav-' + l)) {
+                                var navItem = document.createElement('div');
+                                navItem.className = 'tp-nav-item';
+                                navItem.innerText = text;
+                                navItem.id = 'tp-nav-' + l;
+                                navItem.tabIndex = 0;
+                                var href = link.href || link.getAttribute('href');
+                                if (href) {
+                                    (function(url) {
+                                        navItem.onclick = function() { TizenUtils.navigate(url); };
+                                        navItem.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(url); };
+                                    })(href);
+                                } else {
+                                    (function(orig) {
+                                        navItem.onclick = function() { orig.click(); };
+                                        navItem.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                                    })(link);
+                                }
+                                this.nav.appendChild(navItem);
+                            }
+                        }
+                    }
+                    this.cache.processedNav = true;
+                }
+                
+                // Find all category sections (each has a placard + book row)
+                var categorySections = document.querySelectorAll('.categorizedBookshelfRow');
                 var bookCount = 0;
                 
-                for (var i = 0; i < containers.length; i++) {
-                    var cont = containers[i];
+                for (var i = 0; i < categorySections.length; i++) {
+                    var section = categorySections[i];
+                    var sectionId = 'tp-section-' + i;
                     
-                    // Extract headings
-                    var placard = cont.querySelector('.categoryPlacard');
-                    if (placard) {
+                    // Find the category placard (header) for this section
+                    // It's typically a sibling or in a parent's sibling
+                    var placard = null;
+                    var parent = section.parentElement;
+                    if (parent && parent.parentElement) {
+                        placard = parent.parentElement.querySelector('.categoryPlacard');
+                    }
+                    
+                    // Render category header if found and not already processed
+                    if (placard && !this.cache.processedHeadings[sectionId]) {
                         var text = placard.textContent.trim();
-                        var headerId = 'tp-head-' + i;
-                        if (!this.cache.processedHeadings[headerId] && text.length > 0) {
+                        if (text.length > 0) {
                             var h = document.createElement('div');
                             h.className = 'tp-shelf-title';
                             h.innerText = text;
-                            h.id = headerId;
+                            h.id = sectionId + '-header';
                             this.boat.appendChild(h);
-                            this.cache.processedHeadings[headerId] = true;
+                            this.cache.processedHeadings[sectionId] = true;
                         }
-                        continue;
                     }
                     
-                    // Extract books
-                    var books = cont.querySelectorAll('[id^="book-card-"]');
+                    // Extract books from this section
+                    var books = section.querySelectorAll('[id^="book-card-"]');
                     for (var b = 0; b < books.length; b++) {
                         var original = books[b];
                         var bookId = 'tp-book-' + i + '-' + b;
@@ -294,8 +335,8 @@
                         clone.className = 'tp-rescued-card';
                         clone.setAttribute('tabindex', '0');
                         
-                        // Clean image
-                        var img = clone.querySelector('img');
+                        // Clean image - look for cy-id="coverImage"
+                        var img = clone.querySelector('img[cy-id="coverImage"]') || clone.querySelector('img');
                         if (img) {
                             img.removeAttribute('class');
                             img.removeAttribute('style');
@@ -310,6 +351,12 @@
                                 el.onclick = function() { TizenUtils.navigate(href); };
                                 el.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(href); };
                             })(link.href, clone);
+                        } else {
+                            // If no link, attach click to original card
+                            (function(orig, el) {
+                                el.onclick = function() { orig.click(); };
+                                el.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                            })(original, clone);
                         }
                         
                         this.boat.appendChild(clone);
@@ -318,7 +365,7 @@
                     }
                 }
                 
-                this.log('Rendered ' + bookCount + ' books');
+                this.log('Rendered ' + bookCount + ' books in ' + categorySections.length + ' categories');
             }
         };
         
