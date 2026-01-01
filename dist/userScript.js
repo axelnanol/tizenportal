@@ -174,6 +174,12 @@
             }, 2000);
             document.addEventListener('keydown', this.key.bind(this), true);
             setInterval(this.loop.bind(this), 50);
+            // Initialize first focusable element on page load
+            setTimeout(function() {
+                var focusables = Array.prototype.slice.call(document.querySelectorAll('a, button, input, textarea, select, [tabindex], .tp-input, .tp-btn, .tp-rescued-card, .tp-nav-item'))
+                    .filter(function(el){ return el && (el.tabIndex >= 0 || (el.className && (el.className.indexOf('tp-input') > -1 || el.className.indexOf('tp-btn') > -1 || el.className.indexOf('tp-rescued-card') > -1 || el.className.indexOf('tp-nav-item') > -1))); });
+                if (focusables.length > 0 && !document.activeElement) { focusables[0].focus(); }
+            }, 500);
         },
         key: function(e) {
             var k = e.keyCode;
@@ -194,12 +200,12 @@
             // D-pad focus navigation (linear) to avoid scroll
             if ([37,38,39,40].indexOf(k) > -1 && !this.mouse) {
                 // Broader selector to catch all interactive elements including hidden/generated ones
-                var focusables = Array.prototype.slice.call(document.querySelectorAll('a, button, input, textarea, select, [tabindex], .tp-input, .tp-btn'))
+                var focusables = Array.prototype.slice.call(document.querySelectorAll('a, button, input, textarea, select, [tabindex], .tp-input, .tp-btn, .tp-rescued-card, .tp-nav-item'))
                     .filter(function(el){ 
                         if (!el) return false;
-                        // Accept elements with tabIndex >= 0 or proxy class
+                        // Accept elements with tabIndex >= 0 or known clickable classes
                         if (el.tabIndex >= 0) return true;
-                        if (el.className && (el.className.indexOf('tp-input') > -1 || el.className.indexOf('tp-btn') > -1)) return true;
+                        if (el.className && (el.className.indexOf('tp-input') > -1 || el.className.indexOf('tp-btn') > -1 || el.className.indexOf('tp-rescued-card') > -1 || el.className.indexOf('tp-nav-item') > -1)) return true;
                         return false;
                     });
                 // Clear old focus outlines
