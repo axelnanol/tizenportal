@@ -80,44 +80,78 @@
     </script>
     
     <script id="abs-js" type="text/template">
-        var tpBanner = function(msg){
-            try {
-                var b = document.getElementById('tp-debug');
-                if(!b){
-                    b = document.createElement('div'); b.id='tp-debug';
-                    b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:rgba(0,0,0,0.8);color:#FFD700;font-size:14px;font-family:sans-serif;padding:6px 10px;pointer-events:none;text-align:left;';
-                    document.body.appendChild(b);
-                }
-                b.textContent = '[TP ABS] ' + msg;
-            } catch(e){}
-        };
-        var tpDiag = function(m){ try { console.log('[TP ABS] '+m); tpBanner(m); } catch(e){} };
-        var tpLast = { child:-1, hide:null, login:null, loader:null, books:-1 };
-        setInterval(function() {
-            var boat = document.getElementById('tp-lifeboat');
-            var nav = document.getElementById('tp-navbar');
+        // ABS Lifeboat - State Machine with MutationObserver
+        var ABS = {
+            state: 'INIT', // INIT -> WAIT_NUXT -> DETECT_PAGE -> READY
+            boat: null,
+            nav: null,
+            observer: null,
+            cache: { processedBooks: {}, processedHeadings: {} },
+            ui: { debugBanner: null },
             
-            // 0. WAIT FOR NUXT LOAD (Don't scrape while loading spinner is visible)
-            var loader = document.getElementById('nuxt-loading');
-            if(loader && loader.style.display !== 'none' && loader.style.visibility !== 'hidden' && getComputedStyle(loader).opacity !== '0') {
-                if(tpLast.loader !== true) { tpDiag('Waiting for Nuxt loader'); tpLast.loader = true; }
-                return; 
-            }
-            if(tpLast.loader !== false) { tpDiag('Nuxt loader cleared'); tpLast.loader = false; }
-
-            // A. CREATE LIFEBOAT IF MISSING
-            if (!boat) {
-                nav = document.createElement('div'); nav.id = 'tp-navbar';
+            log: function(msg) {
+                console.log('[TP ABS] ' + msg);
+                if (!this.ui.debugBanner) {
+                    var b = document.createElement('div');
+                    b.id = 'tp-debug';
+                    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:rgba(0,0,0,0.8);color:#FFD700;font-size:14px;font-family:sans-serif;padding:6px 10px;pointer-events:none;text-align:left;';
+                    document.body.appendChild(b);
+                    this.ui.debugBanner = b;
+                }
+                this.ui.debugBanner.textContent = '[TP ABS] ' + msg;
+            },
+            
+            init: function() {
+                this.log('Initializing ABS lifeboat');
+                this.state = 'WAIT_NUXT';
+                this.waitForNuxt();
+            },
+            
+            waitForNuxt: function() {
+                if (typeof window.__NUXT__ !== 'undefined' || document.querySelectorAll('[id*="__nuxt"]').length > 0) {
+                    this.log('Nuxt detected, creating lifeboat');
+                    this.createLifeboat();
+                    this.setupMutationObserver();
+                    this.state = 'DETECT_PAGE';
+                } else {
+                    setTimeout(this.waitForNuxt.bind(this), 100);
+                }
+            },
+            
+            createLifeboat: function() {
+                if (this.boat) return;
                 
-                // Dynamic Home URL from Nuxt Config
+                this.boat = document.createElement('div');
+                this.boat.id = 'tp-lifeboat';
+                
+                this.nav = document.createElement('div');
+                this.nav.id = 'tp-navbar';
+                
+                // Extract home URL from Nuxt config
                 var homeUrl = '/';
-                if(window.__NUXT__ && window.__NUXT__.config && window.__NUXT__.config.routerBasePath) {
+                if (window.__NUXT__ && window.__NUXT__.config && window.__NUXT__.config.routerBasePath) {
                     homeUrl = window.__NUXT__.config.routerBasePath;
                 }
-
-                // Dynamic Background Image - check multiple possible containers
+                
+                // Extract and apply background immediately
+                this.extractBackground();
+                
+                // Add Home button
+                var homeBtn = document.createElement('div');
+                homeBtn.className = 'tp-nav-item';
+                homeBtn.innerText = 'Home';
+                homeBtn.tabIndex = 0;
+                homeBtn.onclick = function() { TizenUtils.navigate(homeUrl); };
+                homeBtn.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(homeUrl); };
+                this.nav.appendChild(homeBtn);
+                
+                document.body.appendChild(this.nav);
+                document.body.appendChild(this.boat);
+                this.log('Lifeboat created');
+            },
+            
+            extractBackground: function() {
                 var bgImg = '';
-                var bgColor = '';
                 var searchEls = [
                     document.querySelector('.bg-bg-background'),
                     document.querySelector('[class*="background"]'),
@@ -126,154 +160,163 @@
                     document.getElementById('__nuxt'),
                     document.body
                 ];
-                for(var s=0; s<searchEls.length; s++) {
-                    var bgEl = searchEls[s];
-                    if(!bgEl) continue;
-                    // Check inline style first
-                    if(bgEl.style && bgEl.style.backgroundImage) {
-                        bgImg = bgEl.style.backgroundImage;
-                        tpDiag('Background from inline: ' + bgImg.substring(0,60));
+                
+                for (var s = 0; s < searchEls.length; s++) {
+                    var el = searchEls[s];
+                    if (!el) continue;
+                    if (el.style && el.style.backgroundImage) {
+                        bgImg = el.style.backgroundImage;
+                        this.log('BG from inline style');
                         break;
                     }
-                    var style = window.getComputedStyle(bgEl);
-                    if(style && style.backgroundImage && style.backgroundImage !== 'none') {
-                        bgImg = style.backgroundImage;
-                        tpDiag('Background found: ' + bgImg.substring(0,60));
+                    var cs = window.getComputedStyle(el);
+                    if (cs && cs.backgroundImage && cs.backgroundImage !== 'none') {
+                        bgImg = cs.backgroundImage;
+                        this.log('BG from computed style');
                         break;
-                    }
-                    if(style && style.backgroundColor && style.backgroundColor !== 'rgba(0, 0, 0, 0)' && style.backgroundColor !== 'transparent' && !bgColor) {
-                        bgColor = style.backgroundColor;
                     }
                 }
-                if(bgImg) {
+                
+                if (bgImg) {
                     document.body.style.backgroundImage = bgImg;
                     document.body.style.backgroundRepeat = 'no-repeat';
                     document.body.style.backgroundSize = 'cover';
                     document.body.style.backgroundPosition = 'center';
                     document.body.style.backgroundAttachment = 'fixed';
-                    tpDiag('Applied background image');
-                } else if(bgColor) {
-                    document.body.style.backgroundColor = bgColor;
                 }
-
-                // Add Home Button manually as anchor
-                var homeBtn = document.createElement('div'); homeBtn.className='tp-nav-item'; 
-                homeBtn.innerText='Home'; homeBtn.tabIndex=0; 
-                homeBtn.onclick = function(){ TizenUtils.navigate(homeUrl); };
-                homeBtn.onkeydown = function(e){ if(e.keyCode===13) TizenUtils.navigate(homeUrl); };
-                nav.appendChild(homeBtn); 
+            },
+            
+            setupMutationObserver: function() {
+                var self = this;
+                this.observer = new MutationObserver(function(mutations) {
+                    // Check if page is loading
+                    var loader = document.getElementById('nuxt-loading');
+                    if (loader && getComputedStyle(loader).opacity !== '0') return;
+                    
+                    self.detectAndRender();
+                });
                 
-                document.body.appendChild(nav);
-                boat = document.createElement('div'); boat.id = 'tp-lifeboat'; document.body.appendChild(boat);
-                tpDiag('Lifeboat and navbar created');
-            }
-
-            // B. CHECK FOR FORMS & INPUTS (Only on login pages, not content pages)
-            var loginOk = false;
-            // Skip form generation if this looks like a content page (has books/items)
-            var hasContent = document.querySelectorAll('[id^="book-card-"], .book-item, [class*="item"]').length > 0;
-            if (!hasContent && window.TizenUtils && window.TizenUtils.handleLogin(boat, 'Audiobookshelf')) {
-                loginOk = true;
-            }
-            if(tpLast.login !== loginOk) { tpDiag('handleLogin=' + loginOk); tpLast.login = loginOk; }
-
-            // C. EXTRACT NAV LINKS (Dynamic Appbar)
-            // We look for links in likely sidebar locations
-            if (nav && nav.children.length < 6) { 
-                var links = document.querySelectorAll('aside a, nav a, .sidebar a, [role="navigation"] a');
-                var existing = {};
-                // Use textContent for reading, innerText is okay for setting but let's match
-                for(var k=0; k<nav.children.length; k++) existing[nav.children[k].textContent] = true;
+                this.observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: false
+                });
+            },
+            
+            detectAndRender: function() {
+                if (this.state !== 'DETECT_PAGE' && this.state !== 'READY') return;
                 
-                for(var n=0; n<links.length; n++) {
-                    var l = links[n];
-                    var txt = l.textContent.trim(); // CHANGED: innerText -> textContent
-                    if(txt && txt.length > 2 && !existing[txt] && l.href && l.href.indexOf('javascript')===-1) {
-                         (function(t, u){
-                             var btn = document.createElement('div'); btn.className='tp-nav-item'; 
-                             btn.innerText=t; btn.tabIndex=0; 
-                             btn.onclick = function(){ TizenUtils.navigate(u); }; 
-                             btn.onkeydown = function(e){ if(e.keyCode===13) TizenUtils.navigate(u); };
-                             nav.appendChild(btn);
-                         })(txt, l.href);
-                         existing[txt] = true;
-                         if(Object.keys(existing).length >= 6) break;
+                // Detect if we're on a login page or content page
+                var hasBooks = document.querySelectorAll('[id^="book-card-"]').length > 0;
+                var hasInputs = this.getVisibleInputs().length > 0;
+                
+                if (!hasBooks && hasInputs) {
+                    this.renderLoginForm();
+                    this.state = 'READY';
+                } else if (hasBooks) {
+                    this.renderContent();
+                    this.state = 'READY';
+                    // Toggle visibility based on content
+                    if (this.boat.childElementCount > 0) {
+                        document.body.classList.add('tp-lifeboat-active');
                     }
                 }
-            }
-
-            // D. EXTRACT BOOKS
-            var containers = document.querySelectorAll('div.relative');
-            var addedBooks = 0;
-            for (var i=0; i<containers.length; i++) {
-                var cont = containers[i];
-                
-                // 1. Headings
-                var placard = cont.querySelector('.categoryPlacard');
-                if (placard) {
-                    var text = placard.textContent.trim(); // CHANGED: innerText -> textContent
-                    var headerId = 'tp-head-' + i;
-                    if (!document.getElementById(headerId) && text.length > 0) {
-                        var h = document.createElement('div'); h.className = 'tp-shelf-title'; h.innerText = text; h.id = headerId; boat.appendChild(h);
-                    } continue;
+            },
+            
+            getVisibleInputs: function() {
+                var all = document.querySelectorAll('input, textarea, select, button');
+                var visible = [];
+                for (var i = 0; i < all.length; i++) {
+                    if (all[i].offsetParent !== null && all[i].style.display !== 'none' && all[i].style.visibility !== 'hidden') {
+                        visible.push(all[i]);
+                    }
                 }
+                return visible;
+            },
+            
+            renderLoginForm: function() {
+                if (window.TizenUtils && window.TizenUtils.handleLogin) {
+                    window.TizenUtils.handleLogin(this.boat, 'Audiobookshelf');
+                    this.log('Login form rendered');
+                }
+            },
+            
+            renderContent: function() {
+                if (this.boat.childElementCount > 0) return; // Already rendered
                 
-                // 2. Books
-                var books = cont.querySelectorAll('[id^="book-card-"]');
-                if (books.length > 0) {
-                    for (var b=0; b<books.length; b++) {
+                var containers = document.querySelectorAll('div.relative');
+                var bookCount = 0;
+                
+                for (var i = 0; i < containers.length; i++) {
+                    var cont = containers[i];
+                    
+                    // Extract headings
+                    var placard = cont.querySelector('.categoryPlacard');
+                    if (placard) {
+                        var text = placard.textContent.trim();
+                        var headerId = 'tp-head-' + i;
+                        if (!this.cache.processedHeadings[headerId] && text.length > 0) {
+                            var h = document.createElement('div');
+                            h.className = 'tp-shelf-title';
+                            h.innerText = text;
+                            h.id = headerId;
+                            this.boat.appendChild(h);
+                            this.cache.processedHeadings[headerId] = true;
+                        }
+                        continue;
+                    }
+                    
+                    // Extract books
+                    var books = cont.querySelectorAll('[id^="book-card-"]');
+                    for (var b = 0; b < books.length; b++) {
                         var original = books[b];
                         var bookId = 'tp-book-' + i + '-' + b;
-                        if (!document.getElementById(bookId)) {
-                            var clone = original.cloneNode(true); 
-                            clone.id = bookId; clone.className = 'tp-rescued-card'; clone.setAttribute('tabindex', '0');
-                            
-                            // CLEAN THE IMAGE
-                            var img = clone.querySelector('img');
-                            if(img) {
-                                img.removeAttribute('class'); 
-                                img.removeAttribute('style'); 
-                                var src = img.getAttribute('src') || img.getAttribute('data-src');
-                                if(src) img.src = src; 
-                            }
-
-                            // FIX CLICKS
-                            var link = original.closest('a') || original.querySelector('a');
-                            if (link && link.href) { 
-                                (function(l) {
-                                    clone.onclick = function() { TizenUtils.navigate(l); }; 
-                                    clone.onkeydown = function(e) { if(e.keyCode===13) TizenUtils.navigate(l); };
-                                })(link.href);
-                            } else { 
-                                (function(orig) {
-                                    clone.onclick = function() { orig.click(); }; 
-                                    clone.onkeydown = function(e) { if(e.keyCode===13) orig.click(); };
-                                })(original);
-                            }
-                            boat.appendChild(clone);
-                            addedBooks++;
+                        
+                        if (this.cache.processedBooks[bookId]) continue; // Already processed
+                        
+                        var clone = original.cloneNode(true);
+                        clone.id = bookId;
+                        clone.className = 'tp-rescued-card';
+                        clone.setAttribute('tabindex', '0');
+                        
+                        // Clean image
+                        var img = clone.querySelector('img');
+                        if (img) {
+                            img.removeAttribute('class');
+                            img.removeAttribute('style');
+                            var src = img.getAttribute('src') || img.getAttribute('data-src');
+                            if (src) img.src = src;
                         }
+                        
+                        // Attach click handler
+                        var link = original.closest('a') || original.querySelector('a');
+                        if (link && link.href) {
+                            (function(href, el) {
+                                el.onclick = function() { TizenUtils.navigate(href); };
+                                el.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(href); };
+                            })(link.href, clone);
+                        }
+                        
+                        this.boat.appendChild(clone);
+                        this.cache.processedBooks[bookId] = true;
+                        bookCount++;
                     }
                 }
+                
+                this.log('Rendered ' + bookCount + ' books');
             }
-
-            if(tpLast.books !== addedBooks) { tpDiag('Books added in pass=' + addedBooks); tpLast.books = addedBooks; }
-
-            // E. TOGGLE HOST VISIBILITY ONLY WHEN RESCUED CONTENT EXISTS
-            if (boat) {
-                var shouldHide = boat.childElementCount > 0;
-                if (shouldHide) document.body.classList.add('tp-lifeboat-active');
-                else document.body.classList.remove('tp-lifeboat-active');
-                if(tpLast.hide !== shouldHide) { tpDiag('Hide host=' + shouldHide + ' (children=' + boat.childElementCount + ')'); tpLast.hide = shouldHide; }
-            }
-        }, 2000);
+        };
+        
+        // Start initialization
+        ABS.init();
+    </script>
     </script>
 
     <script>
         var PRESETS = {
             "__CORE__": {
-                "css": "body{background-size:cover!important;background-position:center!important;background-attachment:fixed!important;background-repeat:no-repeat!important;margin:0!important;padding:20px!important;overflow-y:auto!important}img,svg,video{max-width:100%!important;height:auto!important;box-sizing:border-box!important}img[width]{width:auto!important;max-width:100%!important}img[height]{height:auto!important}img[src]{max-width:100%!important;height:auto!important}svg{max-width:100%!important}img[class*=\"w-\"],img[class*=\"h-\"],img[class*=\"min-w\"],img[class*=\"min-h\"]{width:auto!important;height:auto!important;max-width:50px!important;min-width:auto!important;min-height:auto!important}button img,a img,nav img,[role=\"navigation\"] img,aside img,.tp-nav-item img{max-width:50px!important;height:auto!important}#tp-proxy-form img,#tp-lifeboat img{max-width:200px!important;height:auto!important;display:block!important}:focus{outline:5px solid #FFD700!important}::-webkit-scrollbar{display:none}#tp-proxy-form{background:#222;border:2px solid #FFD700;padding:24px;max-width:420px;margin:60px auto;border-radius:10px;text-align:center;box-shadow:0 0 20px rgba(0,0,0,0.6)}.tp-input{display:block;width:92%;margin:12px auto;padding:12px;font-size:18px;background:#fff;color:#000;border:none;border-radius:5px}.tp-btn{display:block;width:92%;margin:16px auto;padding:12px;font-size:18px;background:#FFD700;color:#000;font-weight:bold;cursor:pointer;border:none;border-radius:5px}.tp-btn:focus,.tp-input:focus{outline:3px solid #fff}.tp-shelf-title{color:#FFD700!important;font-size:24px!important;font-weight:bold;text-shadow:2px 2px 4px #000;border-bottom:2px solid #FFD700;padding:10px;margin-top:40px;margin-bottom:15px;clear:both;background:rgba(0,0,0,0.4);border-radius:5px}.tp-rescued-card{display:inline-block!important;width:160px!important;min-height:240px!important;margin:15px!important;vertical-align:top!important;position:relative!important;cursor:pointer!important;background:rgba(0,0,0,0.5)!important;box-shadow:3px 3px 10px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);transition:transform 0.1s;transform:translateZ(0)}.tp-rescued-card img{width:100%!important;height:160px!important;object-fit:cover!important;display:block!important;opacity:1!important;visibility:visible!important;max-width:100%!important}.tp-rescued-card p,.tp-rescued-card span,.tp-rescued-card div{color:#fff!important;text-shadow:1px 1px 2px #000!important;font-size:13px!important;line-height:1.2!important;background:transparent!important;margin:0!important;padding:3px!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;max-width:100%!important}.tp-rescued-card *{word-break:break-word!important;white-space:normal!important}.tp-rescued-card:focus{outline:4px solid #FFD700!important;transform:scale(1.1) translateZ(0);z-index:5000;background:#000!important}",
-                "js": "if(!Element.prototype.closest){Element.prototype.closest=function(s){var el=this;do{if(el.matches(s))return el;el=el.parentElement||el.parentNode}while(el!==null&&el.nodeType===1);return null}}window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}}, getParam:function(n){var r=new RegExp('[\\?&]'+n+'=([^&#]*)').exec(location.search);return r===null?'':decodeURIComponent(r[1])}, navigate:function(u){if(!u)return;var t=this.getParam('tp');if(t&&u.indexOf('tp=')===-1)u+=(u.indexOf('?')>-1?'&':'?')+'tp='+t;window.location.href=u}, handleLogin:function(cont,title){var isVis=function(e){return e&&e.offsetParent!==null&&e.style.display!=='none'&&e.style.visibility!=='hidden'};var inputs=document.querySelectorAll('input,textarea,select,button');var hasVis=false;for(var k=0;k<inputs.length;k++){if(isVis(inputs[k])){hasVis=true;break}}if(!hasVis){if(!p)return false;else return true;}var p=document.getElementById('tp-proxy-form');if(!p){p=document.createElement('div');p.id='tp-proxy-form';p.style.marginBottom='30px';p.style.borderBottom='2px solid #333';if(cont){if(cont.firstChild)cont.insertBefore(p,cont.firstChild);else cont.appendChild(p)}}else{p.innerHTML='';}var els=document.querySelectorAll('input,textarea,select,button');for(var i=0;i<els.length;i++){var o=els[i];if(!isVis(o)||o.hasAttribute('data-tp-pxy'))continue;o.setAttribute('data-tp-pxy','1');var wrapper=document.createElement('div');wrapper.style.margin='10px 0';if(o.tagName==='BUTTON'||(o.tagName==='INPUT'&&(o.type==='submit'||o.type==='button'))){var b=document.createElement('button');b.innerText=o.innerText||o.value||'Submit';b.className='tp-btn';b.tabIndex=0;b.onclick=function(orig){return function(){orig.click()}}(o);wrapper.appendChild(b)}else{var n=document.createElement(o.tagName==='TEXTAREA'?'textarea':'input');if(o.tagName==='INPUT')n.type=o.type;n.className='tp-input';n.placeholder=o.placeholder||o.name||'';n.value=o.value;n.tabIndex=0;(function(orig,pxy){pxy.oninput=function(){orig.value=pxy.value;orig.dispatchEvent(new Event('input'));orig.dispatchEvent(new Event('change'))};pxy.onkeydown=function(e){if(e.keyCode===38||e.keyCode===40){e.preventDefault();var all=Array.prototype.slice.call(document.querySelectorAll('#tp-proxy-form .tp-input, #tp-proxy-form .tp-btn'));var idx=all.indexOf(pxy);if(e.keyCode===38&&idx>0)all[idx-1].focus();if(e.keyCode===40&&idx<all.length-1)all[idx+1].focus()}if(e.keyCode===10009||e.keyCode===27){e.preventDefault();pxy.blur()}if(e.keyCode===13&&orig.form){var s=orig.form.querySelector('button[type=\"submit\"]');if(s)s.click()}}})(o,n);wrapper.appendChild(n)}p.appendChild(wrapper)}return p&&p.childElementCount>0}};window.TizenUtils.keepAwake();"
+                "css": "html{width:1920px!important;margin:0 auto!important}body{background-size:cover!important;background-position:center!important;background-attachment:fixed!important;background-repeat:no-repeat!important;margin:0!important;padding:20px!important;overflow-y:auto!important}*{-webkit-appearance:none!important}img,svg,video{max-width:100%!important;height:auto!important;box-sizing:border-box!important}img[width]{width:auto!important;max-width:100%!important}img[height]{height:auto!important}img[src]{max-width:100%!important;height:auto!important}svg{max-width:100%!important}img.w-4,img.w-6,img.w-8,img.h-4,img.h-6,img.h-8,img.h-10,img.w-10,img.min-w-0,img.min-h-0{width:auto!important;height:auto!important;max-width:50px!important;min-width:auto!important;min-height:auto!important}img[class*=\"w-\"],img[class*=\"h-\"],img[class*=\"min-w\"],img[class*=\"min-h\"],img[class*=\"max-w\"],img[class*=\"max-h\"]{width:auto!important;height:auto!important;max-width:50px!important;min-width:auto!important;min-height:auto!important;max-height:auto!important}button img,a img,nav img,[role=\"navigation\"] img,aside img,.tp-nav-item img{max-width:50px!important;height:auto!important}#tp-proxy-form img,#tp-lifeboat img{max-width:200px!important;height:auto!important;display:block!important}.tp-rescued-card img{width:100%!important;height:160px!important;object-fit:cover!important;display:block!important}:focus{outline:5px solid #FFD700!important}::-webkit-scrollbar{display:none}#tp-proxy-form{background:#222;border:2px solid #FFD700;padding:24px;max-width:420px;margin:60px auto;border-radius:10px;text-align:center;box-shadow:0 0 20px rgba(0,0,0,0.6)}.tp-input{display:block;width:92%;margin:12px auto;padding:12px;font-size:18px;background:#fff;color:#000;border:none;border-radius:5px}.tp-btn{display:block;width:92%;margin:16px auto;padding:12px;font-size:18px;background:#FFD700;color:#000;font-weight:bold;cursor:pointer;border:none;border-radius:5px}.tp-btn:focus,.tp-input:focus{outline:3px solid #fff}.tp-shelf-title{color:#FFD700!important;font-size:24px!important;font-weight:bold;text-shadow:2px 2px 4px #000;border-bottom:2px solid #FFD700;padding:10px;margin-top:40px;margin-bottom:15px;clear:both;background:rgba(0,0,0,0.4);border-radius:5px}.tp-rescued-card{display:inline-block!important;width:160px!important;min-height:240px!important;margin:15px!important;vertical-align:top!important;position:relative!important;cursor:pointer!important;background:rgba(0,0,0,0.5)!important;box-shadow:3px 3px 10px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);transition:transform 0.1s;transform:translateZ(0)}.tp-rescued-card p,.tp-rescued-card span,.tp-rescued-card div{color:#fff!important;text-shadow:1px 1px 2px #000!important;font-size:13px!important;line-height:1.2!important;background:transparent!important;margin:0!important;padding:3px!important;overflow:hidden!important;text-overflow:ellipsis!important;display:block!important;max-width:100%!important}.tp-rescued-card *{word-break:break-word!important;white-space:normal!important}.tp-rescued-card:focus{outline:4px solid #FFD700!important;transform:scale(1.1) translateZ(0);z-index:5000;background:#000!important}",
+                "js": "if(!Element.prototype.closest){Element.prototype.closest=function(s){var el=this;do{if(el.matches(s))return el;el=el.parentElement||el.parentNode}while(el!==null&&el.nodeType===1);return null}}window.TizenUtils={keepAwake:function(){try{var v=document.createElement('video');v.src='https://raw.githubusercontent.com/anthonium/Gestures/master/blank.mp4';v.loop=true;v.play();document.body.appendChild(v)}catch(e){}},lockViewport:function(){var meta=document.querySelector('meta[name=\"viewport\"]');if(!meta){meta=document.createElement('meta');meta.name='viewport';document.head.appendChild(meta)}meta.setAttribute('content','width=1920, initial-scale=1, maximum-scale=1, user-scalable=no');},getParam:function(n){var r=new RegExp('[\\?&]'+n+'=([^&#]*)').exec(location.search);return r===null?'':decodeURIComponent(r[1])},navigate:function(u){if(!u)return;var t=this.getParam('tp');if(t&&u.indexOf('tp=')===-1)u+=(u.indexOf('?')>-1?'&':'?')+'tp='+t;window.location.href=u},handleLogin:function(cont,title){var isVis=function(e){return e&&e.offsetParent!==null&&e.style.display!=='none'&&e.style.visibility!=='hidden'};var inputs=document.querySelectorAll('input,textarea,select,button');var hasVis=false;for(var k=0;k<inputs.length;k++){if(isVis(inputs[k])){hasVis=true;break}}if(!hasVis){if(!p)return false;else return true;}var p=document.getElementById('tp-proxy-form');if(!p){p=document.createElement('div');p.id='tp-proxy-form';p.style.marginBottom='30px';p.style.borderBottom='2px solid #333';if(cont){if(cont.firstChild)cont.insertBefore(p,cont.firstChild);else cont.appendChild(p)}}var els=document.querySelectorAll('input,textarea,select,button');for(var i=0;i<els.length;i++){var o=els[i];if(!isVis(o)||o.hasAttribute('data-tp-pxy'))continue;o.setAttribute('data-tp-pxy','1');var wrapper=document.createElement('div');wrapper.style.margin='10px 0';if(o.tagName==='BUTTON'||(o.tagName==='INPUT'&&(o.type==='submit'||o.type==='button'))){var b=document.createElement('button');b.innerText=o.innerText||o.value||'Submit';b.className='tp-btn';b.tabIndex=0;b.onclick=function(orig){return function(){orig.click()}}(o);wrapper.appendChild(b)}else{var n=document.createElement(o.tagName==='TEXTAREA'?'textarea':'input');if(o.tagName==='INPUT')n.type=o.type;n.className='tp-input';n.placeholder=o.placeholder||o.name||'';n.value=o.value;n.tabIndex=0;(function(orig,pxy){pxy.oninput=function(){orig.value=pxy.value;orig.dispatchEvent(new Event('input'));orig.dispatchEvent(new Event('change'))};pxy.onkeydown=function(e){if(e.keyCode===38||e.keyCode===40){e.preventDefault();var all=Array.prototype.slice.call(document.querySelectorAll('#tp-proxy-form .tp-input, #tp-proxy-form .tp-btn'));var idx=all.indexOf(pxy);if(e.keyCode===38&&idx>0)all[idx-1].focus();if(e.keyCode===40&&idx<all.length-1)all[idx+1].focus()}if(e.keyCode===10009||e.keyCode===27){e.preventDefault();pxy.blur()}if(e.keyCode===13&&orig.form){var s=orig.form.querySelector('button[type=\"submit\"]');if(s)s.click()}}})(o,n);wrapper.appendChild(n)}p.appendChild(wrapper)}return p&&p.childElementCount>0}};TizenUtils.lockViewport();TizenUtils.keepAwake();"
             },
             "abs": { "name": "Audiobookshelf", "css": "", "js": "" },
             "jellyfin": { "name": "Jellyfin", "css": ":focus-visible{outline:4px solid #FFD700!important}", "js": "" }

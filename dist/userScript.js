@@ -32,7 +32,7 @@
                     sessionStorage.setItem('tp_conf', j); localStorage.setItem('tp_conf', j);
                     // Clear hash without reloading
                     history.replaceState(null, document.title, window.location.pathname + window.location.search);
-                    tpHud('Loaded hash payload'); console.log("[TP] Loaded Hash"); return true;
+                    tpHud('Hash payload loaded'); console.log("[TP] Hash payload loaded"); return true;
                 }
 
                 // 2. Check URL Param (Legacy/Direct)
@@ -41,21 +41,47 @@
                     var j = atob(m2[1]); this.payload = JSON.parse(j); 
                     sessionStorage.setItem('tp_conf', j); localStorage.setItem('tp_conf', j);
                     window.history.replaceState({}, document.title, window.location.href.replace(/[?&]tp=[^&]+/, ''));
-                    tpHud('Loaded query payload'); console.log("[TP] Loaded URL"); return true;
+                    tpHud('Query payload loaded'); console.log("[TP] Query payload loaded"); return true;
                 }
                 
-                // 3. Fallback to Storage
+                // 3. Fallback to Storage (Session first, then Local)
                 var s = sessionStorage.getItem('tp_conf'); 
-                if(s){this.payload=JSON.parse(s);tpHud('Loaded session payload');console.log("[TP] Loaded Storage");return true;}
+                if(s){this.payload=JSON.parse(s);tpHud('Session payload loaded');console.log("[TP] Session payload loaded");return true;}
                 var l = localStorage.getItem('tp_conf');
-                if(l){this.payload=JSON.parse(l);tpHud('Loaded local payload');console.log("[TP] Loaded Local");return true;}
-            } catch(e) { console.error("Conf Fail", e); tpHud('Config load failed'); } return false;
+                if(l){this.payload=JSON.parse(l);tpHud('Local payload loaded');console.log("[TP] Local payload loaded");return true;}
+            } catch(e) { console.error("Conf load failed", e); tpHud('Config load failed: ' + (e.message || 'parse error')); } return false;
         },
         apply: function() {
             if (!this.payload) return false;
-            if (this.payload.ua) { try { Object.defineProperty(navigator, 'userAgent', { get: function(){ return Config.payload.ua; } }); tpHud('UA override applied'); } catch(e){ tpHud('UA override failed: ' + (e && e.message ? e.message : '?')); console.error('UA override failed', e); } }
-            if (this.payload.css) { try { var s=document.createElement('style'); s.textContent=this.payload.css; document.head.appendChild(s); tpHud('CSS injected (' + this.payload.css.length + ' chars)'); } catch(e){ tpHud('CSS inject failed: ' + (e && e.message ? e.message : '?')); console.error('CSS inject failed', e); } }
-            if (this.payload.js) { try { new Function(this.payload.js)(); tpHud('JS executed (' + this.payload.js.length + ' chars)'); } catch(e){ tpHud('JS exec failed: ' + (e && e.message ? e.message : '?')); console.error('JS exec failed', e); } }
+            // Apply User Agent override first
+            if (this.payload.ua) { 
+                try { 
+                    Object.defineProperty(navigator, 'userAgent', { get: function(){ return Config.payload.ua; } }); 
+                    tpHud('UA: ' + Config.payload.ua.substring(0, 40) + '...'); 
+                } catch(e){ 
+                    tpHud('UA override failed'); console.error('UA override failed', e); 
+                } 
+            }
+            // Apply CSS
+            if (this.payload.css) { 
+                try { 
+                    var s=document.createElement('style'); 
+                    s.textContent=this.payload.css; 
+                    document.head.appendChild(s); 
+                    tpHud('CSS applied (' + Math.round(this.payload.css.length/1024) + 'KB)'); 
+                } catch(e){ 
+                    tpHud('CSS injection failed'); console.error('CSS inject failed', e); 
+                } 
+            }
+            // Apply JS (preset initialization)
+            if (this.payload.js) { 
+                try { 
+                    new Function(this.payload.js)(); 
+                    tpHud('Preset JS initialized'); 
+                } catch(e){ 
+                    tpHud('JS init failed: ' + (e.message || 'unknown')); console.error('JS exec failed', e); 
+                } 
+            }
             return true;
         }
     };
@@ -261,6 +287,19 @@
 
     window.TP = { ui: UI, input: Input };
     var loaded = Config.load(); Config.apply();
-    var ready = function() { UI.init(); Input.init(); if(loaded) { UI.toast("TizenPortal 046"); } else { UI.toast("No Config"); tpHud('No payload found'); } };
+    var ready = function() { 
+        // Ensure viewport is locked before any rendering
+        if (window.TizenUtils && window.TizenUtils.lockViewport) {
+            window.TizenUtils.lockViewport();
+        }
+        UI.init(); 
+        Input.init(); 
+        if(loaded) { 
+            UI.toast("TizenPortal 047"); 
+        } else { 
+            UI.toast("No Config"); 
+            tpHud('No payload found'); 
+        } 
+    };
     if (document.body) ready(); else document.addEventListener('DOMContentLoaded', ready);
 })();
