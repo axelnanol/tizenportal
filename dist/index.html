@@ -88,6 +88,7 @@
             observer: null,
             cache: { processedBooks: {}, processedHeadings: {} },
             ui: { debugBanner: null },
+            mode: null, // 'form' or 'content'
             
             log: function(msg) {
                 console.log('[TP ABS] ' + msg);
@@ -210,16 +211,28 @@
                 var hasBooks = document.querySelectorAll('[id^="book-card-"]').length > 0;
                 var hasInputs = this.getVisibleInputs().length > 0;
                 
-                if (!hasBooks && hasInputs) {
-                    this.renderLoginForm();
-                    this.state = 'READY';
-                } else if (hasBooks) {
+                // Books take priority - if we have books, show content (not login form)
+                if (hasBooks) {
+                    if (this.mode !== 'content') {
+                        this.boat.innerHTML = ''; // Clear form if we switch to content mode
+                        this.cache = { processedBooks: {}, processedHeadings: {} };
+                        this.mode = 'content';
+                    }
                     this.renderContent();
                     this.state = 'READY';
                     // Toggle visibility based on content
                     if (this.boat.childElementCount > 0) {
                         document.body.classList.add('tp-lifeboat-active');
                     }
+                } else if (hasInputs) {
+                    // Only show login form if NO books exist
+                    if (this.mode !== 'form') {
+                        this.boat.innerHTML = ''; // Clear content if we switch to form mode
+                        this.cache = { processedBooks: {}, processedHeadings: {} };
+                        this.mode = 'form';
+                    }
+                    this.renderLoginForm();
+                    this.state = 'READY';
                 }
             },
             
@@ -236,13 +249,15 @@
             
             renderLoginForm: function() {
                 if (window.TizenUtils && window.TizenUtils.handleLogin) {
-                    window.TizenUtils.handleLogin(this.boat, 'Audiobookshelf');
-                    this.log('Login form rendered');
+                    var result = window.TizenUtils.handleLogin(this.boat, 'Audiobookshelf');
+                    if (result) {
+                        this.log('Login form rendered');
+                    }
                 }
             },
             
             renderContent: function() {
-                if (this.boat.childElementCount > 0) return; // Already rendered
+                if (this.mode !== 'content') return; // Not in content mode
                 
                 var containers = document.querySelectorAll('div.relative');
                 var bookCount = 0;
