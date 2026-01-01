@@ -103,14 +103,14 @@
             },
             
             init: function() {
-                this.log('Initializing ABS lifeboat');
+                this.log('INIT: Starting ABS lifeboat v0504');
                 this.state = 'WAIT_NUXT';
                 this.waitForNuxt();
             },
             
             waitForNuxt: function() {
                 if (typeof window.__NUXT__ !== 'undefined' || document.querySelectorAll('[id*="__nuxt"]').length > 0) {
-                    this.log('Nuxt detected, creating lifeboat');
+                    this.log('WAIT_NUXT: Found Nuxt, creating lifeboat');
                     this.createLifeboat();
                     this.setupMutationObserver();
                     this.state = 'DETECT_PAGE';
@@ -148,7 +148,7 @@
                 
                 document.body.appendChild(this.nav);
                 document.body.appendChild(this.boat);
-                this.log('Lifeboat created');
+                this.log('DETECT_PAGE: Lifeboat created, waiting for DOM');
             },
             
             extractBackground: function() {
@@ -441,6 +441,7 @@
         };
         
         // Start initialization
+        if (window.console) console.log('[TP ABS] Starting init...');
         ABS.init();
     </script>
     </script>
