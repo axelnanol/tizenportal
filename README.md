@@ -1,6 +1,6 @@
 # 📺 TizenPortal
 
-![Version](https://img.shields.io/badge/version-0.5.29-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0.5.30-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **TizenPortal** is a universal launcher and compatibility layer designed for Samsung Smart TVs running Tizen OS. It allows you to run modern self-hosted web applications (like **Audiobookshelf**, **Jellyfin**, etc.) on older TVs that might otherwise struggle with broken layouts or incompatible interfaces.
 
@@ -46,7 +46,7 @@ This project is designed to be loaded via **TizenBrew** or a similar userscript 
     *   **User Agent:** Select a device profile (Default Tizen is usually best, but try others if you have issues).
 3.  **🚀 Launch:** Click the card to open the app. TizenPortal will automatically inject the necessary fixes.
 
-### 🆕 What's New in 0.5.29
+### 🆕 What's New in 0.5.30
 - **Surgical CSS Targeting**: Fixed over-broad image selectors that were affecting book covers - now only restricts navigation icons
 - **Modal Suppression**: Hidden native modals/dialogs when lifeboat is active to prevent overlay interference
 - **Action Button Extraction**: Book card action buttons (Play, Read, Edit, More) now visible as icons without hover

@@ -216,6 +216,223 @@
         toast: function(m) { var t = document.getElementById('tp-toast'); t.innerText = m; t.style.opacity = 1; setTimeout(function(){ t.style.opacity=0; }, 3000); }
     };
 
+    // Generic Blue Menu - Form sidebar triggered by Blue button
+    var BlueMenu = {
+        active: false,
+        forms: [],
+        selectedIdx: 0,
+        
+        init: function() {
+            var css = "" +
+                "#tp-blue-menu { position:fixed; right:0; top:50px; bottom:0; width:350px; background:#1a3a52; border-left:3px solid #1e90ff; z-index:2147483644; display:none; flex-direction:column; box-shadow:-10px 0 30px rgba(0,0,0,0.7); font-family:sans-serif; }" +
+                "#tp-blue-menu.active { display:flex; }" +
+                "#tp-blue-header { background:#0f2847; color:#1e90ff; padding:15px; border-bottom:2px solid #1e90ff; font-weight:bold; font-size:16px; }" +
+                "#tp-blue-list { flex-shrink:0; overflow-y:auto; max-height:40%; border-bottom:1px solid #0f2847; }" +
+                ".tp-blue-item { padding:12px 15px; color:#aaa; cursor:pointer; border-bottom:1px solid #0f2847; font-size:14px; }" +
+                ".tp-blue-item:focus, .tp-blue-item.active { color:#1e90ff; background:#0f2847; outline:3px solid #1e90ff; font-weight:bold; }" +
+                "#tp-blue-content { flex:1; overflow-y:auto; padding:15px; }" +
+                ".tp-blue-input { width:100%; padding:10px; margin-bottom:12px; background:#0f2847; color:#fff; border:1px solid #1e90ff; border-radius:4px; font-size:14px; }" +
+                ".tp-blue-input:focus { border-color:#FFD700; outline:none; }" +
+                ".tp-blue-label { display:block; color:#1e90ff; font-size:12px; margin-bottom:5px; font-weight:bold; }" +
+                ".tp-blue-btn { width:100%; padding:10px; background:#1e90ff; color:#fff; border:none; border-radius:4px; font-size:14px; cursor:pointer; margin-top:10px; }" +
+                ".tp-blue-btn:focus { outline:3px solid #FFD700; }";
+            
+            var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
+            
+            var menu = document.createElement('div');
+            menu.id = 'tp-blue-menu';
+            menu.innerHTML = '<div id="tp-blue-header">🔵 Forms & Actions</div><div id="tp-blue-list"></div><div id="tp-blue-content"></div>';
+            document.body.appendChild(menu);
+        },
+        
+        toggle: function() {
+            this.active = !this.active;
+            var menu = document.getElementById('tp-blue-menu');
+            if (this.active) {
+                this.detectForms();
+                this.renderList();
+                menu.classList.add('active');
+                var firstItem = document.querySelector('.tp-blue-item');
+                if (firstItem) firstItem.focus();
+                UI.toast("Blue Menu - ↑↓ Navigate / Back to Close");
+            } else {
+                menu.classList.remove('active');
+                document.body.focus();
+            }
+        },
+        
+        detectForms: function() {
+            this.forms = [];
+            var self = this;
+            
+            // Detect search inputs
+            var searchInputs = document.querySelectorAll('input[type="search"], input[placeholder*="Search" i], input[placeholder*="search" i]');
+            var visSearch = [];
+            for (var i = 0; i < searchInputs.length; i++) {
+                if (searchInputs[i].offsetParent !== null) visSearch.push(searchInputs[i]);
+            }
+            if (visSearch.length > 0) this.forms.push({category: '🔍 Search', inputs: visSearch, type: 'search'});
+            
+            // Detect login inputs
+            var loginInputs = document.querySelectorAll('input[type="password"], input[type="email"], input[name*="user" i], input[name*="pass" i]');
+            var visLogin = [];
+            for (var j = 0; j < loginInputs.length; j++) {
+                if (loginInputs[j].offsetParent !== null) visLogin.push(loginInputs[j]);
+            }
+            if (visLogin.length > 0) this.forms.push({category: '🔐 Login', inputs: visLogin, type: 'login'});
+            
+            // Detect text inputs (generic)
+            var textInputs = document.querySelectorAll('input[type="text"]:not([placeholder*="search" i]), textarea');
+            var visText = [];
+            for (var k = 0; k < textInputs.length; k++) {
+                if (textInputs[k].offsetParent !== null && visSearch.indexOf(textInputs[k]) === -1 && visLogin.indexOf(textInputs[k]) === -1) visText.push(textInputs[k]);
+            }
+            if (visText.length > 0) this.forms.push({category: '📝 Text Fields', inputs: visText, type: 'text'});
+            
+            // Detect selects/dropdowns
+            var selects = document.querySelectorAll('select');
+            var visSelect = [];
+            for (var l = 0; l < selects.length; l++) {
+                if (selects[l].offsetParent !== null) visSelect.push(selects[l]);
+            }
+            if (visSelect.length > 0) this.forms.push({category: '📋 Dropdowns', inputs: visSelect, type: 'select'});
+            
+            // Detect buttons
+            var buttons = document.querySelectorAll('button:not(.tp-bar-btn):not(.tp-blue-btn), input[type="submit"], input[type="button"]');
+            var visBtn = [];
+            for (var m = 0; m < buttons.length; m++) {
+                if (buttons[m].offsetParent !== null && buttons[m].textContent.trim().length > 0 && buttons[m].textContent.trim().length < 30) visBtn.push(buttons[m]);
+            }
+            if (visBtn.length > 0) this.forms.push({category: '🔘 Buttons', inputs: visBtn, type: 'button'});
+            
+            console.log('[TP BlueMenu] Detected ' + this.forms.length + ' form groups');
+        },
+        
+        renderList: function() {
+            var self = this;
+            var list = document.getElementById('tp-blue-list');
+            list.innerHTML = '';
+            
+            if (this.forms.length === 0) {
+                list.innerHTML = '<div style="padding:15px;color:#888;">No forms detected on this page</div>';
+                return;
+            }
+            
+            for (var i = 0; i < this.forms.length; i++) {
+                var form = this.forms[i];
+                var item = document.createElement('div');
+                item.className = 'tp-blue-item' + (i === 0 ? ' active' : '');
+                item.innerText = form.category + ' (' + form.inputs.length + ')';
+                item.tabIndex = 0;
+                (function(idx) {
+                    item.onclick = function() { self.selectForm(idx); };
+                    item.onkeydown = function(e) {
+                        if (e.keyCode === 13) { self.selectForm(idx); e.preventDefault(); }
+                        if (e.keyCode === 38 && idx > 0) { self.selectForm(idx-1); e.preventDefault(); }
+                        if (e.keyCode === 40 && idx < self.forms.length-1) { self.selectForm(idx+1); e.preventDefault(); }
+                        if (e.keyCode === 10009 || e.keyCode === 27) { self.toggle(); e.preventDefault(); e.stopPropagation(); }
+                    };
+                })(i);
+                list.appendChild(item);
+            }
+            
+            this.selectForm(0);
+        },
+        
+        selectForm: function(idx) {
+            if (idx < 0 || idx >= this.forms.length) return;
+            this.selectedIdx = idx;
+            
+            var items = document.querySelectorAll('.tp-blue-item');
+            for (var i = 0; i < items.length; i++) {
+                items[i].className = (i === idx) ? 'tp-blue-item active' : 'tp-blue-item';
+                if (i === idx) items[i].focus();
+            }
+            
+            this.renderFormContent(this.forms[idx]);
+        },
+        
+        renderFormContent: function(form) {
+            var self = this;
+            var content = document.getElementById('tp-blue-content');
+            content.innerHTML = '';
+            
+            for (var i = 0; i < form.inputs.length; i++) {
+                var orig = form.inputs[i];
+                var wrapper = document.createElement('div');
+                wrapper.style.marginBottom = '15px';
+                
+                if (form.type === 'button') {
+                    var btn = document.createElement('button');
+                    btn.className = 'tp-blue-btn';
+                    btn.innerText = orig.textContent.trim() || orig.value || 'Button';
+                    btn.tabIndex = 0;
+                    (function(o) {
+                        btn.onclick = function() { o.click(); };
+                        btn.onkeydown = function(e) {
+                            if (e.keyCode === 13) { o.click(); e.preventDefault(); }
+                            if (e.keyCode === 10009 || e.keyCode === 27) { self.toggle(); e.preventDefault(); }
+                        };
+                    })(orig);
+                    wrapper.appendChild(btn);
+                } else if (form.type === 'select') {
+                    var label = document.createElement('label');
+                    label.className = 'tp-blue-label';
+                    label.innerText = orig.name || 'Select';
+                    wrapper.appendChild(label);
+                    
+                    var select = document.createElement('select');
+                    select.className = 'tp-blue-input';
+                    select.tabIndex = 0;
+                    for (var j = 0; j < orig.options.length; j++) {
+                        var opt = document.createElement('option');
+                        opt.value = orig.options[j].value;
+                        opt.innerText = orig.options[j].text;
+                        if (orig.options[j].selected) opt.selected = true;
+                        select.appendChild(opt);
+                    }
+                    (function(o, s) {
+                        s.onchange = function() { o.value = s.value; o.dispatchEvent(new Event('change')); };
+                    })(orig, select);
+                    wrapper.appendChild(select);
+                } else {
+                    var label = document.createElement('label');
+                    label.className = 'tp-blue-label';
+                    label.innerText = orig.placeholder || orig.name || orig.type || 'Input';
+                    wrapper.appendChild(label);
+                    
+                    var input = document.createElement('input');
+                    input.type = orig.type === 'password' ? 'password' : 'text';
+                    input.className = 'tp-blue-input';
+                    input.placeholder = orig.placeholder || '';
+                    input.value = orig.value || '';
+                    input.tabIndex = 0;
+                    (function(o, inp) {
+                        inp.oninput = function() { o.value = inp.value; o.dispatchEvent(new Event('input')); };
+                        inp.onkeydown = function(e) {
+                            if (e.keyCode === 13) { o.dispatchEvent(new Event('change')); if(o.form) { var s = o.form.querySelector('button[type="submit"], input[type="submit"]'); if(s) s.click(); } }
+                            if (e.keyCode === 10009 || e.keyCode === 27) { inp.blur(); }
+                            if (e.keyCode === 38 || e.keyCode === 40) {
+                                var inputs = Array.prototype.slice.call(content.querySelectorAll('.tp-blue-input, .tp-blue-btn'));
+                                var idx = inputs.indexOf(inp);
+                                if (e.keyCode === 38 && idx > 0) inputs[idx-1].focus();
+                                if (e.keyCode === 40 && idx < inputs.length-1) inputs[idx+1].focus();
+                                e.preventDefault();
+                            }
+                        };
+                    })(orig, input);
+                    wrapper.appendChild(input);
+                }
+                
+                content.appendChild(wrapper);
+            }
+            
+            // Focus first input in content
+            var firstInput = content.querySelector('.tp-blue-input, .tp-blue-btn');
+            if (firstInput) setTimeout(function() { firstInput.focus(); }, 100);
+        }
+    };
+
     var Input = {
         mouse: false, x: window.innerWidth/2, y: window.innerHeight/2, cursor: null,
         init: function() {
@@ -236,13 +453,9 @@
         key: function(e) {
             var k = e.keyCode;
             
-            // Blue button toggles address bar focus
+            // Blue button toggles BlueMenu (form sidebar)
             if (k===406) { 
-                if (window.ABS && window.ABS.toggleMenuFocus && window.ABS.mode) {
-                    window.ABS.toggleMenuFocus();
-                } else {
-                    UI.toggleFocus(); 
-                }
+                BlueMenu.toggle();
                 e.preventDefault(); return; 
             } 
             if (k===403) { window.location.reload(); e.preventDefault(); return; } 
@@ -320,9 +533,10 @@
             try { TizenUtils.lockViewport(); } catch(e) { console.error('lockViewport failed', e); }
         }
         UI.init(); 
+        BlueMenu.init();
         Input.init(); 
         if(loaded && applied) { 
-            UI.toast("TizenPortal 0529 - Ready"); 
+            UI.toast("TizenPortal 0530 - Ready"); 
         } else if(loaded && !applied) {
             UI.toast("Config Loaded - Apply Failed");
             tpHud('Payload loaded but apply failed');
