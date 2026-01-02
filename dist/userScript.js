@@ -495,7 +495,14 @@
                                 // Find submit button in form
                                 if (formEl) { 
                                     var s = formEl.querySelector('button[type="submit"], input[type="submit"], button:not([type])'); 
-                                    if(s) s.click(); 
+                                    if (s) {
+                                        s.click();
+                                    } else {
+                                        // No button found - submit form directly and trigger Enter on original input
+                                        formEl.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                                        var enterEvent = new KeyboardEvent('keydown', { keyCode: 13, which: 13, bubbles: true });
+                                        o.dispatchEvent(enterEvent);
+                                    }
                                 }
                             }
                             if (e.keyCode === 10009 || e.keyCode === 27) { inp.blur(); }
@@ -512,6 +519,48 @@
                 }
                 
                 content.appendChild(wrapper);
+            }
+            
+            // Check if form has text inputs but no buttons - add Submit button
+            var hasTextInputs = content.querySelector('input.tp-blue-input, textarea.tp-blue-input');
+            var hasButtons = content.querySelector('.tp-blue-btn');
+            if (hasTextInputs && !hasButtons && form.formEl) {
+                var submitWrapper = document.createElement('div');
+                submitWrapper.style.marginTop = '20px';
+                var submitBtn = document.createElement('button');
+                submitBtn.className = 'tp-blue-btn';
+                submitBtn.innerText = '🔍 Submit';
+                submitBtn.tabIndex = 0;
+                (function(formEl) {
+                    submitBtn.onclick = function() {
+                        // Try to find a submit button in original form
+                        var origSubmit = formEl.querySelector('button[type="submit"], input[type="submit"], button:not([type])');
+                        if (origSubmit) {
+                            origSubmit.click();
+                        } else {
+                            // Submit the form directly
+                            formEl.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                            // Also try triggering Enter on the original input
+                            var origInput = formEl.querySelector('input');
+                            if (origInput) {
+                                var enterEvent = new KeyboardEvent('keydown', { keyCode: 13, which: 13, bubbles: true });
+                                origInput.dispatchEvent(enterEvent);
+                            }
+                        }
+                    };
+                    submitBtn.onkeydown = function(e) {
+                        if (e.keyCode === 13) { submitBtn.click(); e.preventDefault(); }
+                        if (e.keyCode === 10009 || e.keyCode === 27) { self.toggle(); e.preventDefault(); }
+                        if (e.keyCode === 38) {
+                            var els = Array.prototype.slice.call(content.querySelectorAll('.tp-blue-input, .tp-blue-btn'));
+                            var idx = els.indexOf(submitBtn);
+                            if (idx > 0) els[idx-1].focus();
+                            e.preventDefault();
+                        }
+                    };
+                })(form.formEl);
+                submitWrapper.appendChild(submitBtn);
+                content.appendChild(submitWrapper);
             }
             
             // Focus first input in content
@@ -622,7 +671,7 @@
         BlueMenu.init();
         Input.init(); 
         if(loaded && applied) { 
-            UI.toast("TizenPortal 0533 - Ready"); 
+            UI.toast("TizenPortal 0534 - Ready"); 
         } else if(loaded && !applied) {
             UI.toast("Config Loaded - Apply Failed");
             tpHud('Payload loaded but apply failed');
