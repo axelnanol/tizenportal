@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0566</title>
+    <title>TizenPortal 0567</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -290,7 +290,7 @@
 <body>
     <header>
         <div>
-            <h1>TizenPortal <span>0566</span></h1>
+            <h1>TizenPortal <span>0567</span></h1>
             <div class="subtitle">Smart TV App Launcher</div>
         </div>
     </header>
@@ -373,7 +373,7 @@
     </script>
     
     <script id="abs-js" type="text/template">
-        // ABS Lifeboat - Smart scraper with collapsible form menu
+        // ABS Lifeboat - Socket-based data extraction
         var ABS = {
             state: 'INIT',
             boat: null,
@@ -385,7 +385,8 @@
             menuFocused: false,
             menuExpanded: false,
             selectedFormIdx: 0,
-            forms: [], // [ {category: "Search", inputs: [...], type: "search"}, ... ]
+            forms: [],
+            socketData: null, // Store init payload from socket
             
             log: function(msg) {
                 console.log('[TP ABS] ' + msg);
@@ -395,16 +396,168 @@
                 if (this.initialized) return;
                 this.initialized = true;
                 this.log('Starting');
+                this.interceptSocket();
                 this.state = 'WAIT_NUXT';
                 this.waitForNuxt();
+            },
+            
+            // Intercept socket.io to capture init payload
+            interceptSocket: function() {
+                var self = this;
+                
+                // Hook into window.io if it exists
+                var checkSocket = function() {
+                    if (window.io && !window.io._tpHooked) {
+                        window.io._tpHooked = true;
+                        var origIo = window.io;
+                        window.io = function() {
+                            var socket = origIo.apply(this, arguments);
+                            self.hookSocket(socket);
+                            return socket;
+                        };
+                        // Copy properties
+                        for (var k in origIo) {
+                            if (origIo.hasOwnProperty(k)) window.io[k] = origIo[k];
+                        }
+                        self.log('Socket.io hooked');
+                    }
+                    
+                    // Also try to find existing socket on window.$nuxt
+                    if (window.$nuxt && window.$nuxt.$socket && !window.$nuxt.$socket._tpHooked) {
+                        window.$nuxt.$socket._tpHooked = true;
+                        self.hookSocket(window.$nuxt.$socket);
+                        self.log('Existing $nuxt socket hooked');
+                    }
+                };
+                
+                // Check immediately and periodically
+                checkSocket();
+                var socketInterval = setInterval(function() {
+                    checkSocket();
+                    if (self.socketData) {
+                        clearInterval(socketInterval);
+                    }
+                }, 500);
+                
+                // Stop checking after 30 seconds
+                setTimeout(function() { clearInterval(socketInterval); }, 30000);
+            },
+            
+            hookSocket: function(socket) {
+                var self = this;
+                if (!socket || !socket.on) return;
+                
+                // Listen for init event which contains library data
+                socket.on('init', function(data) {
+                    self.log('Socket init received: ' + (data ? Object.keys(data).join(',') : 'null'));
+                    self.socketData = data;
+                    self.renderFromSocketData();
+                });
+                
+                // Also listen for other useful events
+                socket.on('user_item_progress_updated', function(data) {
+                    self.log('Progress update: ' + JSON.stringify(data).substring(0, 100));
+                });
+            },
+            
+            renderFromSocketData: function() {
+                if (!this.socketData || !this.boat) return;
+                
+                var data = this.socketData;
+                this.log('Parsing socket data...');
+                
+                // Try to find library items in the data
+                var items = [];
+                
+                // ABS init payload structure varies - try common paths
+                if (data.libraryItems) items = data.libraryItems;
+                else if (data.items) items = data.items;
+                else if (data.results) items = data.results;
+                else if (data.library && data.library.items) items = data.library.items;
+                
+                if (items.length === 0) {
+                    // Try to find any array that looks like books
+                    for (var key in data) {
+                        if (Array.isArray(data[key]) && data[key].length > 0) {
+                            var sample = data[key][0];
+                            if (sample && (sample.media || sample.book || sample.title || sample.name)) {
+                                items = data[key];
+                                this.log('Found items in: ' + key);
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                this.log('Found ' + items.length + ' items from socket');
+                
+                if (items.length > 0) {
+                    this.boat.innerHTML = '';
+                    this.mode = 'content';
+                    this.renderItems(items);
+                    this.state = 'READY';
+                }
+            },
+            
+            renderItems: function(items) {
+                var cardCount = 0;
+                
+                for (var i = 0; i < items.length && cardCount < 100; i++) {
+                    var item = items[i];
+                    var id = item.id || item.libraryItemId || ('item-' + i);
+                    
+                    if (this.cache.processedBooks[id]) continue;
+                    
+                    // Extract metadata
+                    var meta = item.media ? item.media.metadata : (item.metadata || item);
+                    var title = meta.title || meta.name || item.title || item.name || 'Unknown';
+                    var author = meta.authorName || meta.author || (meta.authors && meta.authors[0] ? meta.authors[0].name : '');
+                    
+                    // Build cover URL
+                    var coverUrl = '';
+                    if (item.media && item.media.coverPath) {
+                        coverUrl = '/api/items/' + id + '/cover';
+                    } else if (item.coverPath) {
+                        coverUrl = '/api/items/' + id + '/cover';
+                    }
+                    
+                    var clone = document.createElement('div');
+                    clone.id = 'tp-' + id;
+                    clone.className = 'tp-rescued-card';
+                    clone.setAttribute('tabindex', '0');
+                    
+                    if (coverUrl) {
+                        var img = document.createElement('img');
+                        img.src = coverUrl;
+                        img.alt = title;
+                        img.onerror = function() { this.style.display = 'none'; };
+                        clone.appendChild(img);
+                    }
+                    
+                    var textDiv = document.createElement('div');
+                    textDiv.style.cssText = 'padding:8px;font-size:14px;line-height:1.3;color:#fff;';
+                    textDiv.innerText = title.substring(0, 60) + (author ? '\n' + author.substring(0, 40) : '');
+                    clone.appendChild(textDiv);
+                    
+                    // Click to open item
+                    (function(itemId) {
+                        clone.onclick = function() { TizenUtils.navigate('/item/' + itemId); };
+                        clone.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate('/item/' + itemId); };
+                    })(id);
+                    
+                    this.boat.appendChild(clone);
+                    this.cache.processedBooks[id] = true;
+                    cardCount++;
+                }
+                
+                this.log('Rendered ' + cardCount + ' items from socket data');
             },
             
             waitForNuxt: function() {
                 var self = this;
                 var nuxtReady = typeof window.__NUXT__ !== 'undefined' || document.querySelectorAll('[id*="__nuxt"]').length > 0;
-                var booksExist = document.querySelectorAll('[cy-id="coverImage"]').length > 0;
                 
-                if (nuxtReady || booksExist || document.body) {
+                if (nuxtReady || document.body) {
                     this.log('Nuxt ready');
                     this.createLifeboat();
                     this.setupMutationObserver();
