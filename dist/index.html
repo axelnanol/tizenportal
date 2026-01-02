@@ -86,10 +86,11 @@
         #tp-menu-content { flex: 1; overflow-y: auto; padding: 15px; }
         
         /* 4. SURGICAL IMAGE FIXES - restrict ONLY nav/button icons */
-        nav img, button img, [role="navigation"] img, aside img, header img, 
+        nav img, [role="navigation"] img, header img, 
         a img[alt="Home"], img[alt="Home"], 
         img.w-8, img.w-10, img.h-8, img.h-10,
-        .tp-nav-item img { 
+        .tp-nav-item img,
+        nav button img, header button img, [role="toolbar"] button img { 
             max-width: 50px !important;
             min-width: auto !important;
             width: auto !important;
