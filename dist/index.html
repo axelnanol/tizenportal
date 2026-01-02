@@ -291,6 +291,7 @@
                 } catch(e) {
                     this.log('detectAndRender error: ' + (e.message || 'unknown'));
                     console.error('[TP ABS] detectAndRender error:', e);
+                    return false;
                 }
             },
             
