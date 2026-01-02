@@ -52,64 +52,331 @@
     </div>
 
     <script id="abs-css" type="text/template">
-        /* Force desktop layout - disable Tailwind responsive breakpoints */
-        body { min-width: 1920px !important; }
+        /* 1. GLOBAL BASICS - Hide broken native app, show lifeboat */
+        body { 
+            background-color: #222 !important; 
+            margin: 0 !important; padding: 20px !important; 
+            overflow-y: auto !important; 
+            font-family: sans-serif !important; 
+            color: #fff !important; 
+        }
+
+        .tp-lifeboat-active #__nuxt { 
+            opacity: 0.001 !important; 
+            pointer-events: none !important; 
+            position: fixed !important; 
+            top: 0 !important; 
+            left: 0 !important; 
+            z-index: -100 !important;
+        }
         
-        /* Surgical image fixes - only restrict nav/button/header icons, NOT book covers */
+        /* 2. LIFEBOAT LAYOUT */
+        #tp-lifeboat { display: block; width: 100%; padding-bottom: 50px; margin-top: 70px; }
+        #tp-navbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #b8860b; display: flex; align-items: center; padding: 0 20px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .tp-nav-item { color: #ddd; font-size: 18px; margin-right: 20px; cursor: pointer; padding: 10px; border: 1px solid transparent; }
+        .tp-nav-item:focus, .tp-nav-item:hover { color: #FFD700; border-color: #FFD700; background: #333; outline: none; }
+        
+        /* 3. SURGICAL IMAGE FIXES - restrict ONLY nav/button icons */
         nav img, button img, [role="navigation"] img, aside img, header img, 
         a img[alt="Home"], img[alt="Home"], 
-        img.w-8, img.w-10, img.h-8, img.h-10 { 
+        img.w-8, img.w-10, img.h-8, img.h-10,
+        .tp-nav-item img { 
             max-width: 50px !important;
             min-width: auto !important;
             width: auto !important;
             height: auto !important; 
         }
         
-        /* Allow book covers to display properly */
-        [cy-id="coverImage"], [class*="book-card"] img, [class*="bookCard"] img, 
-        .categorizedBookshelfRow img, [id^="book-card-"] img {
+        /* 4. RESCUED CARD IMAGES - allow full display */
+        .tp-rescued-card img {
+            width: 100% !important;
+            height: 200px !important;
+            object-fit: cover !important;
+            display: block !important;
             max-width: none !important;
-            width: auto !important;
-            height: auto !important;
         }
-        
-        /* Enhanced focus indicators for TV remote */
-        :focus { outline: 5px solid #FFD700 !important; }
-        
-        /* Ensure scrollable content */
-        body { overflow-y: auto !important; }
     </script>
     
     <script id="abs-js" type="text/template">
-        // Simple Audiobookshelf compatibility - Login form proxy only
-        (function() {
-            function checkForLogin() {
-                // Only proxy login forms, let native app handle everything else
-                var visibleInputs = Array.prototype.slice.call(document.querySelectorAll('input, textarea, button'))
-                    .filter(function(el) {
-                        return el.offsetParent !== null && 
-                               el.style.display !== 'none' && 
-                               el.style.visibility !== 'hidden';
-                    });
+        // ABS Lifeboat - Smart scraper with fire-once rendering
+        var ABS = {
+            state: 'INIT',
+            boat: null,
+            nav: null,
+            observer: null,
+            cache: { processedBooks: {}, processedHeadings: {}, processedNav: false },
+            mode: null,
+            
+            log: function(msg) {
+                console.log('[TP ABS] ' + msg);
+            },
+            
+            init: function() {
+                if (this.initialized) return;
+                this.initialized = true;
+                this.log('Starting');
+                this.state = 'WAIT_NUXT';
+                this.waitForNuxt();
+            },
+            
+            waitForNuxt: function() {
+                var self = this;
+                var nuxtReady = typeof window.__NUXT__ !== 'undefined' || document.querySelectorAll('[id*="__nuxt"]').length > 0;
+                var booksExist = document.querySelectorAll('[cy-id="coverImage"]').length > 0;
                 
-                // If we find visible inputs and no book content, assume login screen
-                var hasBooks = document.querySelectorAll('[cy-id="coverImage"], [id^="book-card-"]').length > 0;
+                if (nuxtReady || booksExist || document.body) {
+                    this.log('Nuxt ready');
+                    this.createLifeboat();
+                    this.setupMutationObserver();
+                    this.state = 'DETECT_PAGE';
+                } else {
+                    if (!this.waitCount) this.waitCount = 0;
+                    this.waitCount++;
+                    if (this.waitCount > 50) {
+                        this.log('Timeout, forcing start');
+                        this.createLifeboat();
+                        this.setupMutationObserver();
+                        this.state = 'DETECT_PAGE';
+                    } else {
+                        setTimeout(function() { self.waitForNuxt(); }, 100);
+                    }
+                }
+            },
+            
+            createLifeboat: function() {
+                if (this.boat) return;
                 
-                if (visibleInputs.length > 0 && !hasBooks && window.TizenUtils) {
-                    var container = document.createElement('div');
-                    container.id = 'tp-login-container';
-                    container.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:999999;background:rgba(0,0,0,0.95);display:flex;align-items:center;justify-content:center;';
-                    document.body.appendChild(container);
+                this.boat = document.createElement('div');
+                this.boat.id = 'tp-lifeboat';
+                
+                this.nav = document.createElement('div');
+                this.nav.id = 'tp-navbar';
+                
+                var homeBtn = document.createElement('div');
+                homeBtn.className = 'tp-nav-item';
+                homeBtn.innerText = 'Home';
+                homeBtn.tabIndex = 0;
+                homeBtn.onclick = function() { TizenUtils.navigate('/'); };
+                homeBtn.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate('/'); };
+                this.nav.appendChild(homeBtn);
+                
+                document.body.appendChild(this.nav);
+                document.body.appendChild(this.boat);
+                this.log('Lifeboat created');
+            },
+            
+            setupMutationObserver: function() {
+                var self = this;
+                var rendered = false;
+                this.observer = new MutationObserver(function(mutations) {
+                    if (rendered) return;
                     
-                    TizenUtils.handleLogin(container, 'Audiobookshelf');
-                    console.log('[TP ABS] Login proxy active');
+                    try {
+                        var loader = document.getElementById('nuxt-loading');
+                        if (loader && getComputedStyle(loader).opacity !== '0') return;
+                        
+                        var success = self.detectAndRender();
+                        if (success) {
+                            rendered = true;
+                            if (self.observer) self.observer.disconnect();
+                        }
+                    } catch(e) {
+                        self.log('Observer error: ' + (e.message || 'unknown'));
+                    }
+                });
+                
+                this.observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: false
+                });
+                this.log('Observer active');
+            },
+            
+            detectAndRender: function() {
+                try {
+                    if (this.state !== 'DETECT_PAGE') return false;
+                    
+                    var bookCount = document.querySelectorAll('[cy-id="coverImage"]').length;
+                    var visibleInputs = this.getVisibleInputs();
+                    
+                    this.log('Detect: books=' + bookCount + ' inputs=' + visibleInputs.length);
+                    
+                    if (bookCount > 0) {
+                        this.boat.innerHTML = '';
+                        this.cache = { processedBooks: {}, processedHeadings: {}, processedNav: false };
+                        this.mode = 'content';
+                        this.log('Rendering books');
+                        this.renderContent();
+                        this.state = 'READY';
+                        document.body.classList.add('tp-lifeboat-active');
+                        return true;
+                    } else if (visibleInputs.length > 0) {
+                        this.boat.innerHTML = '';
+                        this.mode = 'form';
+                        this.log('Rendering form');
+                        this.renderLoginForm();
+                        this.state = 'READY';
+                        return true;
+                    }
+                    return false;
+                } catch(e) {
+                    this.log('detectAndRender error: ' + (e.message || 'unknown'));
+                    return false;
+                }
+            },
+            
+            getVisibleInputs: function() {
+                var all = document.querySelectorAll('input, textarea, select, button');
+                var visible = [];
+                for (var i = 0; i < all.length; i++) {
+                    var el = all[i];
+                    if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
+                    if (el.offsetParent !== null) visible.push(el);
+                }
+                return visible;
+            },
+            
+            renderLoginForm: function() {
+                if (window.TizenUtils && window.TizenUtils.handleLogin) {
+                    TizenUtils.handleLogin(this.boat, 'Audiobookshelf');
+                    this.log('Login form rendered');
+                }
+            },
+            
+            renderContent: function() {
+                try {
+                    if (this.mode !== 'content') return;
+                    
+                    // Extract toolbar navigation
+                    if (!this.cache.processedNav) {
+                        var toolbars = document.querySelectorAll('[role="toolbar"]');
+                        var navFragment = document.createDocumentFragment();
+                        for (var t = 0; t < toolbars.length; t++) {
+                            var toolbar = toolbars[t];
+                            var links = toolbar.querySelectorAll('a, button:not([type="text"]):not([type="search"])');
+                            for (var l = 0; l < links.length; l++) {
+                                var link = links[l];
+                                if (link.tagName === 'INPUT' || link.tagName === 'TEXTAREA' || link.tagName === 'SELECT') continue;
+                                var text = link.textContent.trim();
+                                if (text && text.length > 0 && text.length < 30) {
+                                    var navItem = document.createElement('div');
+                                    navItem.className = 'tp-nav-item';
+                                    navItem.innerText = text;
+                                    navItem.tabIndex = 0;
+                                    var href = link.href || link.getAttribute('href');
+                                    if (href) {
+                                        (function(url) {
+                                            navItem.onclick = function() { TizenUtils.navigate(url); };
+                                            navItem.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(url); };
+                                        })(href);
+                                    } else {
+                                        (function(orig) {
+                                            navItem.onclick = function() { orig.click(); };
+                                            navItem.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                                        })(link);
+                                    }
+                                    navFragment.appendChild(navItem);
+                                }
+                            }
+                        }
+                        if (navFragment.childNodes.length > 0) {
+                            this.nav.appendChild(navFragment);
+                        }
+                        this.cache.processedNav = true;
+                    }
+                    
+                    // Extract books from category sections
+                    var categorySections = document.querySelectorAll('.categorizedBookshelfRow');
+                    this.log('Found ' + categorySections.length + ' sections');
+                    var bookCount = 0;
+                    
+                    for (var i = 0; i < categorySections.length; i++) {
+                        var section = categorySections[i];
+                        var sectionId = 'tp-section-' + i;
+                        
+                        // Find category header
+                        var placard = null;
+                        var parent = section.parentElement;
+                        if (parent && parent.parentElement) {
+                            placard = parent.parentElement.querySelector('.categoryPlacard');
+                        }
+                        
+                        if (placard && !this.cache.processedHeadings[sectionId]) {
+                            var text = placard.textContent.trim();
+                            if (text.length > 0) {
+                                var h = document.createElement('div');
+                                h.className = 'tp-shelf-title';
+                                h.innerText = text;
+                                h.id = sectionId + '-header';
+                                this.boat.appendChild(h);
+                                this.cache.processedHeadings[sectionId] = true;
+                            }
+                        }
+                        
+                        // Extract books using cy-id
+                        var covers = section.querySelectorAll('[cy-id="coverImage"]');
+                        for (var c = 0; c < covers.length; c++) {
+                            var cover = covers[c];
+                            var bookId = 'tp-book-' + i + '-' + c;
+                            
+                            if (this.cache.processedBooks[bookId]) continue;
+                            
+                            // Find the book card container (walk up to find card parent)
+                            var card = cover.closest('div[class*="rounded"]') || cover.closest('div');
+                            if (!card) continue;
+                            
+                            var clone = document.createElement('div');
+                            clone.id = bookId;
+                            clone.className = 'tp-rescued-card';
+                            clone.setAttribute('tabindex', '0');
+                            
+                            // Clone cover image
+                            var img = document.createElement('img');
+                            img.src = cover.getAttribute('src') || cover.getAttribute('data-src');
+                            img.alt = cover.getAttribute('alt') || 'Book cover';
+                            clone.appendChild(img);
+                            
+                            // Extract text content (title/author)
+                            var textContent = card.textContent.trim();
+                            if (textContent) {
+                                var textDiv = document.createElement('div');
+                                textDiv.style.padding = '8px';
+                                textDiv.style.fontSize = '14px';
+                                textDiv.style.lineHeight = '1.3';
+                                textDiv.innerText = textContent.substring(0, 100); // First 100 chars
+                                clone.appendChild(textDiv);
+                            }
+                            
+                            // Attach click handler
+                            var link = card.closest('a') || card.querySelector('a');
+                            if (link && link.href) {
+                                (function(href, el) {
+                                    el.onclick = function() { TizenUtils.navigate(href); };
+                                    el.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(href); };
+                                })(link.href, clone);
+                            } else {
+                                (function(orig, el) {
+                                    el.onclick = function() { orig.click(); };
+                                    el.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                                })(card, clone);
+                            }
+                            
+                            this.boat.appendChild(clone);
+                            this.cache.processedBooks[bookId] = true;
+                            bookCount++;
+                        }
+                    }
+                    
+                    this.log('Rendered ' + bookCount + ' books');
+                } catch(e) {
+                    this.log('renderContent error: ' + (e.message || 'unknown'));
                 }
             }
-            
-            // Check on load and after short delay for Nuxt
-            if (document.body) checkForLogin();
-            setTimeout(checkForLogin, 1000);
-        })();
+        };
+        
+        if (window.console) console.log('[TP ABS] Init');
+        ABS.init();
     </script>
 
     <script>
