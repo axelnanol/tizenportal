@@ -6,6 +6,10 @@ COMPLETION_REPORT.md
 *.log
 *.tmp
 
+# Development files (do not commit)
+abs/main.html
+main.html
+
 # IDE
 .vscode/
 .idea/
