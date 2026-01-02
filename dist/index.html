@@ -476,11 +476,14 @@ var ABS={state:"INIT",boat:null,nav:null,menu:null,observer:null,cache:{processe
                 var uaObj = USER_AGENTS.find(function(u){ return u.id === app.ua }) || USER_AGENTS[0];
                 var payload = { css: (core.css||'')+'\n'+(preset.css||''), js: (core.js||'')+'\n'+(preset.js||''), ua: uaObj.str };
                 var json = JSON.stringify(payload);
-                dbg.textContent = 'json=' + json.length + ' chars';
+                dbg.textContent = 'json=' + json.length + ' chars, wn=' + json.length;
                 // Use window.name for payload delivery (survives cross-origin navigation, no URL limits)
                 window.name = 'TP:' + json;
-                dbg.textContent = 'window.name set, navigating to ' + app.url.substring(0,50);
-                window.location.href = app.url;
+                dbg.textContent = 'GO: ' + app.url;
+                // Force navigation with setTimeout to ensure UI updates
+                setTimeout(function() {
+                    window.location.href = app.url;
+                }, 100);
             } catch(e) {
                 dbg.textContent = 'ERROR: ' + (e.message || 'unknown');
                 console.error('[TP] Launch error:', e);
