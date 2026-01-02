@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0530</title>
+    <title>TizenPortal 0531</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-        <header><h1>TizenPortal <span style="font-size:14px; color:#666;">0530</span></h1></header>
+        <header><h1>TizenPortal <span style="font-size:14px; color:#666;">0531</span></h1></header>
     <div id="grid" class="grid"></div>
     <div id="toast">Long Press Enter to Edit</div>
     <div id="debug-status" style="position:fixed;top:0;right:0;background:#000;color:#0f0;padding:10px;font-size:12px;font-family:monospace;z-index:9999;border:1px solid #0f0;">Loading...</div>
@@ -77,13 +77,13 @@
         }
         
         /* 2. LIFEBOAT LAYOUT */
-        #tp-lifeboat { display: block; width: 100%; padding-bottom: 50px; margin-top: 70px; margin-right: 0 !important; }
-        #tp-navbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #b8860b; display: flex; flex-wrap: wrap; align-items: center; padding: 0 20px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        #tp-lifeboat { display: block; width: 100%; padding-bottom: 50px; margin-top: 120px; margin-right: 0 !important; }
+        #tp-navbar { position: fixed; top: 50px; left: 0; right: 0; height: 60px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #b8860b; display: flex; flex-wrap: wrap; align-items: center; padding: 0 20px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .tp-nav-item { color: #ddd; font-size: 18px; margin-right: 20px; cursor: pointer; padding: 10px; border: 1px solid transparent; white-space: nowrap; }
         .tp-nav-item:focus, .tp-nav-item:hover { color: #FFD700; border-color: #FFD700; background: #333; outline: none; }
         
         /* 3. FORM MENU - Hidden until activated by remote */
-        #tp-menu { position: fixed; right: 0; top: 60px; bottom: 0; width: 350px; background: #1a3a52; border-left: 3px solid #1e90ff; z-index: 9999; display: none; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.7); }
+        #tp-menu { position: fixed; right: 0; top: 110px; bottom: 0; width: 350px; background: #1a3a52; border-left: 3px solid #1e90ff; z-index: 9999; display: none; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.7); }
         #tp-menu.active { display: flex; }
         #tp-menu-header { background: #0f2847; color: #1e90ff; padding: 15px; border-bottom: 2px solid #1e90ff; font-weight: bold; font-size: 16px; }
         #tp-menu-list { flex-shrink: 0; overflow-y: auto; max-height: 40%; border-bottom: 1px solid #0f2847; }

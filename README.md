@@ -1,6 +1,6 @@
 # 📺 TizenPortal
 
-![Version](https://img.shields.io/badge/version-0.5.30-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0.5.31-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **TizenPortal** is a universal launcher and compatibility layer designed for Samsung Smart TVs running Tizen OS. It allows you to run modern self-hosted web applications (like **Audiobookshelf**, **Jellyfin**, etc.) on older TVs that might otherwise struggle with broken layouts or incompatible interfaces.
 

@@ -97,9 +97,8 @@
             { l: "➡️", title: "Forward", fn: function(){ window.history.forward(); }, c:"#0f0" },
             { l: "🔄", title: "Reload", fn: function(){ window.location.reload(); }, c:"#fff" },
             { l: "🖱️", title: "Mouse", fn: function(){ Input.toggleMouse(); }, c:"#fff" },
-            { l: "📐", title: "Aspect", fn: function(){ Input.toggleAspect(); }, c:"#fff" },
-            { l: "📜", title: "Logs", fn: function(){ UI.setMode('logs'); }, c:"#0ff" },
-            { l: "🔍", title: "Source", fn: function(){ UI.setMode('source'); }, c:"#0ff" }
+            { l: "�", title: "Logs", fn: function(){ UI.toggleMode('logs'); }, c:"#0ff" },
+            { l: "🔍", title: "Source", fn: function(){ UI.toggleMode('source'); }, c:"#0ff" }
         ],
         init: function() {
             var css = "" +
@@ -176,6 +175,13 @@
                 document.body.focus();
             }
             this.upd();
+        },
+        toggleMode: function(mode) {
+            if (this.contentMode === mode) {
+                this.setMode('none');
+            } else {
+                this.setMode(mode);
+            }
         },
         setMode: function(mode) {
             this.contentMode = mode;
@@ -520,8 +526,7 @@
             UI.toast(this.mouse ? "Mouse ON" : "Mouse OFF");
         },
         draw: function() { if (this.cursor) { this.cursor.style.left = (this.x-10)+'px'; this.cursor.style.top = (this.y-10)+'px'; } },
-        click: function() { var el = document.elementFromPoint(this.x, this.y); if(el) { el.click(); el.focus(); } },
-        toggleAspect: function() { UI.toast("Aspect Toggle"); var v = document.querySelector('video'); if(v) v.style.objectFit = (v.style.objectFit === 'cover') ? 'contain' : 'cover'; }
+        click: function() { var el = document.elementFromPoint(this.x, this.y); if(el) { el.click(); el.focus(); } }
     };
 
     window.TP = { ui: UI, input: Input };
@@ -536,7 +541,7 @@
         BlueMenu.init();
         Input.init(); 
         if(loaded && applied) { 
-            UI.toast("TizenPortal 0530 - Ready"); 
+            UI.toast("TizenPortal 0531 - Ready"); 
         } else if(loaded && !applied) {
             UI.toast("Config Loaded - Apply Failed");
             tpHud('Payload loaded but apply failed');
