@@ -7,16 +7,17 @@
             var h = document.getElementById('tp-diag');
             if(!h){
                 h = document.createElement('div'); h.id='tp-diag';
-                h.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:rgba(0,0,0,0.85);color:#FFD700;font-size:13px;font-family:sans-serif;padding:6px 10px;pointer-events:none;text-align:left;';
+                h.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#222;color:#FFD700;font-size:14px;font-family:sans-serif;padding:10px 15px;pointer-events:none;text-align:left;border-bottom:2px solid #FFD700;box-shadow:0 5px 15px rgba(0,0,0,0.5);font-weight:bold;';
                 document.body.appendChild(h);
             }
             h.textContent = '[TP] ' + msg;
-            setTimeout(function(){ try { if(h) h.style.opacity='0.4'; } catch(e){} }, 3000);
+            setTimeout(function(){ try { if(h) h.style.opacity='0.6'; } catch(e){} }, 3000);
         } catch(e){}
     };
     function log(type, args) {
         var msg = Array.prototype.slice.call(args).map(function(a){ return (typeof a==='object'?JSON.stringify(a):String(a)); }).join(' ');
-        logs.unshift('['+type+'] '+msg); if (logs.length > 200) logs.pop();
+        var time = new Date().toTimeString().substring(0, 8);
+        logs.unshift({t:time, type:type, msg:msg}); if (logs.length > 200) logs.pop();
         if (window.TP && window.TP.ui) window.TP.ui.updateConsole();
     }
     var origLog = console.log; console.log = function() { log('INF', arguments); origLog.apply(console, arguments); }; console.error = function() { log('ERR', arguments); };
@@ -97,8 +98,7 @@
             { l: "🌐 URL", fn: function(){ var u = prompt("Go to URL:", window.location.href); if(u) window.location.href=u; }, c:"#0f0" },
             { l: "🖱️ Mouse", fn: function(){ Input.toggleMouse(); }, c:"#fff" },
             { l: "📐 Aspect", fn: function(){ Input.toggleAspect(); }, c:"#fff" },
-            { l: "🔲 Maximize", fn: function(){ UI.toggleMax(); }, c:"#0ff" },
-            { l: "🔍 Source", fn: function(){ UI.setMode('source'); }, c:"#0ff" },
+            { l: " Source", fn: function(){ UI.setMode('source'); }, c:"#0ff" },
             { l: "📜 Logs", fn: function(){ UI.setMode('logs'); }, c:"#aaa" }
         ],
         init: function() {
@@ -116,7 +116,7 @@
             
             var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
             var d = document.createElement('div'); d.id='tp-b'; d.className='unfocused';
-            d.innerHTML = '<div id="tp-h">TizenPortal 0.5.0</div>' +
+            d.innerHTML = '<div id="tp-h">TizenPortal 0526</div>' +
                           '<div id="tp-l"></div>' +
                           '<div id="tp-c" tabindex="0"></div>';
             document.body.appendChild(d);
@@ -163,7 +163,8 @@
         viewSource: function() {
             var html = document.documentElement.outerHTML.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
             var c = document.getElementById('tp-c');
-            c.innerHTML = '<div style="color:#0ff;border-bottom:1px solid #fff;margin-bottom:10px">--- SOURCE ---</div>' + html;
+            c.innerHTML = '<div style="color:#FFD700;background:#222;border-bottom:2px solid #FFD700;padding:10px;margin:-10px -10px 10px -10px;font-weight:bold;">PAGE SOURCE</div>' + 
+                          '<div style="color:#0ff;font-size:10px;line-height:1.4;">' + html + '</div>';
         },
         enterConsoleFocus: function() { var c = document.getElementById('tp-c'); c.classList.add('focused'); c.focus(); this.toast("Scroll / Back to Exit"); },
         exitConsoleFocus: function() { 
@@ -173,7 +174,14 @@
         updateConsole: function() {
             if(this.contentMode !== 'logs') return;
             var c = document.getElementById('tp-c');
-            c.innerHTML = logs.map(function(l){ return '<div>'+l.replace(/</g,'&lt;')+'</div>'; }).join('');
+            var header = '<div style="color:#FFD700;background:#222;border-bottom:2px solid #FFD700;padding:10px;margin:-10px -10px 10px -10px;font-weight:bold;">CONSOLE LOGS</div>';
+            var entries = logs.map(function(l){ 
+                var color = l.type === 'ERR' ? '#f00' : (l.type === 'INF' ? '#0f0' : '#fff');
+                return '<div style="margin:5px 0;line-height:1.3;"><span style="color:#888;font-size:10px;">' + l.t + '</span> ' +
+                       '<span style="color:' + color + ';font-weight:bold;">[' + l.type + ']</span> ' +
+                       '<span style="color:#aaa;">' + l.msg.replace(/</g,'&lt;') + '</span></div>'; 
+            }).join('');
+            c.innerHTML = header + entries;
         },
         nav: function(d) {
             if(this.focused !== 'sidebar') return;
