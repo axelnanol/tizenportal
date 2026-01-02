@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0546</title>
+    <title>TizenPortal 0547</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -290,7 +290,7 @@
 <body>
     <header>
         <div>
-            <h1>TizenPortal <span>0546</span></h1>
+            <h1>TizenPortal <span>0547</span></h1>
             <div class="subtitle">Smart TV App Launcher</div>
         </div>
     </header>
@@ -570,31 +570,44 @@
                 try {
                     if (this.state !== 'DETECT_PAGE') return false;
                     
-                    // Debug: dump all images and their attributes to find books
+                    // Debug: dump all images with src info
                     var allImages = document.querySelectorAll('img');
                     var imgInfo = [];
-                    for (var i = 0; i < Math.min(allImages.length, 10); i++) {
+                    for (var i = 0; i < Math.min(allImages.length, 5); i++) {
                         var img = allImages[i];
-                        imgInfo.push(img.getAttribute('cy-id') || img.className || img.id || 'no-id');
+                        var src = (img.src || '').substring(0, 30);
+                        imgInfo.push(src);
                     }
-                    this.log('Images(' + allImages.length + '): ' + imgInfo.join(', '));
+                    this.log('Imgs(' + allImages.length + '): ' + imgInfo.join(' | '));
                     
-                    // Debug: look for any element with cy-id attribute
-                    var cyElements = document.querySelectorAll('[cy-id]');
-                    var cyInfo = [];
-                    for (var j = 0; j < Math.min(cyElements.length, 10); j++) {
-                        cyInfo.push(cyElements[j].getAttribute('cy-id'));
+                    // Debug: find elements with "book" or "cover" in class/id
+                    var bookEls = document.querySelectorAll('[class*="book"], [id*="book"], [class*="cover"], [id*="cover"]');
+                    this.log('book/cover els: ' + bookEls.length);
+                    
+                    // Debug: find shelf/library elements
+                    var shelfEls = document.querySelectorAll('[class*="shelf"], [class*="library"], [class*="Shelf"], [class*="Library"]');
+                    this.log('shelf/lib els: ' + shelfEls.length);
+                    
+                    // Log first few class names of divs to find patterns
+                    var divs = document.querySelectorAll('div[class]');
+                    var divClasses = [];
+                    for (var d = 0; d < Math.min(divs.length, 8); d++) {
+                        var cls = divs[d].className;
+                        if (cls && cls.length < 50) divClasses.push(cls.substring(0, 25));
                     }
-                    this.log('cy-id elements(' + cyElements.length + '): ' + cyInfo.join(', '));
+                    this.log('Divs: ' + divClasses.join(' | '));
                     
-                    // Try multiple selectors for books - log each attempt
-                    var covers = document.querySelectorAll('[cy-id="coverImage"]');
-                    var bookCards = document.querySelectorAll('[id^="book-card-"]');
-                    var rows = document.querySelectorAll('.categorizedBookshelfRow');
+                    // Try multiple selectors for books
+                    var covers = [];
+                    var bookCards = [];
+                    var rows = [];
+                    try { covers = document.querySelectorAll('[cy-id="coverImage"]'); } catch(e) { this.log('cy-id selector failed'); }
+                    try { bookCards = document.querySelectorAll('[id^="book-card-"]'); } catch(e) { this.log('book-card selector failed'); }
+                    try { rows = document.querySelectorAll('.categorizedBookshelfRow'); } catch(e) { this.log('row selector failed'); }
                     
                     this.log('Query: covers=' + covers.length + ' cards=' + bookCards.length + ' rows=' + rows.length);
                     
-                    var bookCount = covers.length || bookCards.length;
+                    var bookCount = covers.length || bookCards.length || bookEls.length;
                     
                     this.forms = this.detectForms();
                     this.log('Detect: books=' + bookCount + ' forms=' + this.forms.length);
