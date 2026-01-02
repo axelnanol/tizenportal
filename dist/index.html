@@ -71,12 +71,21 @@
         }
         
         /* 2. LIFEBOAT LAYOUT */
-        #tp-lifeboat { display: block; width: 100%; padding-bottom: 50px; margin-top: 70px; }
+        #tp-lifeboat { display: block; width: 100%; padding-bottom: 50px; margin-top: 70px; margin-right: 0 !important; }
         #tp-navbar { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(0,0,0,0.9); border-bottom: 2px solid #b8860b; display: flex; align-items: center; padding: 0 20px; z-index: 10000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         .tp-nav-item { color: #ddd; font-size: 18px; margin-right: 20px; cursor: pointer; padding: 10px; border: 1px solid transparent; }
         .tp-nav-item:focus, .tp-nav-item:hover { color: #FFD700; border-color: #FFD700; background: #333; outline: none; }
         
-        /* 3. SURGICAL IMAGE FIXES - restrict ONLY nav/button icons */
+        /* 3. FORM MENU - Collapsible right panel */
+        #tp-menu { position: fixed; right: 0; top: 60px; bottom: 0; width: 350px; background: #1a3a52; border-left: 3px solid #1e90ff; z-index: 9999; display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.7); transform: translateX(400px); transition: transform 0.3s ease; }
+        #tp-menu.expanded { transform: translateX(0); }
+        #tp-menu-header { background: #0f2847; color: #1e90ff; padding: 15px; border-bottom: 2px solid #1e90ff; font-weight: bold; font-size: 16px; }
+        #tp-menu-list { flex-shrink: 0; overflow-y: auto; max-height: 40%; border-bottom: 1px solid #0f2847; }
+        .tp-menu-item { padding: 12px 15px; color: #aaa; cursor: pointer; border-bottom: 1px solid #0f2847; font-size: 14px; transition: background 0.1s; }
+        .tp-menu-item:focus, .tp-menu-item.active { color: #1e90ff; background: #0f2847; outline: 3px solid #1e90ff; font-weight: bold; }
+        #tp-menu-content { flex: 1; overflow-y: auto; padding: 15px; }
+        
+        /* 4. SURGICAL IMAGE FIXES - restrict ONLY nav/button icons */
         nav img, button img, [role="navigation"] img, aside img, header img, 
         a img[alt="Home"], img[alt="Home"], 
         img.w-8, img.w-10, img.h-8, img.h-10,
@@ -87,7 +96,7 @@
             height: auto !important; 
         }
         
-        /* 4. RESCUED CARD IMAGES - allow full display */
+        /* 5. RESCUED CARD IMAGES - allow full display */
         .tp-rescued-card img {
             width: 100% !important;
             height: 200px !important;
@@ -98,14 +107,19 @@
     </script>
     
     <script id="abs-js" type="text/template">
-        // ABS Lifeboat - Smart scraper with fire-once rendering
+        // ABS Lifeboat - Smart scraper with collapsible form menu
         var ABS = {
             state: 'INIT',
             boat: null,
             nav: null,
+            menu: null,
             observer: null,
             cache: { processedBooks: {}, processedHeadings: {}, processedNav: false },
             mode: null,
+            menuFocused: false,
+            menuExpanded: false,
+            selectedFormIdx: 0,
+            forms: [], // [ {category: "Search", inputs: [...], type: "search"}, ... ]
             
             log: function(msg) {
                 console.log('[TP ABS] ' + msg);
@@ -160,8 +174,13 @@
                 homeBtn.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate('/'); };
                 this.nav.appendChild(homeBtn);
                 
+                this.menu = document.createElement('div');
+                this.menu.id = 'tp-menu';
+                this.menu.innerHTML = '<div id="tp-menu-header">Forms</div><div id="tp-menu-list"></div><div id="tp-menu-content"></div>';
+                
                 document.body.appendChild(this.nav);
                 document.body.appendChild(this.boat);
+                document.body.appendChild(this.menu);
                 this.log('Lifeboat created');
             },
             
@@ -198,9 +217,9 @@
                     if (this.state !== 'DETECT_PAGE') return false;
                     
                     var bookCount = document.querySelectorAll('[cy-id="coverImage"]').length;
-                    var visibleInputs = this.getVisibleInputs();
+                    this.forms = this.detectForms();
                     
-                    this.log('Detect: books=' + bookCount + ' inputs=' + visibleInputs.length);
+                    this.log('Detect: books=' + bookCount + ' forms=' + this.forms.length);
                     
                     if (bookCount > 0) {
                         this.boat.innerHTML = '';
@@ -208,14 +227,16 @@
                         this.mode = 'content';
                         this.log('Rendering books');
                         this.renderContent();
+                        if (this.forms.length > 0) this.renderMenuUI();
                         this.state = 'READY';
                         document.body.classList.add('tp-lifeboat-active');
                         return true;
-                    } else if (visibleInputs.length > 0) {
+                    } else if (this.forms.length > 0) {
                         this.boat.innerHTML = '';
                         this.mode = 'form';
                         this.log('Rendering form');
-                        this.renderLoginForm();
+                        this.renderMenuUI();
+                        this.renderSelectedForm();
                         this.state = 'READY';
                         return true;
                     }
@@ -223,6 +244,178 @@
                 } catch(e) {
                     this.log('detectAndRender error: ' + (e.message || 'unknown'));
                     return false;
+                }
+            },
+            
+            detectForms: function() {
+                var forms = [];
+                var processed = {};
+                
+                // Detect search inputs
+                var searchInputs = document.querySelectorAll('input[type="search"], input[placeholder*="Search" i], input[placeholder*="search" i]');
+                if (searchInputs.length > 0) {
+                    var visible = [];
+                    for (var i = 0; i < searchInputs.length; i++) {
+                        if (searchInputs[i].offsetParent !== null) visible.push(searchInputs[i]);
+                    }
+                    if (visible.length > 0) forms.push({category: 'Search', inputs: visible, type: 'search'});
+                }
+                
+                // Detect login form
+                var loginInputs = document.querySelectorAll('input[type="password"], input[type="email"]');
+                var visible2 = [];
+                for (var j = 0; j < loginInputs.length; j++) {
+                    if (loginInputs[j].offsetParent !== null) visible2.push(loginInputs[j]);
+                }
+                if (visible2.length > 0 && !processed.login) {
+                    forms.push({category: 'Login', inputs: visible2, type: 'login'});
+                    processed.login = true;
+                }
+                
+                // Detect filter/select groups
+                var selects = document.querySelectorAll('select');
+                var visible3 = [];
+                for (var k = 0; k < selects.length; k++) {
+                    if (selects[k].offsetParent !== null) visible3.push(selects[k]);
+                }
+                if (visible3.length > 0 && !processed.filters) {
+                    forms.push({category: 'Filters', inputs: visible3, type: 'filters'});
+                    processed.filters = true;
+                }
+                
+                return forms;
+            },
+            
+            renderMenuUI: function() {
+                var self = this;
+                var menuList = document.getElementById('tp-menu-list');
+                menuList.innerHTML = '';
+                
+                var frag = document.createDocumentFragment();
+                for (var i = 0; i < this.forms.length; i++) {
+                    var form = this.forms[i];
+                    var item = document.createElement('div');
+                    item.className = 'tp-menu-item' + (i === 0 ? ' active' : '');
+                    item.innerText = form.category;
+                    item.tabIndex = 0;
+                    item.setAttribute('data-form-idx', i);
+                    (function(idx) {
+                        item.onclick = function() { self.selectForm(idx); };
+                        item.onkeydown = function(e) { 
+                            if (e.keyCode === 13) { self.selectForm(idx); e.preventDefault(); }
+                            if (e.keyCode === 38 && idx > 0) { self.selectForm(idx-1); e.preventDefault(); }
+                            if (e.keyCode === 40 && idx < self.forms.length-1) { self.selectForm(idx+1); e.preventDefault(); }
+                        };
+                    })(i);
+                    frag.appendChild(item);
+                }
+                menuList.appendChild(frag);
+                this.log('Menu rendered with ' + this.forms.length + ' forms');
+            },
+            
+            selectForm: function(idx) {
+                if (idx < 0 || idx >= this.forms.length) return;
+                this.selectedFormIdx = idx;
+                var items = document.querySelectorAll('.tp-menu-item');
+                for (var i = 0; i < items.length; i++) {
+                    items[i].className = (i === idx) ? 'tp-menu-item active' : 'tp-menu-item';
+                }
+                this.renderSelectedForm();
+                this.log('Selected form: ' + this.forms[idx].category);
+            },
+            
+            renderSelectedForm: function() {
+                if (this.selectedFormIdx >= this.forms.length) return;
+                var form = this.forms[this.selectedFormIdx];
+                var content = document.getElementById('tp-menu-content');
+                content.innerHTML = '';
+                
+                if (form.type === 'search') {
+                    this.renderSearchForm(form, content);
+                } else if (form.type === 'login') {
+                    this.renderLoginForm(form, content);
+                } else if (form.type === 'filters') {
+                    this.renderFilterForm(form, content);
+                }
+            },
+            
+            renderSearchForm: function(form, container) {
+                var self = this;
+                for (var i = 0; i < form.inputs.length; i++) {
+                    var orig = form.inputs[i];
+                    var label = document.createElement('label');
+                    label.style.cssText = 'display:block;color:#1e90ff;font-size:12px;margin-bottom:5px;font-weight:bold;';
+                    label.innerText = 'Search';
+                    
+                    var input = document.createElement('input');
+                    input.type = 'text';
+                    input.style.cssText = 'width:100%;padding:10px;margin-bottom:15px;background:#0f2847;color:#fff;border:1px solid #1e90ff;border-radius:4px;font-size:14px;';
+                    input.placeholder = 'Enter search term';
+                    input.tabIndex = 0;
+                    (function(o) {
+                        input.oninput = function() { o.value = input.value; o.dispatchEvent(new Event('input')); };
+                        input.onkeydown = function(e) {
+                            if (e.keyCode === 13) { o.dispatchEvent(new Event('change')); input.blur(); }
+                            if (e.keyCode === 10009 || e.keyCode === 27) input.blur();
+                        };
+                    })(orig);
+                    
+                    container.appendChild(label);
+                    container.appendChild(input);
+                    input.focus();
+                }
+            },
+            
+            renderLoginForm: function(form, container) {
+                if (window.TizenUtils && window.TizenUtils.handleLogin) {
+                    TizenUtils.handleLogin(container, 'Login');
+                    this.log('Login form rendered in menu');
+                }
+            },
+            
+            renderFilterForm: function(form, container) {
+                var self = this;
+                for (var i = 0; i < form.inputs.length; i++) {
+                    var orig = form.inputs[i];
+                    var label = document.createElement('label');
+                    label.style.cssText = 'display:block;color:#1e90ff;font-size:12px;margin-bottom:5px;font-weight:bold;';
+                    label.innerText = orig.name || 'Filter ' + (i+1);
+                    
+                    var select = document.createElement('select');
+                    select.style.cssText = 'width:100%;padding:8px;margin-bottom:12px;background:#0f2847;color:#fff;border:1px solid #1e90ff;border-radius:4px;font-size:13px;';
+                    select.tabIndex = 0;
+                    
+                    for (var j = 0; j < orig.options.length; j++) {
+                        var opt = document.createElement('option');
+                        opt.value = orig.options[j].value;
+                        opt.innerText = orig.options[j].text;
+                        select.appendChild(opt);
+                    }
+                    
+                    (function(o, s) {
+                        select.onchange = function() { o.value = s.value; o.dispatchEvent(new Event('change')); };
+                    })(orig, select);
+                    
+                    container.appendChild(label);
+                    container.appendChild(select);
+                }
+                if (form.inputs.length > 0) container.querySelector('select').focus();
+            },
+            
+            toggleMenuFocus: function() {
+                this.menuFocused = !this.menuFocused;
+                var menu = document.getElementById('tp-menu');
+                if (this.menuFocused) {
+                    menu.classList.add('expanded');
+                    this.menuExpanded = true;
+                    var firstItem = document.querySelector('.tp-menu-item');
+                    if (firstItem) firstItem.focus();
+                    this.log('Menu focused (expanded)');
+                } else {
+                    menu.classList.remove('expanded');
+                    this.menuExpanded = false;
+                    document.body.focus();
+                    this.log('Menu unfocused (collapsed)');
                 }
             },
             
@@ -235,13 +428,6 @@
                     if (el.offsetParent !== null) visible.push(el);
                 }
                 return visible;
-            },
-            
-            renderLoginForm: function() {
-                if (window.TizenUtils && window.TizenUtils.handleLogin) {
-                    TizenUtils.handleLogin(this.boat, 'Audiobookshelf');
-                    this.log('Login form rendered');
-                }
             },
             
             renderContent: function() {
@@ -322,7 +508,7 @@
                             
                             if (this.cache.processedBooks[bookId]) continue;
                             
-                            // Find the book card container (walk up to find card parent)
+                            // Find the book card container
                             var card = cover.closest('div[class*="rounded"]') || cover.closest('div');
                             if (!card) continue;
                             
@@ -337,14 +523,14 @@
                             img.alt = cover.getAttribute('alt') || 'Book cover';
                             clone.appendChild(img);
                             
-                            // Extract text content (title/author)
+                            // Extract text content
                             var textContent = card.textContent.trim();
                             if (textContent) {
                                 var textDiv = document.createElement('div');
                                 textDiv.style.padding = '8px';
                                 textDiv.style.fontSize = '14px';
                                 textDiv.style.lineHeight = '1.3';
-                                textDiv.innerText = textContent.substring(0, 100); // First 100 chars
+                                textDiv.innerText = textContent.substring(0, 100);
                                 clone.appendChild(textDiv);
                             }
                             
@@ -374,6 +560,25 @@
                 }
             }
         };
+        
+        // Inject global key handler for menu toggle
+        var originalKeyHandler = document.onkeydown;
+        document.addEventListener('keydown', function(e) {
+            if (e.keyCode === 39) { // Right arrow - expand menu
+                if (ABS.mode === 'content' && !ABS.menuFocused) {
+                    ABS.toggleMenuFocus();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+            if (e.keyCode === 37) { // Left arrow - collapse menu
+                if (ABS.menuFocused) {
+                    ABS.toggleMenuFocus();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }
+        }, true);
         
         if (window.console) console.log('[TP ABS] Init');
         ABS.init();
