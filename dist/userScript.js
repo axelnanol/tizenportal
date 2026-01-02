@@ -7,13 +7,12 @@
             var h = document.getElementById('tp-diag');
             if(!h){
                 h = document.createElement('div'); h.id='tp-diag';
-                h.style.cssText='position:fixed;top:0;right:0;width:4px;height:100%;z-index:2147483647;background:#0f0;pointer-events:none;box-shadow:inset -2px 0 5px rgba(0,255,0,0.3);';
-                h.title = 'TizenPortal Status';
+                h.style.cssText='position:fixed;top:0;right:0;background:#222;color:#0f0;padding:10px;font-size:12px;font-family:monospace;z-index:2147483647;border-left:2px solid #0f0;border-bottom:2px solid #0f0;pointer-events:none;max-width:300px;word-break:break-all;';
                 document.body.appendChild(h);
             }
-            h.title = '[TP] ' + msg;
+            h.textContent = '[TP] ' + msg;
             h.style.opacity = '1';
-            setTimeout(function(){ try { if(h) h.style.opacity='0.3'; } catch(e){} }, 3000);
+            setTimeout(function(){ try { if(h) h.style.opacity='0.5'; } catch(e){} }, 3000);
         } catch(e){}
     };
     function log(type, args) {
