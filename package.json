@@ -1,7 +1,7 @@
 {
   "name": "@alexnolan/tizenportal",
   "appName": "TizenPortal",
-  "version": "0.5.34",
+  "version": "0.5.35",
   "description": "Universal Tizen Launcher",
   "packageType": "mods",
   "websiteURL": "https://alexnolan.github.io/tizenportal/dist/index.html",

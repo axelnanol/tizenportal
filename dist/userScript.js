@@ -671,7 +671,7 @@
         BlueMenu.init();
         Input.init(); 
         if(loaded && applied) { 
-            UI.toast("TizenPortal 0534 - Ready"); 
+            UI.toast("TizenPortal 0535 - Ready"); 
         } else if(loaded && !applied) {
             UI.toast("Config Loaded - Apply Failed");
             tpHud('Payload loaded but apply failed');
