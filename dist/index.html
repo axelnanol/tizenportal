@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0526</title>
+    <title>TizenPortal 0527</title>
     <style>
         body { background: #000; color: #fff; font-family: "Segoe UI", sans-serif; margin: 0; padding: 40px; overflow: hidden; }
         header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
@@ -35,7 +35,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-        <header><h1>TizenPortal <span style="font-size:14px; color:#666;">0526</span></h1></header>
+        <header><h1>TizenPortal <span style="font-size:14px; color:#666;">0527</span></h1></header>
     <div id="grid" class="grid"></div>
     <div id="toast">Long Press Enter to Edit</div>
     <div id="debug-status" style="position:fixed;top:0;right:0;background:#000;color:#0f0;padding:10px;font-size:12px;font-family:monospace;z-index:9999;border:1px solid #0f0;">Loading...</div>
@@ -261,7 +261,7 @@
                     if (visible.length > 0) forms.push({category: 'Search', inputs: visible, type: 'search'});
                 }
                 
-                // Detect login form
+                // Detect login form (email/password fields)
                 var loginInputs = document.querySelectorAll('input[type="password"], input[type="email"]');
                 var visible2 = [];
                 for (var j = 0; j < loginInputs.length; j++) {
@@ -283,6 +283,7 @@
                     processed.filters = true;
                 }
                 
+                this.log('detectForms: search=' + searchInputs.length + ' login=' + loginInputs.length + ' select=' + selects.length);
                 return forms;
             },
             
@@ -305,6 +306,8 @@
                             if (e.keyCode === 13) { self.selectForm(idx); e.preventDefault(); }
                             if (e.keyCode === 38 && idx > 0) { self.selectForm(idx-1); e.preventDefault(); }
                             if (e.keyCode === 40 && idx < self.forms.length-1) { self.selectForm(idx+1); e.preventDefault(); }
+                            if (e.keyCode === 37) { self.toggleMenuFocus(); e.preventDefault(); e.stopPropagation(); }
+                            if (e.keyCode === 39) { self.toggleMenuFocus(); e.preventDefault(); e.stopPropagation(); }
                         };
                     })(i);
                     frag.appendChild(item);

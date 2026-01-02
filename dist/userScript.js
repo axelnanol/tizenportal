@@ -7,11 +7,13 @@
             var h = document.getElementById('tp-diag');
             if(!h){
                 h = document.createElement('div'); h.id='tp-diag';
-                h.style.cssText='position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#222;color:#FFD700;font-size:14px;font-family:sans-serif;padding:10px 15px;pointer-events:none;text-align:left;border-bottom:2px solid #FFD700;box-shadow:0 5px 15px rgba(0,0,0,0.5);font-weight:bold;';
+                h.style.cssText='position:fixed;top:0;right:0;width:4px;height:100%;z-index:2147483647;background:#0f0;pointer-events:none;box-shadow:inset -2px 0 5px rgba(0,255,0,0.3);';
+                h.title = 'TizenPortal Status';
                 document.body.appendChild(h);
             }
-            h.textContent = '[TP] ' + msg;
-            setTimeout(function(){ try { if(h) h.style.opacity='0.6'; } catch(e){} }, 3000);
+            h.title = '[TP] ' + msg;
+            h.style.opacity = '1';
+            setTimeout(function(){ try { if(h) h.style.opacity='0.3'; } catch(e){} }, 3000);
         } catch(e){}
     };
     function log(type, args) {
@@ -97,8 +99,7 @@
             { l: "🔄 Reload", fn: function(){ window.location.reload(); }, c:"#fff" },
             { l: "🌐 URL", fn: function(){ var u = prompt("Go to URL:", window.location.href); if(u) window.location.href=u; }, c:"#0f0" },
             { l: "🖱️ Mouse", fn: function(){ Input.toggleMouse(); }, c:"#fff" },
-            { l: "📐 Aspect", fn: function(){ Input.toggleAspect(); }, c:"#fff" },
-            { l: " Source", fn: function(){ UI.setMode('source'); }, c:"#0ff" },
+            { l: "📐 Aspect", fn: function(){ Input.toggleAspect(); }, c:"#fff" },            { l: "🔲 Maximize", fn: function(){ UI.toggleMax(); }, c:"#0ff" },            { l: " Source", fn: function(){ UI.setMode('source'); }, c:"#0ff" },
             { l: "📜 Logs", fn: function(){ UI.setMode('logs'); }, c:"#aaa" }
         ],
         init: function() {
@@ -116,7 +117,7 @@
             
             var s = document.createElement('style'); s.textContent = css; document.head.appendChild(s);
             var d = document.createElement('div'); d.id='tp-b'; d.className='unfocused';
-            d.innerHTML = '<div id="tp-h">TizenPortal 0526</div>' +
+            d.innerHTML = '<div id=\"tp-h\">TizenPortal 0527</div>' +
                           '<div id="tp-l"></div>' +
                           '<div id="tp-c" tabindex="0"></div>';
             document.body.appendChild(d);
@@ -194,6 +195,7 @@
             this.upd();
         },
         exe: function() { if(this.focused === 'sidebar' && this.contentMode === 'none') this.items[this.idx].fn(); },
+        toggleMax: function() { UI.toast("Maximize Toggle"); },
         upd: function() { var els = document.querySelectorAll('.tp-i'); for(var i=0; i<els.length; i++) els[i].className = (i===this.idx) ? 'tp-i active' : 'tp-i'; },
         toast: function(m) { var t = document.getElementById('tp-toast'); t.innerText = m; t.style.opacity = 1; setTimeout(function(){ t.style.opacity=0; }, 3000); }
     };
