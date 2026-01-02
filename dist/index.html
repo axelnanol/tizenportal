@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0554</title>
+    <title>TizenPortal 0547</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -290,7 +290,7 @@
 <body>
     <header>
         <div>
-            <h1>TizenPortal <span>0559</span></h1>
+            <h1>TizenPortal <span>0547</span></h1>
             <div class="subtitle">Smart TV App Launcher</div>
         </div>
     </header>
@@ -314,11 +314,684 @@
     </div>
 
     <script id="abs-css" type="text/template">
-body {background-color:#222 !important;margin:0 !important;padding:20px !important;overflow-y:auto !important;font-family:sans-serif !important;color:#fff !important;} .tp-lifeboat-active #app-content,.tp-lifeboat-active #__nuxt {opacity:0.001 !important;pointer-events:none !important;position:fixed !important;top:0 !important;left:0 !important;z-index:-100 !important;} .tp-lifeboat-active [role="toolbar"][aria-label="Library Sidebar"],.tp-lifeboat-active [role="toolbar"][aria-label="Appbar"],.tp-lifeboat-active [role="dialog"],.tp-lifeboat-active .modal,.tp-lifeboat-active .Vue-Toastification__container,.tp-lifeboat-active [style*="bottom:65px"] {display:none !important;} #tp-lifeboat {display:none;width:calc(100% - 120px);padding:20px;padding-bottom:50px;margin-top:60px;margin-left:100px;} .tp-lifeboat-active #tp-lifeboat {display:block;} #tp-navbar {position:fixed;top:50px;left:0;bottom:0;width:90px;background:rgba(0,0,0,0.95);border-right:2px solid #b8860b;display:flex;flex-direction:column;align-items:center;padding:15px 5px;z-index:10000;box-shadow:5px 0 15px rgba(0,0,0,0.5);overflow-y:auto;} .tp-nav-item {color:#ddd;font-size:12px;text-align:center;cursor:pointer;padding:12px 8px;margin-bottom:5px;border:1px solid transparent;border-radius:6px;white-space:normal;width:100%;} .tp-nav-item:focus,.tp-nav-item:hover {color:#FFD700;border-color:#FFD700;background:#333;outline:none;} #tp-menu {position:fixed;right:0;top:50px;bottom:0;width:350px;background:#1a3a52;border-left:3px solid #1e90ff;z-index:9999;display:none;flex-direction:column;box-shadow:-10px 0 30px rgba(0,0,0,0.7);} #tp-menu.active {display:flex;} #tp-menu-header {background:#0f2847;color:#1e90ff;padding:15px;border-bottom:2px solid #1e90ff;font-weight:bold;font-size:16px;} #tp-menu-list {flex-shrink:0;overflow-y:auto;max-height:40%;border-bottom:1px solid #0f2847;} .tp-menu-item {padding:12px 15px;color:#aaa;cursor:pointer;border-bottom:1px solid #0f2847;font-size:14px;transition:background 0.1s;} .tp-menu-item:focus,.tp-menu-item.active {color:#1e90ff;background:#0f2847;outline:3px solid #1e90ff;font-weight:bold;} #tp-menu-content {flex:1;overflow-y:auto;padding:15px;} img[alt="Home"] {max-width:50px !important;height:auto !important;} .tp-rescued-card img {width:100% !important;height:200px !important;object-fit:cover !important;display:block !important;max-width:none !important;}
+        /* 1. GLOBAL BASICS - Hide broken native app, show lifeboat */
+        body { 
+            background-color: #222 !important; 
+            margin: 0 !important; padding: 20px !important; 
+            overflow-y: auto !important; 
+            font-family: sans-serif !important; 
+            color: #fff !important; 
+        }
+
+        .tp-lifeboat-active #__nuxt { 
+            opacity: 0.001 !important; 
+            pointer-events: none !important; 
+            position: fixed !important; 
+            top: 0 !important; 
+            left: 0 !important; 
+            z-index: -100 !important;
+        }
+        
+        /* Hide native modals/dialogs when lifeboat active */
+        .tp-lifeboat-active [role="dialog"],
+        .tp-lifeboat-active .modal,
+        .tp-lifeboat-active .Vue-Toastification__container,
+        .tp-lifeboat-active [style*="bottom: 65px"] {
+            display: none !important;
+        }
+        
+        /* 2. LIFEBOAT LAYOUT - Left sidebar + content area */
+        #tp-lifeboat { display: none; width: calc(100% - 120px); padding: 20px; padding-bottom: 50px; margin-top: 60px; margin-left: 100px; }
+        .tp-lifeboat-active #tp-lifeboat { display: block; }
+        #tp-navbar { position: fixed; top: 50px; left: 0; bottom: 0; width: 90px; background: rgba(0,0,0,0.95); border-right: 2px solid #b8860b; display: flex; flex-direction: column; align-items: center; padding: 15px 5px; z-index: 10000; box-shadow: 5px 0 15px rgba(0,0,0,0.5); overflow-y: auto; }
+        .tp-nav-item { color: #ddd; font-size: 12px; text-align: center; cursor: pointer; padding: 12px 8px; margin-bottom: 5px; border: 1px solid transparent; border-radius: 6px; white-space: normal; width: 100%; }
+        .tp-nav-item:focus, .tp-nav-item:hover { color: #FFD700; border-color: #FFD700; background: #333; outline: none; }
+        
+        /* 3. FORM MENU - Hidden until activated by remote */
+        #tp-menu { position: fixed; right: 0; top: 50px; bottom: 0; width: 350px; background: #1a3a52; border-left: 3px solid #1e90ff; z-index: 9999; display: none; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.7); }
+        #tp-menu.active { display: flex; }
+        #tp-menu-header { background: #0f2847; color: #1e90ff; padding: 15px; border-bottom: 2px solid #1e90ff; font-weight: bold; font-size: 16px; }
+        #tp-menu-list { flex-shrink: 0; overflow-y: auto; max-height: 40%; border-bottom: 1px solid #0f2847; }
+        .tp-menu-item { padding: 12px 15px; color: #aaa; cursor: pointer; border-bottom: 1px solid #0f2847; font-size: 14px; transition: background 0.1s; }
+        .tp-menu-item:focus, .tp-menu-item.active { color: #1e90ff; background: #0f2847; outline: 3px solid #1e90ff; font-weight: bold; }
+        #tp-menu-content { flex: 1; overflow-y: auto; padding: 15px; }
+        
+        /* 4. SURGICAL IMAGE FIXES - restrict ONLY the Home icon */
+        img[alt="Home"] { 
+            max-width: 50px !important;
+            height: auto !important; 
+        }
+        
+        /* 5. RESCUED CARD IMAGES - allow full display */
+        .tp-rescued-card img {
+            width: 100% !important;
+            height: 200px !important;
+            object-fit: cover !important;
+            display: block !important;
+            max-width: none !important;
+        }
     </script>
     
     <script id="abs-js" type="text/template">
-var ABS={log:function(e){console.log("[TP ABS] "+e);try{var t=document.getElementById("tp-diag");t||(t=document.createElement("div"),t.id="tp-diag",t.style.cssText="position:fixed;top:60px;left:10px;background:#000;color:#0f0;padding:10px;font-size:14px;z-index:999999;border:2px solid #0f0;max-width:400px;",document.body.appendChild(t));t.textContent="[ABS] "+e}catch(e){}},init:function(){this.log("v0559 INIT");setTimeout(function(){ABS.log("Step 1: body ready");},500);setTimeout(function(){ABS.log("Step 2: checking DOM...");try{var n=document.querySelectorAll('[id^="book-card-"]');ABS.log("Found "+n.length+" book cards");}catch(e){ABS.log("ERROR: "+e.message);}},1500);}};ABS.init();
+        // ABS Lifeboat - Smart scraper with collapsible form menu
+        var ABS = {
+            state: 'INIT',
+            boat: null,
+            nav: null,
+            menu: null,
+            observer: null,
+            cache: { processedBooks: {}, processedHeadings: {}, processedNav: false },
+            mode: null,
+            menuFocused: false,
+            menuExpanded: false,
+            selectedFormIdx: 0,
+            forms: [], // [ {category: "Search", inputs: [...], type: "search"}, ... ]
+            
+            log: function(msg) {
+                console.log('[TP ABS] ' + msg);
+            },
+            
+            init: function() {
+                if (this.initialized) return;
+                this.initialized = true;
+                this.log('Starting');
+                this.state = 'WAIT_NUXT';
+                this.waitForNuxt();
+            },
+            
+            waitForNuxt: function() {
+                var self = this;
+                var nuxtReady = typeof window.__NUXT__ !== 'undefined' || document.querySelectorAll('[id*="__nuxt"]').length > 0;
+                var booksExist = document.querySelectorAll('[cy-id="coverImage"]').length > 0;
+                
+                if (nuxtReady || booksExist || document.body) {
+                    this.log('Nuxt ready');
+                    this.createLifeboat();
+                    this.setupMutationObserver();
+                    this.state = 'DETECT_PAGE';
+                } else {
+                    if (!this.waitCount) this.waitCount = 0;
+                    this.waitCount++;
+                    if (this.waitCount > 50) {
+                        this.log('Timeout, forcing start');
+                        this.createLifeboat();
+                        this.setupMutationObserver();
+                        this.state = 'DETECT_PAGE';
+                    } else {
+                        setTimeout(function() { self.waitForNuxt(); }, 100);
+                    }
+                }
+            },
+            
+            createLifeboat: function() {
+                if (this.boat) return;
+                
+                this.boat = document.createElement('div');
+                this.boat.id = 'tp-lifeboat';
+                this.boat.innerHTML = '<div style="color:#FFD700;font-size:24px;padding:40px;text-align:center;">Loading content...</div>';
+                
+                this.nav = document.createElement('div');
+                this.nav.id = 'tp-navbar';
+                
+                // Navigation extracted from siderail - no default buttons needed
+                
+                this.menu = document.createElement('div');
+                this.menu.id = 'tp-menu';
+                this.menu.innerHTML = '<div id="tp-menu-header">Forms</div><div id="tp-menu-list"></div><div id="tp-menu-content"></div>';
+                
+                document.body.appendChild(this.nav);
+                document.body.appendChild(this.boat);
+                document.body.appendChild(this.menu);
+                
+                // Hide original content IMMEDIATELY - don't wait for book detection
+                document.body.classList.add('tp-lifeboat-active');
+                
+                // Extract navigation links right away
+                this.extractNavigation();
+                
+                this.log('Lifeboat created');
+            },
+            
+            extractNavigation: function() {
+                var self = this;
+                if (this.cache.processedNav) return;
+                
+                var navFragment = document.createDocumentFragment();
+                
+                // Extract siderail navigation links
+                var siderail = document.getElementById('siderail-buttons-container');
+                if (siderail) {
+                    var siderailLinks = siderail.querySelectorAll('a');
+                    this.log('Found siderail with ' + siderailLinks.length + ' links');
+                    for (var s = 0; s < siderailLinks.length; s++) {
+                        var sLink = siderailLinks[s];
+                        // Get text from the <p> element
+                        var pEl = sLink.querySelector('p');
+                        var text = pEl ? pEl.textContent.trim() : '';
+                        if (text && text.length > 0 && text.length < 30) {
+                            var navItem = document.createElement('div');
+                            navItem.className = 'tp-nav-item';
+                            navItem.innerText = text;
+                            navItem.tabIndex = 0;
+                            var href = sLink.href || sLink.getAttribute('href');
+                            (function(url) {
+                                navItem.onclick = function() { TizenUtils.navigate(url); };
+                                navItem.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(url); };
+                            })(href);
+                            navFragment.appendChild(navItem);
+                        }
+                    }
+                } else {
+                    this.log('No siderail found, will retry');
+                    // Retry after a delay if siderail not found yet
+                    var self = this;
+                    setTimeout(function() { self.extractNavigation(); }, 500);
+                    return;
+                }
+                
+                // Extract library dropdown
+                var libDropdown = document.querySelector('[aria-haspopup="menu"]');
+                if (libDropdown) {
+                    var libBtn = document.createElement('div');
+                    libBtn.className = 'tp-nav-item';
+                    libBtn.innerText = 'Library';
+                    libBtn.tabIndex = 0;
+                    (function(orig) {
+                        libBtn.onclick = function() { orig.click(); };
+                        libBtn.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                    })(libDropdown);
+                    navFragment.appendChild(libBtn);
+                }
+                
+                // Extract search button
+                var searchForm = document.querySelector('form[role="search"]');
+                if (searchForm) {
+                    var searchInput = searchForm.querySelector('input');
+                    if (searchInput) {
+                        var searchBtn = document.createElement('div');
+                        searchBtn.className = 'tp-nav-item';
+                        searchBtn.innerText = 'Search';
+                        searchBtn.tabIndex = 0;
+                        (function(input) {
+                            searchBtn.onclick = function() { input.focus(); };
+                            searchBtn.onkeydown = function(e) { if (e.keyCode === 13) input.focus(); };
+                        })(searchInput);
+                        navFragment.appendChild(searchBtn);
+                    }
+                }
+                
+                if (navFragment.childNodes.length > 0) {
+                    this.nav.appendChild(navFragment);
+                    this.log('Added ' + navFragment.childNodes.length + ' nav items');
+                }
+                this.cache.processedNav = true;
+            },
+            
+            setupMutationObserver: function() {
+                var self = this;
+                this.observer = new MutationObserver(function(mutations) {
+                    try {
+                        // Check if nuxt loader is still visible
+                        var loader = document.getElementById('nuxt-loading');
+                        if (loader) {
+                            var loaderOpacity = getComputedStyle(loader).opacity;
+                            if (loaderOpacity !== '0') {
+                                self.log('Waiting for loader (opacity=' + loaderOpacity + ')');
+                                return;
+                            }
+                        }
+                        
+                        self.detectAndRender();
+                    } catch(e) {
+                        self.log('Observer error: ' + (e.message || 'unknown'));
+                    }
+                });
+                
+                this.observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true
+                });
+                this.log('Observer active');
+                
+                // Also do an initial check after a short delay
+                var self2 = this;
+                setTimeout(function() {
+                    self2.log('Initial delayed check...');
+                    self2.detectAndRender();
+                }, 1000);
+                setTimeout(function() {
+                    self2.log('Second delayed check...');
+                    self2.detectAndRender();
+                }, 3000);
+            },
+            
+            detectAndRender: function() {
+                try {
+                    if (this.state !== 'DETECT_PAGE') return false;
+                    
+                    // Debug: dump all images with src info
+                    var allImages = document.querySelectorAll('img');
+                    var imgInfo = [];
+                    for (var i = 0; i < Math.min(allImages.length, 5); i++) {
+                        var img = allImages[i];
+                        var src = (img.src || '').substring(0, 30);
+                        imgInfo.push(src);
+                    }
+                    this.log('Imgs(' + allImages.length + '): ' + imgInfo.join(' | '));
+                    
+                    // Debug: find elements with "book" or "cover" in class/id
+                    var bookEls = document.querySelectorAll('[class*="book"], [id*="book"], [class*="cover"], [id*="cover"]');
+                    this.log('book/cover els: ' + bookEls.length);
+                    
+                    // Debug: find shelf/library elements
+                    var shelfEls = document.querySelectorAll('[class*="shelf"], [class*="library"], [class*="Shelf"], [class*="Library"]');
+                    this.log('shelf/lib els: ' + shelfEls.length);
+                    
+                    // Log first few class names of divs to find patterns
+                    var divs = document.querySelectorAll('div[class]');
+                    var divClasses = [];
+                    for (var d = 0; d < Math.min(divs.length, 8); d++) {
+                        var cls = divs[d].className;
+                        if (cls && cls.length < 50) divClasses.push(cls.substring(0, 25));
+                    }
+                    this.log('Divs: ' + divClasses.join(' | '));
+                    
+                    // Try multiple selectors for books
+                    var covers = [];
+                    var bookCards = [];
+                    var rows = [];
+                    try { covers = document.querySelectorAll('[cy-id="coverImage"]'); } catch(e) { this.log('cy-id selector failed'); }
+                    try { bookCards = document.querySelectorAll('[id^="book-card-"]'); } catch(e) { this.log('book-card selector failed'); }
+                    try { rows = document.querySelectorAll('.categorizedBookshelfRow'); } catch(e) { this.log('row selector failed'); }
+                    
+                    this.log('Query: covers=' + covers.length + ' cards=' + bookCards.length + ' rows=' + rows.length);
+                    
+                    var bookCount = covers.length || bookCards.length || bookEls.length;
+                    
+                    this.forms = this.detectForms();
+                    this.log('Detect: books=' + bookCount + ' forms=' + this.forms.length);
+                    
+                    if (bookCount > 0) {
+                        this.boat.innerHTML = '';
+                        this.cache.processedBooks = {};
+                        this.cache.processedHeadings = {};
+                        // Keep processedNav - already extracted in createLifeboat
+                        this.mode = 'content';
+                        this.log('Rendering books');
+                        this.renderContent();
+                        if (this.forms.length > 0) this.renderMenuUI();
+                        this.state = 'READY';
+                        // tp-lifeboat-active already added in createLifeboat
+                        return true;
+                    } else if (this.forms.length > 0) {
+                        this.boat.innerHTML = '';
+                        this.mode = 'form';
+                        this.log('Rendering form');
+                        this.renderMenuUI();
+                        this.renderSelectedForm();
+                        this.state = 'READY';
+                        return true;
+                    }
+                    return false;
+                } catch(e) {
+                    this.log('detectAndRender error: ' + (e.message || 'unknown'));
+                    return false;
+                }
+            },
+            
+            detectForms: function() {
+                var forms = [];
+                var processed = {};
+                
+                // Detect search inputs
+                var searchInputs = document.querySelectorAll('input[type="search"], input[placeholder*="Search" i], input[placeholder*="search" i]');
+                if (searchInputs.length > 0) {
+                    var visible = [];
+                    for (var i = 0; i < searchInputs.length; i++) {
+                        if (searchInputs[i].offsetParent !== null) visible.push(searchInputs[i]);
+                    }
+                    if (visible.length > 0) forms.push({category: 'Search', inputs: visible, type: 'search'});
+                }
+                
+                // Detect login form (email/password fields)
+                var loginInputs = document.querySelectorAll('input[type="password"], input[type="email"]');
+                var visible2 = [];
+                for (var j = 0; j < loginInputs.length; j++) {
+                    if (loginInputs[j].offsetParent !== null) visible2.push(loginInputs[j]);
+                }
+                if (visible2.length > 0 && !processed.login) {
+                    forms.push({category: 'Login', inputs: visible2, type: 'login'});
+                    processed.login = true;
+                }
+                
+                // Detect filter/select groups
+                var selects = document.querySelectorAll('select');
+                var visible3 = [];
+                for (var k = 0; k < selects.length; k++) {
+                    if (selects[k].offsetParent !== null) visible3.push(selects[k]);
+                }
+                if (visible3.length > 0 && !processed.filters) {
+                    forms.push({category: 'Filters', inputs: visible3, type: 'filters'});
+                    processed.filters = true;
+                }
+                
+                this.log('detectForms: search=' + searchInputs.length + ' login=' + loginInputs.length + ' select=' + selects.length);
+                return forms;
+            },
+            
+            renderMenuUI: function() {
+                var self = this;
+                var menuList = document.getElementById('tp-menu-list');
+                menuList.innerHTML = '';
+                
+                var frag = document.createDocumentFragment();
+                for (var i = 0; i < this.forms.length; i++) {
+                    var form = this.forms[i];
+                    var item = document.createElement('div');
+                    item.className = 'tp-menu-item' + (i === 0 ? ' active' : '');
+                    item.innerText = form.category;
+                    item.tabIndex = 0;
+                    item.setAttribute('data-form-idx', i);
+                    (function(idx) {
+                        item.onclick = function() { self.selectForm(idx); };
+                        item.onkeydown = function(e) { 
+                            if (e.keyCode === 13) { self.selectForm(idx); e.preventDefault(); }
+                            if (e.keyCode === 38 && idx > 0) { self.selectForm(idx-1); e.preventDefault(); }
+                            if (e.keyCode === 40 && idx < self.forms.length-1) { self.selectForm(idx+1); e.preventDefault(); }
+                            if (e.keyCode === 10009 || e.keyCode === 27) { self.toggleMenuFocus(); e.preventDefault(); e.stopPropagation(); }
+                        };
+                    })(i);
+                    frag.appendChild(item);
+                }
+                menuList.appendChild(frag);
+                this.log('Menu rendered with ' + this.forms.length + ' forms');
+            },
+            
+            selectForm: function(idx) {
+                if (idx < 0 || idx >= this.forms.length) return;
+                this.selectedFormIdx = idx;
+                var items = document.querySelectorAll('.tp-menu-item');
+                for (var i = 0; i < items.length; i++) {
+                    items[i].className = (i === idx) ? 'tp-menu-item active' : 'tp-menu-item';
+                }
+                this.renderSelectedForm();
+                this.log('Selected form: ' + this.forms[idx].category);
+            },
+            
+            renderSelectedForm: function() {
+                if (this.selectedFormIdx >= this.forms.length) return;
+                var form = this.forms[this.selectedFormIdx];
+                var content = document.getElementById('tp-menu-content');
+                content.innerHTML = '';
+                
+                if (form.type === 'search') {
+                    this.renderSearchForm(form, content);
+                } else if (form.type === 'login') {
+                    this.renderLoginForm(form, content);
+                } else if (form.type === 'filters') {
+                    this.renderFilterForm(form, content);
+                }
+            },
+            
+            renderSearchForm: function(form, container) {
+                var self = this;
+                for (var i = 0; i < form.inputs.length; i++) {
+                    var orig = form.inputs[i];
+                    var label = document.createElement('label');
+                    label.style.cssText = 'display:block;color:#1e90ff;font-size:12px;margin-bottom:5px;font-weight:bold;';
+                    label.innerText = 'Search';
+                    
+                    var input = document.createElement('input');
+                    input.type = 'text';
+                    input.style.cssText = 'width:100%;padding:10px;margin-bottom:15px;background:#0f2847;color:#fff;border:1px solid #1e90ff;border-radius:4px;font-size:14px;';
+                    input.placeholder = 'Enter search term';
+                    input.tabIndex = 0;
+                    (function(o) {
+                        input.oninput = function() { o.value = input.value; o.dispatchEvent(new Event('input')); };
+                        input.onkeydown = function(e) {
+                            if (e.keyCode === 13) { o.dispatchEvent(new Event('change')); input.blur(); }
+                            if (e.keyCode === 10009 || e.keyCode === 27) input.blur();
+                        };
+                    })(orig);
+                    
+                    container.appendChild(label);
+                    container.appendChild(input);
+                    input.focus();
+                }
+            },
+            
+            renderLoginForm: function(form, container) {
+                if (window.TizenUtils && window.TizenUtils.handleLogin) {
+                    TizenUtils.handleLogin(container, 'Login');
+                    this.log('Login form rendered in menu');
+                }
+            },
+            
+            renderFilterForm: function(form, container) {
+                var self = this;
+                for (var i = 0; i < form.inputs.length; i++) {
+                    var orig = form.inputs[i];
+                    var label = document.createElement('label');
+                    label.style.cssText = 'display:block;color:#1e90ff;font-size:12px;margin-bottom:5px;font-weight:bold;';
+                    label.innerText = orig.name || 'Filter ' + (i+1);
+                    
+                    var select = document.createElement('select');
+                    select.style.cssText = 'width:100%;padding:8px;margin-bottom:12px;background:#0f2847;color:#fff;border:1px solid #1e90ff;border-radius:4px;font-size:13px;';
+                    select.tabIndex = 0;
+                    
+                    for (var j = 0; j < orig.options.length; j++) {
+                        var opt = document.createElement('option');
+                        opt.value = orig.options[j].value;
+                        opt.innerText = orig.options[j].text;
+                        select.appendChild(opt);
+                    }
+                    
+                    (function(o, s) {
+                        select.onchange = function() { o.value = s.value; o.dispatchEvent(new Event('change')); };
+                    })(orig, select);
+                    
+                    container.appendChild(label);
+                    container.appendChild(select);
+                }
+                if (form.inputs.length > 0) container.querySelector('select').focus();
+            },
+            
+            toggleMenuFocus: function() {
+                this.menuFocused = !this.menuFocused;
+                var menu = document.getElementById('tp-menu');
+                if (this.menuFocused) {
+                    menu.classList.add('active');
+                    var firstItem = document.querySelector('.tp-menu-item');
+                    if (firstItem) firstItem.focus();
+                    this.log('Menu active');
+                } else {
+                    menu.classList.remove('active');
+                    document.body.focus();
+                    this.log('Menu hidden');
+                }
+            },
+            
+            getVisibleInputs: function() {
+                var all = document.querySelectorAll('input, textarea, select, button');
+                var visible = [];
+                for (var i = 0; i < all.length; i++) {
+                    var el = all[i];
+                    if (el.style.display === 'none' || el.style.visibility === 'hidden') continue;
+                    if (el.offsetParent !== null) visible.push(el);
+                }
+                return visible;
+            },
+            
+            renderContent: function() {
+                try {
+                    if (this.mode !== 'content') return;
+                    
+                    // Navigation now extracted in extractNavigation() - no duplicate code here
+                    
+                    // Extract books from category sections
+                    var categorySections = document.querySelectorAll('.categorizedBookshelfRow');
+                    this.log('Found ' + categorySections.length + ' sections');
+                    var bookCount = 0;
+                    
+                    for (var i = 0; i < categorySections.length; i++) {
+                        var section = categorySections[i];
+                        var sectionId = 'tp-section-' + i;
+                        
+                        // Find category header
+                        var placard = null;
+                        var parent = section.parentElement;
+                        if (parent && parent.parentElement) {
+                            placard = parent.parentElement.querySelector('.categoryPlacard');
+                        }
+                        
+                        if (placard && !this.cache.processedHeadings[sectionId]) {
+                            var text = placard.textContent.trim();
+                            if (text.length > 0) {
+                                var h = document.createElement('div');
+                                h.className = 'tp-shelf-title';
+                                h.innerText = text;
+                                h.id = sectionId + '-header';
+                                this.boat.appendChild(h);
+                                this.cache.processedHeadings[sectionId] = true;
+                            }
+                        }
+                        
+                        // Extract books using cy-id
+                        var covers = section.querySelectorAll('[cy-id="coverImage"]');
+                        for (var c = 0; c < covers.length; c++) {
+                            var cover = covers[c];
+                            var bookId = 'tp-book-' + i + '-' + c;
+                            
+                            if (this.cache.processedBooks[bookId]) continue;
+                            
+                            // Find the book card container
+                            var card = cover.closest('div[class*="rounded"]') || cover.closest('div');
+                            if (!card) continue;
+                            
+                            var clone = document.createElement('div');
+                            clone.id = bookId;
+                            clone.className = 'tp-rescued-card';
+                            clone.setAttribute('tabindex', '0');
+                            
+                            // Clone cover image
+                            var img = document.createElement('img');
+                            img.src = cover.getAttribute('src') || cover.getAttribute('data-src');
+                            img.alt = cover.getAttribute('alt') || 'Book cover';
+                            clone.appendChild(img);
+                            
+                            // Extract text content
+                            var textContent = card.textContent.trim();
+                            if (textContent) {
+                                var textDiv = document.createElement('div');
+                                textDiv.style.padding = '8px';
+                                textDiv.style.fontSize = '14px';
+                                textDiv.style.lineHeight = '1.3';
+                                textDiv.innerText = textContent.substring(0, 100);
+                                clone.appendChild(textDiv);
+                            }
+                            
+                            // Extract action buttons from overlay
+                            var overlay = card.querySelector('[cy-id="overlay"]');
+                            if (overlay) {
+                                var buttonBar = document.createElement('div');
+                                buttonBar.style.cssText = 'display:flex;gap:8px;padding:4px 8px;justify-content:center;background:rgba(0,0,0,0.7);';
+                                
+                                var playBtn = overlay.querySelector('[cy-id="playButton"]');
+                                var readBtn = overlay.querySelector('[cy-id="readButton"]');
+                                var editBtn = overlay.querySelector('[cy-id="editButton"]');
+                                var moreBtn = overlay.querySelector('[cy-id="moreButton"]');
+                                
+                                var addedButtons = false;
+                                
+                                if (playBtn) {
+                                    var play = document.createElement('div');
+                                    play.innerHTML = '▶';
+                                    play.style.cssText = 'color:#1e90ff;font-size:18px;cursor:pointer;padding:4px;';
+                                    play.tabIndex = 0;
+                                    (function(orig) {
+                                        play.onclick = function(e) { e.stopPropagation(); orig.click(); };
+                                        play.onkeydown = function(e) { if (e.keyCode === 13) { e.stopPropagation(); orig.click(); } };
+                                    })(playBtn);
+                                    buttonBar.appendChild(play);
+                                    addedButtons = true;
+                                }
+                                
+                                if (readBtn && readBtn.style.display !== 'none') {
+                                    var read = document.createElement('div');
+                                    read.innerHTML = '📖';
+                                    read.style.cssText = 'color:#1e90ff;font-size:18px;cursor:pointer;padding:4px;';
+                                    read.tabIndex = 0;
+                                    (function(orig) {
+                                        read.onclick = function(e) { e.stopPropagation(); orig.click(); };
+                                        read.onkeydown = function(e) { if (e.keyCode === 13) { e.stopPropagation(); orig.click(); } };
+                                    })(readBtn);
+                                    buttonBar.appendChild(read);
+                                    addedButtons = true;
+                                }
+                                
+                                if (editBtn) {
+                                    var edit = document.createElement('div');
+                                    edit.innerHTML = '✏';
+                                    edit.style.cssText = 'color:#888;font-size:18px;cursor:pointer;padding:4px;';
+                                    edit.tabIndex = 0;
+                                    (function(orig) {
+                                        edit.onclick = function(e) { e.stopPropagation(); orig.click(); };
+                                        edit.onkeydown = function(e) { if (e.keyCode === 13) { e.stopPropagation(); orig.click(); } };
+                                    })(editBtn);
+                                    buttonBar.appendChild(edit);
+                                    addedButtons = true;
+                                }
+                                
+                                if (moreBtn) {
+                                    var more = document.createElement('div');
+                                    more.innerHTML = '⋮';
+                                    more.style.cssText = 'color:#888;font-size:18px;cursor:pointer;padding:4px;';
+                                    more.tabIndex = 0;
+                                    (function(orig) {
+                                        more.onclick = function(e) { e.stopPropagation(); orig.click(); };
+                                        more.onkeydown = function(e) { if (e.keyCode === 13) { e.stopPropagation(); orig.click(); } };
+                                    })(moreBtn);
+                                    buttonBar.appendChild(more);
+                                    addedButtons = true;
+                                }
+                                
+                                if (addedButtons) {
+                                    clone.appendChild(buttonBar);
+                                }
+                            }
+                            
+                            // Attach click handler
+                            var link = card.closest('a') || card.querySelector('a');
+                            if (link && link.href) {
+                                (function(href, el) {
+                                    el.onclick = function() { TizenUtils.navigate(href); };
+                                    el.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(href); };
+                                })(link.href, clone);
+                            } else {
+                                (function(orig, el) {
+                                    el.onclick = function() { orig.click(); };
+                                    el.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                                })(card, clone);
+                            }
+                            
+                            this.boat.appendChild(clone);
+                            this.cache.processedBooks[bookId] = true;
+                            bookCount++;
+                        }
+                    }
+                    
+                    this.log('Rendered ' + bookCount + ' books');
+                } catch(e) {
+                    this.log('renderContent error: ' + (e.message || 'unknown'));
+                }
+            }
+        };
+        
+        // Menu toggled only by Blue button (406) from userScript, not arrow keys
+        
+        if (window.console) console.log('[TP ABS] Init');
+        ABS.init();
     </script>
 
     <script>
@@ -466,26 +1139,18 @@ var ABS={log:function(e){console.log("[TP ABS] "+e);try{var t=document.getElemen
         });
 
         function launch(app) {
-            var dbg = document.getElementById('debug-status');
-            dbg.style.display = 'block';
             try {
-                dbg.textContent = 'launch: ' + app.name + ' preset=' + (app.presetID || 'none');
+                document.getElementById('debug-status').textContent = 'launch: ' + app.name;
                 var core = PRESETS['__CORE__']; 
                 var preset = PRESETS[app.presetID] || {}; 
-                dbg.textContent = 'preset css=' + (preset.css ? preset.css.length : 0) + ' js=' + (preset.js ? preset.js.length : 0);
                 var uaObj = USER_AGENTS.find(function(u){ return u.id === app.ua }) || USER_AGENTS[0];
                 var payload = { css: (core.css||'')+'\n'+(preset.css||''), js: (core.js||'')+'\n'+(preset.js||''), ua: uaObj.str };
+                document.getElementById('debug-status').textContent = 'launch: navigating...';
                 var json = JSON.stringify(payload);
-                dbg.textContent = 'json=' + json.length + ' chars, wn=' + json.length;
-                // Use window.name for payload delivery (survives cross-origin navigation, no URL limits)
-                window.name = 'TP:' + json;
-                dbg.textContent = 'GO: ' + app.url;
-                // Force navigation with setTimeout to ensure UI updates
-                setTimeout(function() {
-                    window.location.href = app.url;
-                }, 100);
+                var encoded = btoa(unescape(encodeURIComponent(json)));
+                window.location.href = app.url + '#tp=' + encoded;
             } catch(e) {
-                dbg.textContent = 'ERROR: ' + (e.message || 'unknown');
+                document.getElementById('debug-status').textContent = 'launch ERROR: ' + (e.message || 'unknown');
                 console.error('[TP] Launch error:', e);
                 alert('Error launching app: ' + (e.message || 'unknown'));
             }

@@ -1,13 +1,4 @@
 (function() {
-    // VERY EARLY DEBUG - show alert if we even start
-    try { 
-        var earlyDbg = document.createElement('div');
-        earlyDbg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;padding:20px;font-size:20px;z-index:2147483647;text-align:center;';
-        earlyDbg.textContent = 'TP SCRIPT STARTED - ' + window.location.hostname;
-        if (document.body) document.body.appendChild(earlyDbg);
-        else document.addEventListener('DOMContentLoaded', function() { document.body.appendChild(earlyDbg); });
-    } catch(e) {}
-
     if (window.location.hostname.indexOf('github.io') > -1) return;
 
     var logs = [];
@@ -46,54 +37,27 @@
     var Config = {
         payload: null, homeUrl: 'https://alexnolan.github.io/tizenportal/dist/index.html',
         load: function() {
-            tpHud('load() starting...');
             try {
-                // 1. Check window.name (survives cross-origin navigation, no URL limits)
-                if (window.name && window.name.indexOf('TP:') === 0) {
-                    tpHud('window.name found, len=' + window.name.length);
-                    var j = window.name.substring(3); // Remove 'TP:' prefix
-                    this.payload = JSON.parse(j);
-                    sessionStorage.setItem('tp_conf', j); localStorage.setItem('tp_conf', j);
-                    window.name = ''; // Clear after reading
-                    tpHud('window.name payload loaded'); console.log("[TP] window.name payload loaded"); return true;
-                }
-
-                // 2. Check URL Hash (legacy fallback)
+                // 1. Check URL Hash (Client-Side, bypasses server limits)
                 var m = window.location.hash.match(/[#&]tp=([^&]+)/);
-                tpHud('hash match: ' + (m ? 'yes len=' + m[1].length : 'no'));
                 if (m && m[1]) {
-                    tpHud('atob starting...');
-                    // Reverse URL-safe base64 (- back to +, _ back to /)
-                    var b64 = m[1].replace(/-/g, '+').replace(/_/g, '/');
-                    var decoded = atob(b64);
-                    tpHud('atob done, len=' + decoded.length);
-                    tpHud('escape starting...');
-                    var escaped = escape(decoded);
-                    tpHud('escape done, len=' + escaped.length);
-                    tpHud('decodeURI starting...');
-                    var j = decodeURIComponent(escaped);
-                    tpHud('decodeURI done, len=' + j.length);
-                    tpHud('JSON.parse starting...');
-                    this.payload = JSON.parse(j);
-                    tpHud('JSON.parse done');
+                    var j = atob(m[1]); this.payload = JSON.parse(j); 
                     sessionStorage.setItem('tp_conf', j); localStorage.setItem('tp_conf', j);
                     // Clear hash without reloading
                     history.replaceState(null, document.title, window.location.pathname + window.location.search);
                     tpHud('Hash payload loaded'); console.log("[TP] Hash payload loaded"); return true;
                 }
 
-                // 3. Check URL Param (Legacy/Direct)
+                // 2. Check URL Param (Legacy/Direct)
                 var m2 = window.location.href.match(/[?&]tp=([^&]+)/);
                 if (m2 && m2[1]) {
-                    // Reverse URL-safe base64 (- back to +, _ back to /)
-                    var b64 = m2[1].replace(/-/g, '+').replace(/_/g, '/');
-                    var j = decodeURIComponent(escape(atob(b64))); this.payload = JSON.parse(j); 
+                    var j = atob(m2[1]); this.payload = JSON.parse(j); 
                     sessionStorage.setItem('tp_conf', j); localStorage.setItem('tp_conf', j);
                     window.history.replaceState({}, document.title, window.location.href.replace(/[?&]tp=[^&]+/, ''));
                     tpHud('Query payload loaded'); console.log("[TP] Query payload loaded"); return true;
                 }
                 
-                // 4. Fallback to Storage (Session first, then Local)
+                // 3. Fallback to Storage (Session first, then Local)
                 var s = sessionStorage.getItem('tp_conf'); 
                 if(s){this.payload=JSON.parse(s);tpHud('Session payload loaded');console.log("[TP] Session payload loaded");return true;}
                 var l = localStorage.getItem('tp_conf');
@@ -101,9 +65,7 @@
             } catch(e) { console.error("Conf load failed", e); tpHud('Config load failed: ' + (e.message || 'parse error')); } return false;
         },
         apply: function() {
-            tpHud('apply() starting...');
-            if (!this.payload) { tpHud('No payload!'); return false; }
-            tpHud('payload.css=' + (this.payload.css ? this.payload.css.length : 0) + ' js=' + (this.payload.js ? this.payload.js.length : 0));
+            if (!this.payload) return false;
             // Apply User Agent override first
             if (this.payload.ua) { 
                 try { 
@@ -720,7 +682,7 @@
         BlueMenu.init();
         Input.init(); 
         if(loaded && applied) { 
-            UI.toast("TizenPortal 0559 - Ready"); 
+            UI.toast("TizenPortal 0547 - Ready"); 
         } else if(loaded && !applied) {
             UI.toast("Config Loaded - Apply Failed");
             tpHud('Payload loaded but apply failed');
