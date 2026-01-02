@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0545</title>
+    <title>TizenPortal 0546</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -290,7 +290,7 @@
 <body>
     <header>
         <div>
-            <h1>TizenPortal <span>0545</span></h1>
+            <h1>TizenPortal <span>0546</span></h1>
             <div class="subtitle">Smart TV App Launcher</div>
         </div>
     </header>
@@ -569,6 +569,23 @@
             detectAndRender: function() {
                 try {
                     if (this.state !== 'DETECT_PAGE') return false;
+                    
+                    // Debug: dump all images and their attributes to find books
+                    var allImages = document.querySelectorAll('img');
+                    var imgInfo = [];
+                    for (var i = 0; i < Math.min(allImages.length, 10); i++) {
+                        var img = allImages[i];
+                        imgInfo.push(img.getAttribute('cy-id') || img.className || img.id || 'no-id');
+                    }
+                    this.log('Images(' + allImages.length + '): ' + imgInfo.join(', '));
+                    
+                    // Debug: look for any element with cy-id attribute
+                    var cyElements = document.querySelectorAll('[cy-id]');
+                    var cyInfo = [];
+                    for (var j = 0; j < Math.min(cyElements.length, 10); j++) {
+                        cyInfo.push(cyElements[j].getAttribute('cy-id'));
+                    }
+                    this.log('cy-id elements(' + cyElements.length + '): ' + cyInfo.join(', '));
                     
                     // Try multiple selectors for books - log each attempt
                     var covers = document.querySelectorAll('[cy-id="coverImage"]');
