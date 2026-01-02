@@ -39,7 +39,17 @@
         load: function() {
             tpHud('load() starting...');
             try {
-                // 1. Check URL Hash (Client-Side, bypasses server limits)
+                // 1. Check window.name (survives cross-origin navigation, no URL limits)
+                if (window.name && window.name.indexOf('TP:') === 0) {
+                    tpHud('window.name found, len=' + window.name.length);
+                    var j = window.name.substring(3); // Remove 'TP:' prefix
+                    this.payload = JSON.parse(j);
+                    sessionStorage.setItem('tp_conf', j); localStorage.setItem('tp_conf', j);
+                    window.name = ''; // Clear after reading
+                    tpHud('window.name payload loaded'); console.log("[TP] window.name payload loaded"); return true;
+                }
+
+                // 2. Check URL Hash (legacy fallback)
                 var m = window.location.hash.match(/[#&]tp=([^&]+)/);
                 tpHud('hash match: ' + (m ? 'yes len=' + m[1].length : 'no'));
                 if (m && m[1]) {
@@ -63,7 +73,7 @@
                     tpHud('Hash payload loaded'); console.log("[TP] Hash payload loaded"); return true;
                 }
 
-                // 2. Check URL Param (Legacy/Direct)
+                // 3. Check URL Param (Legacy/Direct)
                 var m2 = window.location.href.match(/[?&]tp=([^&]+)/);
                 if (m2 && m2[1]) {
                     // Reverse URL-safe base64 (- back to +, _ back to /)
@@ -74,7 +84,7 @@
                     tpHud('Query payload loaded'); console.log("[TP] Query payload loaded"); return true;
                 }
                 
-                // 3. Fallback to Storage (Session first, then Local)
+                // 4. Fallback to Storage (Session first, then Local)
                 var s = sessionStorage.getItem('tp_conf'); 
                 if(s){this.payload=JSON.parse(s);tpHud('Session payload loaded');console.log("[TP] Session payload loaded");return true;}
                 var l = localStorage.getItem('tp_conf');
@@ -701,7 +711,7 @@
         BlueMenu.init();
         Input.init(); 
         if(loaded && applied) { 
-            UI.toast("TizenPortal 0556 - Ready"); 
+            UI.toast("TizenPortal 0557 - Ready"); 
         } else if(loaded && !applied) {
             UI.toast("Config Loaded - Apply Failed");
             tpHud('Payload loaded but apply failed');
