@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0565</title>
+    <title>TizenPortal 0566</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -290,7 +290,7 @@
 <body>
     <header>
         <div>
-            <h1>TizenPortal <span>0565</span></h1>
+            <h1>TizenPortal <span>0566</span></h1>
             <div class="subtitle">Smart TV App Launcher</div>
         </div>
     </header>
@@ -570,6 +570,14 @@
                 try {
                     if (this.state !== 'DETECT_PAGE') return false;
                     
+                    // DEBUG: Dump first 5 element IDs on the page
+                    var allEls = document.querySelectorAll('[id]');
+                    var idList = [];
+                    for (var x = 0; x < Math.min(allEls.length, 20); x++) {
+                        idList.push(allEls[x].id);
+                    }
+                    this.log('First 20 IDs: ' + idList.join(', '));
+                    
                     // Try multiple selectors - ABS uses different patterns on different pages
                     var bookCards = document.querySelectorAll('[id^="book-card-"]');
                     var seriesCards = document.querySelectorAll('[id^="series-card-"]');
@@ -582,8 +590,6 @@
                     
                     var totalCards = bookCards.length + seriesCards.length;
                     this.log('Cards: book=' + bookCards.length + ' series=' + seriesCards.length + ' fallback=' + fallbackEls.length + ' imgs=' + allImgs.length);
-                    
-                    this.log('Cards: books=' + bookCards.length + ' series=' + seriesCards.length);
                     
                     this.forms = this.detectForms();
                     this.log('Detect: cards=' + totalCards + ' forms=' + this.forms.length);
