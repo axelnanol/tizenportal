@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0563</title>
+    <title>TizenPortal 0564</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -290,7 +290,7 @@
 <body>
     <header>
         <div>
-            <h1>TizenPortal <span>0563</span></h1>
+            <h1>TizenPortal <span>0564</span></h1>
             <div class="subtitle">Smart TV App Launcher</div>
         </div>
     </header>
@@ -569,6 +569,21 @@
             detectAndRender: function() {
                 try {
                     if (this.state !== 'DETECT_PAGE') return false;
+                    
+                    // Debug: find all elements with IDs containing "book", "card", "series"
+                    var allWithId = document.querySelectorAll('[id]');
+                    var idSamples = [];
+                    for (var d = 0; d < allWithId.length && idSamples.length < 10; d++) {
+                        var id = allWithId[d].id;
+                        if (id && (id.indexOf('book') > -1 || id.indexOf('card') > -1 || id.indexOf('series') > -1 || id.indexOf('item') > -1)) {
+                            idSamples.push(id.substring(0, 30));
+                        }
+                    }
+                    this.log('IDs: ' + (idSamples.length > 0 ? idSamples.join(', ') : 'none with book/card/series/item'));
+                    
+                    // Also check for images (books usually have cover images)
+                    var allImgs = document.querySelectorAll('img');
+                    this.log('Total imgs: ' + allImgs.length);
                     
                     // Use correct ABS selectors: [id^="book-card-"], [id^="series-card-"]
                     var bookCards = document.querySelectorAll('[id^="book-card-"]');
