@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TizenPortal 0547</title>
+    <title>TizenPortal 0549</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -290,7 +290,7 @@
 <body>
     <header>
         <div>
-            <h1>TizenPortal <span>0547</span></h1>
+            <h1>TizenPortal <span>0549</span></h1>
             <div class="subtitle">Smart TV App Launcher</div>
         </div>
     </header>
@@ -323,6 +323,8 @@
             color: #fff !important; 
         }
 
+        /* Hide main app content - use #app-content (from default.vue) not just #__nuxt */
+        .tp-lifeboat-active #app-content,
         .tp-lifeboat-active #__nuxt { 
             opacity: 0.001 !important; 
             pointer-events: none !important; 
@@ -332,7 +334,9 @@
             z-index: -100 !important;
         }
         
-        /* Hide native modals/dialogs when lifeboat active */
+        /* Hide native siderail (we replace it), appbar, and modals */
+        .tp-lifeboat-active [role="toolbar"][aria-label="Library Sidebar"],
+        .tp-lifeboat-active [role="toolbar"][aria-label="Appbar"],
         .tp-lifeboat-active [role="dialog"],
         .tp-lifeboat-active .modal,
         .tp-lifeboat-active .Vue-Toastification__container,
@@ -373,7 +377,9 @@
     </script>
     
     <script id="abs-js" type="text/template">
-        // ABS Lifeboat - Smart scraper with collapsible form menu
+        // ABS Lifeboat v0549 - Selectors from actual ABS source code
+        // Key insight: cy-id is a Vue/Cypress test directive, NOT an HTML attribute!
+        // Real selectors: [id^="book-card-"] for cards, #bookshelf for container
         var ABS = {
             state: 'INIT',
             boat: null,
@@ -385,27 +391,36 @@
             menuFocused: false,
             menuExpanded: false,
             selectedFormIdx: 0,
-            forms: [], // [ {category: "Search", inputs: [...], type: "search"}, ... ]
+            forms: [],
             
             log: function(msg) {
                 console.log('[TP ABS] ' + msg);
+                // Also update HUD if available
+                try {
+                    var h = document.getElementById('tp-diag');
+                    if (h) { h.textContent = '[ABS] ' + msg; h.style.opacity = '1'; h.style.display = 'block'; }
+                } catch(e) {}
             },
             
             init: function() {
                 if (this.initialized) return;
                 this.initialized = true;
-                this.log('Starting');
+                this.log('v0548 Starting');
                 this.state = 'WAIT_NUXT';
                 this.waitForNuxt();
             },
             
             waitForNuxt: function() {
                 var self = this;
-                var nuxtReady = typeof window.__NUXT__ !== 'undefined' || document.querySelectorAll('[id*="__nuxt"]').length > 0;
-                var booksExist = document.querySelectorAll('[cy-id="coverImage"]').length > 0;
+                // Check for Nuxt app OR bookshelf container OR any book cards
+                var nuxtEl = document.querySelector('[id*="__nuxt"], #__nuxt, .__nuxt');
+                var bookshelf = document.getElementById('bookshelf');
+                var bookCards = document.querySelectorAll('[id^="book-card-"]');
                 
-                if (nuxtReady || booksExist || document.body) {
-                    this.log('Nuxt ready');
+                this.log('Wait: nuxt=' + !!nuxtEl + ' shelf=' + !!bookshelf + ' cards=' + bookCards.length);
+                
+                if (nuxtEl || bookshelf || bookCards.length > 0 || document.body) {
+                    this.log('Ready to start');
                     this.createLifeboat();
                     this.setupMutationObserver();
                     this.state = 'DETECT_PAGE';
@@ -458,14 +473,27 @@
                 
                 var navFragment = document.createDocumentFragment();
                 
-                // Extract siderail navigation links
+                // Check if we're on login page first (no siderail on login)
+                var loginForm = document.querySelector('form input[name="username"], form input[name="password"]');
+                if (loginForm && !document.getElementById('siderail-buttons-container')) {
+                    this.log('Login page detected - no nav to extract');
+                    this.cache.processedNav = true;
+                    return;
+                }
+                
+                // Extract siderail navigation links - from SideRail.vue #siderail-buttons-container
                 var siderail = document.getElementById('siderail-buttons-container');
+                if (!siderail) {
+                    // Also try the parent container with role="navigation"
+                    siderail = document.querySelector('[role="navigation"][aria-label="Library Navigation"]');
+                }
+                
                 if (siderail) {
                     var siderailLinks = siderail.querySelectorAll('a');
                     this.log('Found siderail with ' + siderailLinks.length + ' links');
                     for (var s = 0; s < siderailLinks.length; s++) {
                         var sLink = siderailLinks[s];
-                        // Get text from the <p> element
+                        // Get text from the <p> element (SideRail.vue structure)
                         var pEl = sLink.querySelector('p');
                         var text = pEl ? pEl.textContent.trim() : '';
                         if (text && text.length > 0 && text.length < 30) {
@@ -484,40 +512,54 @@
                 } else {
                     this.log('No siderail found, will retry');
                     // Retry after a delay if siderail not found yet
-                    var self = this;
                     setTimeout(function() { self.extractNavigation(); }, 500);
                     return;
                 }
                 
-                // Extract library dropdown
-                var libDropdown = document.querySelector('[aria-haspopup="menu"]');
-                if (libDropdown) {
-                    var libBtn = document.createElement('div');
-                    libBtn.className = 'tp-nav-item';
-                    libBtn.innerText = 'Library';
-                    libBtn.tabIndex = 0;
-                    (function(orig) {
-                        libBtn.onclick = function() { orig.click(); };
-                        libBtn.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
-                    })(libDropdown);
-                    navFragment.appendChild(libBtn);
+                // Extract from appbar (#appbar with role="toolbar") - from Appbar.vue
+                var appbar = document.getElementById('appbar');
+                if (appbar) {
+                    // Find library dropdown (aria-haspopup="menu" or "listbox")
+                    var libDropdown = appbar.querySelector('[aria-haspopup="menu"], [aria-haspopup="listbox"]');
+                    if (libDropdown) {
+                        var libBtn = document.createElement('div');
+                        libBtn.className = 'tp-nav-item';
+                        libBtn.innerText = '📚 Library';
+                        libBtn.tabIndex = 0;
+                        (function(orig) {
+                            libBtn.onclick = function() { orig.click(); };
+                            libBtn.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
+                        })(libDropdown);
+                        navFragment.appendChild(libBtn);
+                    }
+                    
+                    // Find settings link (/config)
+                    var configLink = appbar.querySelector('a[href*="/config"]');
+                    if (configLink) {
+                        var configBtn = document.createElement('div');
+                        configBtn.className = 'tp-nav-item';
+                        configBtn.innerText = '⚙️ Settings';
+                        configBtn.tabIndex = 0;
+                        (function(url) {
+                            configBtn.onclick = function() { TizenUtils.navigate(url); };
+                            configBtn.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(url); };
+                        })(configLink.href);
+                        navFragment.appendChild(configBtn);
+                    }
                 }
                 
-                // Extract search button
-                var searchForm = document.querySelector('form[role="search"]');
-                if (searchForm) {
-                    var searchInput = searchForm.querySelector('input');
-                    if (searchInput) {
-                        var searchBtn = document.createElement('div');
-                        searchBtn.className = 'tp-nav-item';
-                        searchBtn.innerText = 'Search';
-                        searchBtn.tabIndex = 0;
-                        (function(input) {
-                            searchBtn.onclick = function() { input.focus(); };
-                            searchBtn.onkeydown = function(e) { if (e.keyCode === 13) input.focus(); };
-                        })(searchInput);
-                        navFragment.appendChild(searchBtn);
-                    }
+                // Extract global search from appbar - controls-global-search component
+                var searchInput = document.querySelector('#appbar input[type="search"], #appbar input[placeholder*="Search" i]');
+                if (searchInput) {
+                    var searchBtn = document.createElement('div');
+                    searchBtn.className = 'tp-nav-item';
+                    searchBtn.innerText = '🔍 Search';
+                    searchBtn.tabIndex = 0;
+                    (function(input) {
+                        searchBtn.onclick = function() { input.focus(); };
+                        searchBtn.onkeydown = function(e) { if (e.keyCode === 13) input.focus(); };
+                    })(searchInput);
+                    navFragment.appendChild(searchBtn);
                 }
                 
                 if (navFragment.childNodes.length > 0) {
@@ -570,64 +612,49 @@
                 try {
                     if (this.state !== 'DETECT_PAGE') return false;
                     
-                    // Debug: dump all images with src info
-                    var allImages = document.querySelectorAll('img');
-                    var imgInfo = [];
-                    for (var i = 0; i < Math.min(allImages.length, 5); i++) {
-                        var img = allImages[i];
-                        var src = (img.src || '').substring(0, 30);
-                        imgInfo.push(src);
-                    }
-                    this.log('Imgs(' + allImages.length + '): ' + imgInfo.join(' | '));
+                    // PRIMARY SELECTOR: [id^="book-card-"] - from LazyBookCard.vue
+                    // These are the actual book cards with IDs like book-card-0, book-card-1, etc.
+                    var bookCards = document.querySelectorAll('[id^="book-card-"]');
+                    this.log('book-card-* count: ' + bookCards.length);
                     
-                    // Debug: find elements with "book" or "cover" in class/id
-                    var bookEls = document.querySelectorAll('[class*="book"], [id*="book"], [class*="cover"], [id*="cover"]');
-                    this.log('book/cover els: ' + bookEls.length);
+                    // SECONDARY: #bookshelf container
+                    var bookshelf = document.getElementById('bookshelf');
+                    this.log('bookshelf: ' + (bookshelf ? 'found' : 'missing'));
                     
-                    // Debug: find shelf/library elements
-                    var shelfEls = document.querySelectorAll('[class*="shelf"], [class*="library"], [class*="Shelf"], [class*="Library"]');
-                    this.log('shelf/lib els: ' + shelfEls.length);
+                    // TERTIARY: series-card-*, collection-card-*, playlist-card-*
+                    var seriesCards = document.querySelectorAll('[id^="series-card-"]');
+                    var collectionCards = document.querySelectorAll('[id^="collection-card-"]');
+                    this.log('series=' + seriesCards.length + ' collection=' + collectionCards.length);
                     
-                    // Log first few class names of divs to find patterns
-                    var divs = document.querySelectorAll('div[class]');
-                    var divClasses = [];
-                    for (var d = 0; d < Math.min(divs.length, 8); d++) {
-                        var cls = divs[d].className;
-                        if (cls && cls.length < 50) divClasses.push(cls.substring(0, 25));
-                    }
-                    this.log('Divs: ' + divClasses.join(' | '));
+                    // FALLBACK: any img with src containing /api/ (cover images from ABS API)
+                    var apiImages = document.querySelectorAll('img[src*="/api/"]');
+                    this.log('API images: ' + apiImages.length);
                     
-                    // Try multiple selectors for books
-                    var covers = [];
-                    var bookCards = [];
-                    var rows = [];
-                    try { covers = document.querySelectorAll('[cy-id="coverImage"]'); } catch(e) { this.log('cy-id selector failed'); }
-                    try { bookCards = document.querySelectorAll('[id^="book-card-"]'); } catch(e) { this.log('book-card selector failed'); }
-                    try { rows = document.querySelectorAll('.categorizedBookshelfRow'); } catch(e) { this.log('row selector failed'); }
+                    // LAST RESORT: find divs with absolute positioning (lazy loaded cards)
+                    var absCards = document.querySelectorAll('div.absolute.cursor-pointer');
+                    this.log('absolute cursor-pointer divs: ' + absCards.length);
                     
-                    this.log('Query: covers=' + covers.length + ' cards=' + bookCards.length + ' rows=' + rows.length);
-                    
-                    var bookCount = covers.length || bookCards.length || bookEls.length;
+                    // Total potential book elements
+                    var bookCount = bookCards.length + seriesCards.length + collectionCards.length;
+                    if (bookCount === 0 && apiImages.length > 0) bookCount = apiImages.length;
                     
                     this.forms = this.detectForms();
-                    this.log('Detect: books=' + bookCount + ' forms=' + this.forms.length);
+                    this.log('TOTAL: books=' + bookCount + ' forms=' + this.forms.length);
                     
                     if (bookCount > 0) {
                         this.boat.innerHTML = '';
                         this.cache.processedBooks = {};
                         this.cache.processedHeadings = {};
-                        // Keep processedNav - already extracted in createLifeboat
                         this.mode = 'content';
-                        this.log('Rendering books');
+                        this.log('Rendering ' + bookCount + ' items');
                         this.renderContent();
                         if (this.forms.length > 0) this.renderMenuUI();
                         this.state = 'READY';
-                        // tp-lifeboat-active already added in createLifeboat
                         return true;
                     } else if (this.forms.length > 0) {
                         this.boat.innerHTML = '';
                         this.mode = 'form';
-                        this.log('Rendering form');
+                        this.log('Form mode');
                         this.renderMenuUI();
                         this.renderSelectedForm();
                         this.state = 'READY';
@@ -635,7 +662,7 @@
                     }
                     return false;
                 } catch(e) {
-                    this.log('detectAndRender error: ' + (e.message || 'unknown'));
+                    this.log('ERROR: ' + (e.message || 'unknown'));
                     return false;
                 }
             },
@@ -644,25 +671,48 @@
                 var forms = [];
                 var processed = {};
                 
-                // Detect search inputs
+                // CRITICAL: Use name attribute selectors from ABS login.vue source code
+                // ABS uses input[name="username"] and input[name="password"], NOT type="email"
+                
+                // Detect ABS login form first - from login.vue
+                // Form has: input[name="username"], input[name="password"], and submit button
+                var usernameInput = document.querySelector('input[name="username"]');
+                var passwordInput = document.querySelector('input[name="password"]');
+                
+                if (usernameInput && passwordInput) {
+                    var loginInputs = [usernameInput, passwordInput];
+                    // Also find the submit button in the same form
+                    var form = usernameInput.closest('form');
+                    if (form) {
+                        var submitBtn = form.querySelector('button[type="submit"]');
+                        if (submitBtn) loginInputs.push(submitBtn);
+                    }
+                    forms.push({category: '🔐 Login', inputs: loginInputs, type: 'login', formEl: form});
+                    processed.login = true;
+                    this.log('ABS login form detected');
+                }
+                
+                // Fallback: Detect other login forms (email/password pattern)
+                if (!processed.login) {
+                    var emailInputs = document.querySelectorAll('input[type="password"], input[type="email"]');
+                    var visible2 = [];
+                    for (var j = 0; j < emailInputs.length; j++) {
+                        if (emailInputs[j].offsetParent !== null) visible2.push(emailInputs[j]);
+                    }
+                    if (visible2.length > 0) {
+                        forms.push({category: '🔐 Login', inputs: visible2, type: 'login'});
+                        processed.login = true;
+                    }
+                }
+                
+                // Detect search inputs - from controls-global-search in Appbar.vue
                 var searchInputs = document.querySelectorAll('input[type="search"], input[placeholder*="Search" i], input[placeholder*="search" i]');
                 if (searchInputs.length > 0) {
                     var visible = [];
                     for (var i = 0; i < searchInputs.length; i++) {
                         if (searchInputs[i].offsetParent !== null) visible.push(searchInputs[i]);
                     }
-                    if (visible.length > 0) forms.push({category: 'Search', inputs: visible, type: 'search'});
-                }
-                
-                // Detect login form (email/password fields)
-                var loginInputs = document.querySelectorAll('input[type="password"], input[type="email"]');
-                var visible2 = [];
-                for (var j = 0; j < loginInputs.length; j++) {
-                    if (loginInputs[j].offsetParent !== null) visible2.push(loginInputs[j]);
-                }
-                if (visible2.length > 0 && !processed.login) {
-                    forms.push({category: 'Login', inputs: visible2, type: 'login'});
-                    processed.login = true;
+                    if (visible.length > 0) forms.push({category: '🔍 Search', inputs: visible, type: 'search'});
                 }
                 
                 // Detect filter/select groups
@@ -672,11 +722,11 @@
                     if (selects[k].offsetParent !== null) visible3.push(selects[k]);
                 }
                 if (visible3.length > 0 && !processed.filters) {
-                    forms.push({category: 'Filters', inputs: visible3, type: 'filters'});
+                    forms.push({category: '⚙️ Filters', inputs: visible3, type: 'filters'});
                     processed.filters = true;
                 }
                 
-                this.log('detectForms: search=' + searchInputs.length + ' login=' + loginInputs.length + ' select=' + selects.length);
+                this.log('detectForms: login=' + (processed.login ? 'yes' : 'no') + ' search=' + searchInputs.length + ' select=' + selects.length);
                 return forms;
             },
             
@@ -826,162 +876,136 @@
             renderContent: function() {
                 try {
                     if (this.mode !== 'content') return;
-                    
-                    // Navigation now extracted in extractNavigation() - no duplicate code here
-                    
-                    // Extract books from category sections
-                    var categorySections = document.querySelectorAll('.categorizedBookshelfRow');
-                    this.log('Found ' + categorySections.length + ' sections');
                     var bookCount = 0;
                     
-                    for (var i = 0; i < categorySections.length; i++) {
-                        var section = categorySections[i];
-                        var sectionId = 'tp-section-' + i;
+                    // PRIMARY: Get book cards by ID pattern (LazyBookCard.vue uses :id="`book-card-${index}`")
+                    var bookCards = document.querySelectorAll('[id^="book-card-"]');
+                    this.log('Processing ' + bookCards.length + ' book cards');
+                    
+                    for (var i = 0; i < bookCards.length; i++) {
+                        var card = bookCards[i];
+                        var bookId = card.id || ('tp-book-' + i);
                         
-                        // Find category header
-                        var placard = null;
-                        var parent = section.parentElement;
-                        if (parent && parent.parentElement) {
-                            placard = parent.parentElement.querySelector('.categoryPlacard');
-                        }
+                        if (this.cache.processedBooks[bookId]) continue;
                         
-                        if (placard && !this.cache.processedHeadings[sectionId]) {
-                            var text = placard.textContent.trim();
-                            if (text.length > 0) {
-                                var h = document.createElement('div');
-                                h.className = 'tp-shelf-title';
-                                h.innerText = text;
-                                h.id = sectionId + '-header';
-                                this.boat.appendChild(h);
-                                this.cache.processedHeadings[sectionId] = true;
-                            }
-                        }
+                        // Create rescue card
+                        var clone = document.createElement('div');
+                        clone.id = 'tp-' + bookId;
+                        clone.className = 'tp-rescued-card';
+                        clone.setAttribute('tabindex', '0');
                         
-                        // Extract books using cy-id
-                        var covers = section.querySelectorAll('[cy-id="coverImage"]');
-                        for (var c = 0; c < covers.length; c++) {
-                            var cover = covers[c];
-                            var bookId = 'tp-book-' + i + '-' + c;
-                            
-                            if (this.cache.processedBooks[bookId]) continue;
-                            
-                            // Find the book card container
-                            var card = cover.closest('div[class*="rounded"]') || cover.closest('div');
-                            if (!card) continue;
-                            
-                            var clone = document.createElement('div');
-                            clone.id = bookId;
-                            clone.className = 'tp-rescued-card';
-                            clone.setAttribute('tabindex', '0');
-                            
-                            // Clone cover image
+                        // Find cover image - it's a direct img child or nested in cover area
+                        var coverImg = card.querySelector('img');
+                        if (coverImg && coverImg.src) {
                             var img = document.createElement('img');
-                            img.src = cover.getAttribute('src') || cover.getAttribute('data-src');
-                            img.alt = cover.getAttribute('alt') || 'Book cover';
+                            img.src = coverImg.src;
+                            img.alt = coverImg.alt || 'Cover';
                             clone.appendChild(img);
-                            
-                            // Extract text content
-                            var textContent = card.textContent.trim();
-                            if (textContent) {
-                                var textDiv = document.createElement('div');
-                                textDiv.style.padding = '8px';
-                                textDiv.style.fontSize = '14px';
-                                textDiv.style.lineHeight = '1.3';
-                                textDiv.innerText = textContent.substring(0, 100);
-                                clone.appendChild(textDiv);
+                        }
+                        
+                        // Find title/author text - look for p elements with text
+                        var textEls = card.querySelectorAll('p');
+                        var titleDiv = document.createElement('div');
+                        titleDiv.style.cssText = 'padding:8px;font-size:13px;line-height:1.3;';
+                        var textAdded = false;
+                        for (var t = 0; t < textEls.length && t < 3; t++) {
+                            var txt = textEls[t].textContent.trim();
+                            if (txt.length > 0 && txt.length < 100) {
+                                var line = document.createElement('div');
+                                line.innerText = txt;
+                                if (t === 0) line.style.fontWeight = 'bold';
+                                titleDiv.appendChild(line);
+                                textAdded = true;
                             }
+                        }
+                        if (textAdded) clone.appendChild(titleDiv);
+                        
+                        // Click handler - click the original card
+                        (function(origCard, el) {
+                            el.onclick = function() { origCard.click(); };
+                            el.onkeydown = function(e) { if (e.keyCode === 13) origCard.click(); };
+                        })(card, clone);
+                        
+                        this.boat.appendChild(clone);
+                        this.cache.processedBooks[bookId] = true;
+                        bookCount++;
+                    }
+                    
+                    // SECONDARY: Get series cards
+                    var seriesCards = document.querySelectorAll('[id^="series-card-"]');
+                    for (var s = 0; s < seriesCards.length; s++) {
+                        var sCard = seriesCards[s];
+                        var seriesId = sCard.id || ('tp-series-' + s);
+                        
+                        if (this.cache.processedBooks[seriesId]) continue;
+                        
+                        var sClone = document.createElement('div');
+                        sClone.id = 'tp-' + seriesId;
+                        sClone.className = 'tp-rescued-card';
+                        sClone.setAttribute('tabindex', '0');
+                        sClone.style.borderColor = '#b8860b';
+                        
+                        var sImg = sCard.querySelector('img');
+                        if (sImg && sImg.src) {
+                            var sImgEl = document.createElement('img');
+                            sImgEl.src = sImg.src;
+                            sClone.appendChild(sImgEl);
+                        }
+                        
+                        var sTxt = sCard.querySelector('p');
+                        if (sTxt) {
+                            var sLabel = document.createElement('div');
+                            sLabel.style.cssText = 'padding:8px;font-size:13px;font-weight:bold;';
+                            sLabel.innerText = '📚 ' + sTxt.textContent.trim();
+                            sClone.appendChild(sLabel);
+                        }
+                        
+                        (function(origCard, el) {
+                            el.onclick = function() { origCard.click(); };
+                            el.onkeydown = function(e) { if (e.keyCode === 13) origCard.click(); };
+                        })(sCard, sClone);
+                        
+                        this.boat.appendChild(sClone);
+                        this.cache.processedBooks[seriesId] = true;
+                        bookCount++;
+                    }
+                    
+                    // FALLBACK: If no cards found, try API images
+                    if (bookCount === 0) {
+                        var apiImgs = document.querySelectorAll('img[src*="/api/items/"]');
+                        this.log('Fallback: ' + apiImgs.length + ' API images');
+                        
+                        for (var a = 0; a < apiImgs.length; a++) {
+                            var apiImg = apiImgs[a];
+                            var apiId = 'tp-api-' + a;
                             
-                            // Extract action buttons from overlay
-                            var overlay = card.querySelector('[cy-id="overlay"]');
-                            if (overlay) {
-                                var buttonBar = document.createElement('div');
-                                buttonBar.style.cssText = 'display:flex;gap:8px;padding:4px 8px;justify-content:center;background:rgba(0,0,0,0.7);';
-                                
-                                var playBtn = overlay.querySelector('[cy-id="playButton"]');
-                                var readBtn = overlay.querySelector('[cy-id="readButton"]');
-                                var editBtn = overlay.querySelector('[cy-id="editButton"]');
-                                var moreBtn = overlay.querySelector('[cy-id="moreButton"]');
-                                
-                                var addedButtons = false;
-                                
-                                if (playBtn) {
-                                    var play = document.createElement('div');
-                                    play.innerHTML = '▶';
-                                    play.style.cssText = 'color:#1e90ff;font-size:18px;cursor:pointer;padding:4px;';
-                                    play.tabIndex = 0;
-                                    (function(orig) {
-                                        play.onclick = function(e) { e.stopPropagation(); orig.click(); };
-                                        play.onkeydown = function(e) { if (e.keyCode === 13) { e.stopPropagation(); orig.click(); } };
-                                    })(playBtn);
-                                    buttonBar.appendChild(play);
-                                    addedButtons = true;
-                                }
-                                
-                                if (readBtn && readBtn.style.display !== 'none') {
-                                    var read = document.createElement('div');
-                                    read.innerHTML = '📖';
-                                    read.style.cssText = 'color:#1e90ff;font-size:18px;cursor:pointer;padding:4px;';
-                                    read.tabIndex = 0;
-                                    (function(orig) {
-                                        read.onclick = function(e) { e.stopPropagation(); orig.click(); };
-                                        read.onkeydown = function(e) { if (e.keyCode === 13) { e.stopPropagation(); orig.click(); } };
-                                    })(readBtn);
-                                    buttonBar.appendChild(read);
-                                    addedButtons = true;
-                                }
-                                
-                                if (editBtn) {
-                                    var edit = document.createElement('div');
-                                    edit.innerHTML = '✏';
-                                    edit.style.cssText = 'color:#888;font-size:18px;cursor:pointer;padding:4px;';
-                                    edit.tabIndex = 0;
-                                    (function(orig) {
-                                        edit.onclick = function(e) { e.stopPropagation(); orig.click(); };
-                                        edit.onkeydown = function(e) { if (e.keyCode === 13) { e.stopPropagation(); orig.click(); } };
-                                    })(editBtn);
-                                    buttonBar.appendChild(edit);
-                                    addedButtons = true;
-                                }
-                                
-                                if (moreBtn) {
-                                    var more = document.createElement('div');
-                                    more.innerHTML = '⋮';
-                                    more.style.cssText = 'color:#888;font-size:18px;cursor:pointer;padding:4px;';
-                                    more.tabIndex = 0;
-                                    (function(orig) {
-                                        more.onclick = function(e) { e.stopPropagation(); orig.click(); };
-                                        more.onkeydown = function(e) { if (e.keyCode === 13) { e.stopPropagation(); orig.click(); } };
-                                    })(moreBtn);
-                                    buttonBar.appendChild(more);
-                                    addedButtons = true;
-                                }
-                                
-                                if (addedButtons) {
-                                    clone.appendChild(buttonBar);
-                                }
-                            }
+                            if (this.cache.processedBooks[apiId]) continue;
                             
-                            // Attach click handler
-                            var link = card.closest('a') || card.querySelector('a');
-                            if (link && link.href) {
-                                (function(href, el) {
-                                    el.onclick = function() { TizenUtils.navigate(href); };
-                                    el.onkeydown = function(e) { if (e.keyCode === 13) TizenUtils.navigate(href); };
-                                })(link.href, clone);
-                            } else {
+                            var aClone = document.createElement('div');
+                            aClone.id = apiId;
+                            aClone.className = 'tp-rescued-card';
+                            aClone.setAttribute('tabindex', '0');
+                            
+                            var aImgEl = document.createElement('img');
+                            aImgEl.src = apiImg.src;
+                            aClone.appendChild(aImgEl);
+                            
+                            // Try to find parent with click handler
+                            var clickable = apiImg.closest('[id^="book-card-"]') || apiImg.closest('a') || apiImg.closest('[role="button"]');
+                            if (clickable) {
                                 (function(orig, el) {
                                     el.onclick = function() { orig.click(); };
                                     el.onkeydown = function(e) { if (e.keyCode === 13) orig.click(); };
-                                })(card, clone);
+                                })(clickable, aClone);
                             }
                             
-                            this.boat.appendChild(clone);
-                            this.cache.processedBooks[bookId] = true;
+                            this.boat.appendChild(aClone);
+                            this.cache.processedBooks[apiId] = true;
                             bookCount++;
                         }
                     }
                     
-                    this.log('Rendered ' + bookCount + ' books');
+                    this.log('Rendered ' + bookCount + ' items total');
                 } catch(e) {
                     this.log('renderContent error: ' + (e.message || 'unknown'));
                 }

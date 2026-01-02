@@ -1,6 +1,6 @@
 # 📺 TizenPortal
 
-![Version](https://img.shields.io/badge/version-0.5.31-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0.5.49-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **TizenPortal** is a universal launcher and compatibility layer designed for Samsung Smart TVs running Tizen OS. It allows you to run modern self-hosted web applications (like **Audiobookshelf**, **Jellyfin**, etc.) on older TVs that might otherwise struggle with broken layouts or incompatible interfaces.
 
@@ -46,12 +46,18 @@ This project is designed to be loaded via **TizenBrew** or a similar userscript 
     *   **User Agent:** Select a device profile (Default Tizen is usually best, but try others if you have issues).
 3.  **🚀 Launch:** Click the card to open the app. TizenPortal will automatically inject the necessary fixes.
 
-### 🆕 What's New in 0.5.30
-- **Surgical CSS Targeting**: Fixed over-broad image selectors that were affecting book covers - now only restricts navigation icons
-- **Modal Suppression**: Hidden native modals/dialogs when lifeboat is active to prevent overlay interference
-- **Action Button Extraction**: Book card action buttons (Play, Read, Edit, More) now visible as icons without hover
-- **Smart Navigation Extraction**: Siderail buttons, library dropdown, and search bar now correctly extracted to top navbar
-- **Previous Updates**: Event-driven architecture with MutationObserver, state machine, caching layer, viewport locking, and readable code
+### 🆕 What's New in 0.5.49
+- **Verified Selectors from ABS Source**: All selectors now confirmed against actual Audiobookshelf Vue components
+- **Sidebar Navigation**: Uses `#siderail-buttons-container` from `SideRail.vue`, extracts library links correctly
+- **Appbar Integration**: Extracts library dropdown, settings link, and search from `#appbar`
+- **Login Form Fix**: Now uses `input[name="username"]` and `input[name="password"]` (from `login.vue`)
+- **Improved Content Hiding**: Hides `#app-content` AND `#__nuxt` for reliable overlay
+- **Native UI Suppression**: Hides ABS siderail/appbar via ARIA role selectors to prevent overlap
+
+### Previous: 0.5.48
+- Fixed book detection (`cy-id` is Vue directive, not HTML attribute)
+- Correct selectors: `[id^="book-card-"]`, `[id^="series-card-"]`
+- Event-driven architecture with MutationObserver, state machine, caching
 
 ---
 
