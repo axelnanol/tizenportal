@@ -4,23 +4,10 @@
 # Keep this file tracked
 !.gitignore
 
-# Allow only these files (root or dist)
+# Allow only these files in the public repository
 !/package.json
 !/README.md
 !/index.html
 !/userScript.js
 
-# Allow dist directory and the two payload files there
-!/dist/
-!/dist/index.html
-!/dist/userScript.js
-
-# Optional: keep attributes file if present
-!/.gitattributes
-
 # End of allowlist
-
-# Allow GitHub copilot instructions and agent docs to be tracked when needed
-!/.github/
-!/.github/copilot-instructions.md
-!/AGENT_INSTRUCTIONS.md

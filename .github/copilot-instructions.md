@@ -56,6 +56,8 @@ INIT → WAIT_NUXT → DETECT_PAGE → READY
 
 ## Deployment Workflow
 
+- **Repository file policy:** This public repository must only track the following files at any time: `index.html`, `userScript.js`, `package.json`, and `README.md`. All other files, including internal docs, `.github/`, `abs/`, `AGENT_INSTRUCTIONS.md`, and payloads must be added to `.gitignore` and never pushed. If an exception is required, obtain explicit approval and document the reason outside of the repository.
+
 ### Version Bumping
 -- **Tag format:** Four digits (e.g., `0100` = initial release). Use four-digit tags for all releases (e.g., `0100`, `0101`, `0110`). Bump the right-most digit for patch changes, the middle digits for minor, and leftmost for major releases.
 - **Files to update:** `dist/index.html` (title + header), `dist/userScript.js` (toast), `README.md` (badge), `package.json` (version).
