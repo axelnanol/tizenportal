@@ -19,3 +19,8 @@
 !/.gitattributes
 
 # End of allowlist
+
+# Allow GitHub copilot instructions and agent docs to be tracked when needed
+!/.github/
+!/.github/copilot-instructions.md
+!/AGENT_INSTRUCTIONS.md
