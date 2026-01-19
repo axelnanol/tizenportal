@@ -6,6 +6,7 @@
 
 import { KEYS, COLOR_ACTIONS, isColorButton, getKeyName } from './keys.js';
 import { configRead, configWrite } from '../core/config.js';
+import { toggleDiagnosticsPanel, clearDiagnosticsLogs, isDiagnosticsPanelVisible } from '../ui/diagnostics.js';
 
 /**
  * Long press detection threshold (milliseconds)
@@ -191,10 +192,18 @@ function executeColorAction(action) {
       break;
 
     case 'bundleMenu':
-      // TODO: Show bundle menu
-      console.log('TizenPortal: Bundle menu (not implemented)');
-      if (window.TizenPortal) {
-        window.TizenPortal.showToast('Bundle menu - coming soon');
+      // If diagnostics panel is open, clear logs instead
+      if (isDiagnosticsPanelVisible()) {
+        clearDiagnosticsLogs();
+        if (window.TizenPortal) {
+          window.TizenPortal.showToast('Logs cleared');
+        }
+      } else {
+        // TODO: Show bundle menu
+        console.log('TizenPortal: Bundle menu (not implemented)');
+        if (window.TizenPortal) {
+          window.TizenPortal.showToast('Bundle menu - coming soon');
+        }
       }
       break;
 
@@ -207,11 +216,8 @@ function executeColorAction(action) {
       break;
 
     case 'diagnostics':
-      // TODO: Show diagnostics panel
-      console.log('TizenPortal: Diagnostics (not implemented)');
-      if (window.TizenPortal) {
-        window.TizenPortal.showToast('Diagnostics - coming soon');
-      }
+      // Toggle diagnostics panel
+      toggleDiagnosticsPanel();
       break;
 
     case 'safeMode':

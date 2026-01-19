@@ -223,6 +223,90 @@
     .tp-hint-key.green { background: #2ecc71; }
     .tp-hint-key.yellow { background: #f1c40f; }
     .tp-hint-key.blue { background: #3498db; }
+    
+    /* Diagnostics panel */
+    #tp-diagnostics {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 400;
+      flex-direction: column;
+      padding: 40px;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+    
+    #tp-diagnostics.visible {
+      display: flex;
+    }
+    
+    #tp-diagnostics-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    
+    #tp-diagnostics-header h2 {
+      font-size: 28px;
+      font-weight: 500;
+      color: #00a8ff;
+    }
+    
+    #tp-diagnostics-info {
+      font-size: 14px;
+      color: #888;
+    }
+    
+    #tp-diagnostics-logs {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .tp-log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+      gap: 12px;
+    }
+    
+    .tp-log-time {
+      color: #666;
+      flex-shrink: 0;
+      width: 100px;
+    }
+    
+    .tp-log-level {
+      flex-shrink: 0;
+      width: 60px;
+      font-weight: bold;
+    }
+    
+    .tp-log-level.log { color: #888; }
+    .tp-log-level.info { color: #3498db; }
+    .tp-log-level.warn { color: #f1c40f; }
+    .tp-log-level.error { color: #e74c3c; }
+    
+    .tp-log-message {
+      color: #ccc;
+      flex: 1;
+      word-break: break-word;
+    }
+    
+    #tp-diagnostics-footer {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #333;
+      font-size: 14px;
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -231,7 +315,7 @@
     <div id="tp-portal">
       <div id="tp-header">
         <h1>TizenPortal</h1>
-        <span class="version">v0101</span>
+        <span class="version">v0102</span>
       </div>
       <div id="tp-grid">
         <!-- Cards rendered by JavaScript -->
@@ -249,6 +333,16 @@
     
     <!-- Toast notification -->
     <div id="tp-toast"></div>
+    
+    <!-- Diagnostics panel -->
+    <div id="tp-diagnostics">
+      <div id="tp-diagnostics-header">
+        <h2>Diagnostics</h2>
+        <div id="tp-diagnostics-info"></div>
+      </div>
+      <div id="tp-diagnostics-logs"></div>
+      <div id="tp-diagnostics-footer">Press BLUE to close | YELLOW to clear logs</div>
+    </div>
     
     <!-- Color button hints -->
     <div id="tp-hints">

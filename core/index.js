@@ -16,6 +16,7 @@ import { KEYS } from '../input/keys.js';
 import { initInputHandler } from '../input/handler.js';
 import { initPortal, showPortal, hidePortal, refreshPortal } from '../ui/portal.js';
 import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
+import { initDiagnosticsPanel } from '../ui/diagnostics.js';
 
 /**
  * TizenPortal version
@@ -62,11 +63,15 @@ async function init() {
     initDiagnostics();
     log('Diagnostics initialized');
 
-    // Step 4: Initialize input handler
+    // Step 4: Initialize diagnostics panel UI
+    initDiagnosticsPanel();
+    log('Diagnostics panel initialized');
+
+    // Step 5: Initialize input handler
     initInputHandler();
     log('Input handler initialized');
 
-    // Step 5: Initialize and render portal UI
+    // Step 6: Initialize and render portal UI
     initPortal();
     log('Portal UI initialized');
 
