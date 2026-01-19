@@ -3,10 +3,14 @@
  * 
  * Main entry point. Initializes all subsystems and exposes the global API.
  * 
- * @version 0102
+ * @version 0103
  */
 
-// Import spatial navigation polyfill (must be first - sets up window.navigate)
+// Import core-js polyfills first (provides ES6+ features for Chrome 47-69)
+// This matches TizenTube's approach for Tizen compatibility
+import 'core-js/stable';
+
+// Import spatial navigation polyfill (sets up window.navigate)
 import '../navigation/spatial-navigation-polyfill.js';
 
 // Import core modules

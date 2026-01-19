@@ -1,32 +1,47 @@
 {
   "name": "@alexnolan/tizenportal",
   "appName": "TizenPortal",
-  "version": "0102",
+  "version": "0103",
   "description": "Universal Tizen Browser Shell",
   "type": "module",
   "packageType": "app",
   "appPath": "app/index.html",
   "keys": [
-    "MediaPlayPause", "MediaPlay", "MediaPause", "MediaStop",
-    "MediaFastForward", "MediaRewind", "MediaTrackNext", "MediaTrackPrevious",
-    "ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue"
+    "MediaPlayPause",
+    "MediaPlay",
+    "MediaPause",
+    "MediaStop",
+    "MediaFastForward",
+    "MediaRewind",
+    "MediaTrackNext",
+    "MediaTrackPrevious",
+    "ColorF0Red",
+    "ColorF1Green",
+    "ColorF2Yellow",
+    "ColorF3Blue"
   ],
   "author": "Alex Nolan",
   "license": "MIT",
-  "repository": { "type": "git", "url": "https://github.com/alexnolan/tizenportal" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexnolan/tizenportal"
+  },
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c --watch",
     "clean": "node -e \"require('fs').rmSync('app/tizenportal.js', {force: true})\""
   },
   "devDependencies": {
-    "@rollup/plugin-babel": "^6.0.0",
-    "@rollup/plugin-node-resolve": "^15.0.0",
-    "@rollup/plugin-commonjs": "^25.0.0",
-    "@rollup/plugin-terser": "^0.4.0",
     "@babel/core": "^7.23.0",
     "@babel/preset-env": "^7.23.0",
+    "@rollup/plugin-babel": "^6.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-terser": "^0.4.0",
     "rollup": "^4.0.0",
     "rollup-plugin-string": "^3.0.0"
+  },
+  "dependencies": {
+    "core-js": "^3.47.0"
   }
 }
