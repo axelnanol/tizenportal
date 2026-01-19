@@ -3,8 +3,11 @@
  * 
  * Main entry point. Initializes all subsystems and exposes the global API.
  * 
- * @version 0100
+ * @version 0101
  */
+
+// Import spatial navigation polyfill (must be first - sets up window.navigate)
+import '../navigation/spatial-navigation-polyfill.js';
 
 // Import core modules
 import { configRead, configWrite, configOnChange, configInit } from './config.js';
@@ -17,7 +20,7 @@ import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
 /**
  * TizenPortal version
  */
-const VERSION = '0100';
+const VERSION = '0101';
 
 /**
  * Application state
