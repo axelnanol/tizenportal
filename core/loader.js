@@ -279,25 +279,40 @@ function injectKeyForwarder(iframe) {
       10182, // EXIT
     ];
 
+    /**
+     * Create a keyboard event that works on Chrome 47+
+     * Note: KeyboardEvent constructor doesn't set keyCode/which on older Chrome
+     * We use Object.defineProperty to force the values
+     */
+    function createKeyEvent(type, originalEvent) {
+      var event;
+      try {
+        event = new KeyboardEvent(type, {
+          bubbles: true,
+          cancelable: true,
+          key: originalEvent.key || '',
+          code: originalEvent.code || '',
+        });
+      } catch (e) {
+        // Fallback for very old browsers
+        event = document.createEvent('KeyboardEvent');
+        event.initKeyboardEvent(type, true, true, window, originalEvent.key || '', 0, '', false, '');
+      }
+      
+      // Force keyCode and which values (constructor ignores them on Chrome 47)
+      Object.defineProperty(event, 'keyCode', { value: originalEvent.keyCode });
+      Object.defineProperty(event, 'which', { value: originalEvent.keyCode });
+      
+      return event;
+    }
+
     // Keydown forwarder
     contentDocument.addEventListener('keydown', function(event) {
       var keyCode = event.keyCode;
       
       // Forward color buttons and exit to parent
       if (forwardKeyCodes.indexOf(keyCode) !== -1) {
-        // Dispatch equivalent event on parent document
-        var parentEvent = new KeyboardEvent('keydown', {
-          keyCode: keyCode,
-          which: keyCode,
-          key: event.key,
-          code: event.code,
-          bubbles: true,
-          cancelable: true,
-        });
-        
-        // Mark as forwarded to avoid loops
-        parentEvent._forwarded = true;
-        
+        var parentEvent = createKeyEvent('keydown', event);
         window.document.dispatchEvent(parentEvent);
         
         // Prevent default in iframe
@@ -311,17 +326,7 @@ function injectKeyForwarder(iframe) {
       var keyCode = event.keyCode;
       
       if (forwardKeyCodes.indexOf(keyCode) !== -1) {
-        var parentEvent = new KeyboardEvent('keyup', {
-          keyCode: keyCode,
-          which: keyCode,
-          key: event.key,
-          code: event.code,
-          bubbles: true,
-          cancelable: true,
-        });
-        
-        parentEvent._forwarded = true;
-        
+        var parentEvent = createKeyEvent('keyup', event);
         window.document.dispatchEvent(parentEvent);
         
         event.preventDefault();
@@ -332,7 +337,7 @@ function injectKeyForwarder(iframe) {
     console.log('TizenPortal Loader: Key forwarder injected into iframe');
 
   } catch (err) {
-    console.log('TizenPortal Loader: Cannot inject key forwarder (cross-origin)');
+    console.log('TizenPortal Loader: Cannot inject key forwarder (cross-origin):', err.message);
   }
 }
 
