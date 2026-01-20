@@ -50,7 +50,7 @@ function createAddressBar() {
     '<div class="tp-addressbar-content">' +
       // Portal button - return to grid
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-portal" tabindex="0" title="Back to Portal">' +
-        '<span class="tp-btn-icon">P</span>' +
+        '<span class="tp-btn-icon">▤</span>' +
       '</button>' +
       // Home button - go to site's home URL
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-home" tabindex="0" title="Site Home">' +
@@ -58,24 +58,24 @@ function createAddressBar() {
       '</button>' +
       // Back button
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-back" tabindex="0" title="Back">' +
-        '<span class="tp-btn-icon">&lt;</span>' +
+        '<span class="tp-btn-icon">←</span>' +
       '</button>' +
       // Forward button
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-forward" tabindex="0" title="Forward">' +
-        '<span class="tp-btn-icon">&gt;</span>' +
+        '<span class="tp-btn-icon">→</span>' +
       '</button>' +
       // Reload button
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-reload" tabindex="0" title="Reload">' +
-        '<span class="tp-btn-icon">R</span>' +
+        '<span class="tp-btn-icon">↻</span>' +
       '</button>' +
       // URL container (focusable, press Enter to edit)
       '<div class="tp-addressbar-url-container" id="tp-addressbar-url-container" tabindex="0">' +
-        '<span class="tp-addressbar-url-display" id="tp-addressbar-url-display">Press ENTER to edit URL</span>' +
+        '<span class="tp-addressbar-url-display" id="tp-addressbar-url-display"></span>' +
         '<input type="text" class="tp-addressbar-url" id="tp-addressbar-url" tabindex="-1" placeholder="Enter URL...">' +
       '</div>' +
       // Go button
       '<button type="button" class="tp-addressbar-btn tp-addressbar-go" id="tp-addressbar-go" tabindex="0" title="Go">' +
-        '<span class="tp-btn-icon">GO</span>' +
+        '<span class="tp-btn-icon">→</span>' +
       '</button>' +
       // Open in Tizen Browser button
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-tizen" tabindex="0" title="Open in Tizen Browser">' +
@@ -371,7 +371,7 @@ function updateUrlFromIframe() {
   
   // Update both display and input
   if (display) {
-    display.textContent = url || 'Press ENTER to edit URL';
+    display.textContent = url || '';
   }
   if (input) {
     input.value = url;

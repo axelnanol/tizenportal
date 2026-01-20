@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TizenPortal 0126</title>
+  <title>TizenPortal 0127</title>
   <style>
     /* Reset and base styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -835,12 +835,13 @@
       align-items: center;
       max-width: 1800px;
       margin: 0 auto;
-      gap: 12px;
+      /* gap not reliable for spatial nav, use margins */
     }
     
     .tp-addressbar-btn {
       width: 56px;
       height: 56px;
+      margin-right: 12px;
       background: #2a2a2a;
       border: 2px solid #444;
       border-radius: 10px;
@@ -875,6 +876,7 @@
     .tp-addressbar-url-container {
       flex: 1;
       height: 56px;
+      margin-right: 12px;
       display: flex;
       align-items: center;
       padding: 0 20px;
@@ -1141,7 +1143,7 @@
     <div id="tp-portal">
       <div id="tp-header">
         <h1>TizenPortal</h1>
-        <span class="version">v0126</span>
+        <span class="version">v0127</span>
       </div>
       <div id="tp-grid">
         <!-- Cards rendered by JavaScript -->
