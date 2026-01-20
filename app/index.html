@@ -318,8 +318,314 @@
       font-size: 14px;
       color: #666;
     }
+
+    /* ========================================================================
+       SITE EDITOR - Full-screen TV-friendly site creation/editing
+       ======================================================================== */
     
-    /* Modal System */
+    .tp-site-editor {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 600;
+    }
+    
+    .tp-site-editor.visible {
+      display: block;
+    }
+    
+    .tp-editor-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+    }
+    
+    .tp-editor-panel {
+      position: absolute;
+      top: 40px;
+      left: 60px;
+      right: 60px;
+      bottom: 40px;
+      background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+      border: 2px solid #333;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .tp-editor-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .tp-editor-header h2 {
+      font-size: 28px;
+      font-weight: 500;
+      color: #fff;
+      margin: 0;
+    }
+    
+    .tp-editor-hint {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .tp-editor-body {
+      flex: 1;
+      display: flex;
+      padding: 24px 32px;
+      gap: 40px;
+      overflow: hidden;
+    }
+    
+    .tp-editor-fields {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 20px;
+    }
+    
+    .tp-editor-preview {
+      width: 300px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 20px;
+    }
+    
+    .tp-editor-preview-card {
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      width: 100%;
+    }
+    
+    .tp-preview-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #333 0%, #222 100%);
+      border-radius: 16px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: #888;
+    }
+    
+    .tp-preview-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 16px;
+    }
+    
+    .tp-preview-name {
+      font-size: 20px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    
+    .tp-preview-url {
+      font-size: 14px;
+      color: #666;
+      word-break: break-all;
+    }
+    
+    /* Field Rows */
+    .tp-field-row {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .tp-field-row:focus {
+      outline: none;
+      border-color: #00a8ff;
+      background: #252525;
+      transform: scale(1.01);
+    }
+    
+    .tp-field-label {
+      width: 140px;
+      font-size: 16px;
+      color: #888;
+      flex-shrink: 0;
+    }
+    
+    .tp-field-value {
+      flex: 1;
+      font-size: 18px;
+      color: #fff;
+      padding: 0 16px;
+    }
+    
+    .tp-field-value.empty {
+      color: #555;
+      font-style: italic;
+    }
+    
+    .tp-field-edit {
+      font-size: 12px;
+      color: #444;
+      padding: 4px 8px;
+      background: #111;
+      border-radius: 4px;
+    }
+    
+    .tp-field-row:focus .tp-field-edit {
+      color: #00a8ff;
+      background: #1a2a3a;
+    }
+    
+    /* Bundle Section */
+    .tp-field-section {
+      margin-bottom: 20px;
+    }
+    
+    .tp-field-section-label {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    
+    .tp-bundle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    
+    .tp-bundle-option {
+      padding: 16px;
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    
+    .tp-bundle-option:focus {
+      outline: none;
+      border-color: #00a8ff;
+      background: #252525;
+      transform: scale(1.02);
+    }
+    
+    .tp-bundle-option.selected {
+      border-color: #00a8ff;
+      background: #1a2a3a;
+    }
+    
+    .tp-bundle-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    
+    .tp-bundle-desc {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.4;
+    }
+    
+    .tp-bundle-check {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      background: #00a8ff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+    }
+    
+    /* Editor Footer */
+    .tp-editor-footer {
+      padding: 20px 32px;
+      border-top: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .tp-editor-footer-right {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .tp-editor-btn {
+      display: flex;
+      align-items: center;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 500;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #333;
+      color: #fff;
+    }
+    
+    .tp-editor-btn:focus {
+      outline: none;
+      transform: scale(1.05);
+    }
+    
+    .tp-editor-btn .tp-btn-icon {
+      margin-right: 8px;
+    }
+    
+    .tp-editor-btn-save {
+      background: #00a8ff;
+    }
+    
+    .tp-editor-btn-save:focus {
+      border-color: #fff;
+    }
+    
+    .tp-editor-btn-cancel {
+      background: #333;
+    }
+    
+    .tp-editor-btn-cancel:focus {
+      border-color: #00a8ff;
+    }
+    
+    .tp-editor-btn-delete {
+      background: #8b2020;
+    }
+    
+    .tp-editor-btn-delete:focus {
+      border-color: #ff6b6b;
+      background: #a52a2a;
+    }
+    
+    /* Modal System (legacy - keeping for compatibility) */
     .tp-modal-overlay {
       position: fixed;
       top: 0;

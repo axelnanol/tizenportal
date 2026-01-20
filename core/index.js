@@ -39,6 +39,7 @@ import { initInputHandler, executeColorAction } from '../input/handler.js';
 import { initPointer, isPointerActive, togglePointer } from '../input/pointer.js';
 import { initPortal, showPortal, hidePortal, refreshPortal } from '../ui/portal.js';
 import { initModal } from '../ui/modal.js';
+import { initSiteEditor, showAddSiteEditor, showEditSiteEditor, isSiteEditorOpen } from '../ui/siteeditor.js';
 import { initAddressBar, showAddressBar, hideAddressBar, toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
 import { initBundleMenu, showBundleMenu, hideBundleMenu, toggleBundleMenu, isBundleMenuVisible, cycleBundle } from '../ui/bundlemenu.js';
 import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
@@ -95,9 +96,13 @@ async function init() {
     initDiagnosticsPanel();
     log('Diagnostics panel initialized');
 
-    // Step 5: Initialize modal system
+    // Step 5: Initialize modal system (legacy)
     initModal();
     log('Modal system initialized');
+
+    // Step 5b: Initialize new site editor
+    initSiteEditor();
+    log('Site editor initialized');
 
     // Step 6: Initialize address bar
     initAddressBar();

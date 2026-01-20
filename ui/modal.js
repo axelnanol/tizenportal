@@ -6,6 +6,7 @@
  */
 
 import { addCard, updateCard, deleteCard, getCards } from './cards.js';
+import { getBundleNames } from '../bundles/registry.js';
 
 /**
  * Refresh portal function (set externally to avoid circular dependency)
@@ -40,11 +41,6 @@ var activeModal = null;
  * Element that had focus before modal opened
  */
 var previousFocusElement = null;
-
-/**
- * Available bundles (will be populated from registry in Phase 4)
- */
-var availableBundles = ['default', 'audiobookshelf', 'jellyfin'];
 
 /**
  * Available user agent options
@@ -203,11 +199,12 @@ function createCardForm(card) {
   html += '</div>';
   
   // Bundle selector
+  var bundleNames = getBundleNames();
   html += '<div class="tp-form-group">';
   html += '<label for="tp-form-bundle">Bundle</label>';
   html += '<select id="tp-form-bundle" name="bundle" tabindex="0">';
-  for (var i = 0; i < availableBundles.length; i++) {
-    var b = availableBundles[i];
+  for (var i = 0; i < bundleNames.length; i++) {
+    var b = bundleNames[i];
     var selected = b === bundle ? ' selected' : '';
     html += '<option value="' + b + '"' + selected + '>' + b + '</option>';
   }

@@ -6,6 +6,7 @@
 
 import { getCards, addCard, updateCard, deleteCard } from './cards.js';
 import { showAddCardModal, showEditCardModal, setRefreshPortalFn } from './modal.js';
+import { showAddSiteEditor, showEditSiteEditor } from './siteeditor.js';
 
 /**
  * Portal container element
@@ -127,7 +128,7 @@ function createCardElement(card, index) {
       pressTimer = setTimeout(function() {
         // Long press - show edit dialog
         console.log('TizenPortal: Long press - edit card');
-        showEditCardModal(card);
+        showEditSiteEditor(card, refreshPortal);
         pressTimer = null;
       }, LONG_PRESS_MS);
     }
@@ -226,7 +227,7 @@ function launchCard(card) {
  */
 function showAddCardDialog() {
   console.log('TizenPortal: Add card dialog');
-  showAddCardModal();
+  showAddSiteEditor(refreshPortal);
 }
 
 /**
