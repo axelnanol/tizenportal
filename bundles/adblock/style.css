@@ -1,0 +1,234 @@
+/* TizenPortal Ad Blocker Bundle Styles */
+
+/* ==========================================================================
+   GENERIC AD HIDING
+   Hide common ad containers by class names and IDs
+   ========================================================================== */
+
+/* Common ad class patterns */
+[class*="ad-container"],
+[class*="ad-wrapper"],
+[class*="ad-banner"],
+[class*="ad-unit"],
+[class*="ad-slot"],
+[class*="ad-block"],
+[class*="ad-placement"],
+[class*="ad-frame"],
+[class*="ad-zone"],
+[class*="ad-box"],
+[class*="advert-"],
+[class*="advert_"],
+[class*="advertisement"],
+[class*="advertising"],
+[class*="sponsored-"],
+[class*="sponsored_"],
+[class*="sponsor-"],
+[class*="promo-banner"],
+[class*="promotional"],
+[class*="dfp-"],
+[class*="gpt-"],
+[class*="google-ad"],
+[class*="googlead"],
+[class*="doubleclick"],
+[class*="adsense"],
+[class*="prebid"],
+[class*="taboola"],
+[class*="outbrain"],
+[class*="revcontent"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Common ad ID patterns */
+[id*="ad-container"],
+[id*="ad-wrapper"],
+[id*="ad-banner"],
+[id*="ad-unit"],
+[id*="ad-slot"],
+[id*="ad-block"],
+[id*="ad-placement"],
+[id*="advertisement"],
+[id*="advertising"],
+[id*="google_ads"],
+[id*="dfp-"],
+[id*="gpt-ad"],
+[id*="taboola"],
+[id*="outbrain"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+}
+
+/* ==========================================================================
+   IFRAME ADS
+   Hide common ad iframes
+   ========================================================================== */
+
+iframe[src*="doubleclick"],
+iframe[src*="googlesyndication"],
+iframe[src*="googleadservices"],
+iframe[src*="google-analytics"],
+iframe[src*="adserver"],
+iframe[src*="adservice"],
+iframe[src*="advertising"],
+iframe[src*="taboola"],
+iframe[src*="outbrain"],
+iframe[src*="ads."],
+iframe[src*="/ads/"],
+iframe[id*="google_ads"],
+iframe[id*="aswift"],
+iframe[name*="google_ads"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+/* ==========================================================================
+   OVERLAY ADS / POPUPS
+   Hide overlay and popup style ads
+   ========================================================================== */
+
+[class*="popup-ad"],
+[class*="ad-popup"],
+[class*="modal-ad"],
+[class*="ad-modal"],
+[class*="overlay-ad"],
+[class*="ad-overlay"],
+[class*="interstitial"],
+[class*="lightbox-ad"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* ==========================================================================
+   STICKY/FIXED ADS
+   Hide sticky footer/header ads
+   ========================================================================== */
+
+[class*="sticky-ad"],
+[class*="ad-sticky"],
+[class*="fixed-ad"],
+[class*="ad-fixed"],
+[class*="footer-ad"],
+[class*="header-ad"],
+[class*="bottom-ad"],
+[class*="top-ad"] {
+  display: none !important;
+  visibility: hidden !important;
+  position: static !important;
+  height: 0 !important;
+}
+
+/* ==========================================================================
+   SOCIAL WIDGETS THAT ACT AS ADS
+   Hide "recommended" and "you may also like" spam
+   ========================================================================== */
+
+[class*="recommended-ads"],
+[class*="related-ads"],
+[class*="native-ad"],
+[class*="content-ad"],
+[class*="in-feed-ad"],
+[class*="infeed-ad"],
+[class*="promoted-content"],
+[class*="promoted-post"],
+[class*="paid-content"],
+[class*="paid-post"] {
+  display: none !important;
+}
+
+/* ==========================================================================
+   VIDEO AD OVERLAYS
+   Hide video ad overlays (but not the video itself)
+   ========================================================================== */
+
+[class*="video-ad"]:not(video):not([class*="player"]),
+[class*="preroll"],
+[class*="midroll"],
+[class*="postroll"],
+[class*="ad-skip"],
+[class*="skip-ad"],
+.ytp-ad-overlay-container,
+.ytp-ad-text-overlay,
+.ytp-ad-image-overlay {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ==========================================================================
+   NEWSLETTER/SIGNUP POPUPS
+   Hide intrusive newsletter and signup prompts
+   ========================================================================== */
+
+[class*="newsletter-popup"],
+[class*="signup-popup"],
+[class*="subscribe-popup"],
+[class*="email-capture"],
+[class*="lead-capture"],
+[class*="exit-intent"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ==========================================================================
+   COOKIE/GDPR BANNERS
+   Optionally hide cookie consent banners (user can enable)
+   ========================================================================== */
+
+/* These are kept visible by default for compliance, but bundle JS can hide them */
+
+/* ==========================================================================
+   COMMON THIRD-PARTY AD NETWORKS
+   Hide elements from known ad networks
+   ========================================================================== */
+
+/* Google */
+.adsbygoogle,
+ins.adsbygoogle,
+.google-auto-placed {
+  display: none !important;
+  height: 0 !important;
+}
+
+/* Amazon */
+[class*="amzn-native"],
+[class*="amazon-adsystem"] {
+  display: none !important;
+}
+
+/* Facebook */
+[class*="fb-ad"],
+[class*="facebook-ad"] {
+  display: none !important;
+}
+
+/* ==========================================================================
+   COSMETIC FIXES
+   Fix layout issues caused by hidden ads
+   ========================================================================== */
+
+/* Prevent empty space where ads were */
+.ad-hidden-spacer,
+.ad-placeholder,
+[class*="ad-space"],
+[class*="ad-holder"] {
+  display: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}

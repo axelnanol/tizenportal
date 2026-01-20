@@ -1,0 +1,249 @@
+/* TizenPortal Audiobookshelf Bundle Styles */
+
+/* ==========================================================================
+   VIEWPORT LOCK
+   Lock to 1920px to disable Tailwind responsive breakpoints
+   ========================================================================== */
+
+html {
+  min-width: 1920px !important;
+  width: 1920px !important;
+  overflow-x: hidden;
+}
+
+/* Prevent viewport meta from being respected */
+@viewport {
+  width: 1920px;
+}
+
+/* ==========================================================================
+   FOCUS INDICATORS
+   Strong focus styling for TV remote navigation
+   ========================================================================== */
+
+/* Book/Item cards - main library grid */
+.book-card:focus,
+.book-card-overlay:focus,
+[class*="bookshelf"] a:focus,
+[class*="BookCard"]:focus,
+.card:focus,
+[data-testid="card"]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(26, 214, 145, 0.3) !important;
+  z-index: 100 !important;
+}
+
+/* Navigation items */
+nav a:focus,
+nav button:focus,
+.nav-link:focus,
+[role="navigation"] a:focus,
+[role="navigation"] button:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 2px;
+  background-color: rgba(26, 214, 145, 0.2) !important;
+}
+
+/* Buttons */
+button:focus,
+[role="button"]:focus,
+.btn:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 2px;
+}
+
+/* Form inputs */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 0;
+  border-color: #1ad691 !important;
+}
+
+/* Generic focusable elements */
+[tabindex]:focus:not([tabindex="-1"]) {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   MOBILE/RESPONSIVE ELEMENTS
+   Hide or adjust elements designed for mobile
+   ========================================================================== */
+
+/* Hide mobile navigation */
+.mobile-menu,
+.mobile-nav,
+.mobile-only,
+[class*="mobile-menu"],
+.hamburger-menu,
+.menu-toggle {
+  display: none !important;
+}
+
+/* Hide elements that break on TV */
+.bottom-bar-mobile,
+[class*="BottomBar"],
+.mobile-player {
+  display: none !important;
+}
+
+/* ==========================================================================
+   SIDEBAR ADJUSTMENTS
+   Ensure sidebar is always visible and navigable
+   ========================================================================== */
+
+/* Keep sidebar expanded */
+.sidebar,
+.side-rail,
+[class*="Sidebar"],
+[class*="siderail"],
+#siderail {
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* ==========================================================================
+   BOOK CARDS / LIBRARY GRID
+   Make book cards more TV-friendly
+   ========================================================================== */
+
+/* Ensure cards are focusable and have visible borders */
+.book-card,
+.card,
+[class*="BookCard"] {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Hover simulation for focused cards */
+.book-card:focus,
+[class*="BookCard"]:focus {
+  transform: scale(1.02);
+}
+
+/* ==========================================================================
+   PLAYER BAR
+   Ensure player controls are accessible
+   ========================================================================== */
+
+.player-bar,
+[class*="PlayerBar"],
+.audio-player,
+#player {
+  z-index: 50 !important;
+}
+
+/* Player buttons */
+.player-bar button:focus,
+[class*="PlayerBar"] button:focus,
+.audio-player button:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 2px;
+  background-color: rgba(26, 214, 145, 0.2) !important;
+}
+
+/* ==========================================================================
+   LOGIN/FORM PAGES
+   Ensure forms work properly
+   ========================================================================== */
+
+/* Login form container */
+.login-form,
+[class*="LoginForm"],
+form[action*="login"] {
+  max-width: 100% !important;
+}
+
+/* Make form fields larger for TV */
+.login-form input,
+[class*="LoginForm"] input,
+form input[type="text"],
+form input[type="password"],
+form input[type="email"] {
+  font-size: 18px !important;
+  padding: 12px 16px !important;
+  min-height: 48px !important;
+}
+
+/* Submit buttons */
+form button[type="submit"],
+.login-form button[type="submit"] {
+  font-size: 18px !important;
+  padding: 12px 24px !important;
+  min-height: 48px !important;
+}
+
+/* ==========================================================================
+   SCROLLBARS
+   TV-friendly scrollbar styling
+   ========================================================================== */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(35, 35, 35, 0.8);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1ad691;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #15b578;
+}
+
+/* ==========================================================================
+   MODALS AND OVERLAYS
+   Ensure modals are navigable
+   ========================================================================== */
+
+.modal,
+[class*="Modal"],
+[role="dialog"] {
+  /* Ensure modals are on top */
+  z-index: 1000 !important;
+}
+
+/* Modal close button focus */
+.modal button[aria-label*="close"]:focus,
+[class*="Modal"] button[aria-label*="close"]:focus {
+  outline: 3px solid #1ad691 !important;
+  background-color: rgba(26, 214, 145, 0.2) !important;
+}
+
+/* ==========================================================================
+   NUXT LOADING INDICATOR
+   Hide Nuxt loading bar when done
+   ========================================================================== */
+
+#nuxt-loading.hidden,
+#nuxt-loading[style*="display: none"] {
+  display: none !important;
+}
+
+/* ==========================================================================
+   TEXT SELECTION
+   Disable text selection except in inputs
+   ========================================================================== */
+
+* {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}

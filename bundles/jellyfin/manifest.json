@@ -1,0 +1,8 @@
+{
+  "name": "jellyfin",
+  "displayName": "Jellyfin",
+  "version": "1.0.0",
+  "description": "Enhanced TV support for Jellyfin Media Server",
+  "author": "TizenPortal",
+  "homepage": "https://jellyfin.org/"
+}

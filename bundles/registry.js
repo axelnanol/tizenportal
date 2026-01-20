@@ -5,12 +5,18 @@
  */
 
 import defaultBundle from './default/main.js';
+import adblockBundle from './adblock/main.js';
+import audiobookshelfBundle from './audiobookshelf/main.js';
+import jellyfinBundle from './jellyfin/main.js';
 
 /**
  * Registered bundles
  */
 var bundles = {
   'default': defaultBundle,
+  'adblock': adblockBundle,
+  'audiobookshelf': audiobookshelfBundle,
+  'jellyfin': jellyfinBundle,
 };
 
 /**
