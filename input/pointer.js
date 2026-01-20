@@ -45,10 +45,10 @@ var EDGE_THRESHOLD = 50;
 var pointerElement = null;
 
 /**
- * Current pointer position
+ * Current pointer position (centered on init)
  */
-var posX = SCREEN_WIDTH / 2;
-var posY = SCREEN_HEIGHT / 2;
+var posX = 960;
+var posY = 540;
 
 /**
  * Is pointer mode active
