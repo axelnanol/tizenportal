@@ -3,7 +3,7 @@
  * 
  * Main entry point. Initializes all subsystems and exposes the global API.
  * 
- * @version 0104
+ * @version 0109
  */
 
 // ============================================================================

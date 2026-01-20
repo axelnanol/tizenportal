@@ -37,7 +37,7 @@ var SCROLL_AMOUNT = 100;
 /**
  * Edge threshold for triggering scroll
  */
-var EDGE_THRESHOLD = 50;
+// EDGE_THRESHOLD removed - now scroll triggers when pointer hits actual screen edge
 
 /**
  * Pointer element
@@ -205,7 +205,6 @@ export function handlePointerKeyDown(event) {
   var speed = holdDuration > HOLD_THRESHOLD ? FAST_SPEED : MOVE_SPEED;
   
   var handled = false;
-  var needsScroll = false;
   var scrollDirection = 0;
   
   // Get current screen bounds
@@ -223,23 +222,25 @@ export function handlePointerKeyDown(event) {
       break;
       
     case KEYS.UP:
-      if (posY <= EDGE_THRESHOLD) {
-        // At top edge - scroll up instead
-        needsScroll = true;
+      var newY = posY - speed;
+      if (newY < 0) {
+        // Hit top edge - scroll up and clamp pointer
         scrollDirection = -SCROLL_AMOUNT;
+        posY = 0;
       } else {
-        posY = Math.max(0, posY - speed);
+        posY = newY;
       }
       handled = true;
       break;
       
     case KEYS.DOWN:
-      if (posY >= screen.height - EDGE_THRESHOLD) {
-        // At bottom edge - scroll down instead
-        needsScroll = true;
+      var newYDown = posY + speed;
+      if (newYDown >= screen.height) {
+        // Hit bottom edge - scroll down and clamp pointer
         scrollDirection = SCROLL_AMOUNT;
+        posY = screen.height - 1;
       } else {
-        posY = Math.min(screen.height - 1, posY + speed);
+        posY = newYDown;
       }
       handled = true;
       break;
@@ -255,7 +256,7 @@ export function handlePointerKeyDown(event) {
     updatePointerPosition();
     
     // Handle scrolling if needed
-    if (needsScroll) {
+    if (scrollDirection !== 0) {
       scrollPage(scrollDirection);
     }
     
