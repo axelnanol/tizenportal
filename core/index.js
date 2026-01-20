@@ -3,7 +3,7 @@
  * 
  * Main entry point. Initializes all subsystems and exposes the global API.
  * 
- * @version 0118
+ * @version 0119
  */
 
 // ============================================================================
@@ -50,7 +50,7 @@ import { getBundleNames } from '../bundles/registry.js';
 /**
  * TizenPortal version
  */
-const VERSION = '0118';
+const VERSION = '0119';
 
 /**
  * Application state
