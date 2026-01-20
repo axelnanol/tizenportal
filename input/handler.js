@@ -233,11 +233,15 @@ export function executeColorAction(action) {
       break;
 
     case 'editSite':
-      // Edit current site (opens site editor)
+      // If site editor is open, Yellow = Save
       if (isSiteEditorOpen()) {
-        // Already open, do nothing
+        var saveBtn = document.getElementById('tp-editor-save');
+        if (saveBtn) {
+          saveBtn.click();
+        }
         return;
       }
+      // Edit current site (opens site editor)
       if (window.TizenPortal && window.TizenPortal.getCurrentCard) {
         var currentCard = window.TizenPortal.getCurrentCard();
         if (currentCard) {
