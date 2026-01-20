@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TizenPortal 0105</title>
+  <title>TizenPortal 0106</title>
   <style>
     /* Reset and base styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -693,6 +693,57 @@
       color: #666;
       text-align: center;
     }
+    
+    /* Pointer/Mouse Mode */
+    .tp-pointer {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
+    
+    .tp-pointer.visible {
+      display: block;
+    }
+    
+    .tp-pointer-cursor {
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 20px solid #00a8ff;
+      transform: rotate(-30deg);
+      filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));
+    }
+    
+    .tp-pointer-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(0, 168, 255, 0.5);
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    
+    .tp-pointer.moving .tp-pointer-ring {
+      opacity: 1;
+    }
+    
+    .tp-pointer.clicking .tp-pointer-ring {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(0.6);
+      border-color: #fff;
+      border-width: 3px;
+    }
+    
+    .tp-pointer.clicking .tp-pointer-cursor {
+      border-top-color: #fff;
+    }
   </style>
 </head>
 <body>
@@ -701,7 +752,7 @@
     <div id="tp-portal">
       <div id="tp-header">
         <h1>TizenPortal</h1>
-        <span class="version">v0105</span>
+        <span class="version">v0106</span>
       </div>
       <div id="tp-grid">
         <!-- Cards rendered by JavaScript -->

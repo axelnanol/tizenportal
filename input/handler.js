@@ -9,6 +9,7 @@ import { configRead, configWrite } from '../core/config.js';
 import { toggleDiagnosticsPanel, clearDiagnosticsLogs, isDiagnosticsPanelVisible } from '../ui/diagnostics.js';
 import { toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
 import { toggleBundleMenu, isBundleMenuVisible, cycleBundle } from '../ui/bundlemenu.js';
+import { isPointerActive, handlePointerKeyDown, handlePointerKeyUp, togglePointer } from './pointer.js';
 
 /**
  * Long press detection threshold (milliseconds)
@@ -82,6 +83,15 @@ function handleKeyDown(event) {
     }
   }
 
+  // Handle pointer mode - intercepts arrow keys and enter
+  if (isPointerActive()) {
+    if (handlePointerKeyDown(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+  }
+
   // Handle color buttons (short press handled on keyup for long press detection)
   if (isColorButton(keyCode)) {
     event.preventDefault();
@@ -110,6 +120,15 @@ function handleKeyUp(event) {
   var isLongPress = duration >= LONG_PRESS_MS;
 
   delete keyDownTimes[keyCode];
+
+  // Handle pointer mode keyup
+  if (isPointerActive()) {
+    if (handlePointerKeyUp(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+  }
 
   // Handle color buttons
   if (isColorButton(keyCode)) {
@@ -183,10 +202,9 @@ function executeColorAction(action) {
 
     case 'pointerMode':
       // Toggle pointer/mouse mode
-      var currentPointer = configRead('pointerMode') || false;
-      configWrite('pointerMode', !currentPointer);
+      var pointerEnabled = togglePointer();
       if (window.TizenPortal) {
-        window.TizenPortal.showToast('Mouse mode: ' + (!currentPointer ? 'ON' : 'OFF'));
+        window.TizenPortal.showToast('Mouse mode: ' + (pointerEnabled ? 'ON' : 'OFF'));
       }
       break;
 

@@ -36,6 +36,7 @@ import { configRead, configWrite, configOnChange, configInit } from './config.js
 import { initPolyfills, hasPolyfill, getLoadedPolyfills } from '../polyfills/index.js';
 import { KEYS } from '../input/keys.js';
 import { initInputHandler } from '../input/handler.js';
+import { initPointer, isPointerActive, togglePointer } from '../input/pointer.js';
 import { initPortal, showPortal, hidePortal, refreshPortal } from '../ui/portal.js';
 import { initModal } from '../ui/modal.js';
 import { initAddressBar, showAddressBar, hideAddressBar, toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
@@ -46,7 +47,7 @@ import { initDiagnosticsPanel } from '../ui/diagnostics.js';
 /**
  * TizenPortal version
  */
-const VERSION = '0105';
+const VERSION = '0106';
 
 /**
  * Application state
@@ -104,11 +105,15 @@ async function init() {
     initBundleMenu();
     log('Bundle menu initialized');
 
-    // Step 8: Initialize input handler
+    // Step 8: Initialize pointer/mouse mode
+    initPointer();
+    log('Pointer mode initialized');
+
+    // Step 9: Initialize input handler
     initInputHandler();
     log('Input handler initialized');
 
-    // Step 9: Initialize and render portal UI
+    // Step 10: Initialize and render portal UI
     initPortal();
     log('Portal UI initialized');
 
@@ -266,9 +271,10 @@ var TizenPortalAPI = {
   // Key constants
   keys: KEYS,
 
-  // Input state (to be populated by input handler)
+  // Input state
   input: {
-    isPointerMode: function() { return configRead('pointerMode') || false; },
+    isPointerMode: isPointerActive,
+    togglePointer: togglePointer,
     isIMEActive: function() { return false; }, // TODO: implement IME tracking
   },
 
