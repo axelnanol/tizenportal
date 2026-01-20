@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920, initial-scale=1">
+  <title>TizenPortal 0.2.01</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      padding: 40px;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    h1 {
+      font-size: 36px;
+      font-weight: 200;
+      letter-spacing: 3px;
+      background: linear-gradient(90deg, #FFD700, #FFA500);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    h1 span {
+      font-size: 14px;
+      letter-spacing: 1px;
+      -webkit-text-fill-color: #666;
+    }
+    
+    .hints {
+      display: flex;
+      gap: 20px;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .hint-key {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    
+    .hint-key.yellow { background: #FFFF00; }
+    .hint-key.blue { background: #0000FF; }
+    
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+    }
+    
+    .card {
+      width: 220px;
+      height: 160px;
+      background: linear-gradient(145deg, #1e1e2f 0%, #151525 100%);
+      border: 2px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    
+    .card:focus {
+      outline: none;
+      border-color: #FFD700;
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(255,215,0,0.3);
+    }
+    
+    .card-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+    
+    .card-name {
+      font-size: 16px;
+      color: #ccc;
+      text-align: center;
+      padding: 0 10px;
+    }
+    
+    .card-add {
+      border: 2px dashed rgba(255,255,255,0.2);
+      background: transparent;
+    }
+    
+    .card-add:focus {
+      border-color: #0f0;
+    }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.9);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: #1a1a2e;
+      border: 2px solid #FFD700;
+      border-radius: 12px;
+      padding: 30px;
+      width: 500px;
+      max-width: 90%;
+    }
+    
+    .modal h2 {
+      color: #FFD700;
+      margin-bottom: 20px;
+      font-weight: 400;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #888;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px;
+      background: #000;
+      border: 2px solid #333;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 16px;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #FFD700;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .btn:focus {
+      outline: 3px solid #fff;
+    }
+    
+    .btn-primary {
+      background: #FFD700;
+      color: #000;
+    }
+    
+    .btn-secondary {
+      background: #333;
+      color: #fff;
+    }
+    
+    .btn-danger {
+      background: #c00;
+      color: #fff;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.9);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TizenPortal <span>0.2.01</span></h1>
+    <div class="hints">
+      <span><span class="hint-key yellow"></span> Home</span>
+      <span><span class="hint-key blue"></span> Diagnostics</span>
+    </div>
+  </header>
+  
+  <div id="grid" class="grid"></div>
+  
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <h2 id="modal-title">Add App</h2>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="input-name" placeholder="My App">
+      </div>
+      <div class="form-group">
+        <label>URL</label>
+        <input type="url" id="input-url" placeholder="http://192.168.1.100:8080">
+      </div>
+      <div class="form-group">
+        <label>Bundle</label>
+        <select id="input-bundle">
+          <option value="default">Default</option>
+          <option value="audiobookshelf">Audiobookshelf</option>
+          <option value="jellyfin">Jellyfin</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="btn-save">Save</button>
+        <button class="btn btn-secondary" id="btn-cancel">Cancel</button>
+        <button class="btn btn-danger" id="btn-delete" style="display:none">Delete</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="toast" class="toast"></div>
+
+  <!-- Bundle CSS (embedded) -->
+  <script id="bundle-css-default" type="text/plain">
+/* Default bundle CSS */
+:focus { outline: 3px solid #00a8ff !important; outline-offset: 2px; }
+::-webkit-scrollbar { width: 8px; }
+  </script>
+  
+  <script id="bundle-css-audiobookshelf" type="text/plain">
+/* Audiobookshelf bundle CSS */
+html { min-width: 1920px !important; width: 1920px !important; }
+:focus { outline: 4px solid #1ad691 !important; outline-offset: 2px; }
+.book-card:focus, [class*="BookCard"]:focus { box-shadow: 0 0 0 6px rgba(26, 214, 145, 0.3) !important; z-index: 100 !important; }
+.mobile-menu, .mobile-nav, .hamburger-menu { display: none !important; }
+  </script>
+  
+  <script id="bundle-css-jellyfin" type="text/plain">
+/* Jellyfin bundle CSS */
+:focus { outline: 3px solid #00a4dc !important; outline-offset: 2px; }
+  </script>
+
+  <script>
+    (function() {
+      'use strict';
+      
+      // State
+      var apps = [];
+      var selectedIdx = 0;
+      var editIdx = -1;
+      
+      // Elements
+      var grid = document.getElementById('grid');
+      var modal = document.getElementById('modal');
+      var toast = document.getElementById('toast');
+      
+      // Load apps from localStorage
+      function loadApps() {
+        try {
+          apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
+        } catch (e) {
+          apps = [];
+        }
+      }
+      
+      // Save apps to localStorage
+      function saveApps() {
+        localStorage.setItem('tp_apps', JSON.stringify(apps));
+      }
+      
+      // Render the grid
+      function render() {
+        grid.innerHTML = '';
+        
+        // App cards
+        apps.forEach(function(app, i) {
+          var card = document.createElement('div');
+          card.className = 'card';
+          card.tabIndex = 0;
+          card.innerHTML = '<div class="card-icon">📺</div><div class="card-name">' + escapeHtml(app.name) + '</div>';
+          card.onclick = function() { launch(app); };
+          card.onkeydown = function(e) {
+            if (e.keyCode === 13) { // Enter
+              if (e.repeat) return; // Ignore held key
+              launch(app);
+            }
+          };
+          grid.appendChild(card);
+        });
+        
+        // Add card
+        var addCard = document.createElement('div');
+        addCard.className = 'card card-add';
+        addCard.tabIndex = 0;
+        addCard.innerHTML = '<div class="card-icon">➕</div><div class="card-name">Add App</div>';
+        addCard.onclick = function() { openModal(-1); };
+        addCard.onkeydown = function(e) {
+          if (e.keyCode === 13) openModal(-1);
+        };
+        grid.appendChild(addCard);
+        
+        // Focus first card
+        var cards = grid.querySelectorAll('.card');
+        if (cards.length > 0) cards[0].focus();
+      }
+      
+      // Launch an app
+      function launch(app) {
+        showToast('Loading ' + app.name + '...');
+        
+        // Get bundle CSS
+        var bundleEl = document.getElementById('bundle-css-' + (app.bundle || 'default'));
+        var css = bundleEl ? bundleEl.textContent : '';
+        
+        // Build payload
+        var payload = {
+          css: css,
+          js: '',
+          ua: '',
+          bundleName: app.bundle || 'default',
+          cardName: app.name
+        };
+        
+        // Encode and navigate
+        try {
+          var json = JSON.stringify(payload);
+          var encoded = btoa(unescape(encodeURIComponent(json)));
+          var url = app.url + (app.url.indexOf('#') === -1 ? '#' : '&') + 'tp=' + encoded;
+          window.location.href = url;
+        } catch (e) {
+          showToast('Error: ' + e.message);
+        }
+      }
+      
+      // Open modal for add/edit
+      function openModal(idx) {
+        editIdx = idx;
+        var isAdd = idx === -1;
+        
+        document.getElementById('modal-title').textContent = isAdd ? 'Add App' : 'Edit App';
+        document.getElementById('btn-delete').style.display = isAdd ? 'none' : 'block';
+        
+        if (isAdd) {
+          document.getElementById('input-name').value = '';
+          document.getElementById('input-url').value = '';
+          document.getElementById('input-bundle').value = 'default';
+        } else {
+          var app = apps[idx];
+          document.getElementById('input-name').value = app.name;
+          document.getElementById('input-url').value = app.url;
+          document.getElementById('input-bundle').value = app.bundle || 'default';
+        }
+        
+        modal.classList.add('active');
+        document.getElementById('input-name').focus();
+      }
+      
+      // Close modal
+      function closeModal() {
+        modal.classList.remove('active');
+        editIdx = -1;
+        render();
+      }
+      
+      // Save app
+      function saveApp() {
+        var name = document.getElementById('input-name').value.trim();
+        var url = document.getElementById('input-url').value.trim();
+        var bundle = document.getElementById('input-bundle').value;
+        
+        if (!name || !url) {
+          showToast('Name and URL required');
+          return;
+        }
+        
+        var app = { name: name, url: url, bundle: bundle };
+        
+        if (editIdx === -1) {
+          apps.push(app);
+        } else {
+          apps[editIdx] = app;
+        }
+        
+        saveApps();
+        closeModal();
+        showToast('Saved!');
+      }
+      
+      // Delete app
+      function deleteApp() {
+        if (editIdx >= 0 && editIdx < apps.length) {
+          apps.splice(editIdx, 1);
+          saveApps();
+          closeModal();
+          showToast('Deleted');
+        }
+      }
+      
+      // Show toast
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('visible');
+        setTimeout(function() {
+          toast.classList.remove('visible');
+        }, 3000);
+      }
+      
+      // Escape HTML
+      function escapeHtml(str) {
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+      
+      // Key handling
+      document.addEventListener('keydown', function(e) {
+        // Modal keys
+        if (modal.classList.contains('active')) {
+          if (e.keyCode === 27 || e.keyCode === 10009) { // Escape or Back
+            closeModal();
+            e.preventDefault();
+          }
+          return;
+        }
+        
+        // Grid navigation
+        var cards = grid.querySelectorAll('.card');
+        var focusedIdx = Array.prototype.indexOf.call(cards, document.activeElement);
+        
+        if (e.keyCode === 37 && focusedIdx > 0) { // Left
+          cards[focusedIdx - 1].focus();
+          e.preventDefault();
+        }
+        if (e.keyCode === 39 && focusedIdx < cards.length - 1) { // Right
+          cards[focusedIdx + 1].focus();
+          e.preventDefault();
+        }
+        
+        // Long press Enter for edit
+        if (e.keyCode === 13 && focusedIdx >= 0 && focusedIdx < apps.length) {
+          // Note: Long press detection would need timer logic
+        }
+      });
+      
+      // Button handlers
+      document.getElementById('btn-save').onclick = saveApp;
+      document.getElementById('btn-cancel').onclick = closeModal;
+      document.getElementById('btn-delete').onclick = deleteApp;
+      
+      // Initialize
+      loadApps();
+      render();
+      showToast('TizenPortal 0.2.01');
+    })();
+  </script>
+</body>
+</html>

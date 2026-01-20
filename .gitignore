@@ -24,9 +24,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Legacy dist folder (replaced by app/)
-dist/
-
 # Temporary files
 *.tmp
 *.temp
