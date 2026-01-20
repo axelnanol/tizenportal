@@ -190,7 +190,12 @@
     let container = null;
     if ((isContainer(eventTarget) || eventTarget.nodeName === 'BODY') && !(eventTarget.nodeName === 'INPUT')) {
       if (eventTarget.nodeName === 'IFRAME') {
-        eventTarget = eventTarget.contentDocument.documentElement;
+        try {
+          eventTarget = eventTarget.contentDocument.documentElement;
+        } catch (e) {
+          // Cross-origin iframe, skip
+          return;
+        }
       }
       container = eventTarget;
       let bestInsideCandidate = null;
@@ -475,7 +480,14 @@
     } else {
       return candidates.filter(candidate => {
         const candidateRect = getBoundingClientRect(candidate);
-        const candidateBody = (candidate.nodeName === 'IFRAME') ? candidate.contentDocument.body : null;
+        let candidateBody = null;
+        if (candidate.nodeName === 'IFRAME') {
+          try {
+            candidateBody = candidate.contentDocument.body;
+          } catch (e) {
+            // Cross-origin iframe
+          }
+        }
         return container.contains(candidate) &&
           candidate !== currentElm && candidateBody !== currentElm &&
           isOutside(candidateRect, eventTargetRect, dir) &&
@@ -1614,8 +1626,14 @@
       // If startingPoint is either a scroll container or the document,
       // find the best candidate within startingPoint
       if ((isContainer(eventTarget) || eventTarget.nodeName === 'BODY') && !(eventTarget.nodeName === 'INPUT')) {
-        if (eventTarget.nodeName === 'IFRAME')
-          eventTarget = eventTarget.contentDocument.body;
+        if (eventTarget.nodeName === 'IFRAME') {
+          try {
+            eventTarget = eventTarget.contentDocument.body;
+          } catch (e) {
+            // Cross-origin iframe, skip
+            return null;
+          }
+        }
 
         const candidates = getSpatialNavigationCandidates(eventTarget, option);
 
