@@ -85,7 +85,7 @@ export var KEYS = {
  * |--------|---------------------|-------------------------|
  * | Red    | Address bar         | Reload page             |
  * | Green  | Mouse mode toggle   | Focus highlight toggle  |
- * | Yellow | Bundle menu         | Cycle bundles           |
+ * | Yellow | Edit site           | Quick add site          |
  * | Blue   | Diagnostics menu    | Safe mode               |
  */
 export var COLOR_ACTIONS = {
@@ -98,8 +98,8 @@ export var COLOR_ACTIONS = {
     long: 'focusHighlight',
   },
   YELLOW: {
-    short: 'bundleMenu',
-    long: 'cycleBundle',
+    short: 'editSite',
+    long: 'addSite',
   },
   BLUE: {
     short: 'diagnostics',

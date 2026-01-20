@@ -9,6 +9,7 @@ import { configRead, configWrite } from '../core/config.js';
 import { toggleDiagnosticsPanel, clearDiagnosticsLogs, isDiagnosticsPanelVisible } from '../ui/diagnostics.js';
 import { toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
 import { toggleBundleMenu, isBundleMenuVisible, cycleBundle } from '../ui/bundlemenu.js';
+import { showAddSiteEditor, showEditSiteEditor, isSiteEditorOpen } from '../ui/siteeditor.js';
 import { isPointerActive, handlePointerKeyDown, handlePointerKeyUp, togglePointer } from './pointer.js';
 
 /**
@@ -226,9 +227,46 @@ export function executeColorAction(action) {
           window.TizenPortal.showToast('Logs cleared');
         }
       } else {
-        // Toggle bundle menu
+        // Toggle bundle menu (legacy)
         toggleBundleMenu();
       }
+      break;
+
+    case 'editSite':
+      // Edit current site (opens site editor)
+      if (isSiteEditorOpen()) {
+        // Already open, do nothing
+        return;
+      }
+      if (window.TizenPortal && window.TizenPortal.getCurrentCard) {
+        var currentCard = window.TizenPortal.getCurrentCard();
+        if (currentCard) {
+          showEditSiteEditor(currentCard, function() {
+            if (window.TizenPortal && window.TizenPortal._refreshPortal) {
+              window.TizenPortal._refreshPortal();
+            }
+          });
+        } else {
+          // No current card, show add instead
+          showAddSiteEditor(function() {
+            if (window.TizenPortal && window.TizenPortal._refreshPortal) {
+              window.TizenPortal._refreshPortal();
+            }
+          });
+        }
+      }
+      break;
+
+    case 'addSite':
+      // Quick add new site
+      if (isSiteEditorOpen()) {
+        return;
+      }
+      showAddSiteEditor(function() {
+        if (window.TizenPortal && window.TizenPortal._refreshPortal) {
+          window.TizenPortal._refreshPortal();
+        }
+      });
       break;
 
     case 'cycleBundle':

@@ -412,7 +412,7 @@ function renderBundleField(field, value) {
   
   var html = '<div class="tp-field-section">';
   html += '<div class="tp-field-section-label">' + field.label + '</div>';
-  html += '<div class="tp-bundle-grid">';
+  html += '<div class="tp-bundle-list">';
   
   for (var i = 0; i < bundles.length; i++) {
     var bundleName = bundles[i];
@@ -423,9 +423,11 @@ function renderBundleField(field, value) {
     
     html += '' +
       '<div class="tp-bundle-option' + (isSelected ? ' selected' : '') + '" data-bundle="' + bundleName + '" tabindex="0">' +
-        '<div class="tp-bundle-name">' + escapeHtml(displayName) + '</div>' +
-        '<div class="tp-bundle-desc">' + escapeHtml(description) + '</div>' +
-        (isSelected ? '<div class="tp-bundle-check">✓</div>' : '') +
+        '<div class="tp-bundle-check">' + (isSelected ? '●' : '○') + '</div>' +
+        '<div class="tp-bundle-info">' +
+          '<div class="tp-bundle-name">' + escapeHtml(displayName) + '</div>' +
+          '<div class="tp-bundle-desc">' + escapeHtml(description) + '</div>' +
+        '</div>' +
       '</div>';
   }
   
