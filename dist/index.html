@@ -2,499 +2,1232 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1920, initial-scale=1">
-  <title>TizenPortal 0.2.01</title>
+  <meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TizenPortal 0204</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Reset and base styles */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     
-    body {
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      min-height: 100vh;
-      padding: 40px;
+    /* Fixed 1920x1080 layout - NEVER use responsive */
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #ffffff;
     }
     
-    header {
+    /* Shell container */
+    #tp-shell {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: radial-gradient(ellipse at top, #1a2332 0%, transparent 50%),
+                  radial-gradient(ellipse at bottom, #1a1a2e 0%, transparent 50%);
+    }
+    
+    /* Portal launcher grid */
+    #tp-portal {
+      width: 100%;
+      height: 100%;
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      padding: 60px;
+    }
+    
+    /* Header */
+    #tp-header {
+      display: flex;
       align-items: center;
       margin-bottom: 40px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     
-    h1 {
-      font-size: 36px;
-      font-weight: 200;
-      letter-spacing: 3px;
-      background: linear-gradient(90deg, #FFD700, #FFA500);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+    #tp-header h1 {
+      font-size: 48px;
+      font-weight: 300;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0, 168, 255, 0.3);
     }
     
-    h1 span {
-      font-size: 14px;
-      letter-spacing: 1px;
-      -webkit-text-fill-color: #666;
+    #tp-header .version {
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-left: 20px;
     }
     
-    .hints {
-      display: flex;
-      gap: 20px;
-      font-size: 12px;
-      color: #666;
-    }
-    
-    .hint-key {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-    
-    .hint-key.yellow { background: #FFFF00; }
-    .hint-key.blue { background: #0000FF; }
-    
-    .grid {
+    /* Card grid container */
+    #tp-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 24px;
+      /* gap not supported in Chrome 47-69 for flexbox, use margins instead */
+      margin: -15px;
+      flex: 1;
+      align-content: flex-start;
     }
     
-    .card {
-      width: 220px;
-      height: 160px;
-      background: linear-gradient(145deg, #1e1e2f 0%, #151525 100%);
-      border: 2px solid rgba(255,255,255,0.05);
+    /* Site card */
+    .tp-card {
+      width: 280px;
+      height: 180px;
+      margin: 15px;
+      background: linear-gradient(145deg, #1e2430 0%, #151922 100%);
+      border: 2px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
     
-    .card:focus {
+    .tp-card:focus {
       outline: none;
-      border-color: #FFD700;
-      transform: scale(1.05);
-      box-shadow: 0 0 30px rgba(255,215,0,0.3);
+      border-color: #00a8ff;
+      box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.4), 0 8px 24px rgba(0, 0, 0, 0.5);
     }
     
-    .card-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
+    .tp-card-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #2a3444 0%, #1a2030 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
     }
     
-    .card-name {
-      font-size: 16px;
-      color: #ccc;
+    .tp-card-name {
+      font-size: 18px;
+      font-weight: 500;
       text-align: center;
-      padding: 0 10px;
+      max-width: 240px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     
-    .card-add {
-      border: 2px dashed rgba(255,255,255,0.2);
+    /* Add card button */
+    .tp-card-add {
+      border-style: dashed;
+      border-color: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(145deg, rgba(30, 36, 48, 0.5) 0%, rgba(21, 25, 34, 0.5) 100%);
+    }
+    
+    .tp-card-add:focus {
+      border-color: #00a8ff;
+      background: linear-gradient(145deg, rgba(30, 36, 48, 0.8) 0%, rgba(21, 25, 34, 0.8) 100%);
+    }
+    
+    .tp-card-add .tp-card-icon {
       background: transparent;
+      border: none;
+      font-size: 48px;
+      color: rgba(255, 255, 255, 0.4);
     }
     
-    .card-add:focus {
-      border-color: #0f0;
+    /* Iframe container (hidden by default) */
+    #tp-iframe-container {
+      display: none;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
     }
     
-    /* Modal */
-    .modal {
+    #tp-iframe-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    /* Loading state */
+    #tp-loading {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    
+    #tp-loading.active {
+      display: flex;
+    }
+    
+    .tp-spinner {
+      width: 64px;
+      height: 64px;
+      border: 4px solid #333333;
+      border-top-color: #00a8ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    #tp-loading-text {
+      margin-top: 24px;
+      font-size: 24px;
+      color: #888888;
+    }
+    
+    /* Toast notification */
+    #tp-toast {
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333333;
+      padding: 16px 32px;
+      border-radius: 8px;
+      font-size: 18px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 300;
+    }
+    
+    #tp-toast.visible {
+      opacity: 1;
+    }
+    
+    /* Color button hints */
+    #tp-hints {
+      position: absolute;
+      bottom: 20px;
+      left: 60px;
+      right: 60px;
+      display: flex;
+      font-size: 16px;
+      color: #666666;
+      z-index: 800;
+      pointer-events: auto;
+    }
+    
+    .tp-hint {
+      display: flex;
+      align-items: center;
+      margin-right: 40px;
+      transition: opacity 0.2s ease, color 0.2s ease;
+    }
+    
+    .tp-hint:hover {
+      opacity: 1;
+      color: #ffffff;
+    }
+    
+    .tp-hint-key {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+    
+    .tp-hint-key.red { background: #e74c3c; }
+    .tp-hint-key.green { background: #2ecc71; }
+    .tp-hint-key.yellow { background: #f1c40f; }
+    .tp-hint-key.blue { background: #3498db; }
+    
+    /* Diagnostics panel */
+    #tp-diagnostics {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 700;
+      flex-direction: column;
+      padding: 40px;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+    
+    #tp-diagnostics.visible {
+      display: flex;
+    }
+    
+    #tp-diagnostics-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    
+    #tp-diagnostics-header h2 {
+      font-size: 28px;
+      font-weight: 500;
+      color: #00a8ff;
+    }
+    
+    #tp-diagnostics-info {
+      font-size: 14px;
+      color: #888;
+    }
+    
+    #tp-diagnostics-logs {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .tp-log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #1a1a1a;
+      display: flex;
+    }
+    
+    .tp-log-time {
+      color: #666;
+      flex-shrink: 0;
+      width: 100px;
+      margin-right: 12px;
+    }
+    
+    .tp-log-level {
+      flex-shrink: 0;
+      width: 60px;
+      margin-right: 12px;
+      font-weight: bold;
+    }
+    
+    .tp-log-level.log { color: #888; }
+    .tp-log-level.info { color: #3498db; }
+    .tp-log-level.warn { color: #f1c40f; }
+    .tp-log-level.error { color: #e74c3c; }
+    
+    .tp-log-message {
+      color: #ccc;
+      flex: 1;
+      word-break: break-word;
+    }
+    
+    #tp-diagnostics-footer {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #333;
+      font-size: 14px;
+      color: #666;
+    }
+
+    /* ========================================================================
+       SITE EDITOR - Full-screen TV-friendly site creation/editing
+       ======================================================================== */
+    
+    .tp-site-editor {
       display: none;
       position: fixed;
       top: 0;
       left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.9);
+      width: 100%;
+      height: 100%;
+      z-index: 600;
+    }
+    
+    .tp-site-editor.visible {
+      display: block;
+    }
+    
+    .tp-editor-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+    }
+    
+    .tp-editor-panel {
+      position: absolute;
+      top: 40px;
+      left: 60px;
+      right: 60px;
+      bottom: 40px;
+      background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+      border: 2px solid #333;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .tp-editor-header {
+      padding: 24px 32px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    .tp-editor-header h2 {
+      font-size: 28px;
+      font-weight: 500;
+      color: #fff;
+      margin: 0;
+    }
+    
+    .tp-editor-hint {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .tp-editor-body {
+      flex: 1;
+      display: flex;
+      padding: 24px 32px;
+      gap: 40px;
+      overflow: hidden;
+    }
+    
+    .tp-editor-fields {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 20px;
+    }
+    
+    .tp-editor-preview {
+      width: 300px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 20px;
+    }
+    
+    .tp-editor-preview-card {
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      width: 100%;
+    }
+    
+    .tp-preview-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #333 0%, #222 100%);
+      border-radius: 16px;
+      margin: 0 auto 16px;
+      display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
-    }
-    
-    .modal.active {
-      display: flex;
-    }
-    
-    .modal-content {
-      background: #1a1a2e;
-      border: 2px solid #FFD700;
-      border-radius: 12px;
-      padding: 30px;
-      width: 500px;
-      max-width: 90%;
-    }
-    
-    .modal h2 {
-      color: #FFD700;
-      margin-bottom: 20px;
-      font-weight: 400;
-    }
-    
-    .form-group {
-      margin-bottom: 16px;
-    }
-    
-    .form-group label {
-      display: block;
-      margin-bottom: 6px;
+      font-size: 36px;
       color: #888;
-      font-size: 12px;
-      text-transform: uppercase;
     }
     
-    .form-group input,
-    .form-group select {
+    .tp-preview-icon img {
       width: 100%;
-      padding: 12px;
-      background: #000;
-      border: 2px solid #333;
-      border-radius: 6px;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 16px;
+    }
+    
+    .tp-preview-name {
+      font-size: 20px;
+      font-weight: 500;
       color: #fff;
-      font-size: 16px;
+      margin-bottom: 8px;
     }
     
-    .form-group input:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: #FFD700;
+    .tp-preview-url {
+      font-size: 14px;
+      color: #666;
+      word-break: break-all;
     }
     
-    .form-actions {
+    /* Field Rows */
+    .tp-field-row-group {
       display: flex;
-      gap: 12px;
-      margin-top: 24px;
+      align-items: stretch;
+      margin-bottom: 20px;
     }
     
-    .btn {
+    .tp-field-row-group .tp-field-row {
       flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
+      margin-bottom: 0;
+      margin-right: 12px;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    
+    .tp-editor-btn-fetch {
+      padding: 0 20px;
+      background: #2a4a3a;
+      border: 2px solid #3a6a4a;
+      border-radius: 0 10px 10px 0;
+      color: #8fc;
+      font-size: 14px;
       cursor: pointer;
-      transition: all 0.15s;
+      white-space: nowrap;
     }
     
-    .btn:focus {
-      outline: 3px solid #fff;
+    .tp-editor-btn-fetch:focus {
+      outline: none;
+      border-color: #00a8ff;
+      background: #3a5a4a;
+      box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.3);
     }
     
-    .btn-primary {
-      background: #FFD700;
-      color: #000;
+    .tp-field-row {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
     
-    .btn-secondary {
+    .tp-field-row:focus {
+      outline: none;
+      border-color: #00a8ff;
+      background: #252525;
+      box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.3);
+    }
+    
+    .tp-field-label {
+      width: 140px;
+      font-size: 16px;
+      color: #888;
+      flex-shrink: 0;
+    }
+    
+    .tp-field-value {
+      flex: 1;
+      font-size: 18px;
+      color: #fff;
+      padding: 0 16px;
+    }
+    
+    .tp-field-value.empty {
+      color: #555;
+      font-style: italic;
+    }
+    
+    .tp-field-edit {
+      font-size: 12px;
+      color: #444;
+      padding: 4px 8px;
+      background: #111;
+      border-radius: 4px;
+    }
+    
+    .tp-field-row:focus .tp-field-edit {
+      color: #00a8ff;
+      background: #1a2a3a;
+    }
+    
+    /* Bundle Section */
+    .tp-field-section {
+      margin-top: 8px;
+      margin-bottom: 24px;
+    }
+    
+    .tp-field-section-label {
+      font-size: 16px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    
+    /* Bundle list - vertical for reliable D-pad navigation */
+    .tp-bundle-list {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .tp-bundle-option {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .tp-bundle-option:last-child {
+      margin-bottom: 0;
+    }
+    
+    .tp-bundle-option:focus {
+      outline: none;
+      border-color: #00a8ff;
+      background: #252525;
+      box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.3);
+    }
+    
+    .tp-bundle-option.selected {
+      border-color: #00a8ff;
+      background: #1a2a3a;
+    }
+    
+    .tp-bundle-check {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #444;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+    
+    .tp-bundle-option.selected .tp-bundle-check {
+      color: #00a8ff;
+    }
+    
+    .tp-bundle-info {
+      flex: 1;
+    }
+    
+    .tp-bundle-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+    
+    .tp-bundle-desc {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.3;
+    }
+    
+    /* Editor Footer - horizontal buttons with gaps for navigation */
+    .tp-editor-footer {
+      padding: 20px 32px;
+      border-top: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    
+    .tp-editor-footer-right {
+      display: flex;
+    }
+    
+    .tp-editor-btn {
+      display: flex;
+      align-items: center;
+      padding: 14px 28px;
+      margin-left: 16px;
+      font-size: 16px;
+      font-weight: 500;
+      border: 2px solid #444;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
       background: #333;
       color: #fff;
     }
     
-    .btn-danger {
-      background: #c00;
+    .tp-editor-btn:first-child {
+      margin-left: 0;
+    }
+    
+    .tp-editor-btn:focus {
+      outline: none;
+      border-color: #00a8ff;
+      box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.3);
+    }
+    
+    .tp-editor-btn .tp-btn-icon {
+      margin-right: 8px;
+    }
+    
+    .tp-editor-btn-save {
+      background: #00a8ff;
+      border-color: #00a8ff;
+    }
+    
+    .tp-editor-btn-save:focus {
+      border-color: #fff;
+    }
+    
+    .tp-editor-btn-cancel {
+      background: #333;
+    }
+    
+    .tp-editor-btn-cancel:focus {
+      border-color: #00a8ff;
+    }
+    
+    .tp-editor-btn-delete {
+      background: #8b2020;
+      border-color: #8b2020;
+    }
+    
+    .tp-editor-btn-delete:focus {
+      border-color: #ff6b6b;
+      background: #a52a2a;
+    }
+    
+    /* Modal System (legacy - keeping for compatibility) */
+    .tp-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+    
+    .tp-modal {
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 12px;
+      width: 600px;
+      max-height: 800px;
+      overflow: hidden;
+    }
+    
+    .tp-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid #333;
+    }
+    
+    .tp-modal-header h3 {
+      font-size: 24px;
+      font-weight: 500;
       color: #fff;
     }
     
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.9);
+    .tp-modal-close {
+      background: none;
+      border: 2px solid #444;
+      border-radius: 6px;
+      color: #888;
+      font-size: 28px;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    
+    .tp-modal-close:focus {
+      outline: none;
+      border-color: #00a8ff;
       color: #fff;
-      padding: 14px 28px;
-      border-radius: 8px;
+    }
+    
+    .tp-modal-content {
+      padding: 24px;
+    }
+    
+    .tp-modal-form {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .tp-form-group {
+      margin-bottom: 20px;
+    }
+    
+    .tp-form-group label {
+      display: block;
       font-size: 16px;
-      opacity: 0;
-      transition: opacity 0.3s;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    
+    .tp-form-group input,
+    .tp-form-group select {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 18px;
+      background: #0a0a0a;
+      border: 2px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      outline: none;
+    }
+    
+    .tp-form-group input:focus,
+    .tp-form-group select:focus {
+      border-color: #00a8ff;
+    }
+    
+    .tp-form-group input::placeholder {
+      color: #555;
+    }
+    
+    .tp-form-error {
+      display: none;
+      color: #e74c3c;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .tp-form-buttons {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+    
+    .tp-btn {
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 500;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-left: 12px;
+      outline: none;
+    }
+    
+    .tp-btn:first-child {
+      margin-left: 0;
+    }
+    
+    .tp-btn:focus {
+      box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.5);
+    }
+    
+    .tp-btn-primary {
+      background: #00a8ff;
+      color: #fff;
+    }
+    
+    .tp-btn-primary:focus {
+      border-color: #fff;
+    }
+    
+    .tp-btn-secondary {
+      background: #333;
+      color: #fff;
+    }
+    
+    .tp-btn-secondary:focus {
+      border-color: #00a8ff;
+    }
+    
+    .tp-btn-danger {
+      background: #c0392b;
+      color: #fff;
+      margin-right: auto;
+    }
+    
+    .tp-btn-danger:focus {
+      border-color: #fff;
+    }
+    
+    /* Address Bar - TV-friendly full-width chrome */
+    .tp-addressbar {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(180deg, #1e1e1e 0%, #141414 100%);
+      border-bottom: 2px solid #333;
+      z-index: 450;
+      padding: 16px 40px;
+    }
+    
+    .tp-addressbar.visible {
+      display: block;
+    }
+    
+    .tp-addressbar-content {
+      display: flex;
+      align-items: center;
+      max-width: 1800px;
+      margin: 0 auto;
+      /* gap not reliable for spatial nav, use margins */
+    }
+    
+    .tp-addressbar-btn {
+      width: 56px;
+      height: 56px;
+      margin-right: 12px;
+      background: #2a2a2a;
+      border: 2px solid #444;
+      border-radius: 10px;
+      color: #aaa;
+      font-size: 26px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+    
+    .tp-addressbar-btn:focus {
+      outline: none;
+      border-color: #00a8ff;
+      background: #333;
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.4);
+    }
+    
+    .tp-addressbar-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    .tp-btn-icon {
+      line-height: 1;
+    }
+    
+    /* URL Container - focusable wrapper */
+    .tp-addressbar-url-container {
+      flex: 1;
+      height: 56px;
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 20px;
+      background: #0f0f0f;
+      border: 2px solid #444;
+      border-radius: 10px;
+      color: #fff;
+      outline: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .tp-addressbar-url-container:focus {
+      border-color: #00a8ff;
+      background: #1a1a1a;
+      box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.4);
+    }
+    
+    .tp-addressbar-url-container.editing {
+      border-color: #00a8ff;
+      background: #1a1a1a;
+    }
+    
+    .tp-addressbar-url-display {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #aaa;
+    }
+    
+    .tp-addressbar-url {
+      display: none;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      font-size: 20px;
+      background: transparent;
+      border: none;
+      color: #fff;
+      outline: none;
+    }
+    
+    .tp-addressbar-url:focus {
+      outline: none;
+    }
+    
+    .tp-addressbar-url::placeholder {
+      color: #555;
+    }
+    
+    .tp-addressbar-go {
+      background: #00a8ff;
+      border-color: #00a8ff;
+      color: #fff;
+      width: 80px;
+    }
+    
+    .tp-addressbar-go:focus {
+      border-color: #fff;
+      background: #0090dd;
+    }
+    
+    /* Bundle Menu */
+    .tp-bundlemenu {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 460;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .tp-bundlemenu.visible {
+      display: flex;
+    }
+    
+    .tp-bundlemenu-content {
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 12px;
+      width: 600px;
+      max-height: 700px;
+      overflow: hidden;
+    }
+    
+    .tp-bundlemenu-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid #333;
+    }
+    
+    .tp-bundlemenu-header h3 {
+      font-size: 24px;
+      font-weight: 500;
+      color: #f1c40f;
+    }
+    
+    .tp-bundlemenu-close {
+      background: none;
+      border: 2px solid #444;
+      border-radius: 6px;
+      color: #888;
+      font-size: 28px;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .tp-bundlemenu-close:focus {
+      outline: none;
+      border-color: #f1c40f;
+      color: #fff;
+    }
+    
+    .tp-bundlemenu-current {
+      padding: 16px 24px;
+      background: #0f0f0f;
+      border-bottom: 1px solid #333;
+      font-size: 14px;
+      color: #888;
+    }
+    
+    .tp-bundlemenu-label {
+      color: #666;
+    }
+    
+    .tp-bundlemenu-site {
+      margin-bottom: 4px;
+    }
+    
+    .tp-bundlemenu-list {
+      padding: 16px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    
+    .tp-bundlemenu-item {
+      padding: 16px 20px;
+      background: #0f0f0f;
+      border: 2px solid #333;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      position: relative;
+    }
+    
+    .tp-bundlemenu-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .tp-bundlemenu-item:focus {
+      outline: none;
+      border-color: #f1c40f;
+      box-shadow: 0 0 0 2px rgba(241, 196, 15, 0.4);
+    }
+    
+    .tp-bundlemenu-item.active {
+      border-color: #f1c40f;
+    }
+    
+    .tp-bundlemenu-item-name {
+      font-size: 18px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+    
+    .tp-bundlemenu-item-desc {
+      font-size: 14px;
+      color: #888;
+    }
+    
+    .tp-bundlemenu-item-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: #f1c40f;
+      color: #000;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    .tp-bundlemenu-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #333;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+    }
+    
+    /* Pointer/Mouse Mode */
+    .tp-pointer {
+      display: none;
+      position: fixed;
+      z-index: 9999;
       pointer-events: none;
     }
     
-    .toast.visible {
-      opacity: 1;
+    .tp-pointer.visible {
+      display: block;
+    }
+    
+    .tp-pointer-cursor {
+      /* Traditional arrow cursor shape using CSS */
+      width: 20px;
+      height: 20px;
+      position: relative;
+    }
+    
+    .tp-pointer-cursor::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 24px 0 0 16px;
+      border-color: transparent transparent transparent #fff;
+      filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8));
+    }
+    
+    .tp-pointer-cursor::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 18px 0 0 12px;
+      border-color: transparent transparent transparent #000;
+    }
+    
+    .tp-pointer.clicking .tp-pointer-cursor::before {
+      border-color: transparent transparent transparent #00a8ff;
+    }
+    
+    /* Hover highlight for elements under pointer */
+    .tp-pointer-hover {
+      outline: 3px solid #00a8ff !important;
+      outline-offset: 2px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>TizenPortal <span>0.2.01</span></h1>
-    <div class="hints">
-      <span><span class="hint-key yellow"></span> Home</span>
-      <span><span class="hint-key blue"></span> Diagnostics</span>
-    </div>
-  </header>
-  
-  <div id="grid" class="grid"></div>
-  
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <h2 id="modal-title">Add App</h2>
-      <div class="form-group">
-        <label>Name</label>
-        <input type="text" id="input-name" placeholder="My App">
+  <div id="tp-shell">
+    <!-- Portal launcher -->
+    <div id="tp-portal">
+      <div id="tp-header">
+        <h1>TizenPortal</h1>
+        <span class="version">v0204</span>
       </div>
-      <div class="form-group">
-        <label>URL</label>
-        <input type="url" id="input-url" placeholder="http://192.168.1.100:8080">
-      </div>
-      <div class="form-group">
-        <label>Bundle</label>
-        <select id="input-bundle">
-          <option value="default">Default</option>
-          <option value="audiobookshelf">Audiobookshelf</option>
-          <option value="jellyfin">Jellyfin</option>
-        </select>
-      </div>
-      <div class="form-actions">
-        <button class="btn btn-primary" id="btn-save">Save</button>
-        <button class="btn btn-secondary" id="btn-cancel">Cancel</button>
-        <button class="btn btn-danger" id="btn-delete" style="display:none">Delete</button>
+      <div id="tp-grid">
+        <!-- Cards rendered by JavaScript -->
       </div>
     </div>
+    
+    <!-- Iframe container for sites -->
+    <div id="tp-iframe-container"></div>
+    
+    <!-- Loading overlay -->
+    <div id="tp-loading">
+      <div class="tp-spinner"></div>
+      <div id="tp-loading-text">Loading...</div>
+    </div>
+    
+    <!-- Toast notification -->
+    <div id="tp-toast"></div>
+    
+    <!-- Diagnostics panel -->
+    <div id="tp-diagnostics">
+      <div id="tp-diagnostics-header">
+        <h2>Diagnostics</h2>
+        <div id="tp-diagnostics-info"></div>
+      </div>
+      <div id="tp-diagnostics-logs"></div>
+      <div id="tp-diagnostics-footer">Press BLUE to close | YELLOW to clear logs</div>
+    </div>
+    
+    <!-- Color button hints -->
+    <div id="tp-hints">
+      <div class="tp-hint">
+        <div class="tp-hint-key red"></div>
+        <span>Address Bar</span>
+      </div>
+      <div class="tp-hint">
+        <div class="tp-hint-key green"></div>
+        <span>Mouse Mode</span>
+      </div>
+      <div class="tp-hint">
+        <div class="tp-hint-key yellow"></div>
+        <span>Edit Site</span>
+      </div>
+      <div class="tp-hint">
+        <div class="tp-hint-key blue"></div>
+        <span>Diagnostics</span>
+      </div>
+    </div>
+    
+    <!-- Modal container -->
+    <div id="tp-modal-container"></div>
   </div>
   
-  <div id="toast" class="toast"></div>
-
-  <!-- Bundle CSS (embedded) -->
-  <script id="bundle-css-default" type="text/plain">
-/* Default bundle CSS */
-:focus { outline: 3px solid #00a8ff !important; outline-offset: 2px; }
-::-webkit-scrollbar { width: 8px; }
-  </script>
-  
-  <script id="bundle-css-audiobookshelf" type="text/plain">
-/* Audiobookshelf bundle CSS */
-html { min-width: 1920px !important; width: 1920px !important; }
-:focus { outline: 4px solid #1ad691 !important; outline-offset: 2px; }
-.book-card:focus, [class*="BookCard"]:focus { box-shadow: 0 0 0 6px rgba(26, 214, 145, 0.3) !important; z-index: 100 !important; }
-.mobile-menu, .mobile-nav, .hamburger-menu { display: none !important; }
-  </script>
-  
-  <script id="bundle-css-jellyfin" type="text/plain">
-/* Jellyfin bundle CSS */
-:focus { outline: 3px solid #00a4dc !important; outline-offset: 2px; }
-  </script>
-
-  <script>
-    (function() {
-      'use strict';
-      
-      // State
-      var apps = [];
-      var selectedIdx = 0;
-      var editIdx = -1;
-      
-      // Elements
-      var grid = document.getElementById('grid');
-      var modal = document.getElementById('modal');
-      var toast = document.getElementById('toast');
-      
-      // Load apps from localStorage
-      function loadApps() {
-        try {
-          apps = JSON.parse(localStorage.getItem('tp_apps') || '[]');
-        } catch (e) {
-          apps = [];
-        }
-      }
-      
-      // Save apps to localStorage
-      function saveApps() {
-        localStorage.setItem('tp_apps', JSON.stringify(apps));
-      }
-      
-      // Render the grid
-      function render() {
-        grid.innerHTML = '';
-        
-        // App cards
-        apps.forEach(function(app, i) {
-          var card = document.createElement('div');
-          card.className = 'card';
-          card.tabIndex = 0;
-          card.innerHTML = '<div class="card-icon">📺</div><div class="card-name">' + escapeHtml(app.name) + '</div>';
-          card.onclick = function() { launch(app); };
-          card.onkeydown = function(e) {
-            if (e.keyCode === 13) { // Enter
-              if (e.repeat) return; // Ignore held key
-              launch(app);
-            }
-          };
-          grid.appendChild(card);
-        });
-        
-        // Add card
-        var addCard = document.createElement('div');
-        addCard.className = 'card card-add';
-        addCard.tabIndex = 0;
-        addCard.innerHTML = '<div class="card-icon">➕</div><div class="card-name">Add App</div>';
-        addCard.onclick = function() { openModal(-1); };
-        addCard.onkeydown = function(e) {
-          if (e.keyCode === 13) openModal(-1);
-        };
-        grid.appendChild(addCard);
-        
-        // Focus first card
-        var cards = grid.querySelectorAll('.card');
-        if (cards.length > 0) cards[0].focus();
-      }
-      
-      // Launch an app
-      function launch(app) {
-        showToast('Loading ' + app.name + '...');
-        
-        // Get bundle CSS
-        var bundleEl = document.getElementById('bundle-css-' + (app.bundle || 'default'));
-        var css = bundleEl ? bundleEl.textContent : '';
-        
-        // Build payload
-        var payload = {
-          css: css,
-          js: '',
-          ua: '',
-          bundleName: app.bundle || 'default',
-          cardName: app.name
-        };
-        
-        // Encode and navigate
-        try {
-          var json = JSON.stringify(payload);
-          var encoded = btoa(unescape(encodeURIComponent(json)));
-          var url = app.url + (app.url.indexOf('#') === -1 ? '#' : '&') + 'tp=' + encoded;
-          window.location.href = url;
-        } catch (e) {
-          showToast('Error: ' + e.message);
-        }
-      }
-      
-      // Open modal for add/edit
-      function openModal(idx) {
-        editIdx = idx;
-        var isAdd = idx === -1;
-        
-        document.getElementById('modal-title').textContent = isAdd ? 'Add App' : 'Edit App';
-        document.getElementById('btn-delete').style.display = isAdd ? 'none' : 'block';
-        
-        if (isAdd) {
-          document.getElementById('input-name').value = '';
-          document.getElementById('input-url').value = '';
-          document.getElementById('input-bundle').value = 'default';
-        } else {
-          var app = apps[idx];
-          document.getElementById('input-name').value = app.name;
-          document.getElementById('input-url').value = app.url;
-          document.getElementById('input-bundle').value = app.bundle || 'default';
-        }
-        
-        modal.classList.add('active');
-        document.getElementById('input-name').focus();
-      }
-      
-      // Close modal
-      function closeModal() {
-        modal.classList.remove('active');
-        editIdx = -1;
-        render();
-      }
-      
-      // Save app
-      function saveApp() {
-        var name = document.getElementById('input-name').value.trim();
-        var url = document.getElementById('input-url').value.trim();
-        var bundle = document.getElementById('input-bundle').value;
-        
-        if (!name || !url) {
-          showToast('Name and URL required');
-          return;
-        }
-        
-        var app = { name: name, url: url, bundle: bundle };
-        
-        if (editIdx === -1) {
-          apps.push(app);
-        } else {
-          apps[editIdx] = app;
-        }
-        
-        saveApps();
-        closeModal();
-        showToast('Saved!');
-      }
-      
-      // Delete app
-      function deleteApp() {
-        if (editIdx >= 0 && editIdx < apps.length) {
-          apps.splice(editIdx, 1);
-          saveApps();
-          closeModal();
-          showToast('Deleted');
-        }
-      }
-      
-      // Show toast
-      function showToast(msg) {
-        toast.textContent = msg;
-        toast.classList.add('visible');
-        setTimeout(function() {
-          toast.classList.remove('visible');
-        }, 3000);
-      }
-      
-      // Escape HTML
-      function escapeHtml(str) {
-        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      }
-      
-      // Key handling
-      document.addEventListener('keydown', function(e) {
-        // Modal keys
-        if (modal.classList.contains('active')) {
-          if (e.keyCode === 27 || e.keyCode === 10009) { // Escape or Back
-            closeModal();
-            e.preventDefault();
-          }
-          return;
-        }
-        
-        // Grid navigation
-        var cards = grid.querySelectorAll('.card');
-        var focusedIdx = Array.prototype.indexOf.call(cards, document.activeElement);
-        
-        if (e.keyCode === 37 && focusedIdx > 0) { // Left
-          cards[focusedIdx - 1].focus();
-          e.preventDefault();
-        }
-        if (e.keyCode === 39 && focusedIdx < cards.length - 1) { // Right
-          cards[focusedIdx + 1].focus();
-          e.preventDefault();
-        }
-        
-        // Long press Enter for edit
-        if (e.keyCode === 13 && focusedIdx >= 0 && focusedIdx < apps.length) {
-          // Note: Long press detection would need timer logic
-        }
-      });
-      
-      // Button handlers
-      document.getElementById('btn-save').onclick = saveApp;
-      document.getElementById('btn-cancel').onclick = closeModal;
-      document.getElementById('btn-delete').onclick = deleteApp;
-      
-      // Initialize
-      loadApps();
-      render();
-      showToast('TizenPortal 0.2.01');
-    })();
-  </script>
+  <script src="tizenportal.js"></script>
 </body>
 </html>
