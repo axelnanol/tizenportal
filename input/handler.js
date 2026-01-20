@@ -172,7 +172,7 @@ function handleColorButton(keyCode, isLongPress) {
  * Execute a color button action
  * @param {string} action
  */
-function executeColorAction(action) {
+export function executeColorAction(action) {
   switch (action) {
     case 'addressbar':
       // Toggle address bar

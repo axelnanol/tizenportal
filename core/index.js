@@ -35,7 +35,7 @@ import '../navigation/spatial-navigation-polyfill.js';
 import { configRead, configWrite, configOnChange, configInit } from './config.js';
 import { initPolyfills, hasPolyfill, getLoadedPolyfills } from '../polyfills/index.js';
 import { KEYS } from '../input/keys.js';
-import { initInputHandler } from '../input/handler.js';
+import { initInputHandler, executeColorAction } from '../input/handler.js';
 import { initPointer, isPointerActive, togglePointer } from '../input/pointer.js';
 import { initPortal, showPortal, hidePortal, refreshPortal } from '../ui/portal.js';
 import { initModal } from '../ui/modal.js';
@@ -119,6 +119,10 @@ async function init() {
     initPortal();
     log('Portal UI initialized');
 
+    // Step 11: Initialize color button hints (make clickable)
+    initColorHints();
+    log('Color hints initialized');
+
     state.initialized = true;
     log('TizenPortal ' + VERSION + ' ready');
 
@@ -171,6 +175,65 @@ function hideLoading() {
   var loading = document.getElementById('tp-loading');
   if (loading) {
     loading.classList.remove('active');
+  }
+}
+
+/**
+ * Initialize color button hints with click handlers
+ * Makes the hints clickable for mouse users
+ */
+function initColorHints() {
+  var hints = document.getElementById('tp-hints');
+  if (!hints) return;
+
+  // Define hint configurations: color class -> short press action
+  var hintConfig = {
+    'red': 'addressbar',
+    'green': 'pointerMode',
+    'yellow': 'bundleMenu',
+    'blue': 'diagnostics'
+  };
+
+  // Find all hint elements and add click handlers
+  var hintElements = hints.querySelectorAll('.tp-hint');
+  for (var i = 0; i < hintElements.length; i++) {
+    var hint = hintElements[i];
+    var keyElement = hint.querySelector('.tp-hint-key');
+    
+    if (!keyElement) continue;
+
+    // Determine which color this is
+    var color = null;
+    if (keyElement.classList.contains('red')) color = 'red';
+    else if (keyElement.classList.contains('green')) color = 'green';
+    else if (keyElement.classList.contains('yellow')) color = 'yellow';
+    else if (keyElement.classList.contains('blue')) color = 'blue';
+
+    if (!color || !hintConfig[color]) continue;
+
+    // Store the action in a data attribute
+    hint.setAttribute('data-action', hintConfig[color]);
+    
+    // Make it look clickable
+    hint.style.cursor = 'pointer';
+    
+    // Add click handler
+    hint.addEventListener('click', function(e) {
+      var action = this.getAttribute('data-action');
+      if (action) {
+        executeColorAction(action);
+      }
+    });
+
+    // Add hover effect
+    hint.addEventListener('mouseenter', function() {
+      this.style.opacity = '1';
+      this.style.color = '#ffffff';
+    });
+    hint.addEventListener('mouseleave', function() {
+      this.style.opacity = '';
+      this.style.color = '';
+    });
   }
 }
 

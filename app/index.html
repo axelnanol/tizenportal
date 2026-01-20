@@ -206,12 +206,20 @@
       display: flex;
       font-size: 16px;
       color: #666666;
+      z-index: 500;
+      pointer-events: auto;
     }
     
     .tp-hint {
       display: flex;
       align-items: center;
       margin-right: 40px;
+      transition: opacity 0.2s ease, color 0.2s ease;
+    }
+    
+    .tp-hint:hover {
+      opacity: 1;
+      color: #ffffff;
     }
     
     .tp-hint-key {
