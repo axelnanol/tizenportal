@@ -50,33 +50,36 @@ function createAddressBar() {
     '<div class="tp-addressbar-content">' +
       // Portal button - return to grid
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-portal" tabindex="0" title="Back to Portal">' +
-        '<span class="tp-btn-icon">▤</span>' +
+        '<span class="tp-btn-icon">P</span>' +
       '</button>' +
       // Home button - go to site's home URL
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-home" tabindex="0" title="Site Home">' +
-        '<span class="tp-btn-icon">⌂</span>' +
+        '<span class="tp-btn-icon">H</span>' +
       '</button>' +
       // Back button
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-back" tabindex="0" title="Back">' +
-        '<span class="tp-btn-icon">←</span>' +
+        '<span class="tp-btn-icon">&lt;</span>' +
       '</button>' +
       // Forward button
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-forward" tabindex="0" title="Forward">' +
-        '<span class="tp-btn-icon">→</span>' +
+        '<span class="tp-btn-icon">&gt;</span>' +
       '</button>' +
       // Reload button
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-reload" tabindex="0" title="Reload">' +
-        '<span class="tp-btn-icon">↻</span>' +
+        '<span class="tp-btn-icon">R</span>' +
       '</button>' +
-      // URL input
-      '<input type="text" class="tp-addressbar-url" id="tp-addressbar-url" tabindex="0" placeholder="Enter URL...">' +
+      // URL container (focusable, press Enter to edit)
+      '<div class="tp-addressbar-url-container" id="tp-addressbar-url-container" tabindex="0">' +
+        '<span class="tp-addressbar-url-display" id="tp-addressbar-url-display">Press ENTER to edit URL</span>' +
+        '<input type="text" class="tp-addressbar-url" id="tp-addressbar-url" tabindex="-1" placeholder="Enter URL...">' +
+      '</div>' +
       // Go button
       '<button type="button" class="tp-addressbar-btn tp-addressbar-go" id="tp-addressbar-go" tabindex="0" title="Go">' +
-        '<span class="tp-btn-icon">→</span>' +
+        '<span class="tp-btn-icon">GO</span>' +
       '</button>' +
       // Open in Tizen Browser button
       '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-tizen" tabindex="0" title="Open in Tizen Browser">' +
-        '<span class="tp-btn-icon">⧉</span>' +
+        '<span class="tp-btn-icon">TB</span>' +
       '</button>' +
     '</div>';
   
@@ -160,19 +163,103 @@ function attachEventHandlers(bar) {
     });
   }
   
-  // URL input - Enter key submits
-  var urlInput = bar.querySelector('#tp-addressbar-url');
-  if (urlInput) {
-    urlInput.addEventListener('keydown', function(e) {
+  // URL container - Enter key focuses the input
+  var urlContainer = bar.querySelector('#tp-addressbar-url-container');
+  if (urlContainer) {
+    urlContainer.addEventListener('click', handleUrlContainerActivate);
+    urlContainer.addEventListener('keydown', function(e) {
       if (e.keyCode === 13) { // Enter
         e.preventDefault();
-        handleGo();
-      } else if (e.keyCode === 27 || e.keyCode === 10009) { // Escape or Back
-        e.preventDefault();
-        hideAddressBar();
+        handleUrlContainerActivate();
       }
     });
   }
+  
+  // URL input - handles typing and escape
+  var urlInput = bar.querySelector('#tp-addressbar-url');
+  if (urlInput) {
+    urlInput.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) { // Enter - submit
+        e.preventDefault();
+        handleGo();
+        deactivateUrlInput();
+      } else if (e.keyCode === 27 || e.keyCode === 10009) { // Escape or Back - cancel edit
+        e.preventDefault();
+        deactivateUrlInput();
+      }
+    });
+    
+    urlInput.addEventListener('blur', function() {
+      // When input loses focus, deactivate it
+      deactivateUrlInput();
+    });
+  }
+}
+
+/**
+ * Track if URL input is currently active (editable)
+ */
+var isUrlInputActive = false;
+
+/**
+ * Activate URL input for editing
+ */
+function handleUrlContainerActivate() {
+  var container = document.getElementById('tp-addressbar-url-container');
+  var display = document.getElementById('tp-addressbar-url-display');
+  var input = document.getElementById('tp-addressbar-url');
+  
+  if (!container || !input) return;
+  
+  // Show input, hide display
+  container.classList.add('editing');
+  if (display) display.style.display = 'none';
+  input.style.display = 'block';
+  input.tabIndex = 0;
+  
+  // Focus and select input
+  try {
+    input.focus();
+    input.select();
+  } catch (err) {
+    console.warn('TizenPortal: URL input focus error:', err.message);
+  }
+  
+  isUrlInputActive = true;
+  console.log('TizenPortal: URL input activated');
+}
+
+/**
+ * Deactivate URL input (return to display mode)
+ */
+function deactivateUrlInput() {
+  if (!isUrlInputActive) return;
+  
+  var container = document.getElementById('tp-addressbar-url-container');
+  var display = document.getElementById('tp-addressbar-url-display');
+  var input = document.getElementById('tp-addressbar-url');
+  
+  if (!container) return;
+  
+  // Update display with current input value
+  if (display && input) {
+    var url = input.value.trim();
+    display.textContent = url || 'Press ENTER to edit URL';
+    display.style.display = 'block';
+  }
+  
+  // Hide input, show display
+  container.classList.remove('editing');
+  if (input) {
+    input.style.display = 'none';
+    input.tabIndex = -1;
+  }
+  
+  // Return focus to container
+  container.focus();
+  
+  isUrlInputActive = false;
+  console.log('TizenPortal: URL input deactivated');
 }
 
 /**
@@ -192,11 +279,11 @@ export function showAddressBar() {
     addressBarElement.classList.add('visible');
     isVisible = true;
     
-    // Focus URL input
-    if (urlInputElement) {
+    // Focus the URL container (not the input itself)
+    var urlContainer = document.getElementById('tp-addressbar-url-container');
+    if (urlContainer) {
       try {
-        urlInputElement.focus();
-        urlInputElement.select();
+        urlContainer.focus();
       } catch (err) {
         console.warn('TizenPortal: Address bar focus error:', err.message);
       }
@@ -211,6 +298,9 @@ export function showAddressBar() {
  */
 export function hideAddressBar() {
   if (!isVisible) return;
+  
+  // Deactivate URL input if active
+  deactivateUrlInput();
   
   if (addressBarElement) {
     addressBarElement.classList.remove('visible');
@@ -250,33 +340,41 @@ export function isAddressBarVisible() {
 }
 
 /**
- * Update URL input from current iframe
+ * Update URL display and input from current iframe
  */
 function updateUrlFromIframe() {
-  if (!urlInputElement) return;
+  var display = document.getElementById('tp-addressbar-url-display');
+  var input = document.getElementById('tp-addressbar-url');
+  
+  var url = '';
   
   var iframe = document.getElementById('tp-iframe');
   if (iframe) {
     try {
       // Try to get actual URL from contentWindow
-      var url = iframe.contentWindow.location.href;
-      urlInputElement.value = url;
+      url = iframe.contentWindow.location.href;
     } catch (err) {
       // Cross-origin - use src attribute instead
-      urlInputElement.value = iframe.src || '';
+      url = iframe.src || '';
     }
   } else {
     // No iframe - get URL from state
     try {
       var state = window.TizenPortal ? window.TizenPortal.getState() : null;
       if (state && state.currentCard) {
-        urlInputElement.value = state.currentCard.url || '';
-      } else {
-        urlInputElement.value = '';
+        url = state.currentCard.url || '';
       }
     } catch (err) {
-      urlInputElement.value = '';
+      // Ignore
     }
+  }
+  
+  // Update both display and input
+  if (display) {
+    display.textContent = url || 'Press ENTER to edit URL';
+  }
+  if (input) {
+    input.value = url;
   }
 }
 
