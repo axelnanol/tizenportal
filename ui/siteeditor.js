@@ -60,30 +60,21 @@ function createEditorHTML() {
     '<div class="tp-editor-panel">' +
       '<div class="tp-editor-header">' +
         '<h2 id="tp-editor-title">Add Site</h2>' +
-        '<div class="tp-editor-hint">Press ENTER to edit field | Navigate with D-pad</div>' +
+        '<div class="tp-editor-hint">Navigate with D-pad | ENTER to edit/select</div>' +
       '</div>' +
       '<div class="tp-editor-body">' +
         '<div class="tp-editor-fields" id="tp-editor-fields"></div>' +
-        '<div class="tp-editor-preview" id="tp-editor-preview">' +
-          '<div class="tp-editor-preview-card">' +
-            '<div class="tp-preview-icon" id="tp-preview-icon">?</div>' +
-            '<div class="tp-preview-name" id="tp-preview-name">Site Name</div>' +
-            '<div class="tp-preview-url" id="tp-preview-url">https://...</div>' +
-          '</div>' +
-        '</div>' +
       '</div>' +
       '<div class="tp-editor-footer">' +
+        '<button type="button" class="tp-editor-btn tp-editor-btn-save" id="tp-editor-save" tabindex="0">' +
+          '<span class="tp-btn-icon">✓</span> Save' +
+        '</button>' +
+        '<button type="button" class="tp-editor-btn tp-editor-btn-cancel" id="tp-editor-cancel" tabindex="0">' +
+          'Cancel' +
+        '</button>' +
         '<button type="button" class="tp-editor-btn tp-editor-btn-delete" id="tp-editor-delete" tabindex="0">' +
           '<span class="tp-btn-icon">🗑</span> Delete' +
         '</button>' +
-        '<div class="tp-editor-footer-right">' +
-          '<button type="button" class="tp-editor-btn tp-editor-btn-cancel" id="tp-editor-cancel" tabindex="0">' +
-            'Cancel' +
-          '</button>' +
-          '<button type="button" class="tp-editor-btn tp-editor-btn-save" id="tp-editor-save" tabindex="0">' +
-            '<span class="tp-btn-icon">✓</span> Save' +
-          '</button>' +
-        '</div>' +
       '</div>' +
     '</div>';
 }

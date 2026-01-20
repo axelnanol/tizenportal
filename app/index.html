@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TizenPortal 0119</title>
+  <title>TizenPortal 0120</title>
   <style>
     /* Reset and base styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -349,8 +349,8 @@
     .tp-editor-panel {
       position: absolute;
       top: 40px;
-      left: 60px;
-      right: 60px;
+      left: 200px;
+      right: 200px;
       bottom: 40px;
       background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
       border: 2px solid #333;
@@ -361,15 +361,16 @@
     }
     
     .tp-editor-header {
-      padding: 24px 32px;
+      padding: 20px 32px;
       border-bottom: 1px solid #333;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-shrink: 0;
     }
     
     .tp-editor-header h2 {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 500;
       color: #fff;
       margin: 0;
@@ -380,68 +381,20 @@
       color: #666;
     }
     
+    /* Single column body - no side preview */
     .tp-editor-body {
       flex: 1;
-      display: flex;
-      padding: 24px 32px;
-      gap: 40px;
-      overflow: hidden;
+      overflow-y: auto;
+      padding: 20px 32px;
+    }
+    
+    /* Hide preview panel - simplify layout */
+    .tp-editor-preview {
+      display: none;
     }
     
     .tp-editor-fields {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 20px;
-    }
-    
-    .tp-editor-preview {
-      width: 300px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 20px;
-    }
-    
-    .tp-editor-preview-card {
-      background: #1e1e1e;
-      border: 2px solid #333;
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
       width: 100%;
-    }
-    
-    .tp-preview-icon {
-      width: 80px;
-      height: 80px;
-      background: linear-gradient(135deg, #333 0%, #222 100%);
-      border-radius: 16px;
-      margin: 0 auto 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      color: #888;
-    }
-    
-    .tp-preview-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 16px;
-    }
-    
-    .tp-preview-name {
-      font-size: 20px;
-      font-weight: 500;
-      color: #fff;
-      margin-bottom: 8px;
-    }
-    
-    .tp-preview-url {
-      font-size: 14px;
-      color: #666;
-      word-break: break-all;
     }
     
     /* Field Rows */
@@ -570,37 +523,41 @@
       line-height: 1.3;
     }
     
-    /* Editor Footer */
+    /* Editor Footer - stacked buttons for linear navigation */
     .tp-editor-footer {
-      padding: 20px 32px;
+      padding: 16px 32px 20px;
       border-top: 1px solid #333;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
     }
     
     .tp-editor-footer-right {
-      display: flex;
-      gap: 12px;
+      display: contents;
     }
     
     .tp-editor-btn {
       display: flex;
       align-items: center;
-      padding: 14px 28px;
-      font-size: 16px;
+      justify-content: center;
+      width: 100%;
+      padding: 16px 28px;
+      font-size: 18px;
       font-weight: 500;
-      border: 2px solid transparent;
-      border-radius: 8px;
+      border: 2px solid #444;
+      border-radius: 10px;
       cursor: pointer;
-      transition: all 0.2s ease;
-      background: #333;
+      transition: all 0.15s ease;
+      background: #252525;
       color: #fff;
     }
     
     .tp-editor-btn:focus {
       outline: none;
-      box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.5);
+      border-color: #00a8ff;
+      background: #333;
+      box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.3);
     }
     
     .tp-editor-btn .tp-btn-icon {
@@ -609,14 +566,18 @@
     
     .tp-editor-btn-save {
       background: #00a8ff;
+      border-color: #00a8ff;
+      order: 1;
     }
     
     .tp-editor-btn-save:focus {
       border-color: #fff;
+      background: #0090dd;
     }
     
     .tp-editor-btn-cancel {
       background: #333;
+      order: 2;
     }
     
     .tp-editor-btn-cancel:focus {
@@ -624,12 +585,14 @@
     }
     
     .tp-editor-btn-delete {
-      background: #8b2020;
+      background: #3a1a1a;
+      border-color: #5a2020;
+      order: 3;
     }
     
     .tp-editor-btn-delete:focus {
       border-color: #ff6b6b;
-      background: #a52a2a;
+      background: #4a2020;
     }
     
     /* Modal System (legacy - keeping for compatibility) */
@@ -1083,7 +1046,7 @@
     <div id="tp-portal">
       <div id="tp-header">
         <h1>TizenPortal</h1>
-        <span class="version">v0119</span>
+        <span class="version">v0120</span>
       </div>
       <div id="tp-grid">
         <!-- Cards rendered by JavaScript -->
