@@ -54,6 +54,34 @@ import { getBundleNames, getBundle } from '../bundles/registry.js';
 const VERSION = '0200';
 
 /**
+ * Early debug HUD - shows immediately before full init
+ * This helps debug whether the script is loading at all
+ */
+function tpHud(msg) {
+  try {
+    var h = document.getElementById('tp-hud');
+    if (!h) {
+      h = document.createElement('div');
+      h.id = 'tp-hud';
+      h.style.cssText = 'position:fixed;top:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;padding:10px;font-size:12px;font-family:monospace;z-index:2147483647;border-left:2px solid #0f0;border-bottom:2px solid #0f0;max-width:400px;word-break:break-all;';
+      // Append to documentElement if body doesn't exist yet
+      (document.body || document.documentElement).appendChild(h);
+    }
+    h.textContent = '[TP ' + VERSION + '] ' + msg;
+    // Auto-hide after 8 seconds
+    if (h._timer) clearTimeout(h._timer);
+    h._timer = setTimeout(function() { 
+      if (h) h.style.opacity = '0.3'; 
+    }, 8000);
+  } catch (e) {
+    // Silently fail
+  }
+}
+
+// Show HUD immediately when script loads
+tpHud('Script loaded, waiting for DOM...');
+
+/**
  * Application state
  */
 const state = {
@@ -88,6 +116,7 @@ async function init() {
 
   // Detect which mode we're in
   state.mode = detectMode();
+  tpHud('Mode: ' + state.mode.toUpperCase());
   
   log('TizenPortal ' + VERSION + ' initializing in ' + state.mode.toUpperCase() + ' mode...');
 
@@ -103,33 +132,65 @@ async function init() {
  */
 async function initModMode() {
   try {
+    tpHud('MOD: Loading polyfills...');
+    
     // Step 1: Initialize polyfills
     const loadedPolyfills = await initPolyfills();
     log('Polyfills loaded: ' + (loadedPolyfills.length > 0 ? loadedPolyfills.join(', ') : 'none needed'));
 
+    tpHud('MOD: Config init...');
+    
     // Step 2: Initialize configuration (to read tp_apps)
     configInit();
 
     // Step 3: Initialize diagnostics
     initDiagnostics();
 
-    // Step 4: Find matching card for current URL
-    var matchedCard = findMatchingCard(window.location.href);
+    tpHud('MOD: Finding card...');
     
-    if (matchedCard) {
-      log('Matched card: ' + matchedCard.name + ' (bundle: ' + (matchedCard.bundle || 'default') + ')');
-      state.currentCard = matchedCard;
-    } else {
+    // Step 4: Try to get card config from URL hash first, then localStorage
+    var matchedCard = null;
+    
+    // Try URL hash (passed by portal when navigating)
+    var hashCard = getCardFromHash();
+    if (hashCard) {
+      log('Card from URL hash: ' + hashCard.name);
+      matchedCard = hashCard;
+      tpHud('Card (hash): ' + hashCard.name);
+      // Clear hash after reading (clean URL)
+      try {
+        var cleanUrl = window.location.href.replace(/[#&]tp=[^&#]+/, '');
+        history.replaceState(null, document.title, cleanUrl);
+      } catch (e) {
+        // Ignore - some sites may block history manipulation
+      }
+    }
+    
+    // Fallback to localStorage match
+    if (!matchedCard) {
+      matchedCard = findMatchingCard(window.location.href);
+      if (matchedCard) {
+        log('Matched card from localStorage: ' + matchedCard.name + ' (bundle: ' + (matchedCard.bundle || 'default') + ')');
+        state.currentCard = matchedCard;
+        tpHud('Card (storage): ' + matchedCard.name);
+      }
+    }
+    
+    // Final fallback - create pseudo-card
+    if (!matchedCard) {
       log('No matching card for: ' + window.location.href);
-      // Create a pseudo-card with default bundle
+      tpHud('No card - using default');
       matchedCard = {
         name: document.title || 'Unknown Site',
         url: window.location.href,
         bundle: 'default'
       };
-      state.currentCard = matchedCard;
     }
+    
+    state.currentCard = matchedCard;
 
+    tpHud('MOD: Applying bundle...');
+    
     // Step 5: Apply bundle to the current page
     await applyBundleToPage(matchedCard);
 
@@ -141,6 +202,7 @@ async function initModMode() {
     createModOverlay();
 
     state.initialized = true;
+    tpHud('MOD Ready!');
     log('TizenPortal MOD mode ready');
 
   } catch (err) {
@@ -214,6 +276,35 @@ async function initAppMode() {
   } catch (err) {
     error('APP mode initialization failed: ' + err.message);
     console.error(err);
+  }
+}
+
+/**
+ * Extract card config from URL hash
+ * Format: #tp=BASE64(JSON) or &tp=BASE64(JSON)
+ * @returns {Object|null} Card object or null
+ */
+function getCardFromHash() {
+  try {
+    var hash = window.location.hash;
+    if (!hash) return null;
+    
+    // Look for tp= parameter in hash
+    var match = hash.match(/[#&]tp=([^&]+)/);
+    if (!match || !match[1]) return null;
+    
+    // Decode base64 JSON
+    var decoded = atob(match[1]);
+    var cardData = JSON.parse(decoded);
+    
+    // Add current URL to card
+    cardData.url = window.location.href.replace(/[#&]tp=[^&#]+/, '');
+    
+    log('Decoded card from hash: ' + JSON.stringify(cardData));
+    return cardData;
+  } catch (e) {
+    error('Failed to parse hash card: ' + e.message);
+    return null;
   }
 }
 
@@ -455,7 +546,7 @@ function initColorHints() {
 
 /**
  * Load a site - navigates the browser to the site URL
- * The TizenPortal mod will be injected by TizenBrew and apply the bundle
+ * Passes card config via URL hash for the mod to pick up
  * @param {Object} card - Card object with url, bundle, etc.
  */
 function loadSite(card) {
@@ -467,11 +558,36 @@ function loadSite(card) {
   log('Navigating to site: ' + card.url);
   showToast('Loading ' + (card.name || card.url) + '...');
 
-  // Store current card in state (will be read by mod on next page)
+  // Store current card in state
   state.currentCard = card;
   
+  // Build URL with card config in hash
+  // This ensures the mod can read the config even if localStorage fails
+  var targetUrl = card.url;
+  try {
+    // Encode card data as base64 JSON in hash
+    var cardPayload = {
+      name: card.name,
+      bundle: card.bundle || 'default',
+      icon: card.icon
+    };
+    var encoded = btoa(JSON.stringify(cardPayload));
+    
+    // Append to URL hash (preserve existing hash if any)
+    if (targetUrl.indexOf('#') === -1) {
+      targetUrl += '#tp=' + encoded;
+    } else {
+      targetUrl += '&tp=' + encoded;
+    }
+  } catch (e) {
+    error('Failed to encode card payload: ' + e.message);
+    // Continue without hash - mod will try localStorage
+  }
+  
+  log('Final URL: ' + targetUrl);
+  
   // Navigate to the site - TizenBrew mod injection will handle the rest
-  window.location.href = card.url;
+  window.location.href = targetUrl;
 }
 
 /**
