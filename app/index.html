@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>TizenPortal 0124</title>
+  <title>TizenPortal 0125</title>
   <style>
     /* Reset and base styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,7 +13,7 @@
       width: 1920px;
       height: 1080px;
       overflow: hidden;
-      background: #0a0a0a;
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #ffffff;
     }
@@ -23,6 +23,8 @@
       width: 100%;
       height: 100%;
       position: relative;
+      background: radial-gradient(ellipse at top, #1a2332 0%, transparent 50%),
+                  radial-gradient(ellipse at bottom, #1a1a2e 0%, transparent 50%);
     }
     
     /* Portal launcher grid */
@@ -45,11 +47,12 @@
       font-size: 48px;
       font-weight: 300;
       color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0, 168, 255, 0.3);
     }
     
     #tp-header .version {
       font-size: 20px;
-      color: #666666;
+      color: rgba(255, 255, 255, 0.4);
       margin-left: 20px;
     }
     
@@ -68,15 +71,16 @@
       width: 280px;
       height: 180px;
       margin: 15px;
-      background: #1a1a1a;
-      border: 3px solid #333333;
+      background: linear-gradient(145deg, #1e2430 0%, #151922 100%);
+      border: 2px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
     
     .tp-card:focus {
@@ -90,7 +94,8 @@
       height: 64px;
       margin-bottom: 16px;
       border-radius: 8px;
-      background: #333333;
+      background: linear-gradient(145deg, #2a3444 0%, #1a2030 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -110,17 +115,20 @@
     /* Add card button */
     .tp-card-add {
       border-style: dashed;
-      border-color: #444444;
+      border-color: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(145deg, rgba(30, 36, 48, 0.5) 0%, rgba(21, 25, 34, 0.5) 100%);
     }
     
     .tp-card-add:focus {
       border-color: #00a8ff;
+      background: linear-gradient(145deg, rgba(30, 36, 48, 0.8) 0%, rgba(21, 25, 34, 0.8) 100%);
     }
     
     .tp-card-add .tp-card-icon {
       background: transparent;
+      border: none;
       font-size: 48px;
-      color: #666666;
+      color: rgba(255, 255, 255, 0.4);
     }
     
     /* Iframe container (hidden by default) */
@@ -1097,7 +1105,7 @@
     <div id="tp-portal">
       <div id="tp-header">
         <h1>TizenPortal</h1>
-        <span class="version">v0124</span>
+        <span class="version">v0125</span>
       </div>
       <div id="tp-grid">
         <!-- Cards rendered by JavaScript -->
