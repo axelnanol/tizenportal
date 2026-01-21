@@ -340,7 +340,7 @@ export function isAddressBarVisible() {
 }
 
 /**
- * Update URL display and input from current iframe
+ * Update URL display and input from current context
  */
 function updateUrlFromIframe() {
   var display = document.getElementById('tp-addressbar-url-display');
@@ -348,6 +348,7 @@ function updateUrlFromIframe() {
   
   var url = '';
   
+  // Check if we're on portal page (has iframe) or target site (direct)
   var iframe = document.getElementById('tp-iframe');
   if (iframe) {
     try {
@@ -358,20 +359,13 @@ function updateUrlFromIframe() {
       url = iframe.src || '';
     }
   } else {
-    // No iframe - get URL from state
-    try {
-      var state = window.TizenPortal ? window.TizenPortal.getState() : null;
-      if (state && state.currentCard) {
-        url = state.currentCard.url || '';
-      }
-    } catch (err) {
-      // Ignore
-    }
+    // No iframe - we're on a target site, use current location
+    url = window.location.href;
   }
   
   // Update both display and input
   if (display) {
-    display.textContent = url || '';
+    display.textContent = url || 'Press ENTER to edit URL';
   }
   if (input) {
     input.value = url;
@@ -494,7 +488,7 @@ function handleTizenBrowser() {
 }
 
 /**
- * Handle Back button - go back in iframe history
+ * Handle Back button - go back in history
  */
 function handleBack() {
   console.log('TizenPortal: Address bar - Back');
@@ -512,11 +506,14 @@ function handleBack() {
         window.TizenPortal.showToast('Cannot go back');
       }
     }
+  } else {
+    // Target site - use window history
+    history.back();
   }
 }
 
 /**
- * Handle Forward button - go forward in iframe history
+ * Handle Forward button - go forward in history
  */
 function handleForward() {
   console.log('TizenPortal: Address bar - Forward');
@@ -534,11 +531,14 @@ function handleForward() {
         window.TizenPortal.showToast('Cannot go forward');
       }
     }
+  } else {
+    // Target site - use window history
+    history.forward();
   }
 }
 
 /**
- * Handle Reload button - reload iframe
+ * Handle Reload button - reload page
  */
 function handleReload() {
   console.log('TizenPortal: Address bar - Reload');
@@ -556,6 +556,12 @@ function handleReload() {
       iframe.src = '';
       iframe.src = src;
     }
+  } else {
+    // Target site - reload window
+    if (window.TizenPortal) {
+      window.TizenPortal.showToast('Reloading...');
+    }
+    window.location.reload();
   }
 }
 
@@ -584,6 +590,7 @@ function handleGo() {
   // Navigate
   var iframe = document.getElementById('tp-iframe');
   if (iframe) {
+    // Portal page with iframe - navigate iframe
     try {
       iframe.contentWindow.location.href = url;
     } catch (err) {
@@ -594,15 +601,11 @@ function handleGo() {
       window.TizenPortal.showToast('Loading...');
     }
   } else {
-    // No iframe - load as new site
-    if (window.TizenPortal && window.TizenPortal.loadSite) {
-      window.TizenPortal.loadSite({
-        name: 'URL',
-        url: url,
-        bundle: 'default',
-        userAgent: 'tizen',
-      });
+    // Target site - navigate directly
+    if (window.TizenPortal) {
+      window.TizenPortal.showToast('Loading...');
     }
+    window.location.href = url;
   }
   
   hideAddressBar();

@@ -44,7 +44,7 @@ import { initSiteEditor, showAddSiteEditor, showEditSiteEditor, isSiteEditorOpen
 import { initAddressBar, showAddressBar, hideAddressBar, toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
 import { initBundleMenu, showBundleMenu, hideBundleMenu, toggleBundleMenu, isBundleMenuVisible, cycleBundle } from '../ui/bundlemenu.js';
 import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
-import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel } from '../ui/diagnostics.js';
+import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggleDiagnosticsPanel } from '../ui/diagnostics.js';
 import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown } from './loader.js';
 import { getBundleNames, getBundle } from '../bundles/registry.js';
 
@@ -197,6 +197,9 @@ async function initPortalPage() {
 async function initTargetSite() {
   tpHud('Finding card...');
   
+  // Inject base CSS for overlay components (pointer, address bar, etc.)
+  injectOverlayStyles();
+  
   // Try to get card config from URL hash first, then localStorage
   var matchedCard = null;
   
@@ -241,8 +244,13 @@ async function initTargetSite() {
   tpHud('Applying bundle...');
   await applyBundleToPage(matchedCard);
 
-  // Create overlay UI (address bar, diagnostics, etc.)
-  createSiteOverlay();
+  // Initialize standard UI components (same as portal, they create their own elements)
+  initAddressBar();
+  log('Address bar initialized');
+  
+  // Create color button hints
+  createSiteHints();
+  log('Color hints created');
 }
 
 /**
@@ -380,127 +388,204 @@ async function applyBundleToPage(card) {
 }
 
 /**
- * Create overlay UI for target sites
- * Full-featured overlay with address bar, diagnostics, navigation
+ * Inject overlay styles for target sites
+ * These styles are normally in the portal HTML, but need to be injected on external sites
  */
-function createSiteOverlay() {
-  // Main overlay container
-  var overlay = document.createElement('div');
-  overlay.id = 'tp-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483640;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;';
+function injectOverlayStyles() {
+  var style = document.createElement('style');
+  style.id = 'tp-overlay-styles';
+  style.textContent = [
+    '/* TizenPortal Overlay Styles */',
+    '',
+    '/* Pointer cursor */',
+    '.tp-pointer {',
+    '  position: fixed;',
+    '  width: 32px;',
+    '  height: 32px;',
+    '  pointer-events: none;',
+    '  z-index: 2147483647;',
+    '  opacity: 0;',
+    '  transition: opacity 0.15s;',
+    '}',
+    '.tp-pointer.visible { opacity: 1; }',
+    '.tp-pointer-cursor {',
+    '  width: 0;',
+    '  height: 0;',
+    '  border-left: 12px solid #00a8ff;',
+    '  border-top: 8px solid transparent;',
+    '  border-bottom: 8px solid transparent;',
+    '  filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.5));',
+    '  transform: rotate(-30deg);',
+    '}',
+    '.tp-pointer-hover {',
+    '  outline: 3px solid #00a8ff !important;',
+    '  outline-offset: 2px;',
+    '}',
+    '',
+    '/* Address bar */',
+    '.tp-addressbar {',
+    '  position: fixed;',
+    '  top: 0;',
+    '  left: 0;',
+    '  right: 0;',
+    '  height: 70px;',
+    '  background: linear-gradient(180deg, rgba(13,17,23,0.98) 0%, rgba(13,17,23,0.95) 100%);',
+    '  border-bottom: 2px solid #00a8ff;',
+    '  z-index: 2147483640;',
+    '  display: none;',
+    '  box-shadow: 0 4px 20px rgba(0,0,0,0.5);',
+    '}',
+    '.tp-addressbar.visible { display: block; }',
+    '.tp-addressbar-content {',
+    '  display: flex;',
+    '  align-items: center;',
+    '  height: 100%;',
+    '  padding: 0 20px;',
+    '  gap: 12px;',
+    '}',
+    '.tp-addressbar-btn {',
+    '  width: 50px;',
+    '  height: 50px;',
+    '  background: linear-gradient(145deg, #1e2430 0%, #151922 100%);',
+    '  border: 2px solid rgba(255,255,255,0.1);',
+    '  border-radius: 8px;',
+    '  color: #fff;',
+    '  font-size: 20px;',
+    '  cursor: pointer;',
+    '  transition: all 0.15s;',
+    '  display: flex;',
+    '  align-items: center;',
+    '  justify-content: center;',
+    '}',
+    '.tp-addressbar-btn:focus {',
+    '  outline: none;',
+    '  border-color: #00a8ff;',
+    '  box-shadow: 0 0 0 3px rgba(0,168,255,0.3);',
+    '}',
+    '.tp-addressbar-url-container {',
+    '  flex: 1;',
+    '  height: 50px;',
+    '  background: #000;',
+    '  border: 2px solid rgba(255,255,255,0.1);',
+    '  border-radius: 8px;',
+    '  display: flex;',
+    '  align-items: center;',
+    '  padding: 0 16px;',
+    '  cursor: pointer;',
+    '  transition: all 0.15s;',
+    '}',
+    '.tp-addressbar-url-container:focus {',
+    '  outline: none;',
+    '  border-color: #00a8ff;',
+    '}',
+    '.tp-addressbar-url-display {',
+    '  color: #888;',
+    '  font-size: 16px;',
+    '  font-family: monospace;',
+    '  white-space: nowrap;',
+    '  overflow: hidden;',
+    '  text-overflow: ellipsis;',
+    '}',
+    '.tp-addressbar-url {',
+    '  display: none;',
+    '  width: 100%;',
+    '  height: 100%;',
+    '  background: transparent;',
+    '  border: none;',
+    '  color: #fff;',
+    '  font-size: 16px;',
+    '  font-family: monospace;',
+    '  outline: none;',
+    '}',
+    '.tp-addressbar-url-container.editing .tp-addressbar-url { display: block; }',
+    '.tp-addressbar-url-container.editing .tp-addressbar-url-display { display: none; }',
+    '',
+    '/* Color hints */',
+    '.tp-site-hints {',
+    '  position: fixed;',
+    '  bottom: 20px;',
+    '  left: 50%;',
+    '  transform: translateX(-50%);',
+    '  display: flex;',
+    '  gap: 24px;',
+    '  background: rgba(0,0,0,0.85);',
+    '  padding: 12px 24px;',
+    '  border-radius: 12px;',
+    '  z-index: 2147483640;',
+    '  pointer-events: none;',
+    '}',
+    '.tp-site-hint {',
+    '  display: flex;',
+    '  align-items: center;',
+    '  gap: 8px;',
+    '}',
+    '.tp-site-hint-key {',
+    '  width: 24px;',
+    '  height: 24px;',
+    '  border-radius: 4px;',
+    '}',
+    '.tp-site-hint-key.red { background: #e91e63; }',
+    '.tp-site-hint-key.green { background: #4caf50; }',
+    '.tp-site-hint-key.yellow { background: #ffeb3b; }',
+    '.tp-site-hint-key.blue { background: #2196f3; }',
+    '.tp-site-hint span { color: #fff; font-size: 13px; }',
+    '',
+    '/* Toast */',
+    '#tp-toast {',
+    '  position: fixed;',
+    '  bottom: 80px;',
+    '  left: 50%;',
+    '  transform: translateX(-50%);',
+    '  background: rgba(0,0,0,0.95);',
+    '  color: #fff;',
+    '  padding: 16px 32px;',
+    '  border-radius: 12px;',
+    '  font-size: 18px;',
+    '  z-index: 2147483647;',
+    '  opacity: 0;',
+    '  transition: opacity 0.3s;',
+    '  pointer-events: none;',
+    '}',
+    '#tp-toast.visible { opacity: 1; }',
+  ].join('\n');
   
-  // ========== Address Bar ==========
-  var addressBar = document.createElement('div');
-  addressBar.id = 'tp-site-addressbar';
-  addressBar.style.cssText = 'display:none;position:absolute;top:0;left:0;right:0;height:60px;background:linear-gradient(180deg,rgba(0,0,0,0.95) 0%,rgba(0,0,0,0.9) 100%);border-bottom:2px solid #00a8ff;pointer-events:auto;';
-  addressBar.innerHTML = [
-    '<div style="display:flex;align-items:center;height:100%;padding:0 20px;gap:12px;">',
-    '  <button id="tp-btn-home" style="width:44px;height:44px;background:linear-gradient(145deg,#1a1a2e,#0d0d1a);border:2px solid #00a8ff;border-radius:8px;color:#00a8ff;font-size:20px;cursor:pointer;transition:all 0.15s;" title="Return to Portal">🏠</button>',
-    '  <button id="tp-btn-back" style="width:44px;height:44px;background:linear-gradient(145deg,#1a1a2e,#0d0d1a);border:2px solid #444;border-radius:8px;color:#fff;font-size:20px;cursor:pointer;transition:all 0.15s;" title="Back">←</button>',
-    '  <button id="tp-btn-fwd" style="width:44px;height:44px;background:linear-gradient(145deg,#1a1a2e,#0d0d1a);border:2px solid #444;border-radius:8px;color:#fff;font-size:20px;cursor:pointer;transition:all 0.15s;" title="Forward">→</button>',
-    '  <button id="tp-btn-reload" style="width:44px;height:44px;background:linear-gradient(145deg,#1a1a2e,#0d0d1a);border:2px solid #444;border-radius:8px;color:#fff;font-size:20px;cursor:pointer;transition:all 0.15s;" title="Reload">↻</button>',
-    '  <input id="tp-site-url" type="text" style="flex:1;height:44px;background:#000;border:2px solid #333;border-radius:8px;color:#fff;padding:0 16px;font-size:16px;font-family:monospace;" value="' + window.location.href + '">',
-    '  <div style="color:#666;font-size:12px;padding:0 8px;">' + (state.currentCard ? state.currentCard.name : 'Unknown') + '</div>',
-    '</div>'
-  ].join('');
-  overlay.appendChild(addressBar);
-  
-  // ========== Diagnostics Panel ==========
-  var diagPanel = document.createElement('div');
-  diagPanel.id = 'tp-site-diagnostics';
-  diagPanel.style.cssText = 'display:none;position:absolute;top:20px;right:20px;width:600px;max-height:80%;background:rgba(0,0,0,0.95);border:2px solid #00a8ff;border-radius:12px;pointer-events:auto;overflow:hidden;box-shadow:0 8px 32px rgba(0,168,255,0.3);';
-  diagPanel.innerHTML = [
-    '<div style="background:linear-gradient(90deg,#00a8ff,#0066cc);color:#fff;padding:16px 20px;font-weight:bold;font-size:16px;display:flex;justify-content:space-between;align-items:center;">',
-    '  <span>TizenPortal ' + VERSION + '</span>',
-    '  <span style="font-weight:normal;font-size:12px;opacity:0.8;">Diagnostics</span>',
-    '</div>',
-    '<div id="tp-site-diag-info" style="padding:16px 20px;border-bottom:1px solid #333;font-size:13px;color:#aaa;background:#0a0a0f;">',
-    '  <div style="display:grid;grid-template-columns:80px 1fr;gap:8px;">',
-    '    <span style="color:#666;">URL:</span><span style="color:#fff;word-break:break-all;">' + window.location.href.substring(0, 80) + (window.location.href.length > 80 ? '...' : '') + '</span>',
-    '    <span style="color:#666;">Card:</span><span style="color:#00a8ff;">' + (state.currentCard ? state.currentCard.name : 'None') + '</span>',
-    '    <span style="color:#666;">Bundle:</span><span style="color:#0f0;">' + (state.currentBundle || 'default') + '</span>',
-    '  </div>',
-    '</div>',
-    '<div id="tp-site-diag-log" style="padding:12px 20px;max-height:400px;overflow-y:auto;font-size:12px;font-family:monospace;background:#050508;"></div>',
-    '<div style="padding:16px 20px;display:flex;gap:12px;background:#0a0a0f;border-top:1px solid #222;">',
-    '  <button id="tp-btn-portal" style="flex:1;padding:14px;background:linear-gradient(145deg,#00a8ff,#0066cc);border:none;border-radius:8px;color:#fff;font-size:15px;font-weight:bold;cursor:pointer;">Return to Portal</button>',
-    '  <button id="tp-btn-clear-log" style="flex:1;padding:14px;background:#222;border:2px solid #444;border-radius:8px;color:#fff;font-size:15px;cursor:pointer;">Clear Logs</button>',
-    '  <button id="tp-btn-close-diag" style="flex:1;padding:14px;background:#333;border:none;border-radius:8px;color:#fff;font-size:15px;cursor:pointer;">Close</button>',
-    '</div>'
-  ].join('');
-  overlay.appendChild(diagPanel);
-  
-  // ========== Toast ==========
-  var toast = document.createElement('div');
-  toast.id = 'tp-site-toast';
-  toast.style.cssText = 'position:absolute;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.95);color:#fff;padding:16px 32px;border-radius:12px;font-size:18px;opacity:0;transition:opacity 0.3s;pointer-events:none;border:1px solid #333;';
-  overlay.appendChild(toast);
-  
-  // ========== Color Button Hints ==========
-  var hints = document.createElement('div');
-  hints.id = 'tp-site-hints';
-  hints.style.cssText = 'position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:24px;background:rgba(0,0,0,0.8);padding:12px 24px;border-radius:12px;pointer-events:none;';
-  hints.innerHTML = [
-    '<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;background:#e91e63;border-radius:4px;"></div><span style="color:#fff;font-size:13px;">Address</span></div>',
-    '<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;background:#4caf50;border-radius:4px;"></div><span style="color:#fff;font-size:13px;">Mouse</span></div>',
-    '<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;background:#ffeb3b;border-radius:4px;"></div><span style="color:#fff;font-size:13px;">Portal</span></div>',
-    '<div style="display:flex;align-items:center;gap:8px;"><div style="width:24px;height:24px;background:#2196f3;border-radius:4px;"></div><span style="color:#fff;font-size:13px;">Diagnostics</span></div>',
-  ].join('');
-  overlay.appendChild(hints);
-  
-  // Add to page
-  document.body.appendChild(overlay);
-  
-  // ========== Wire up event handlers ==========
-  document.getElementById('tp-btn-home').addEventListener('click', returnToPortal);
-  document.getElementById('tp-btn-back').addEventListener('click', function() { history.back(); });
-  document.getElementById('tp-btn-fwd').addEventListener('click', function() { history.forward(); });
-  document.getElementById('tp-btn-reload').addEventListener('click', function() { location.reload(); });
-  document.getElementById('tp-site-url').addEventListener('keydown', function(e) {
-    if (e.keyCode === 13) {
-      window.location.href = this.value;
-    }
-  });
-  document.getElementById('tp-btn-portal').addEventListener('click', returnToPortal);
-  document.getElementById('tp-btn-clear-log').addEventListener('click', function() {
-    document.getElementById('tp-site-diag-log').innerHTML = '';
-  });
-  document.getElementById('tp-btn-close-diag').addEventListener('click', function() {
-    diagPanel.style.display = 'none';
-  });
-  
-  // Store references for toggling
-  window._tpSiteAddressBar = addressBar;
-  window._tpSiteDiagnostics = diagPanel;
-  window._tpSiteToast = toast;
-  window._tpSiteHints = hints;
-  
-  log('Site overlay created');
+  document.head.appendChild(style);
+  log('Overlay styles injected');
 }
 
 /**
- * Toggle site overlay address bar
+ * Create color button hints for target sites
+ */
+function createSiteHints() {
+  // Create toast element (used by showToast)
+  var toast = document.createElement('div');
+  toast.id = 'tp-toast';
+  document.body.appendChild(toast);
+  
+  // Create hints bar
+  var hints = document.createElement('div');
+  hints.className = 'tp-site-hints';
+  hints.innerHTML = [
+    '<div class="tp-site-hint"><div class="tp-site-hint-key red"></div><span>Address</span></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key green"></div><span>Mouse</span></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key yellow"></div><span>Portal</span></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key blue"></div><span>Diagnostics</span></div>',
+  ].join('');
+  document.body.appendChild(hints);
+}
+
+/**
+ * Toggle site address bar (uses standard addressbar module)
  */
 function toggleSiteAddressBar() {
-  var bar = window._tpSiteAddressBar;
-  if (bar) {
-    var visible = bar.style.display !== 'none';
-    bar.style.display = visible ? 'none' : 'block';
-    if (!visible) {
-      var urlInput = document.getElementById('tp-site-url');
-      if (urlInput) urlInput.focus();
-    }
-  }
+  toggleAddressBar();
 }
 
 /**
- * Toggle site overlay diagnostics panel
+ * Toggle site diagnostics panel (uses standard diagnostics module)
  */
 function toggleSiteDiagnostics() {
-  var diag = window._tpSiteDiagnostics;
-  if (diag) {
-    diag.style.display = diag.style.display === 'none' ? 'block' : 'none';
-  }
+  toggleDiagnosticsPanel();
 }
 
 /**
@@ -652,38 +737,23 @@ function closeSite() {
 function showToast(message, duration) {
   duration = duration || 3000;
   
-  // On target sites, use the site overlay toast
-  if (!state.isPortalPage) {
-    var toast = window._tpSiteToast || document.getElementById('tp-site-toast');
-    if (toast) {
-      toast.textContent = message;
-      toast.style.opacity = '1';
-      setTimeout(function() {
-        toast.style.opacity = '0';
-      }, duration);
-      return;
-    }
+  // Use standard toast element (created on both portal and target sites)
+  var toast = document.getElementById('tp-toast');
+  if (!toast) {
     // Fallback: create temporary toast
-    var tempToast = document.createElement('div');
-    tempToast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.95);color:#fff;padding:16px 32px;border-radius:12px;font-size:18px;z-index:2147483647;transition:opacity 0.3s;';
-    tempToast.textContent = message;
-    document.body.appendChild(tempToast);
-    setTimeout(function() {
-      tempToast.style.opacity = '0';
-      setTimeout(function() { tempToast.remove(); }, 300);
-    }, duration);
-    return;
+    toast = document.createElement('div');
+    toast.id = 'tp-toast';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.95);color:#fff;padding:16px 32px;border-radius:12px;font-size:18px;z-index:2147483647;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+    document.body.appendChild(toast);
   }
   
-  // On portal page, use existing toast element
-  var toast = document.getElementById('tp-toast');
-  if (!toast) return;
-
   toast.textContent = message;
   toast.classList.add('visible');
+  toast.style.opacity = '1';
 
   setTimeout(function() {
     toast.classList.remove('visible');
+    toast.style.opacity = '0';
   }, duration);
 }
 
