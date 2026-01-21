@@ -56,6 +56,17 @@
       return null;
     }
   }
+  
+  // TizenPortal: Safe getComputedStyle wrapper that returns null on error
+  function safeGetComputedStyle(element, pseudoElt) {
+    if (!element) return null;
+    try {
+      return window.getComputedStyle(element, pseudoElt || null);
+    } catch (e) {
+      return null;
+    }
+  }
+  
   let mapOfBoundRect = null;
   let startingPoint = null; // Saves spatial navigation starting point
   let savedSearchOrigin = {element: null, rect: null};  // Saves previous search origin
@@ -541,7 +552,9 @@
    */
   function selectBestCandidate(currentElm, candidates, dir) {
     const container = currentElm.getSpatialNavigationContainer();
-    const spatialNavigationFunction = getComputedStyle(container).getPropertyValue('--spatial-navigation-function');
+    // TizenPortal: Use safe wrapper
+    const containerStyle = safeGetComputedStyle(container);
+    const spatialNavigationFunction = containerStyle ? containerStyle.getPropertyValue('--spatial-navigation-function') : 'normal';
     const currentTargetRect = searchOriginRect || getBoundingClientRect(currentElm);
     let distanceFunction;
     let alignedCandidates;
@@ -814,18 +827,15 @@
 
     if (!searchOrigin || (searchOrigin === document.body && !document.querySelector(':focus'))) {
       // When the previous search origin lost its focus by blur: (1) disable attribute (2) visibility: hidden
-      // TizenPortal: Wrap in try-catch for cross-origin safety
+      // TizenPortal: Use safe wrapper for cross-origin safety
       if (savedSearchOrigin.element && (searchOrigin !== savedSearchOrigin.element)) {
-        try {
-          const elementStyle = window.getComputedStyle(savedSearchOrigin.element, null);
+        const elementStyle = safeGetComputedStyle(savedSearchOrigin.element);
+        if (elementStyle) {
           const invisibleStyle = ['hidden', 'collapse'];
-
           if (savedSearchOrigin.element.disabled || invisibleStyle.includes(elementStyle.getPropertyValue('visibility'))) {
             searchOrigin = savedSearchOrigin.element;
             return searchOrigin;
           }
-        } catch (e) {
-          // Cross-origin element - ignore
         }
       }
       searchOrigin = document.documentElement;
@@ -902,7 +912,9 @@
    * @returns {boolean}
    */
   function isScrollContainer(element) {
-    const elementStyle = window.getComputedStyle(element, null);
+    // TizenPortal: Use safe wrapper
+    const elementStyle = safeGetComputedStyle(element);
+    if (!elementStyle) return false;
     const overflowX = elementStyle.getPropertyValue('overflow-x');
     const overflowY = elementStyle.getPropertyValue('overflow-y');
 
@@ -925,7 +937,9 @@
       if (dir && typeof dir === 'string') { // parameter: dir, element
         if (isOverflow(element, dir)) {
           // style property
-          const elementStyle = window.getComputedStyle(element, null);
+          // TizenPortal: Use safe wrapper
+          const elementStyle = safeGetComputedStyle(element);
+          if (!elementStyle) return false;
           const overflowX = elementStyle.getPropertyValue('overflow-x');
           const overflowY = elementStyle.getPropertyValue('overflow-y');
 
@@ -1123,18 +1137,17 @@
    * @returns {boolean}
    */
   function isBeingRendered(element) {
-    // TizenPortal: Guard against cross-origin elements
-    try {
-      if (!isVisibleStyleProperty(element.parentElement))
-        return false;
-      if (!isVisibleStyleProperty(element) || (element.style.opacity === '0') ||
-          (window.getComputedStyle(element).height === '0px' || window.getComputedStyle(element).width === '0px'))
-        return false;
-      return true;
-    } catch (e) {
-      // Cross-origin or detached element - assume rendered
-      return true;
-    }
+    // TizenPortal: Use safe wrapper for cross-origin safety
+    if (!isVisibleStyleProperty(element.parentElement))
+      return false;
+    if (!isVisibleStyleProperty(element) || (element.style && element.style.opacity === '0'))
+      return false;
+    
+    const elementStyle = safeGetComputedStyle(element);
+    if (elementStyle && (elementStyle.height === '0px' || elementStyle.width === '0px'))
+      return false;
+    
+    return true;
   }
 
   /**
@@ -1174,19 +1187,16 @@
    * @returns {boolean}
    */
   function isVisibleStyleProperty(element) {
-    // TizenPortal: Guard against cross-origin elements
+    // TizenPortal: Use safe wrapper for cross-origin safety
     if (!element) return true;
-    try {
-      const elementStyle = window.getComputedStyle(element, null);
-      const thisVisibility = elementStyle.getPropertyValue('visibility');
-      const thisDisplay = elementStyle.getPropertyValue('display');
-      const invisibleStyle = ['hidden', 'collapse'];
+    const elementStyle = safeGetComputedStyle(element);
+    if (!elementStyle) return true; // Assume visible if can't access
+    
+    const thisVisibility = elementStyle.getPropertyValue('visibility');
+    const thisDisplay = elementStyle.getPropertyValue('display');
+    const invisibleStyle = ['hidden', 'collapse'];
 
-      return (thisDisplay !== 'none' && !invisibleStyle.includes(thisVisibility));
-    } catch (e) {
-      // Cross-origin or detached element - assume visible
-      return true;
-    }
+    return (thisDisplay !== 'none' && !invisibleStyle.includes(thisVisibility));
   }
 
   /**
