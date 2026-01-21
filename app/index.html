@@ -261,6 +261,34 @@
       display: flex;
     }
     
+    /* Compact mode - bottom panel */
+    #tp-diagnostics.compact {
+      top: auto;
+      bottom: 0;
+      height: 300px;
+      padding: 20px 40px;
+    }
+    
+    #tp-diagnostics.compact #tp-diagnostics-header {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+    }
+    
+    #tp-diagnostics.compact #tp-diagnostics-header h2 {
+      font-size: 20px;
+    }
+    
+    #tp-diagnostics.compact #tp-diagnostics-footer {
+      margin-top: 10px;
+      padding-top: 10px;
+    }
+    
+    /* Fullscreen mode */
+    #tp-diagnostics.fullscreen {
+      top: 0;
+      height: 100%;
+    }
+    
     #tp-diagnostics-header {
       display: flex;
       justify-content: space-between;
@@ -1201,26 +1229,26 @@
         <div id="tp-diagnostics-info"></div>
       </div>
       <div id="tp-diagnostics-logs"></div>
-      <div id="tp-diagnostics-footer">Press BLUE to close | YELLOW to clear logs</div>
+      <div id="tp-diagnostics-footer">Press BLUE to expand/close | YELLOW to clear logs</div>
     </div>
     
     <!-- Color button hints -->
     <div id="tp-hints">
       <div class="tp-hint">
         <div class="tp-hint-key red"></div>
-        <span>Address Bar</span>
+        <span>Address</span>
       </div>
       <div class="tp-hint">
         <div class="tp-hint-key green"></div>
-        <span>Mouse Mode</span>
+        <span>Mouse</span>
       </div>
       <div class="tp-hint">
         <div class="tp-hint-key yellow"></div>
-        <span>Edit Site</span>
+        <span id="tp-hint-yellow-text">Edit Site</span>
       </div>
       <div class="tp-hint">
         <div class="tp-hint-key blue"></div>
-        <span>Diagnostics</span>
+        <span>Console</span>
       </div>
     </div>
     

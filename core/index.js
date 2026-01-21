@@ -248,6 +248,9 @@ async function initTargetSite() {
   initAddressBar();
   log('Address bar initialized');
   
+  initDiagnosticsPanel();
+  log('Diagnostics panel initialized');
+  
   // Create color button hints
   createSiteHints();
   log('Color hints created');
@@ -446,6 +449,7 @@ function injectOverlayStyles() {
     '.tp-addressbar-btn {',
     '  width: 50px;',
     '  height: 50px;',
+    '  margin-right: 12px;',
     '  background: linear-gradient(145deg, #1e2430 0%, #151922 100%);',
     '  border: 2px solid rgba(255,255,255,0.1);',
     '  border-radius: 8px;',
@@ -547,6 +551,44 @@ function injectOverlayStyles() {
     '  pointer-events: none;',
     '}',
     '#tp-toast.visible { opacity: 1; }',
+    '',
+    '/* Diagnostics panel */',
+    '#tp-diagnostics {',
+    '  display: none;',
+    '  position: fixed;',
+    '  left: 0;',
+    '  right: 0;',
+    '  bottom: 0;',
+    '  height: 300px;',
+    '  background: rgba(0,0,0,0.95);',
+    '  z-index: 2147483645;',
+    '  flex-direction: column;',
+    '  padding: 20px 40px;',
+    '  font-family: Consolas, Monaco, monospace;',
+    '}',
+    '#tp-diagnostics.visible { display: flex; }',
+    '#tp-diagnostics.compact { height: 300px; }',
+    '#tp-diagnostics.fullscreen { top: 0; height: 100%; }',
+    '#tp-diagnostics-header {',
+    '  display: flex;',
+    '  justify-content: space-between;',
+    '  align-items: center;',
+    '  margin-bottom: 10px;',
+    '  padding-bottom: 10px;',
+    '  border-bottom: 1px solid #333;',
+    '}',
+    '#tp-diagnostics-header h2 { font-size: 20px; font-weight: 500; color: #00a8ff; margin: 0; }',
+    '#tp-diagnostics-info { font-size: 14px; color: #888; }',
+    '#tp-diagnostics-logs { flex: 1; overflow-y: auto; font-size: 14px; line-height: 1.6; }',
+    '.tp-log-entry { padding: 4px 0; border-bottom: 1px solid #1a1a1a; display: flex; }',
+    '.tp-log-time { color: #666; flex-shrink: 0; width: 100px; margin-right: 12px; }',
+    '.tp-log-level { flex-shrink: 0; width: 60px; margin-right: 12px; font-weight: bold; }',
+    '.tp-log-level.log { color: #888; }',
+    '.tp-log-level.info { color: #3498db; }',
+    '.tp-log-level.warn { color: #f1c40f; }',
+    '.tp-log-level.error { color: #e74c3c; }',
+    '.tp-log-message { color: #ccc; flex: 1; word-break: break-word; }',
+    '#tp-diagnostics-footer { margin-top: 10px; padding-top: 10px; border-top: 1px solid #333; font-size: 14px; color: #666; }',
   ].join('\n');
   
   document.head.appendChild(style);
@@ -569,7 +611,7 @@ function createSiteHints() {
     '<div class="tp-site-hint"><div class="tp-site-hint-key red"></div><span>Address</span></div>',
     '<div class="tp-site-hint"><div class="tp-site-hint-key green"></div><span>Mouse</span></div>',
     '<div class="tp-site-hint"><div class="tp-site-hint-key yellow"></div><span>Portal</span></div>',
-    '<div class="tp-site-hint"><div class="tp-site-hint-key blue"></div><span>Diagnostics</span></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key blue"></div><span>Console</span></div>',
   ].join('');
   document.body.appendChild(hints);
 }

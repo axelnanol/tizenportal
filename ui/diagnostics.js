@@ -27,6 +27,11 @@ var infoElement = null;
 var isVisible = false;
 
 /**
+ * Panel display state: 'hidden' | 'compact' | 'fullscreen'
+ */
+var displayState = 'hidden';
+
+/**
  * Unsubscribe function for log listener
  */
 var unsubscribe = null;
@@ -35,6 +40,11 @@ var unsubscribe = null;
  * Initialize diagnostics panel
  */
 export function initDiagnosticsPanel() {
+  // Create panel if it doesn't exist (for target sites)
+  if (!document.getElementById('tp-diagnostics')) {
+    createDiagnosticsPanel();
+  }
+  
   panelElement = document.getElementById('tp-diagnostics');
   logsElement = document.getElementById('tp-diagnostics-logs');
   infoElement = document.getElementById('tp-diagnostics-info');
@@ -51,6 +61,23 @@ export function initDiagnosticsPanel() {
       scrollToBottom();
     }
   });
+}
+
+/**
+ * Create the diagnostics panel DOM elements
+ */
+function createDiagnosticsPanel() {
+  var panel = document.createElement('div');
+  panel.id = 'tp-diagnostics';
+  panel.innerHTML = [
+    '<div id="tp-diagnostics-header">',
+    '  <h2>Console</h2>',
+    '  <div id="tp-diagnostics-info"></div>',
+    '</div>',
+    '<div id="tp-diagnostics-logs"></div>',
+    '<div id="tp-diagnostics-footer">Press BLUE to expand/close | YELLOW to clear</div>',
+  ].join('');
+  document.body.appendChild(panel);
 }
 
 /**
@@ -79,18 +106,46 @@ export function hideDiagnosticsPanel() {
   if (!panelElement) return;
 
   isVisible = false;
-  panelElement.classList.remove('visible');
+  displayState = 'hidden';
+  panelElement.classList.remove('visible', 'compact', 'fullscreen');
 }
 
 /**
- * Toggle the diagnostics panel
+ * Toggle the diagnostics panel through 3 states: hidden -> compact -> fullscreen -> hidden
  */
 export function toggleDiagnosticsPanel() {
-  if (isVisible) {
-    hideDiagnosticsPanel();
-  } else {
+  if (displayState === 'hidden') {
+    // Show compact
+    displayState = 'compact';
     showDiagnosticsPanel();
+    setCompactMode();
+  } else if (displayState === 'compact') {
+    // Go fullscreen
+    displayState = 'fullscreen';
+    setFullscreenMode();
+  } else {
+    // Hide
+    displayState = 'hidden';
+    hideDiagnosticsPanel();
   }
+}
+
+/**
+ * Set compact mode (bottom panel)
+ */
+function setCompactMode() {
+  if (!panelElement) return;
+  panelElement.classList.remove('fullscreen');
+  panelElement.classList.add('compact');
+}
+
+/**
+ * Set fullscreen mode
+ */
+function setFullscreenMode() {
+  if (!panelElement) return;
+  panelElement.classList.remove('compact');
+  panelElement.classList.add('fullscreen');
 }
 
 /**
