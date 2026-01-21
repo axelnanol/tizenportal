@@ -272,13 +272,9 @@
     let parentContainer = (container.parentElement) ? container.getSpatialNavigationContainer() : null;
 
     // When the container is the viewport of a browsing context
-    // TizenPortal: Use safe helper for cross-origin contexts
-    if (!parentContainer && isInIframe()) {
-      const parentDoc = getParentDocument();
-      if (parentDoc) {
-        parentContainer = parentDoc.documentElement;
-      }
-    }
+    // TizenPortal: Don't navigate to parent document - stay within current document
+    // Previously we would set parentContainer to parent document element, but that causes
+    // cross-origin errors when those elements are later accessed with getComputedStyle etc.
 
     if (getCSSSpatNavAction(container) === 'scroll') {
       if (scrollingController(container, dir)) return;
@@ -651,13 +647,9 @@
 
     do {
       if (!container.parentElement) {
-        // TizenPortal: Use safe helper for cross-origin contexts
-        const parentDoc = getParentDocument();
-        if (parentDoc) {
-          container = parentDoc.documentElement;
-        } else {
-          container = window.document.documentElement;
-        }
+        // TizenPortal: Don't navigate to parent document - stay within current document
+        // This prevents cross-origin errors when elements from parent documents are later accessed
+        container = window.document.documentElement;
         break;
       } else {
         container = container.parentElement;
@@ -677,13 +669,9 @@
 
     do {
       if (!scrollContainer.parentElement) {
-        // TizenPortal: Use safe helper for cross-origin contexts
-        const parentDoc = getParentDocument();
-        if (parentDoc) {
-          scrollContainer = parentDoc.documentElement;
-        } else {
-          scrollContainer = window.document.documentElement;
-        }
+        // TizenPortal: Don't navigate to parent document - stay within current document
+        // This prevents cross-origin errors when elements from parent documents are later accessed
+        scrollContainer = window.document.documentElement;
         break;
       } else {
         scrollContainer = scrollContainer.parentElement;
@@ -783,12 +771,8 @@
 
           // find the container
           if (container === document || container === document.documentElement) {
-            // TizenPortal: Use safe helper for cross-origin contexts
-            if (isInIframe() && window.frameElement) {
-              // The page is in an iframe. eventTarget needs to be reset because the position of the element in the iframe
-              eventTarget = window.frameElement;
-              container = eventTarget.ownerDocument.documentElement;              
-            }
+            // TizenPortal: Don't navigate to parent document - stay within current document
+            // Navigation stops at the document boundary
           } else {
             container = parentContainer;
           }
@@ -1048,8 +1032,14 @@
    * @returns {boolean}
    */
   function isVisibleInScroller(element) {
-    const elementRect = element.getBoundingClientRect();
-    let nearestScroller = getScrollContainer(element);
+    // TizenPortal: Use safe wrapper for cross-origin safety
+    const elementRect = getBoundingClientRect(element);
+    let nearestScroller;
+    try {
+      nearestScroller = getScrollContainer(element);
+    } catch (e) {
+      return true; // Assume visible if can't determine
+    }
 
     let scrollerRect = null;
     if (nearestScroller !== window) {
@@ -1728,13 +1718,7 @@
       let parentContainer = (container.parentElement) ? container.getSpatialNavigationContainer() : null;
 
       // When the container is the viewport of a browsing context
-      // TizenPortal: Use safe helper for cross-origin contexts
-      if (!parentContainer && isInIframe()) {
-        const parentDoc = getParentDocument();
-        if (parentDoc) {
-          parentContainer = parentDoc.documentElement;
-        }
-      }
+      // TizenPortal: Don't navigate to parent document - stay within current document
 
       // 7
       while (parentContainer) {
@@ -1756,26 +1740,11 @@
           container = window.document.documentElement;
 
           // The page is in an iframe
-          // TizenPortal: Use safe helper for cross-origin contexts
-          if (isInIframe() && window.frameElement) {
-            // eventTarget needs to be reset because the position of the element in the IFRAME
-            // is unuseful when the focus moves out of the iframe
-            eventTarget = window.frameElement;
-            const parentDoc = getParentDocument();
-            if (parentDoc) {
-              container = parentDoc.documentElement;
-              if (container.parentElement)
-                parentContainer = container.getSpatialNavigationContainer();
-              else {
-                parentContainer = null;
-                break;
-              }
-            } else {
-              // Cross-origin: can't navigate to parent
-              parentContainer = null;
-              break;
-            }
-          }
+          // TizenPortal: Don't navigate to parent document - stay within current document
+          // Previously we would try to get parentDoc.documentElement, but that causes
+          // cross-origin errors when those elements are later accessed with getComputedStyle etc.
+          parentContainer = null;
+          break;
         } else {
           // avoiding when spatnav container with tabindex=-1
           if (isFocusable(container)) {
