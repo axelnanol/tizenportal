@@ -1,6 +1,8 @@
 // Source: https://github.com/WICG/spatial-navigation (npm: spatial-navigation-polyfill)
 // Local modifications:
-// - Line 85: Guard parent.__spatialNavigation__ access to prevent errors in cross-origin contexts
+// - Guard parent.__spatialNavigation__ access to prevent errors in cross-origin contexts
+// - Guard all window.parent.document accesses with try-catch for cross-origin safety
+// - Add isInIframe() and getParentDocument() helpers
 //
 /* Spatial Navigation Polyfill
  *
@@ -22,6 +24,28 @@
 
   const ARROW_KEY_CODE = {37: 'left', 38: 'up', 39: 'right', 40: 'down'};
   const TAB_KEY_CODE = 9;
+  
+  // TizenPortal: Helper to safely check if we're in an iframe (cross-origin safe)
+  function isInIframe() {
+    try {
+      return window.location !== window.parent.location;
+    } catch (e) {
+      // Cross-origin: we can't access parent.location, so assume we're not in a navigable iframe context
+      return false;
+    }
+  }
+  
+  // TizenPortal: Helper to safely get parent document (returns null if cross-origin)
+  function getParentDocument() {
+    try {
+      if (window.location !== window.parent.location) {
+        return window.parent.document;
+      }
+    } catch (e) {
+      // Cross-origin access denied
+    }
+    return null;
+  }
   let mapOfBoundRect = null;
   let startingPoint = null; // Saves spatial navigation starting point
   let savedSearchOrigin = {element: null, rect: null};  // Saves previous search origin
@@ -85,8 +109,16 @@
      * If arrow key pressed, get the next focusing element and send it to focusing controller
      */
     window.addEventListener('keydown', (e) => {
-      // Fix: Guard against parent.__spatialNavigation__ being undefined (e.g., cross-origin)
-      const currentKeyMode = (parent && parent.__spatialNavigation__ && parent.__spatialNavigation__.keyMode) || (window.__spatialNavigation__ && window.__spatialNavigation__.keyMode);
+      // TizenPortal: Guard against parent access being denied (cross-origin)
+      let parentKeyMode = null;
+      try {
+        if (parent && parent !== window && parent.__spatialNavigation__) {
+          parentKeyMode = parent.__spatialNavigation__.keyMode;
+        }
+      } catch (err) {
+        // Cross-origin: parent access denied
+      }
+      const currentKeyMode = parentKeyMode || (window.__spatialNavigation__ && window.__spatialNavigation__.keyMode);
       const eventTarget = document.activeElement;
       const dir = ARROW_KEY_CODE[e.keyCode];
 
@@ -219,8 +251,12 @@
     let parentContainer = (container.parentElement) ? container.getSpatialNavigationContainer() : null;
 
     // When the container is the viewport of a browsing context
-    if (!parentContainer && ( window.location !== window.parent.location)) {
-      parentContainer = window.parent.document.documentElement;
+    // TizenPortal: Use safe helper for cross-origin contexts
+    if (!parentContainer && isInIframe()) {
+      const parentDoc = getParentDocument();
+      if (parentDoc) {
+        parentContainer = parentDoc.documentElement;
+      }
     }
 
     if (getCSSSpatNavAction(container) === 'scroll') {
@@ -542,12 +578,17 @@
    */
   function getClosestElement(currentElm, candidates, dir, distanceFunction) {
     let eventTargetRect = null;
-    if (( window.location !== window.parent.location ) && (currentElm.nodeName === 'BODY' || currentElm.nodeName === 'HTML')) {
+    // TizenPortal: Use safe helper for cross-origin contexts
+    if (isInIframe() && (currentElm.nodeName === 'BODY' || currentElm.nodeName === 'HTML')) {
       // If the eventTarget is iframe, then get rect of it based on its containing document
       // Set the iframe's position as (0,0) because the rects of elements inside the iframe don't know the real iframe's position.
-      eventTargetRect = window.frameElement.getBoundingClientRect();
-      eventTargetRect.x = 0;
-      eventTargetRect.y = 0;
+      if (window.frameElement) {
+        eventTargetRect = window.frameElement.getBoundingClientRect();
+        eventTargetRect.x = 0;
+        eventTargetRect.y = 0;
+      } else {
+        eventTargetRect = searchOriginRect || currentElm.getBoundingClientRect();
+      }
     } else {
       eventTargetRect = searchOriginRect || currentElm.getBoundingClientRect();
     }
@@ -587,8 +628,10 @@
 
     do {
       if (!container.parentElement) {
-        if (window.location !== window.parent.location) {
-          container = window.parent.document.documentElement;
+        // TizenPortal: Use safe helper for cross-origin contexts
+        const parentDoc = getParentDocument();
+        if (parentDoc) {
+          container = parentDoc.documentElement;
         } else {
           container = window.document.documentElement;
         }
@@ -611,8 +654,10 @@
 
     do {
       if (!scrollContainer.parentElement) {
-        if (window.location !== window.parent.location) {
-          scrollContainer = window.parent.document.documentElement;
+        // TizenPortal: Use safe helper for cross-origin contexts
+        const parentDoc = getParentDocument();
+        if (parentDoc) {
+          scrollContainer = parentDoc.documentElement;
         } else {
           scrollContainer = window.document.documentElement;
         }
@@ -715,7 +760,8 @@
 
           // find the container
           if (container === document || container === document.documentElement) {
-            if ( window.location !== window.parent.location ) {
+            // TizenPortal: Use safe helper for cross-origin contexts
+            if (isInIframe() && window.frameElement) {
               // The page is in an iframe. eventTarget needs to be reset because the position of the element in the iframe
               eventTarget = window.frameElement;
               container = eventTarget.ownerDocument.documentElement;              
@@ -1632,8 +1678,12 @@
       let parentContainer = (container.parentElement) ? container.getSpatialNavigationContainer() : null;
 
       // When the container is the viewport of a browsing context
-      if (!parentContainer && ( window.location !== window.parent.location)) {
-        parentContainer = window.parent.document.documentElement;
+      // TizenPortal: Use safe helper for cross-origin contexts
+      if (!parentContainer && isInIframe()) {
+        const parentDoc = getParentDocument();
+        if (parentDoc) {
+          parentContainer = parentDoc.documentElement;
+        }
       }
 
       // 7
@@ -1656,14 +1706,22 @@
           container = window.document.documentElement;
 
           // The page is in an iframe
-          if ( window.location !== window.parent.location ) {
+          // TizenPortal: Use safe helper for cross-origin contexts
+          if (isInIframe() && window.frameElement) {
             // eventTarget needs to be reset because the position of the element in the IFRAME
             // is unuseful when the focus moves out of the iframe
             eventTarget = window.frameElement;
-            container = window.parent.document.documentElement;
-            if (container.parentElement)
-              parentContainer = container.getSpatialNavigationContainer();
-            else {
+            const parentDoc = getParentDocument();
+            if (parentDoc) {
+              container = parentDoc.documentElement;
+              if (container.parentElement)
+                parentContainer = container.getSpatialNavigationContainer();
+              else {
+                parentContainer = null;
+                break;
+              }
+            } else {
+              // Cross-origin: can't navigate to parent
               parentContainer = null;
               break;
             }
