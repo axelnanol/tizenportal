@@ -75,11 +75,78 @@ img {
   object-fit: fill !important;
 }
 
-/* Book card container - inline styles have min/max 192px */
+/* ==========================================================================
+   BOOKSHELF ROW LAYOUT - HORIZONTAL SCROLLING
+   Book cards must display horizontally with proper gaps for spatial navigation.
+   Chrome 47 needs explicit flexbox properties.
+   ========================================================================== */
+
+/* Bookshelf row container - horizontal scroll */
+.bookshelfRow,
+.categorizedBookshelfRow {
+  display: block !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 40px !important; /* Space for card labels */
+}
+
+/* Inner wrapper divs */
+.categorizedBookshelfRow > div,
+.bookshelfRow > div {
+  display: block !important;
+  width: 100% !important;
+}
+
+/* The flex container that holds cards - CRITICAL for horizontal layout */
+.categorizedBookshelfRow .flex.items-center,
+.bookshelfRow .flex.items-center,
+.categorizedBookshelfRow > div > div > .flex,
+.bookshelfRow > div > div > .flex {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-orient: horizontal !important;
+  -webkit-box-direction: normal !important;
+  -webkit-flex-direction: row !important;
+  flex-direction: row !important;
+  -webkit-flex-wrap: nowrap !important;
+  flex-wrap: nowrap !important;
+  -webkit-box-align: start !important;
+  -webkit-align-items: flex-start !important;
+  align-items: flex-start !important;
+  /* Allow content to extend beyond container */
+  width: max-content !important;
+  min-width: 100% !important;
+}
+
+/* Book card container - MUST have gaps for spatial navigation */
+[id^="book-card-"],
+[id^="series-card-"] {
+  display: inline-block !important;
+  vertical-align: top !important;
+  /* Remove absolute positioning - it breaks flex flow */
+  position: relative !important;
+  /* CRITICAL: Gaps between cards for spatial navigation */
+  margin: 16px !important;
+  /* Flex item properties */
+  -webkit-flex-shrink: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Book cards - fixed width */
 [id^="book-card-"] {
   width: 192px !important;
   min-width: 192px !important;
   max-width: 192px !important;
+}
+
+/* Series cards - wider */
+[id^="series-card-"] {
+  width: 384px !important;
+  min-width: 384px !important;
+  max-width: 384px !important;
 }
 
 /* Cover area container */
