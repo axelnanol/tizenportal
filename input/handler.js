@@ -71,29 +71,20 @@ function handleKeyDown(event) {
     return;
   }
 
-  // Block arrow keys when overlays are open (diagnostics, address bar, bundle menu)
-  // This prevents background scrolling/navigation while overlays are visible
+  // Diagnostics panel: up/down scrolls the log history, block left/right
+  // Address bar and bundle menu: let arrow keys through for native focus navigation
   var isArrowKey = keyCode === KEYS.LEFT || keyCode === KEYS.RIGHT || 
                    keyCode === KEYS.UP || keyCode === KEYS.DOWN;
-  if (isArrowKey) {
-    // Diagnostics panel: up/down scrolls the log history
-    if (isDiagnosticsPanelVisible()) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (keyCode === KEYS.UP) {
-        scrollDiagnosticsLogs(-100); // Scroll up
-      } else if (keyCode === KEYS.DOWN) {
-        scrollDiagnosticsLogs(100);  // Scroll down
-      }
-      // Left/Right do nothing for now
-      return;
+  if (isArrowKey && isDiagnosticsPanelVisible()) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (keyCode === KEYS.UP) {
+      scrollDiagnosticsLogs(-100); // Scroll up
+    } else if (keyCode === KEYS.DOWN) {
+      scrollDiagnosticsLogs(100);  // Scroll down
     }
-    // Other overlays: just block the event
-    if (isAddressBarVisible() || isBundleMenuVisible()) {
-      event.preventDefault();
-      event.stopPropagation();
-      return;
-    }
+    // Left/Right do nothing for now
+    return;
   }
 
   // Give custom handlers a chance to consume the event

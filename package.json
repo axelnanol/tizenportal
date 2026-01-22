@@ -1,7 +1,7 @@
 {
   "name": "@alexnolan/tizenportal",
   "appName": "TizenPortal",
-  "version": "0213",
+  "version": "0214",
   "description": "Universal Tizen Browser Shell",
   "type": "module",
   "packageType": "mods",
