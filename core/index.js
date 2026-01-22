@@ -259,6 +259,7 @@ async function initTargetSite() {
 /**
  * Extract card config from URL hash
  * Format: #tp=BASE64(JSON) or &tp=BASE64(JSON)
+ * Payload format: { css, js, bundleName, cardName, ua }
  * @returns {Object|null} Card object or null
  */
 function getCardFromHash() {
@@ -271,14 +272,22 @@ function getCardFromHash() {
     if (!match || !match[1]) return null;
     
     // Decode base64 JSON
-    var decoded = atob(match[1]);
-    var cardData = JSON.parse(decoded);
+    var decoded = decodeURIComponent(escape(atob(match[1])));
+    var payload = JSON.parse(decoded);
     
-    // Add current URL to card
-    cardData.url = window.location.href.replace(/[#&]tp=[^&#]+/, '');
+    log('Decoded payload from hash: ' + JSON.stringify(payload));
     
-    log('Decoded card from hash: ' + JSON.stringify(cardData));
-    return cardData;
+    // Convert payload to card format
+    var card = {
+      name: payload.cardName || 'Unknown Site',
+      url: window.location.href.replace(/[#&]tp=[^&#]+/, ''),
+      bundle: payload.bundleName || 'default',
+      // Store raw payload for CSS/JS injection
+      _payload: payload
+    };
+    
+    log('Card from URL hash: ' + card.name + ' (bundle: ' + card.bundle + ')');
+    return card;
   } catch (e) {
     error('Failed to parse hash card: ' + e.message);
     return null;
