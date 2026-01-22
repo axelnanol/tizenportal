@@ -9,6 +9,8 @@
  * - Viewport lock to 1920px (disables Tailwind responsive breakpoints)
  * - Focus management for siderail and content
  * - TV-friendly focus indicators
+ * - Text input wrapping (no keyboard until Enter pressed)
+ * - Scroll-into-view with margin for focused elements
  */
 
 import absStyles from './style.css';
@@ -29,6 +31,11 @@ var observer = null;
 var debounceTimeout = null;
 
 /**
+ * Track wrapped inputs to avoid re-wrapping
+ */
+var wrappedInputs = new WeakMap();
+
+/**
  * Selectors based on actual ABS DOM structure
  */
 var SELECTORS = {
@@ -42,8 +49,9 @@ var SELECTORS = {
   libraryDropdown: '[aria-haspopup="menu"][aria-label*="Library"]',
   libraryMenuItems: '[role="menuitem"]',
   
-  // Search
+  // Search and text inputs
   searchInput: 'input[placeholder*="Search"], [role="search"] input',
+  textInputs: 'input[type="text"], input[type="search"], input:not([type])',
   
   // Bookshelf content - book cards are DIVs with id="book-card-N", not links
   bookshelfRow: '.bookshelfRow, .categorizedBookshelfRow',
@@ -100,6 +108,12 @@ export default {
     // Set up focusable elements
     this.setupFocusables();
     
+    // Wrap text inputs for TV-friendly keyboard handling
+    this.wrapTextInputs();
+    
+    // Set up scroll-into-view for focused elements
+    this.setupScrollIntoView();
+    
     // Observe DOM for dynamic content (Nuxt/Vue renders dynamically)
     this.observeDOM();
     
@@ -126,6 +140,218 @@ export default {
       clearTimeout(debounceTimeout);
       debounceTimeout = null;
     }
+    
+    // Remove focus listener
+    document.removeEventListener('focusin', this.handleFocusIn);
+  },
+  
+  /**
+   * Set up scroll-into-view behavior for focused elements
+   */
+  setupScrollIntoView: function() {
+    var self = this;
+    
+    // Store bound function for removal
+    this.handleFocusIn = function(e) {
+      self.scrollElementIntoView(e.target);
+    };
+    
+    document.addEventListener('focusin', this.handleFocusIn);
+    console.log('TizenPortal [ABS]: Scroll-into-view enabled');
+  },
+  
+  /**
+   * Scroll element into view with margin
+   * @param {HTMLElement} el
+   */
+  scrollElementIntoView: function(el) {
+    if (!el || !el.getBoundingClientRect) return;
+    
+    try {
+      var rect = el.getBoundingClientRect();
+      var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      
+      // Margin from edge before we scroll (200px gives good buffer)
+      var margin = 200;
+      
+      // Check if element is near bottom edge
+      if (rect.bottom > viewportHeight - margin) {
+        // Scroll down to bring element more into view
+        var scrollAmount = rect.bottom - (viewportHeight - margin);
+        window.scrollBy(0, scrollAmount);
+        console.log('TizenPortal [ABS]: Scrolled down by', scrollAmount);
+      }
+      
+      // Check if element is near top edge (below appbar at 64px)
+      if (rect.top < 64 + margin) {
+        // Scroll up to bring element more into view
+        var scrollUpAmount = (64 + margin) - rect.top;
+        window.scrollBy(0, -scrollUpAmount);
+        console.log('TizenPortal [ABS]: Scrolled up by', scrollUpAmount);
+      }
+      
+      // Horizontal scroll for bookshelf rows
+      var parent = el.closest('.bookshelfRow, .categorizedBookshelfRow');
+      if (parent) {
+        // Scroll horizontally within the row
+        if (rect.right > viewportWidth - margin) {
+          parent.scrollLeft += rect.right - (viewportWidth - margin);
+        }
+        if (rect.left < 80 + margin) { // 80px for siderail
+          parent.scrollLeft -= (80 + margin) - rect.left;
+        }
+      }
+    } catch (err) {
+      console.warn('TizenPortal [ABS]: Scroll error:', err.message);
+    }
+  },
+  
+  /**
+   * Wrap text inputs for TV-friendly keyboard handling
+   * Inputs don't pop up keyboard until user presses Enter
+   */
+  wrapTextInputs: function() {
+    var self = this;
+    var inputs = document.querySelectorAll(SELECTORS.textInputs);
+    var count = 0;
+    
+    for (var i = 0; i < inputs.length; i++) {
+      var input = inputs[i];
+      
+      // Skip if already wrapped or is our own input
+      if (wrappedInputs.has(input) || input.classList.contains('tp-wrapped')) {
+        continue;
+      }
+      
+      // Skip hidden inputs
+      if (input.type === 'hidden' || input.closest('[style*="display: none"]')) {
+        continue;
+      }
+      
+      this.wrapSingleInput(input);
+      count++;
+    }
+    
+    if (count > 0) {
+      console.log('TizenPortal [ABS]: Wrapped', count, 'text inputs');
+    }
+  },
+  
+  /**
+   * Wrap a single text input
+   * @param {HTMLInputElement} input
+   */
+  wrapSingleInput: function(input) {
+    var self = this;
+    
+    // Create wrapper
+    var wrapper = document.createElement('div');
+    wrapper.className = 'tp-input-wrapper';
+    wrapper.setAttribute('tabindex', '0');
+    
+    // Create display element
+    var display = document.createElement('span');
+    display.className = 'tp-input-display';
+    var placeholder = input.getAttribute('placeholder') || 'Enter text...';
+    display.textContent = input.value || placeholder;
+    if (input.value) {
+      display.classList.add('has-value');
+    }
+    
+    // Insert wrapper before input
+    input.parentNode.insertBefore(wrapper, input);
+    
+    // Move input inside wrapper
+    wrapper.appendChild(display);
+    wrapper.appendChild(input);
+    
+    // Mark input as wrapped
+    input.classList.add('tp-wrapped');
+    input.setAttribute('tabindex', '-1');
+    wrappedInputs.set(input, wrapper);
+    
+    // Handle wrapper activation (Enter key or click)
+    wrapper.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) { // Enter
+        e.preventDefault();
+        e.stopPropagation();
+        self.activateInput(wrapper, input, display);
+      }
+    });
+    
+    wrapper.addEventListener('click', function() {
+      self.activateInput(wrapper, input, display);
+    });
+    
+    // Handle input deactivation
+    input.addEventListener('blur', function() {
+      self.deactivateInput(wrapper, input, display);
+    });
+    
+    input.addEventListener('keydown', function(e) {
+      if (e.keyCode === 27 || e.keyCode === 10009) { // Escape or Back
+        e.preventDefault();
+        self.deactivateInput(wrapper, input, display);
+        wrapper.focus();
+      } else if (e.keyCode === 13) { // Enter - submit and deactivate
+        // Let the form handle Enter, then deactivate
+        setTimeout(function() {
+          self.deactivateInput(wrapper, input, display);
+        }, 100);
+      }
+    });
+    
+    // Sync display when input changes
+    input.addEventListener('input', function() {
+      display.textContent = input.value || placeholder;
+      if (input.value) {
+        display.classList.add('has-value');
+      } else {
+        display.classList.remove('has-value');
+      }
+    });
+  },
+  
+  /**
+   * Activate input for editing
+   */
+  activateInput: function(wrapper, input, display) {
+    wrapper.classList.add('editing');
+    display.style.display = 'none';
+    input.style.display = 'block';
+    input.setAttribute('tabindex', '0');
+    
+    try {
+      input.focus();
+      input.select();
+    } catch (err) {
+      console.warn('TizenPortal [ABS]: Input focus error:', err.message);
+    }
+    
+    console.log('TizenPortal [ABS]: Input activated');
+  },
+  
+  /**
+   * Deactivate input (return to display mode)
+   */
+  deactivateInput: function(wrapper, input, display) {
+    if (!wrapper.classList.contains('editing')) return;
+    
+    wrapper.classList.remove('editing');
+    var placeholder = input.getAttribute('placeholder') || 'Enter text...';
+    display.textContent = input.value || placeholder;
+    display.style.display = 'block';
+    input.style.display = 'none';
+    input.setAttribute('tabindex', '-1');
+    
+    if (input.value) {
+      display.classList.add('has-value');
+    } else {
+      display.classList.remove('has-value');
+    }
+    
+    console.log('TizenPortal [ABS]: Input deactivated');
   },
 
   /**
@@ -277,6 +503,7 @@ export default {
         debounceTimeout = setTimeout(function() {
           debounceTimeout = null;
           self.setupFocusables();
+          self.wrapTextInputs();
         }, 250);
       });
       

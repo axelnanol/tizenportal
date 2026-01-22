@@ -310,6 +310,78 @@ img {
 .opacity-0 { opacity: 0 !important; }
 .opacity-90 { opacity: 0.9 !important; }
 
+/* ==========================================================================
+   LINK COLOR RESET
+   Override default browser blue link color to white.
+   ABS uses white/gray text for links, not browser default blue.
+   ========================================================================== */
+
+/* All links should inherit color, not use browser default blue */
+a, a:link, a:visited, a:hover, a:active {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Siderail links - white text */
+#siderail-buttons-container a,
+[role="toolbar"][aria-orientation="vertical"] a {
+  color: #ffffff !important;
+}
+
+/* Appbar links - white/gray text */
+#appbar a,
+#appbar a:link,
+#appbar a:visited {
+  color: #ffffff !important;
+}
+#appbar a:hover {
+  color: #edf2f7 !important;
+}
+
+/* Material symbols icons should not be colored blue */
+.material-symbols,
+span.material-symbols {
+  color: inherit !important;
+}
+
+/* Icon text in siderail */
+#siderail-buttons-container .material-symbols {
+  color: #ffffff !important;
+  font-size: 1.5rem !important;
+}
+
+/* Icon text in appbar */
+#appbar .material-symbols {
+  color: #ffffff !important;
+}
+
+/* ==========================================================================
+   ELEMENT SPACING - GAPS FOR SPATIAL NAVIGATION
+   Elements need physical gaps for spatial navigation to work correctly.
+   ========================================================================== */
+
+/* Siderail link spacing - gap between each navigation item */
+#siderail-buttons-container a {
+  margin-bottom: 4px !important;
+}
+
+/* Appbar element spacing */
+#appbar > .flex > * {
+  margin-right: 8px !important;
+}
+#appbar > .flex > *:last-child {
+  margin-right: 0 !important;
+}
+
+/* Appbar icon buttons need more margin */
+#appbar a[href*="/config"],
+#appbar a[href*="/upload"],
+#appbar a[href*="/stats"],
+#appbar a[href*="/account"] {
+  margin-left: 8px !important;
+  margin-right: 8px !important;
+}
+
 /* Appbar height - h-16 = 64px */
 .w-full.h-16.bg-primary {
   height: 64px !important;
@@ -565,6 +637,84 @@ textarea:focus {
 a[href]:focus:not(#appbar a):not([role="toolbar"] a):not(.bookshelfRow a):not(.categorizedBookshelfRow a) {
   outline: 2px solid #1ad691 !important;
   outline-offset: 2px !important;
+}
+
+/* ==========================================================================
+   TV-FRIENDLY TEXT INPUT WRAPPER
+   Text inputs shouldn't pop up keyboard immediately on focus.
+   We wrap them in a focusable container that shows a display value.
+   Press Enter to activate the actual input and show keyboard.
+   ========================================================================== */
+
+/* Wrapper container - focusable, shows display value */
+.tp-input-wrapper {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-align: center !important;
+  -webkit-align-items: center !important;
+  align-items: center !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  cursor: pointer !important;
+  background: transparent !important;
+}
+
+/* Display text (shows current value or placeholder) */
+.tp-input-display {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 8px 12px !important;
+  color: #a0aec0 !important; /* gray-400 placeholder */
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+}
+
+/* Display text with value */
+.tp-input-display.has-value {
+  color: #edf2f7 !important; /* gray-200 */
+}
+
+/* Actual input (hidden until activated) */
+.tp-input-wrapper input {
+  display: none !important;
+}
+
+/* When wrapper is in editing mode */
+.tp-input-wrapper.editing .tp-input-display {
+  display: none !important;
+}
+.tp-input-wrapper.editing input {
+  display: block !important;
+}
+
+/* Wrapper focus state */
+.tp-input-wrapper:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 2px !important;
+}
+
+/* Hint text */
+.tp-input-wrapper::after {
+  content: "Press OK to edit";
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  -webkit-transform: translateY(-50%) !important;
+  transform: translateY(-50%) !important;
+  font-size: 0.7rem !important;
+  color: #718096 !important; /* gray-500 */
+  pointer-events: none !important;
+}
+.tp-input-wrapper.editing::after {
+  display: none !important;
 }
 
 /* ==========================================================================
