@@ -125,14 +125,28 @@ export function getFocusableChildren(card) {
 export function enterCard(card) {
   if (!card) return false;
   
+  // Mark card as entered (CSS will show hover buttons)
+  card.classList.add('tp-card-entered');
+  card.setAttribute('data-tp-entered', 'true');
+  
+  // Make all buttons inside the card focusable
+  var buttons = card.querySelectorAll('button, [role="button"]');
+  for (var i = 0; i < buttons.length; i++) {
+    var btn = buttons[i];
+    if (!btn.disabled && btn.getAttribute('aria-hidden') !== 'true') {
+      btn.setAttribute('tabindex', '0');
+    }
+  }
+  
   var focusables = getFocusableChildren(card);
   if (focusables.length === 0) {
-    // No inner focusables, treat as single-action
+    // No inner focusables, revert and treat as single-action
+    card.classList.remove('tp-card-entered');
+    card.removeAttribute('data-tp-entered');
     return false;
   }
   
   enteredCard = card;
-  card.classList.add('tp-card-entered');
   
   // Focus the first focusable child
   focusables[0].focus();
@@ -151,6 +165,7 @@ export function exitCard() {
   var card = enteredCard;
   enteredCard = null;
   card.classList.remove('tp-card-entered');
+  card.removeAttribute('data-tp-entered');
   
   // Return focus to the card shell
   card.focus();
@@ -188,20 +203,32 @@ export function handleOK(card) {
     return false;
   }
   
-  // Check if single or multi-action
+  // Check explicit data-tp-card marker FIRST (bundle knows best)
+  var markedType = card.getAttribute('data-tp-card');
+  if (markedType === 'single') {
+    // Explicit single-action: click the card directly
+    card.click();
+    console.log('TizenPortal [CardInteraction]: Activated explicit single-action card');
+    return true;
+  }
+  if (markedType === 'multi') {
+    // Explicit multi-action: enter the card
+    if (enterCard(card)) {
+      return true;
+    }
+    // Fall through if enter failed (no focusables) - click instead
+    card.click();
+    console.log('TizenPortal [CardInteraction]: Multi-action card had no focusables, clicked instead');
+    return true;
+  }
+  
+  // No explicit marker - use heuristic
   if (isSingleActionCard(card)) {
     // Activate the primary action
     var action = getPrimaryAction(card);
     if (action) {
       action.click();
       console.log('TizenPortal [CardInteraction]: Activated single-action card via primary action');
-      return true;
-    }
-    // If explicitly marked as single-action, click the card itself
-    // This handles cards with addEventListener (not onclick attribute)
-    if (card.getAttribute('data-tp-card') === 'single') {
-      card.click();
-      console.log('TizenPortal [CardInteraction]: Activated explicit single-action card');
       return true;
     }
     // If card is clickable via attribute

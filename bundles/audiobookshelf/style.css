@@ -639,6 +639,114 @@ body {
   transition: transform 0.15s ease-out !important;
 }
 
+/* ========================================================================
+   SERIES & COLLECTION TITLE PLACARDS
+   Series/Collection cards show multiple book covers which is confusing for nav.
+   We make the title placard underneath focusable instead of the whole card.
+   ======================================================================== */
+
+/* Series card title placards */
+[id^="series-card-"] .categoryPlacard:focus,
+[id^="series-card-"] [cy-id="detailBottomText"]:focus,
+[id^="series-card-"] [cy-id="standardBottomText"]:focus,
+[id^="series-card-"] [tabindex="0"]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  z-index: 100 !important;
+  position: relative !important;
+  background-color: rgba(26, 214, 145, 0.1) !important;
+  border-radius: 4px !important;
+}
+
+/* Collection card title placards */
+[id^="collection-card-"] .categoryPlacard:focus,
+[id^="collection-card-"] p.truncate:focus,
+[id^="collection-card-"] [tabindex="0"]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  z-index: 100 !important;
+  position: relative !important;
+  background-color: rgba(26, 214, 145, 0.1) !important;
+  border-radius: 4px !important;
+}
+
+/* Author cards */
+.author-card:focus,
+[id^="author-card-"]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  z-index: 100 !important;
+}
+
+/* Playlist cards */
+[id^="playlist-card-"]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  z-index: 100 !important;
+}
+
+/* Table rows (for narrators page, etc.) */
+tr[tabindex="0"]:focus,
+tr[data-tp-card]:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: -3px !important;
+  background-color: rgba(26, 214, 145, 0.15) !important;
+}
+
+/* ========================================================================
+   ENTERED CARD STATE (MULTI-ACTION MODE)
+   When user presses Enter on a multi-action card, the card is "entered"
+   and the hover buttons become visible for navigation.
+   ======================================================================== */
+
+/* Mark entered card with stronger outline */
+.tp-card-entered,
+[data-tp-entered="true"] {
+  outline: 4px solid #fcd34d !important; /* Yellow to indicate "inside" */
+  outline-offset: 4px !important;
+  z-index: 200 !important;
+}
+
+/* Show hover buttons when card is entered */
+.tp-card-entered [id^="cover-area-"] > div.absolute,
+.tp-card-entered [id^="cover-area-"] .group-hover\\:block,
+.tp-card-entered [id^="cover-area-"] .group-hover\\:flex,
+.tp-card-entered [id^="cover-area-"] [class*="hover:"],
+.tp-card-entered [id^="cover-area-"] [class*="opacity-0"],
+[data-tp-entered="true"] [id^="cover-area-"] > div.absolute,
+[data-tp-entered="true"] [id^="cover-area-"] .group-hover\\:block,
+[data-tp-entered="true"] [id^="cover-area-"] .group-hover\\:flex,
+[data-tp-entered="true"] [id^="cover-area-"] [class*="hover:"],
+[data-tp-entered="true"] [id^="cover-area-"] [class*="opacity-0"] {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Make buttons inside entered card focusable and visible */
+.tp-card-entered button,
+.tp-card-entered [role="button"],
+[data-tp-entered="true"] button,
+[data-tp-entered="true"] [role="button"] {
+  display: inline-block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Focus style for buttons inside entered card */
+.tp-card-entered button:focus,
+.tp-card-entered [role="button"]:focus,
+[data-tp-entered="true"] button:focus,
+[data-tp-entered="true"] [role="button"]:focus {
+  outline: 3px solid #fff !important;
+  outline-offset: 2px !important;
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
 /* Legacy bookshelf link focus (if any links exist) */
 .bookshelfRow a:focus,
 .categorizedBookshelfRow a:focus,

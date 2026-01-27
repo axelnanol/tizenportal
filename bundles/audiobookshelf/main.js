@@ -574,9 +574,10 @@ export default {
       }
       
       // ========================================================================
-      // CARDS - All types are single-action for TV
+      // BOOK CARDS - Multi-action (Enter enters card for play/edit/more buttons)
       // ========================================================================
-      // Book cards (1:1 aspect ratio)
+      // Book cards have hover buttons that appear on mouse hover.
+      // For TV: Enter "enters" the card, then navigate to buttons, Enter activates.
       var bookCards = document.querySelectorAll(SELECTORS.bookCards);
       for (var j = 0; j < bookCards.length; j++) {
         var card = bookCards[j];
@@ -584,38 +585,89 @@ export default {
           card.setAttribute('tabindex', '0');
           count++;
         }
+        // MULTI-ACTION: Enter enters the card to access hover buttons
         if (!card.hasAttribute('data-tp-card')) {
-          card.setAttribute('data-tp-card', 'single');
+          card.setAttribute('data-tp-card', 'multi');
         }
       }
       
-      // Series cards (2:1 aspect ratio - wider)
+      // ========================================================================
+      // SERIES CARDS - Focus on TITLE PLACARD, not the card itself
+      // ========================================================================
+      // Series cards display multiple book covers which is confusing for nav.
+      // Instead, make the title placard underneath focusable.
       var seriesCards = document.querySelectorAll(SELECTORS.seriesCards);
       for (var s = 0; s < seriesCards.length; s++) {
         var sCard = seriesCards[s];
-        if (sCard.getAttribute('tabindex') !== '0') {
-          sCard.setAttribute('tabindex', '0');
-          count++;
-        }
-        if (!sCard.hasAttribute('data-tp-card')) {
-          sCard.setAttribute('data-tp-card', 'single');
+        // Remove tabindex from the card itself - we don't want it focusable
+        sCard.setAttribute('tabindex', '-1');
+        sCard.removeAttribute('data-tp-card');
+        
+        // Find the title placard (standard or detail view)
+        var titlePlacard = sCard.querySelector('.categoryPlacard') || 
+                          sCard.querySelector('[cy-id="detailBottomText"]') ||
+                          sCard.querySelector('[cy-id="standardBottomText"]');
+        if (titlePlacard) {
+          if (titlePlacard.getAttribute('tabindex') !== '0') {
+            titlePlacard.setAttribute('tabindex', '0');
+            count++;
+          }
+          // Single-action: clicking title navigates to series
+          titlePlacard.setAttribute('data-tp-card', 'single');
+          // Store reference to parent card for click handling
+          titlePlacard.setAttribute('data-tp-series-card', sCard.id);
+          
+          // Add click handler to navigate when Enter pressed on title
+          if (!titlePlacard.hasAttribute('data-tp-click-setup')) {
+            titlePlacard.setAttribute('data-tp-click-setup', 'true');
+            titlePlacard.addEventListener('click', function() {
+              var cardId = this.getAttribute('data-tp-series-card');
+              var parentCard = document.getElementById(cardId);
+              if (parentCard) {
+                parentCard.click();
+              }
+            });
+          }
         }
       }
       
-      // Collection cards (2:1 aspect ratio)
+      // ========================================================================
+      // COLLECTION CARDS - Focus on title, similar to series
+      // ========================================================================
       var collectionCards = document.querySelectorAll(SELECTORS.collectionCards);
       for (var c = 0; c < collectionCards.length; c++) {
         var cCard = collectionCards[c];
-        if (cCard.getAttribute('tabindex') !== '0') {
-          cCard.setAttribute('tabindex', '0');
-          count++;
-        }
-        if (!cCard.hasAttribute('data-tp-card')) {
-          cCard.setAttribute('data-tp-card', 'single');
+        // Remove tabindex from card itself
+        cCard.setAttribute('tabindex', '-1');
+        cCard.removeAttribute('data-tp-card');
+        
+        // Find title element
+        var collectionTitle = cCard.querySelector('.categoryPlacard') ||
+                              cCard.querySelector('p.truncate');
+        if (collectionTitle) {
+          if (collectionTitle.getAttribute('tabindex') !== '0') {
+            collectionTitle.setAttribute('tabindex', '0');
+            count++;
+          }
+          collectionTitle.setAttribute('data-tp-card', 'single');
+          collectionTitle.setAttribute('data-tp-collection-card', cCard.id);
+          
+          if (!collectionTitle.hasAttribute('data-tp-click-setup')) {
+            collectionTitle.setAttribute('data-tp-click-setup', 'true');
+            collectionTitle.addEventListener('click', function() {
+              var cardId = this.getAttribute('data-tp-collection-card');
+              var parentCard = document.getElementById(cardId);
+              if (parentCard) {
+                parentCard.click();
+              }
+            });
+          }
         }
       }
       
-      // Playlist cards
+      // ========================================================================
+      // PLAYLIST CARDS - Single-action
+      // ========================================================================
       var playlistCards = document.querySelectorAll(SELECTORS.playlistCards);
       for (var p = 0; p < playlistCards.length; p++) {
         var pCard = playlistCards[p];
@@ -625,6 +677,66 @@ export default {
         }
         if (!pCard.hasAttribute('data-tp-card')) {
           pCard.setAttribute('data-tp-card', 'single');
+        }
+      }
+      
+      // ========================================================================
+      // AUTHOR CARDS - Focus on the card (has name and image)
+      // ========================================================================
+      var authorCards = document.querySelectorAll(SELECTORS.authorCards);
+      for (var a = 0; a < authorCards.length; a++) {
+        var aCard = authorCards[a];
+        if (aCard.getAttribute('tabindex') !== '0') {
+          aCard.setAttribute('tabindex', '0');
+          count++;
+        }
+        // Single-action: clicking navigates to author page
+        if (!aCard.hasAttribute('data-tp-card')) {
+          aCard.setAttribute('data-tp-card', 'single');
+        }
+      }
+      
+      // ========================================================================
+      // GENERIC FOCUSABLE ELEMENTS (links, buttons in content area)
+      // ========================================================================
+      // This catches elements on author pages, narrator pages, settings, etc.
+      var pageWrapper = document.querySelector(SELECTORS.pageWrapper);
+      if (pageWrapper) {
+        // Links in content
+        var links = pageWrapper.querySelectorAll('a[href]:not([tabindex])');
+        for (var l = 0; l < links.length; l++) {
+          var link = links[l];
+          // Skip if inside a component we've already handled
+          if (!link.closest(SELECTORS.siderail) && 
+              !link.closest('#appbar') &&
+              link.offsetParent !== null) {
+            link.setAttribute('tabindex', '0');
+            count++;
+          }
+        }
+        
+        // Buttons in content
+        var buttons = pageWrapper.querySelectorAll('button:not([tabindex])');
+        for (var b = 0; b < buttons.length; b++) {
+          var btn = buttons[b];
+          if (!btn.closest(SELECTORS.siderail) && 
+              !btn.closest('#appbar') &&
+              !btn.disabled &&
+              btn.offsetParent !== null) {
+            btn.setAttribute('tabindex', '0');
+            count++;
+          }
+        }
+        
+        // Table rows that might be clickable (narrators table, etc.)
+        var tableRows = pageWrapper.querySelectorAll('tr[class*="cursor-pointer"], tr.hover\\:bg-');
+        for (var tr = 0; tr < tableRows.length; tr++) {
+          var row = tableRows[tr];
+          if (row.getAttribute('tabindex') !== '0') {
+            row.setAttribute('tabindex', '0');
+            row.setAttribute('data-tp-card', 'single');
+            count++;
+          }
         }
       }
       
