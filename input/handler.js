@@ -177,8 +177,9 @@ function handleKeyDown(event) {
     return;
   }
 
-  // Handle Enter key - card interaction model
-  if (keyCode === KEYS.ENTER) {
+  // Handle Enter key - card interaction model (not on portal - portal has its own long-press handling)
+  var isOnPortal = window.TizenPortal && window.TizenPortal.isPortalPage;
+  if (keyCode === KEYS.ENTER && !isOnPortal) {
     // Check if we're on a card shell
     var activeEl = document.activeElement;
     var cardShell = findCardShell(activeEl);
