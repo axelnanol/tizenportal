@@ -1,6 +1,6 @@
 # 📺 TizenPortal
 
-![Version](https://img.shields.io/badge/version-0204-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0301-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
 
 **TizenPortal** is a browser shell for Samsung Smart TVs running Tizen OS. It provides a launcher for managing self-hosted web applications (like **Audiobookshelf**, **Jellyfin**, etc.) and injects site-specific fixes for TV compatibility.
 
@@ -14,9 +14,9 @@ A clean, dark gradient interface to manage all your self-hosted web apps in one 
 - Site editor for adding/editing apps with custom names and icons
 - Bundle selector for choosing compatibility fixes per-site
 
-### 🔧 Site Modification (MOD Mode)
-Runs as a TizenBrew `mods` module to inject fixes into any site.
-- Bundle CSS/JS passed via URL payload
+### 🔧 Site Enhancement
+Runs as a TizenBrew module to inject fixes into any site.
+- Bundle CSS/JS applied automatically
 - Viewport locking for responsive sites
 - Works universally (no cross-origin restrictions)
 
@@ -25,7 +25,7 @@ Runs as a TizenBrew `mods` module to inject fixes into any site.
 - **Color buttons** for quick actions:
   - 🔴 Red: Address bar overlay
   - 🟢 Green: Mouse mode toggle
-  - 🟡 Yellow: Return to portal
+  - 🟡 Yellow: Bundle menu / Return to portal
   - 🔵 Blue: Diagnostics panel
 
 ---
@@ -35,10 +35,10 @@ Runs as a TizenBrew `mods` module to inject fixes into any site.
 This project is designed to be loaded via **TizenBrew** on your Samsung TV.
 
 1. **Open TizenBrew** on your Samsung TV
-2. **Add Module:** `alexnolan/tizenportal@0204`
+2. **Add Module:** `alexnolan/tizenportal@0301`
 3. **Launch** TizenPortal from your TizenBrew dashboard
 
-TizenBrew will open the portal and inject the userScript into all navigated pages.
+TizenBrew will open the portal and inject the runtime into all navigated pages.
 
 ---
 
@@ -62,44 +62,55 @@ TizenBrew will open the portal and inject the userScript into all navigated page
 |--------|-------------|------------|
 | 🔴 Red | Address Bar | Reload Page |
 | 🟢 Green | Toggle Mouse | Focus Highlight |
-| 🟡 Yellow | Return to Portal | Cycle Bundles |
+| 🟡 Yellow | Bundle Menu | Cycle Bundles |
 | 🔵 Blue | Diagnostics | Safe Mode |
 
 ---
 
-## 🏗️ Architecture (MOD Mode)
+## 🏗️ Architecture
 
-TizenPortal operates as a **TizenBrew Site Modification Module** (`packageType: "mods"`):
+TizenPortal uses a **Universal Runtime** architecture:
 
 ```
-Portal (GitHub Pages)          Target Site
-─────────────────────          ───────────
-1. User selects card
-2. Build payload (CSS/JS)
-3. Navigate to:
-   site.url#tp=BASE64
-                               4. TizenBrew injects userScript.js
-                               5. userScript reads #tp= payload
-                               6. Applies bundle CSS/JS
-                               7. YELLOW returns to portal
+┌─────────────────────────────────────────────────────────────┐
+│                        TizenBrew                            │
+│  1. Loads module from GitHub tag                            │
+│  2. Opens websiteURL (portal) in browser                    │
+│  3. Injects tizenportal.js into ALL pages                   │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Portal Page                               │
+│  - Runtime detects it's on the portal                       │
+│  - Renders site card grid                                   │
+│  - User selects card → navigates with #tp= payload          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                Target Site                                  │
+│  - Runtime detects it's NOT on portal                       │
+│  - Reads #tp= payload for bundle name                       │
+│  - Applies bundle CSS/JS                                    │
+│  - Provides overlay UI (address bar, diagnostics)           │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Why MOD Mode?
+### Key Points
 
+- **Single runtime** (`tizenportal.js`) on all pages
 - **No cross-origin issues** — Payload passed via URL hash
-- **Full DOM access** — userScript runs in site context  
-- **SPA compatible** — sessionStorage fallback for hash changes
-- **Lightweight** — userScript.js is only ~8KB
+- **Full DOM access** — Runtime runs in page context  
+- **Bundles compiled in** — All bundles included in runtime
 
 ---
 
-## 🆕 What's New in v0204
+## 🆕 What's New in v0301
 
-- **MOD Mode Architecture** — Simplified injection via TizenBrew mods
-- **Payload System** — Bundle CSS/JS passed via URL hash (`#tp=`)
-- **Dual Build** — Portal runtime (~314KB) + userScript (~8KB)
-- **Version Injection** — Centralized version in package.json
-- **YELLOW returns home** — Press Yellow button to return to portal from any site
+- **Unified Runtime** — Single codebase for portal and target sites
+- **Simplified Architecture** — Removed legacy dual-build system
+- **Bundle Registry** — All bundles compiled into runtime
 
 ---
 

@@ -3,7 +3,7 @@
  * 
  * TV support for Audiobookshelf (https://www.audiobookshelf.org/)
  * 
- * This bundle runs directly in the page (MOD mode), not in an iframe.
+ * This bundle is compiled into the TizenPortal runtime and runs directly in the page.
  * 
  * Architecture:
  * - Navigation targets stable outer shells (book cards, nav items)

@@ -62,7 +62,7 @@ const plugins = [
 ];
 
 export default [
-  // Build: TizenPortal runtime
+  // Build: TizenPortal universal runtime
   // Output to both app/ (for development) and dist/ (for deployment)
   {
     input: 'core/index.js',

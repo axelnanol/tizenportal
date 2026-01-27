@@ -759,8 +759,8 @@ function updateYellowHint() {
 
 /**
  * Load a site - navigates the browser to the site URL
- * Builds payload with CSS/JS from bundle and passes via URL hash
- * The dist/userScript.js mod will read and apply this
+ * Builds payload with bundle name and passes via URL hash
+ * The runtime reads and applies the bundle on the target site
  * @param {Object} card - Card object with url, bundle, etc.
  */
 function loadSite(card) {
@@ -779,7 +779,7 @@ function loadSite(card) {
   var bundleName = card.bundle || 'default';
   var bundle = getBundle(bundleName);
   
-  // Build payload in the format userScript.js expects: { css, js, ua }
+  // Build payload with bundle info: { css, js, ua, bundleName }
   var targetUrl = card.url;
   try {
     var payload = {
@@ -795,7 +795,7 @@ function loadSite(card) {
     
     // Add bundle JS initialization code (if needed)
     // The bundle object has methods, so we can't directly serialize it
-    // Instead, pass bundle name and let userScript look it up if needed
+    // Instead, pass bundle name and let the runtime look it up
     payload.bundleName = bundleName;
     payload.cardName = card.name;
     
@@ -818,7 +818,7 @@ function loadSite(card) {
   
   log('Final URL: ' + targetUrl.substring(0, 100) + '...');
   
-  // Navigate to the site - userScript.js mod will handle injection
+  // Navigate to the site - runtime will handle bundle injection
   window.location.href = targetUrl;
 }
 
