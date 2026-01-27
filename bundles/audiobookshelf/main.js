@@ -19,8 +19,7 @@
 import absStyles from './style.css';
 import { 
   isInsideCard, 
-  exitCard,
-  isSingleActionCard
+  exitCard
 } from '../../navigation/card-interaction.js';
 import { 
   injectSpacingCSS, 
@@ -487,7 +486,8 @@ export default {
       }
       
       // Book cards (main content) - these are divs with id="book-card-N"
-      // They may be single or multi-action depending on content
+      // ABS cards use Vue @click handlers to navigate to item detail
+      // For TV, pressing Enter should navigate (single-action), hover buttons are mouse-only
       var bookCards = document.querySelectorAll(SELECTORS.bookCards);
       for (var j = 0; j < bookCards.length; j++) {
         var card = bookCards[j];
@@ -496,11 +496,9 @@ export default {
           card.setAttribute('tabindex', '0');
           count++;
         }
-        // Mark as card - let runtime determine single vs multi
+        // Mark as single-action - Enter clicks the card to navigate to detail
         if (!card.hasAttribute('data-tp-card')) {
-          // Detect card type based on interactive children
-          var cardType = isSingleActionCard(card) ? 'single' : 'multi';
-          card.setAttribute('data-tp-card', cardType);
+          card.setAttribute('data-tp-card', 'single');
         }
       }
       
