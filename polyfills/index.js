@@ -280,39 +280,56 @@ function polyfillResizeObserver() {
       height: rect.height,
     });
     
-    // CRITICAL: Fire initial callback after a delay to let CSS settle
+    // CRITICAL: Fire initial callback after delays to let CSS settle
     // Virtual scrollers and layout calculators depend on accurate initial dimensions
+    // We fire twice - once early for quick layouts, once later for complex ones
     var self = this;
-    setTimeout(function() {
-      if (!document.body || !document.body.contains(target)) return;
-      try {
-        var initialRect = target.getBoundingClientRect();
-        var entry = {
-          target: target,
-          contentRect: {
-            x: 0,
-            y: 0,
-            width: initialRect.width,
-            height: initialRect.height,
-            top: 0,
-            right: initialRect.width,
-            bottom: initialRect.height,
-            left: 0,
-          },
-          borderBoxSize: [{
-            blockSize: initialRect.height,
-            inlineSize: initialRect.width,
-          }],
-          contentBoxSize: [{
-            blockSize: initialRect.height,
-            inlineSize: initialRect.width,
-          }],
-        };
-        self._callback([entry], self);
-      } catch (err) {
-        // Ignore errors from initial callback
-      }
-    }, 50); // Delay to let CSS/layout settle
+    
+    var fireCallback = function(delay) {
+      setTimeout(function() {
+        if (!document.body || !document.body.contains(target)) return;
+        try {
+          var measuredRect = target.getBoundingClientRect();
+          // Update stored dimensions
+          for (var i = 0; i < self._observedElements.length; i++) {
+            if (self._observedElements[i].target === target) {
+              self._observedElements[i].width = measuredRect.width;
+              self._observedElements[i].height = measuredRect.height;
+              break;
+            }
+          }
+          var entry = {
+            target: target,
+            contentRect: {
+              x: 0,
+              y: 0,
+              width: measuredRect.width,
+              height: measuredRect.height,
+              top: 0,
+              right: measuredRect.width,
+              bottom: measuredRect.height,
+              left: 0,
+            },
+            borderBoxSize: [{
+              blockSize: measuredRect.height,
+              inlineSize: measuredRect.width,
+            }],
+            contentBoxSize: [{
+              blockSize: measuredRect.height,
+              inlineSize: measuredRect.width,
+            }],
+          };
+          self._callback([entry], self);
+        } catch (err) {
+          // Ignore errors from callback
+        }
+      }, delay);
+    };
+    
+    // Fire at multiple delays to catch different layout stages
+    fireCallback(50);   // Quick initial
+    fireCallback(200);  // After Vue renders
+    fireCallback(500);  // After images/lazy content
     
     // Start polling if not already
     if (!this._timeoutId) {
