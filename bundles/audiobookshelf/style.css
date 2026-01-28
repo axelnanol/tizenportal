@@ -623,38 +623,54 @@ button[aria-label*="Options"] {
   position: relative !important;
 }
 
-/* Shelf category labels ("Continue Listening", etc.) - h-6e = 1.5em */
-/* Must be above bookshelfDividerCategorized (z-20) */
-.categorizedBookshelfRow .categoryPlacard {
-  height: 1.5em !important;
+/* Shelf category labels ("Continue Listening", etc.) */
+/* The placard sits ON TOP of the wooden divider bar - needs higher z-index */
+.categorizedBookshelfRow > div > .categoryPlacard {
   z-index: 30 !important;
-  position: relative !important;
 }
 
-/* The shelf divider (wooden bar) - keep at z-20 */
+/* The shelf divider (wooden bar) */
 .bookshelfDividerCategorized {
   z-index: 20 !important;
 }
 
-/* Series card labels - keep at h-6e, positioned below card */
-[id^="series-card-"] .categoryPlacard {
-  height: 1.5em !important;
-  bottom: -1.5em !important;
+/* ========================================================================== 
+   SERIES CARD LABELS
+   LazySeriesCard has two label variants:
+   1. standardBottomText: .categoryPlacard with h-6e -bottom-6e (below card)
+   2. detailBottomText: relative div with py-1e (inline below card)
+   
+   The card cover area has dynamic height set via :style="{ height: coverHeight + 'px' }"
+   The label placard uses h-6e (1.5em based on card's font-size which is sizeMultiplier rem)
+   ========================================================================== */
+
+/* Series card label - the categoryPlacard - direct child only */
+[id^="series-card-"] > .categoryPlacard {
+  /* h-6e = 1.5em, but em is relative to parent font-size */
+  /* Series card uses fontSize: sizeMultiplier + 'rem' (default 1rem = 16px) */
+  /* So 1.5em = 24px at default size */
+  height: 24px !important;
+  max-height: 24px !important;
+  min-height: 24px !important;
 }
 
-/* Series hover overlay - should be hidden by default (opacity-0) */
-/* On Tizen this may be showing when it shouldn't */
-[id^="series-card-"] .opacity-0,
-.opacity-0 {
+/* Series hover overlay - contains the title shown on hover */
+/* This is a div with class="opacity-0" that shows title on hover */
+/* It's inside the covers-area div, not a direct child of series-card */
+/* The overlay has classes: bg-black/60 opacity-0 transition-opacity */
+/* In CSS, we need to escape the slash: bg-black\/60 */
+[id^="series-card-"] .opacity-0 {
   opacity: 0 !important;
   visibility: hidden !important;
+  pointer-events: none !important;
 }
 
-/* Only show on hover/focus */
+/* Show overlay on hover/focus */
 [id^="series-card-"]:hover .opacity-0,
 [id^="series-card-"]:focus .opacity-0 {
   opacity: 1 !important;
   visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 /* Book card container - DO NOT override position or size - ABS calculates dynamically */
