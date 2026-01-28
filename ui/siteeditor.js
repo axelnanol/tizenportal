@@ -92,27 +92,49 @@ function createEditorHTML() {
  * Set up event listeners
  */
 function setupEventListeners(editor) {
-  // Cancel button
+  // Cancel button - click AND keydown for Enter
   var cancelBtn = editor.querySelector('#tp-editor-cancel');
   if (cancelBtn) {
     cancelBtn.addEventListener('click', function() {
       closeSiteEditor();
     });
+    cancelBtn.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) { // Enter
+        e.preventDefault();
+        e.stopPropagation();
+        closeSiteEditor();
+      }
+    });
   }
 
-  // Save button
+  // Save button - click AND keydown for Enter
   var saveBtn = editor.querySelector('#tp-editor-save');
   if (saveBtn) {
     saveBtn.addEventListener('click', function() {
       saveAndClose();
     });
+    saveBtn.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) { // Enter
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('TizenPortal: Save button keydown Enter');
+        saveAndClose();
+      }
+    });
   }
 
-  // Delete button
+  // Delete button - click AND keydown for Enter
   var deleteBtn = editor.querySelector('#tp-editor-delete');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', function() {
       deleteAndClose();
+    });
+    deleteBtn.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) { // Enter
+        e.preventDefault();
+        e.stopPropagation();
+        deleteAndClose();
+      }
     });
   }
 
@@ -124,7 +146,7 @@ function setupEventListeners(editor) {
     });
   }
 
-  // Keyboard handler
+  // Keyboard handler for the editor as a whole (backup)
   editor.addEventListener('keydown', handleEditorKeyDown);
 }
 
@@ -520,13 +542,28 @@ function setupFieldListeners(container) {
     rows[i].addEventListener('click', function() {
       activateFieldInput(this);
     });
+    rows[i].addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) { // Enter
+        e.preventDefault();
+        e.stopPropagation();
+        activateFieldInput(this);
+      }
+    });
   }
 
-  // Bundle options
+  // Bundle options - click AND keydown for Enter
   var bundleOptions = container.querySelectorAll('.tp-bundle-option');
   for (var j = 0; j < bundleOptions.length; j++) {
     bundleOptions[j].addEventListener('click', function() {
       selectBundleOption(this);
+    });
+    bundleOptions[j].addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) { // Enter
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('TizenPortal: Bundle option keydown Enter');
+        selectBundleOption(this);
+      }
     });
   }
   

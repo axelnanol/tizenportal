@@ -198,12 +198,19 @@ var SELECTORS = {
  * The first matching element gets focus on page load.
  */
 var INITIAL_FOCUS_SELECTORS = {
-  // Default (library/home page)
+  // Default (library/home page) - comprehensive list
   default: [
     '#siderail-buttons-container a.nuxt-link-active',  // Active nav link
     '#siderail-buttons-container a',                    // First nav link
-    '[id^="book-card-"]',                               // First book card
-    '[id^="series-card-"]',                             // First series card
+    '[id^="book-card-"]',                               // Book card
+    '[id^="series-card-"] .categoryPlacard',            // Series card title
+    '[id^="series-card-"] [tabindex="0"]',              // Series card focusable
+    '[id^="collection-card-"] .categoryPlacard',        // Collection card title
+    '[id^="collection-card-"] [tabindex="0"]',          // Collection card focusable
+    '.author-card, [id^="author-card-"]',               // Author card
+    '[id^="playlist-card-"]',                           // Playlist card
+    'button[tabindex="0"]',                             // Any focusable button
+    'a[tabindex="0"]',                                  // Any focusable link
     'input[placeholder*="Search"]',                     // Search input
   ],
   
@@ -217,7 +224,8 @@ var INITIAL_FOCUS_SELECTORS = {
   
   // Item detail page
   item: [
-    'button:has(.material-symbols):has(span)',          // Play button
+    'button:has(.material-symbols)',                    // Play button
+    'button[tabindex="0"]',                             // Any focusable button
     'h1',                                               // Title (for reading)
     '.covers-book-cover',                               // Cover image
   ],
@@ -227,6 +235,22 @@ var INITIAL_FOCUS_SELECTORS = {
     '.app-config-side-nav a.nuxt-link-active',          // Active config link
     '.app-config-side-nav a',                           // First config link
     'form input:first-of-type',                         // First form input
+  ],
+  
+  // Series page
+  series: [
+    '#siderail-buttons-container a.nuxt-link-active',  // Active nav link
+    '[id^="book-card-"]',                               // Book cards in the series
+    'button[tabindex="0"]',                             // Sort/filter buttons
+    'a[tabindex="0"]',                                  // Any link
+  ],
+  
+  // Author page
+  author: [
+    '[id^="book-card-"]',                               // Books by author
+    'button[tabindex="0"]',                             // Any button
+    'a[tabindex="0"]',                                  // Any link
+    '#siderail-buttons-container a',                    // Siderail
   ],
 };
 
@@ -245,6 +269,12 @@ function getInitialFocusSelectors() {
   }
   if (path.indexOf('/config') !== -1) {
     return INITIAL_FOCUS_SELECTORS.config;
+  }
+  if (path.indexOf('/series/') !== -1) {
+    return INITIAL_FOCUS_SELECTORS.series;
+  }
+  if (path.indexOf('/author/') !== -1) {
+    return INITIAL_FOCUS_SELECTORS.author;
   }
   
   return INITIAL_FOCUS_SELECTORS.default;
