@@ -558,14 +558,6 @@ button[aria-label*="Options"] {
   height: 64px !important;
 }
 
-/* Book card images - object-fill within constrained parent */
-[cy-id="coverImage"],
-.object-fill {
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: cover !important;
-}
-
 /* ==========================================================================
    BOOKSHELF ROW LAYOUT - HORIZONTAL SCROLLING
    Book cards must display horizontally with proper gaps for spatial navigation.
