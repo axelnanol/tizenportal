@@ -228,10 +228,68 @@ function stopRescanInterval() {
 }
 
 /**
+ * Inject core card focus styles
+ * These apply to ALL registered cards automatically
+ */
+function injectFocusStyles() {
+  if (document.getElementById('tp-card-focus-styles')) return;
+  
+  var style = document.createElement('style');
+  style.id = 'tp-card-focus-styles';
+  style.textContent = [
+    '/* TizenPortal Core Card Focus Styles */',
+    '',
+    '/* Universal focus indicator for ALL registered cards */',
+    '[data-tp-card]:focus {',
+    '  outline: 4px solid #1ad691 !important;',
+    '  outline-offset: 4px !important;',
+    '  z-index: 100 !important;',
+    '  position: relative !important;',
+    '}',
+    '',
+    '/* Subtle scale on focus for visual feedback */',
+    '[data-tp-card]:focus > *:first-child {',
+    '  transform: scale(1.02);',
+    '  transition: transform 0.15s ease-out;',
+    '}',
+    '',
+    '/* Single-action cards get slightly different styling */',
+    '[data-tp-card="single"]:focus {',
+    '  outline-color: #1ad691 !important;',
+    '}',
+    '',
+    '/* Multi-action cards (have inner focusables) */',
+    '[data-tp-card="multi"]:focus {',
+    '  outline-color: #1ad691 !important;',
+    '}',
+    '',
+    '/* Entered state for multi-action cards */',
+    '[data-tp-card="multi"].tp-card-entered,',
+    '[data-tp-card="multi"][data-tp-entered="true"] {',
+    '  outline: 4px solid #fcd34d !important;',
+    '  outline-offset: 4px !important;',
+    '}',
+    '',
+    '/* Make cards cursor pointer */',
+    '[data-tp-card] {',
+    '  cursor: pointer;',
+    '}'
+  ].join('\n');
+  
+  var head = document.head || document.documentElement;
+  head.insertBefore(style, head.firstChild);
+  
+  console.log('TizenPortal [Cards]: Focus styles injected');
+}
+
+/**
  * Initialize the card system
  * Called automatically when bundle is loaded
  */
 export function initCards() {
+  // Inject focus styles first
+  injectFocusStyles();
+  
   // Process any existing registrations
   processCards();
   
