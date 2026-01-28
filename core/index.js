@@ -346,19 +346,23 @@ function findMatchingCard(url) {
  */
 async function applyBundleToPage(card) {
   var bundleName = card.bundle || 'default';
+  tpHud('Bundle: ' + bundleName);
   var bundle = getBundle(bundleName);
   
   if (!bundle) {
     log('Bundle not found: ' + bundleName + ', using default');
+    tpHud('Bundle not found: ' + bundleName);
     bundle = getBundle('default');
   }
   
   if (!bundle) {
     warn('No bundle available');
+    tpHud('No bundle available!');
     return;
   }
   
   log('Applying bundle: ' + bundle.name);
+  tpHud('Applying: ' + bundle.name);
   state.currentBundle = bundle.name;
   
   // Inject bundle CSS (bundles export as 'style' property)
@@ -406,10 +410,13 @@ async function applyBundleToPage(card) {
   
   try {
     if (bundle.onActivate) {
+      tpHud('Calling onActivate...');
       bundle.onActivate(window, card);
+      tpHud('onActivate done');
     }
   } catch (e) {
     error('onActivate error: ' + e.message);
+    tpHud('onActivate ERROR: ' + e.message);
   }
   
   log('Bundle applied successfully');
