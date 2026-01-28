@@ -170,6 +170,9 @@ img {
 .mx-2e { margin-left: 0.5em !important; margin-right: 0.5em !important; }
 .pl-8e { padding-left: 2em !important; }
 .-bottom-6e { bottom: -1.5em !important; }
+.left-4e { left: 1em !important; }
+.left-8e { left: 2em !important; }
+.w-44e { width: 11em !important; }
 
 /* Min/max width */
 .min-w-5 { min-width: 20px !important; }
@@ -588,11 +591,18 @@ button[aria-label*="Options"] {
 }
 
 /* Categorized bookshelf row - HOMEPAGE - cards inside flex container */
-/* Inner div uses h-full which collapses, so we need overflow-y visible to prevent clipping */
+/* Inner div uses h-full which collapses to 0 because parent has no height */
+/* Override to auto so it sizes to fit the card content */
 .categorizedBookshelfRow {
   overflow-x: auto !important;
   overflow-y: visible !important;
   -webkit-overflow-scrolling: touch !important;
+}
+
+/* The inner div.h-full needs auto height to size to content */
+.categorizedBookshelfRow > div.h-full,
+.categorizedBookshelfRow .h-full {
+  height: auto !important;
 }
 
 /* Book card container - DO NOT override position or size - ABS calculates dynamically */
