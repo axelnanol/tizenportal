@@ -339,21 +339,31 @@ function updateYellowHintText(text) {
 function saveAndClose() {
   console.log('TizenPortal: saveAndClose called, state.card =', JSON.stringify(state.card));
   
-  // Validate
-  if (!state.card.name || !state.card.name.trim()) {
+  // Guard against null state
+  if (!state.card) {
+    console.error('TizenPortal: state.card is null in saveAndClose');
+    showEditorToast('Error: No card data');
+    return;
+  }
+  
+  // Validate - use defensive checks
+  var cardName = state.card.name || '';
+  var cardUrl = state.card.url || '';
+  
+  if (!cardName.trim()) {
     showEditorToast('Please enter a site name');
     focusField('name');
     return;
   }
 
-  if (!state.card.url || !state.card.url.trim()) {
+  if (!cardUrl.trim()) {
     showEditorToast('Please enter a URL');
     focusField('url');
     return;
   }
 
   // Ensure URL has protocol
-  var url = state.card.url.trim();
+  var url = cardUrl.trim();
   if (url.indexOf('://') === -1) {
     url = 'https://' + url;
     state.card.url = url;
@@ -362,22 +372,22 @@ function saveAndClose() {
   // Save
   if (state.isEdit) {
     updateCard(state.card.id, {
-      name: state.card.name.trim(),
+      name: cardName.trim(),
       url: url,
-      bundle: state.card.bundle,
-      userAgent: state.card.userAgent,
+      bundle: state.card.bundle || 'default',
+      userAgent: state.card.userAgent || 'tizen',
       icon: state.card.icon || null,
     });
-    showEditorToast('Updated: ' + state.card.name);
+    showEditorToast('Updated: ' + cardName);
   } else {
     addCard({
-      name: state.card.name.trim(),
+      name: cardName.trim(),
       url: url,
-      bundle: state.card.bundle,
-      userAgent: state.card.userAgent,
+      bundle: state.card.bundle || 'default',
+      userAgent: state.card.userAgent || 'tizen',
       icon: state.card.icon || null,
     });
-    showEditorToast('Added: ' + state.card.name);
+    showEditorToast('Added: ' + cardName);
   }
 
   closeSiteEditor();
@@ -392,13 +402,15 @@ function saveAndClose() {
  * Delete and close
  */
 function deleteAndClose() {
-  if (!state.isEdit || !state.card.id) return;
+  if (!state.card || !state.isEdit || !state.card.id) return;
+  
+  var cardName = state.card.name || 'Site';
 
   // Simple confirmation via toast + second press
   var deleteBtn = document.getElementById('tp-editor-delete');
   if (deleteBtn && deleteBtn.dataset.confirmDelete === 'true') {
     deleteCard(state.card.id);
-    showEditorToast('Deleted: ' + state.card.name);
+    showEditorToast('Deleted: ' + cardName);
     closeSiteEditor();
 
     if (state.onComplete) {
@@ -429,6 +441,10 @@ function deleteAndClose() {
 function renderFields() {
   var container = document.getElementById('tp-editor-fields');
   if (!container) return;
+  if (!state.card) {
+    console.error('TizenPortal: state.card is null in renderFields');
+    return;
+  }
 
   var html = '';
 
