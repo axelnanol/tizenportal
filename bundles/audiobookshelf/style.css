@@ -657,20 +657,18 @@ body {
   overflow-y: auto !important;
 }
 
-/* CRITICAL: Override the main content container's overflow-hidden */
-/* This is the div with "text-white max-h-screen h-screen overflow-hidden" */
-/* Be SPECIFIC - only target the main layout container, not all h-screen elements */
-#__layout > div.text-white.h-screen.overflow-hidden {
-  max-height: none !important;
-  height: auto !important;
-  min-height: 100vh !important;
+/* CRITICAL: Main layout uses h-screen overflow-hidden.
+   - h-screen = 100vh (KEEP - children use h-full which needs defined parent)
+   - overflow-hidden clips content (OVERRIDE to allow #bookshelf to scroll)
+   - DO NOT set height: auto - breaks h-full chain for BookShelfCategorized!
+*/
+#__layout > div.text-white.overflow-hidden {
   overflow: visible !important;
-  overflow-y: auto !important;
 }
 
-/* Ensure overflow-hidden doesn't apply to main layout container only */
-#__layout > div.overflow-hidden {
-  overflow: visible !important;
+/* Remove max-height constraint */
+#__layout > div.max-h-screen {
+  max-height: none !important;
 }
 
 /* But keep overflow-hidden on elements that need it (cover images, etc) */
