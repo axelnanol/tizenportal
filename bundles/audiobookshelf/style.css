@@ -591,18 +591,23 @@ button[aria-label*="Options"] {
 }
 
 /* Categorized bookshelf row - HOMEPAGE - cards inside flex container */
-/* Inner div uses h-full which collapses to 0 because parent has no height */
-/* Override to auto so it sizes to fit the card content */
+/* Default card height is 192px, plus ~50px for labels below, plus pt-6e padding */
 .categorizedBookshelfRow {
   overflow-x: auto !important;
   overflow-y: visible !important;
   -webkit-overflow-scrolling: touch !important;
+  min-height: 280px !important;
 }
 
-/* The inner div.h-full needs auto height to size to content */
-.categorizedBookshelfRow > div.h-full,
-.categorizedBookshelfRow .h-full {
+/* The inner content div needs to NOT collapse */
+.categorizedBookshelfRow > div {
   height: auto !important;
+  min-height: 250px !important;
+}
+
+/* The flex container with cards */
+.categorizedBookshelfRow .flex.items-center {
+  min-height: 220px !important;
 }
 
 /* Book card container - DO NOT override position or size - ABS calculates dynamically */
