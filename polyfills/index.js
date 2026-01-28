@@ -307,42 +307,59 @@ function polyfillResizeObserver() {
   };
 
   window.ResizeObserver.prototype._scheduleCheck = function() {
-    this._rafId = requestAnimationFrame(this._boundCheck);
+    var self = this;
+    this._rafId = requestAnimationFrame(function() {
+      self._check();
+    });
   };
 
   window.ResizeObserver.prototype._check = function() {
     var entries = [];
     
+    // Filter out elements that are no longer in the document
+    var validElements = [];
     for (var i = 0; i < this._observedElements.length; i++) {
       var obs = this._observedElements[i];
-      var rect = obs.target.getBoundingClientRect();
-      
-      if (rect.width !== obs.width || rect.height !== obs.height) {
-        obs.width = rect.width;
-        obs.height = rect.height;
+      if (obs.target && document.body && document.body.contains(obs.target)) {
+        validElements.push(obs);
+      }
+    }
+    this._observedElements = validElements;
+    
+    for (var j = 0; j < this._observedElements.length; j++) {
+      var obs = this._observedElements[j];
+      try {
+        var rect = obs.target.getBoundingClientRect();
         
-        // Create a ResizeObserverEntry-like object
-        entries.push({
-          target: obs.target,
-          contentRect: {
-            x: 0,
-            y: 0,
-            width: rect.width,
-            height: rect.height,
-            top: 0,
-            right: rect.width,
-            bottom: rect.height,
-            left: 0,
-          },
-          borderBoxSize: [{
-            blockSize: rect.height,
-            inlineSize: rect.width,
-          }],
-          contentBoxSize: [{
-            blockSize: rect.height,
-            inlineSize: rect.width,
-          }],
-        });
+        if (rect.width !== obs.width || rect.height !== obs.height) {
+          obs.width = rect.width;
+          obs.height = rect.height;
+          
+          // Create a ResizeObserverEntry-like object
+          entries.push({
+            target: obs.target,
+            contentRect: {
+              x: 0,
+              y: 0,
+              width: rect.width,
+              height: rect.height,
+              top: 0,
+              right: rect.width,
+              bottom: rect.height,
+              left: 0,
+            },
+            borderBoxSize: [{
+              blockSize: rect.height,
+              inlineSize: rect.width,
+            }],
+            contentBoxSize: [{
+              blockSize: rect.height,
+              inlineSize: rect.width,
+            }],
+          });
+        }
+      } catch (err) {
+        // Element may have been removed, skip it
       }
     }
     
@@ -350,7 +367,8 @@ function polyfillResizeObserver() {
       try {
         this._callback(entries, this);
       } catch (err) {
-        console.warn('ResizeObserver callback error:', err);
+        // Don't let callback errors stop the observer
+        // Log silently - ABS may throw during Vue re-renders
       }
     }
     
