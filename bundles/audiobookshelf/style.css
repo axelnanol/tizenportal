@@ -6,23 +6,26 @@
  */
 
 /* ==========================================================================
-   CRITICAL TV LAYOUT FIXES
+   CRITICAL TV LAYOUT FIXES - SCROLLBAR HIDING
+   TV screens don't need visible scrollbars. Hide them while keeping scroll.
    ========================================================================== */
 
-/* Force the entire page to not overflow - TV screens have no scrollbars */
-html, body {
-  overflow-x: hidden !important;
+/* Hide scrollbars globally - webkit (Chrome/Tizen) */
+::-webkit-scrollbar {
+  width: 0px !important;
+  height: 0px !important;
+  display: none !important;
 }
 
-/* Hide horizontal scrollbars on bookshelf rows */
+/* Ensure content can still scroll but scrollbars are hidden */
+html, body,
+#page-wrapper,
+#bookshelf,
 .bookshelfRow,
-.categorizedBookshelfRow {
-  overflow-x: hidden !important;
-}
-
-/* Ensure the main content area doesn't overflow horizontally */
-#page-wrapper {
-  overflow-x: hidden !important;
+.categorizedBookshelfRow,
+.bookshelf-row {
+  scrollbar-width: none !important;  /* Firefox */
+  -ms-overflow-style: none !important;  /* IE/Edge */
 }
 
 /* ==========================================================================
@@ -610,57 +613,14 @@ button[aria-label*="Options"] {
   align-items: center !important;
 }
 
-/* Book card container - DO NOT override position - ABS uses absolute + transform */
+/* Book card container - DO NOT override position or size - ABS calculates dynamically */
 [id^="book-card-"],
 [id^="series-card-"] {
   /* CRITICAL: Do NOT set position - ABS uses position: absolute with transform: translate3d() */
+  /* CRITICAL: Do NOT set width/height - ABS calculates based on sizeMultiplier and aspectRatio */
   /* Only override flex shrink to prevent sizing issues */
   -webkit-flex-shrink: 0 !important;
   flex-shrink: 0 !important;
-}
-
-/* Book cards - fixed width */
-[id^="book-card-"] {
-  width: 192px !important;
-  min-width: 192px !important;
-  max-width: 192px !important;
-}
-
-/* Series cards - wider */
-[id^="series-card-"] {
-  width: 384px !important;
-  min-width: 384px !important;
-  max-width: 384px !important;
-}
-
-/* Cover area container */
-[id^="cover-area-"] {
-  width: 192px !important;
-  height: 192px !important;
-  max-width: 192px !important;
-  max-height: 192px !important;
-  overflow: hidden !important;
-  position: relative !important;
-}
-
-/* Ensure images inside cover area respect bounds - use explicit pixels */
-[id^="cover-area-"] img,
-[id^="cover-area-"] [cy-id="coverImage"] {
-  width: 192px !important;
-  height: 192px !important;
-  max-width: 192px !important;
-  max-height: 192px !important;
-  object-fit: cover !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-}
-
-/* Series card cover areas are wider */
-[id^="series-card-"] [cy-id="covers-area"] {
-  width: 384px !important;
-  max-width: 384px !important;
-  overflow: hidden !important;
 }
 
 /* ==========================================================================
