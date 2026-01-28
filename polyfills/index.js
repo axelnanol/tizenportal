@@ -290,6 +290,13 @@ function polyfillResizeObserver() {
         if (!document.body || !document.body.contains(target)) return;
         try {
           var measuredRect = target.getBoundingClientRect();
+          
+          // DEBUG: Log dimensions being reported
+          if (typeof console !== 'undefined' && console.log) {
+            var tagInfo = target.tagName + (target.id ? '#' + target.id : '') + (target.className ? '.' + String(target.className).split(' ')[0] : '');
+            console.log('[ResizeObserver] ' + tagInfo + ' @ ' + delay + 'ms: ' + Math.round(measuredRect.width) + 'x' + Math.round(measuredRect.height) + ' (window: ' + window.innerWidth + 'x' + window.innerHeight + ', dpr: ' + (window.devicePixelRatio || 1) + ')');
+          }
+          
           // Update stored dimensions
           for (var i = 0; i < self._observedElements.length; i++) {
             if (self._observedElements[i].target === target) {
