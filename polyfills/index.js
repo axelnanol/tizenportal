@@ -277,6 +277,39 @@ function polyfillResizeObserver() {
       height: rect.height,
     });
     
+    // CRITICAL: Fire initial callback immediately (native behavior)
+    // Virtual scrollers depend on this to know initial container size
+    var self = this;
+    setTimeout(function() {
+      try {
+        var initialRect = target.getBoundingClientRect();
+        var entry = {
+          target: target,
+          contentRect: {
+            x: 0,
+            y: 0,
+            width: initialRect.width,
+            height: initialRect.height,
+            top: 0,
+            right: initialRect.width,
+            bottom: initialRect.height,
+            left: 0,
+          },
+          borderBoxSize: [{
+            blockSize: initialRect.height,
+            inlineSize: initialRect.width,
+          }],
+          contentBoxSize: [{
+            blockSize: initialRect.height,
+            inlineSize: initialRect.width,
+          }],
+        };
+        self._callback([entry], self);
+      } catch (err) {
+        // Ignore errors from initial callback
+      }
+    }, 0);
+    
     // Start polling if not already
     if (!this._rafId) {
       this._scheduleCheck();
