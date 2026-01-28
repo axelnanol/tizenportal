@@ -176,9 +176,10 @@ var SELECTORS = {
   // ==========================================================================
   // DROPDOWN MENUS
   // ==========================================================================
-  menuItems: '[role="menuitem"]',
-  dropdown: '.dropdown-menu, [role="menu"]',
-  dropdownItem: '.dropdown-item, [role="menuitem"]',
+  menuItems: '[role="menuitem"], [role="option"]',
+  dropdown: '.dropdown-menu, [role="menu"], [role="listbox"]',
+  dropdownItem: '.dropdown-item, [role="menuitem"], [role="option"]',
+  dropdownContainer: '.ui-dropdown-menu, [role="menu"], [role="listbox"], .dropdown-menu',
   
   // ==========================================================================
   // CONFIG/SETTINGS PAGES
@@ -797,6 +798,21 @@ export default {
         if (menuEl.getAttribute('tabindex') !== '0') {
           menuEl.setAttribute('tabindex', '0');
           count++;
+        }
+      }
+      
+      // ========================================================================
+      // DROPDOWN CONTAINERS - Add spacing class for navigation
+      // ========================================================================
+      var dropdownContainers = document.querySelectorAll(SELECTORS.dropdownContainer);
+      for (var dc = 0; dc < dropdownContainers.length; dc++) {
+        var container = dropdownContainers[dc];
+        if (!container.classList.contains(SPACING_CLASS)) {
+          container.classList.add(SPACING_CLASS);
+        }
+        // Also ensure vertical navigation
+        if (!container.hasAttribute('data-tp-nav')) {
+          container.setAttribute('data-tp-nav', 'vertical');
         }
       }
       

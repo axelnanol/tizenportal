@@ -294,7 +294,13 @@ function polyfillResizeObserver() {
           // DEBUG: Log dimensions being reported
           if (typeof console !== 'undefined' && console.log) {
             var tagInfo = target.tagName + (target.id ? '#' + target.id : '') + (target.className ? '.' + String(target.className).split(' ')[0] : '');
-            console.log('[ResizeObserver] ' + tagInfo + ' @ ' + delay + 'ms: ' + Math.round(measuredRect.width) + 'x' + Math.round(measuredRect.height) + ' (window: ' + window.innerWidth + 'x' + window.innerHeight + ', dpr: ' + (window.devicePixelRatio || 1) + ')');
+            console.log('[ResizeObserver] ' + tagInfo + ' @ ' + delay + 'ms: ' + Math.round(measuredRect.width) + 'x' + Math.round(measuredRect.height) + ' (window: ' + window.innerWidth + 'x' + window.innerHeight + ')');
+            
+            // Extra debug for bookshelf container
+            var bookshelf = document.getElementById('bookshelf');
+            if (bookshelf) {
+              console.log('[ResizeObserver] #bookshelf clientWidth=' + bookshelf.clientWidth + ' offsetWidth=' + bookshelf.offsetWidth);
+            }
           }
           
           // Update stored dimensions

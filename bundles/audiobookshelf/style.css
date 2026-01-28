@@ -25,20 +25,101 @@ html, body {
   overflow-x: hidden !important;
 }
 
-/* Filter/sort dropdowns in the toolbar - ABS uses ui-dropdown class */
-.ui-dropdown,
-.ui-dropdown-trigger,
-[class*="dropdown"] button,
-[class*="dropdown"] > span {
+/* ==========================================================================
+   BOOKSHELF CARD LAYOUT FIX
+   ABS virtual scroller uses absolute positioning for cards within rows.
+   Cards must stay on the same horizontal line within their row container.
+   ========================================================================== */
+
+/* The bookshelf row content that holds cards should allow horizontal layout */
+.bookshelfRow > div,
+.categorizedBookshelfRow > div,
+[class*="bookshelf"] [style*="height:"] {
+  /* Don't constrain width - let ABS calculate */
+  position: relative !important;
+}
+
+/* Cards with absolute positioning - ensure they're positioned correctly */
+[id^="book-card-"],
+[id^="series-card-"],
+[id^="collection-card-"],
+[id^="author-card-"],
+[id^="playlist-card-"] {
+  /* Cards should respect their calculated left position */
+  display: block !important;
+}
+
+/* ==========================================================================
+   FILTER/SORT DROPDOWN FIXES
+   ABS uses controls-library-filter-select and controls-library-sort-select
+   ========================================================================== */
+
+/* Filter/sort control wrappers */
+.libraryFilterMenu,
+[class*="library-filter"],
+[class*="library-sort"],
+[class*="FilterSelect"],
+[class*="SortSelect"] {
+  min-width: 180px !important;
+}
+
+/* Filter dropdown trigger button */
+#filter-by-btn,
+button[aria-label*="filter" i],
+button[aria-label*="Filter" i],
+[class*="filter"] button,
+.filter-dropdown,
+.sort-dropdown {
   min-width: 140px !important;
 }
 
-/* Dropdown menu items need readable width */
+/* Sort dropdown trigger */
+#sort-by-btn,
+button[aria-label*="sort" i],
+button[aria-label*="Sort" i],
+[class*="sort"] button {
+  min-width: 140px !important;
+}
+
+/* Dropdown menus when open */
 .ui-dropdown-menu,
-[class*="dropdown-menu"],
+[role="menu"],
 [role="listbox"],
-[role="menu"] {
-  min-width: 160px !important;
+.dropdown-menu {
+  min-width: 180px !important;
+  max-width: 300px !important;
+}
+
+/* Dropdown items - make navigable with spacing */
+[role="menuitem"],
+[role="option"],
+.dropdown-item,
+.ui-dropdown-menu > div,
+.ui-dropdown-menu > a,
+.ui-dropdown-menu > button,
+[role="menu"] > div,
+[role="menu"] > button,
+[role="listbox"] > div,
+.libraryFilterMenu li,
+.libraryFilterMenu ul > li {
+  display: block !important;
+  padding: 8px 12px !important;
+  margin: 2px 0 !important;
+  min-height: 36px !important;
+  cursor: pointer !important;
+}
+
+/* Dropdown item focus state */
+[role="menuitem"]:focus,
+[role="option"]:focus,
+.dropdown-item:focus,
+.ui-dropdown-menu > div:focus,
+.ui-dropdown-menu > a:focus,
+.ui-dropdown-menu > button:focus,
+.libraryFilterMenu li:focus {
+  outline: 2px solid #1ad691 !important;
+  outline-offset: -2px !important;
+  background: rgba(26, 214, 145, 0.2) !important;
 }
 
 /* ==========================================================================
