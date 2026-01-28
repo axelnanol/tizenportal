@@ -95,9 +95,10 @@ export function getPrimaryAction(card) {
 /**
  * Get all focusable children within a card (for multi-action navigation)
  * @param {HTMLElement} card - The card element
+ * @param {boolean} [skipVisibilityCheck] - If true, include potentially hidden elements
  * @returns {HTMLElement[]}
  */
-export function getFocusableChildren(card) {
+export function getFocusableChildren(card, skipVisibilityCheck) {
   if (!card) return [];
   
   var focusables = card.querySelectorAll(FOCUSABLE_SELECTOR);
@@ -107,9 +108,16 @@ export function getFocusableChildren(card) {
     var el = focusables[i];
     // Skip the card itself
     if (el === card) continue;
-    // Skip hidden elements
-    if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') {
-      continue;
+    // Skip disabled elements
+    if (el.disabled) continue;
+    // Skip aria-hidden elements
+    if (el.getAttribute('aria-hidden') === 'true') continue;
+    
+    // Visibility check (can be skipped for entered cards where CSS will make them visible)
+    if (!skipVisibilityCheck) {
+      if (el.offsetParent === null && getComputedStyle(el).position !== 'fixed') {
+        continue;
+      }
     }
     result.push(el);
   }
@@ -131,14 +139,23 @@ export function enterCard(card) {
   
   // Make all buttons inside the card focusable
   var buttons = card.querySelectorAll('button, [role="button"]');
+  console.log('TizenPortal [CardInteraction]: Found', buttons.length, 'buttons in card');
   for (var i = 0; i < buttons.length; i++) {
     var btn = buttons[i];
     if (!btn.disabled && btn.getAttribute('aria-hidden') !== 'true') {
       btn.setAttribute('tabindex', '0');
+      console.log('TizenPortal [CardInteraction]: Made button focusable:', btn.className || btn.tagName);
     }
   }
   
-  var focusables = getFocusableChildren(card);
+  // CRITICAL: Force browser reflow so CSS changes take effect
+  // Without this, the buttons may still be invisible when we check offsetParent
+  void card.offsetHeight;
+  
+  // Skip visibility check - we just made them visible via CSS class
+  // The CSS rule for .tp-card-entered button will show them
+  var focusables = getFocusableChildren(card, true);
+  console.log('TizenPortal [CardInteraction]: getFocusableChildren returned', focusables.length);
   if (focusables.length === 0) {
     // No inner focusables, revert and treat as single-action
     card.classList.remove('tp-card-entered');
