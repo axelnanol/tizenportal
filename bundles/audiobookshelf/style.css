@@ -616,11 +616,22 @@ button[aria-label*="Options"] {
   min-height: 220px !important;
 }
 
-/* Homepage cards are rendered with class="relative" - ensure they're not absolute */
-.categorizedBookshelfRow [id^="book-card-"],
-.categorizedBookshelfRow [id^="series-card-"],
-.categorizedBookshelfRow .relative {
+/* Homepage cards only - position relative for flex layout (NOT library page) */
+/* Be specific: only target card elements directly in the flex container */
+.categorizedBookshelfRow .flex.items-center > [id^="book-card-"],
+.categorizedBookshelfRow .flex.items-center > [id^="series-card-"] {
   position: relative !important;
+}
+
+/* Shelf category labels ("Continue Listening", etc.) - h-6e = 1.5em */
+.categorizedBookshelfRow .categoryPlacard {
+  height: 1.5em !important;
+}
+
+/* Series card labels - keep at h-6e, positioned below card */
+[id^="series-card-"] .categoryPlacard {
+  height: 1.5em !important;
+  bottom: -1.5em !important;
 }
 
 /* Book card container - DO NOT override position or size - ABS calculates dynamically */
