@@ -356,6 +356,48 @@ span.material-symbols {
 }
 
 /* ==========================================================================
+   BUTTON BACKGROUND FIX - CHROME 47 TRANSPARENCY ISSUE
+   Chrome 47 may render buttons with white backgrounds by default.
+   Force transparent backgrounds on all ABS icon buttons.
+   ========================================================================== */
+
+/* All buttons in appbar - force transparent background */
+#appbar button {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* All icon buttons throughout the app */
+button:has(.material-symbols),
+button.icon-btn,
+button[class*="icon"],
+.iconBtn,
+[class*="IconBtn"],
+button.rounded-full {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Context menu / triple-dot buttons */
+button[aria-label*="more"],
+button[aria-label*="More"],
+button[aria-label*="menu"],
+button[aria-label*="Menu"],
+button:has(span:contains("more_vert")),
+button:has(span:contains("more_horiz")) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Ensure siderail buttons are also transparent */
+#siderail-buttons-container a,
+#siderail-buttons-container button {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* ==========================================================================
    ELEMENT SPACING - GAPS FOR SPATIAL NAVIGATION
    CSS-first approach: Minimum 4px gap between focusable elements.
    This ensures spatial navigation can reliably distinguish adjacent elements.
