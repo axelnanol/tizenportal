@@ -162,6 +162,15 @@ img {
 .h-screen { height: 100vh !important; }
 .max-h-screen { max-height: 100vh !important; }
 
+/* Em-based utilities - ABS uses these for relative sizing */
+.h-6e { height: 1.5em !important; }
+.h-8e { height: 2em !important; }
+.pt-6e { padding-top: 1.5em !important; }
+.my-6e { margin-top: 1.5em !important; margin-bottom: 1.5em !important; }
+.mx-2e { margin-left: 0.5em !important; margin-right: 0.5em !important; }
+.pl-8e { padding-left: 2em !important; }
+.-bottom-6e { bottom: -1.5em !important; }
+
 /* Min/max width */
 .min-w-5 { min-width: 20px !important; }
 .min-w-8 { min-width: 32px !important; }
@@ -578,9 +587,11 @@ button[aria-label*="Options"] {
   -webkit-overflow-scrolling: touch !important;
 }
 
-/* Categorized bookshelf row - HOMEPAGE - minimal overrides only */
+/* Categorized bookshelf row - HOMEPAGE - cards inside flex container */
+/* Inner div uses h-full which collapses, so we need overflow-y visible to prevent clipping */
 .categorizedBookshelfRow {
   overflow-x: auto !important;
+  overflow-y: visible !important;
   -webkit-overflow-scrolling: touch !important;
 }
 
