@@ -314,17 +314,53 @@ export function hideAddressBar() {
     isVisible = false;
   }
   
-  // Restore previous focus
+  // Restore previous focus (if still valid)
+  var restored = false;
   if (previousFocus) {
     try {
-      previousFocus.focus();
+      // Check if element is still in DOM and visible
+      if (previousFocus.offsetParent !== null || previousFocus === document.body) {
+        previousFocus.focus();
+        restored = true;
+      }
     } catch (err) {
       // Ignore
     }
     previousFocus = null;
   }
   
+  // If couldn't restore, try to find something sensible to focus
+  if (!restored) {
+    restoreFocusAfterOverlay();
+  }
+  
   console.log('TizenPortal: Address bar hidden');
+}
+
+/**
+ * Restore focus after closing an overlay when previousFocus is invalid
+ */
+function restoreFocusAfterOverlay() {
+  // On portal page, focus cards
+  var targets = [
+    '.tp-card:focus',
+    '.tp-card',
+    '.tp-add-card',
+    '#tp-portal-grid',
+  ];
+  
+  for (var i = 0; i < targets.length; i++) {
+    var el = document.querySelector(targets[i]);
+    if (el && el.offsetParent !== null) {
+      try {
+        el.focus();
+        console.log('TizenPortal: Focus restored to:', targets[i]);
+        return;
+      } catch (err) {
+        // Try next
+      }
+    }
+  }
 }
 
 /**

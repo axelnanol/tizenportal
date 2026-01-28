@@ -1015,19 +1015,34 @@ a[href]:focus:not(#appbar a):not([role="toolbar"] a):not(.bookshelfRow a):not(.c
   padding-right: 8px !important;
 }
 
-/* Search input container */
-#appbar .relative.w-full.sm\\:w-80,
-#appbar [class*="sm:w-80"] {
-  width: 320px !important;
-  min-width: 320px !important;
+/* Search input container - force wider for TV usability */
+#appbar .relative.w-full,
+#appbar [class*="w-80"],
+#appbar [class*="sm:w-80"],
+#appbar form,
+#appbar form > .relative {
+  width: 400px !important;
+  min-width: 400px !important;
+  max-width: 400px !important;
 }
 
-/* Search input */
+/* Search input - ensure it fills container */
+#appbar input[type="text"],
+#appbar input[type="search"],
+#appbar input[placeholder*="Search"],
 #appbar input[placeholder="Search.."] {
-  height: 32px !important;
+  height: 40px !important;
   width: 100% !important;
-  padding: 8px 12px !important;
+  min-width: 350px !important;
+  padding: 8px 16px !important;
   border-radius: 4px !important;
+  font-size: 18px !important;
+}
+
+/* Search input focus state */
+#appbar input:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 2px !important;
 }
 
 /* Appbar icon buttons - w-8 h-8 */

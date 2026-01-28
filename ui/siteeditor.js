@@ -320,6 +320,38 @@ export function closeSiteEditor() {
   state.active = false;
   // Update yellow hint back to context-appropriate text
   updateYellowHintText('Add Site');
+  
+  // Restore focus to the portal grid
+  restoreFocusToPortal();
+}
+
+/**
+ * Restore focus to a sensible element in the portal
+ */
+function restoreFocusToPortal() {
+  // Try to focus the last focused card, or the first card, or the add button
+  var targets = [
+    '.tp-card:focus',
+    '.tp-card[data-focused="true"]',
+    '.tp-card',
+    '.tp-add-card',
+    '#tp-portal-grid',
+  ];
+  
+  for (var i = 0; i < targets.length; i++) {
+    var el = document.querySelector(targets[i]);
+    if (el && el.offsetParent !== null) {
+      try {
+        el.focus();
+        console.log('TizenPortal: Focus restored to:', targets[i]);
+        return;
+      } catch (err) {
+        // Try next
+      }
+    }
+  }
+  
+  console.log('TizenPortal: Could not restore focus after closing editor');
 }
 
 /**
