@@ -323,6 +323,12 @@ var unregisterKeyHandler = null;
 /** Stop function for DOM observer */
 var stopObserver = null;
 
+/** Last known URL for detecting SPA navigation */
+var lastUrl = '';
+
+/** Cleanup function for URL change detection */
+var stopUrlWatcher = null;
+
 // ============================================================================
 // BUNDLE EXPORT
 // ============================================================================
@@ -403,6 +409,10 @@ export default {
       wrapTextInputs(SELECTORS.textInputs);
     }, { debounceMs: 250 });
     
+    // SPA NAVIGATION: Watch for URL changes and reset navigation state
+    // Nuxt uses History API for navigation, which doesn't trigger page reload
+    stopUrlWatcher = this.watchUrlChanges();
+    
     // OVERRIDE: Register custom key handler for ABS-specific behavior
     // This runs BEFORE core handlers - return true to consume the event
     // NOTE: Accessed via global API to avoid circular dependency
@@ -440,6 +450,12 @@ export default {
     if (stopObserver) {
       stopObserver();
       stopObserver = null;
+    }
+    
+    // Clean up URL watcher
+    if (stopUrlWatcher) {
+      stopUrlWatcher();
+      stopUrlWatcher = null;
     }
     
     // Clean up scroll-into-view listener
@@ -970,5 +986,74 @@ export default {
     if (first) {
       first.focus();
     }
+  },
+  
+  /**
+   * Watch for SPA URL changes and reset navigation state
+   * 
+   * Nuxt/Vue uses the History API for SPA navigation, which doesn't trigger
+   * page reload. When the URL changes, we need to:
+   * 1. Force re-process all card registrations (some DOM elements are stale)
+   * 2. Reset focus to something sensible on the new page
+   * 
+   * @returns {Function} Cleanup function to stop watching
+   */
+  watchUrlChanges: function() {
+    var self = this;
+    lastUrl = window.location.href;
+    
+    // Handler for URL changes
+    function onUrlChange() {
+      var currentUrl = window.location.href;
+      if (currentUrl === lastUrl) return;
+      
+      console.log('TizenPortal [ABS]: URL changed from', lastUrl, 'to', currentUrl);
+      lastUrl = currentUrl;
+      
+      // Exit any entered card state
+      if (isInsideCard()) {
+        exitCard();
+      }
+      
+      // Force re-process cards - remove all data-tp-card attributes first
+      // so they get re-registered with fresh DOM elements
+      var staleCards = document.querySelectorAll('[data-tp-card]');
+      for (var i = 0; i < staleCards.length; i++) {
+        staleCards[i].removeAttribute('data-tp-card');
+        staleCards[i].removeAttribute('tabindex');
+      }
+      
+      // Small delay for Vue/Nuxt to render new content
+      setTimeout(function() {
+        // Re-run card registration
+        if (window.TizenPortal && window.TizenPortal.cards) {
+          window.TizenPortal.cards.processCards();
+        }
+        
+        // Re-run other focusables
+        self.setupOtherFocusables();
+        self.applySpacingClasses();
+        wrapTextInputs(SELECTORS.textInputs);
+        
+        // Set initial focus on new page
+        setInitialFocus(getInitialFocusSelectors(), 100);
+      }, 300);
+    }
+    
+    // Listen for popstate (back/forward buttons)
+    window.addEventListener('popstate', onUrlChange);
+    
+    // Also poll for URL changes (catches programmatic navigation)
+    var pollInterval = setInterval(function() {
+      if (window.location.href !== lastUrl) {
+        onUrlChange();
+      }
+    }, 500);
+    
+    // Return cleanup function
+    return function() {
+      window.removeEventListener('popstate', onUrlChange);
+      clearInterval(pollInterval);
+    };
   },
 };
