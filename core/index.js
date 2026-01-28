@@ -53,6 +53,10 @@ import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
 import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggleDiagnosticsPanel } from '../ui/diagnostics.js';
 import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown } from './loader.js';
 import { getBundleNames, getBundle } from '../bundles/registry.js';
+import { 
+  registerCards, unregisterCards, clearRegistrations, getRegistrations,
+  processCards, initCards, shutdownCards 
+} from './cards.js';
 
 /**
  * TizenPortal version - injected from package.json at build time
@@ -418,6 +422,11 @@ async function applyBundleToPage(card) {
     error('onActivate error: ' + e.message);
     tpHud('onActivate ERROR: ' + e.message);
   }
+  
+  // Initialize card registration system
+  // This starts the observer and processes any cards registered by the bundle
+  initCards();
+  log('Card registration system initialized');
   
   log('Bundle applied successfully');
 }
@@ -983,6 +992,15 @@ var TizenPortalAPI = {
     unlockViewport: unlockViewport,
     observeDOM: observeDOM,
     stopObservingDOM: stopObservingDOM,
+  },
+
+  // Card registration system - bundles register selectors, core handles the rest
+  cards: {
+    register: registerCards,
+    unregister: unregisterCards,
+    clear: clearRegistrations,
+    process: processCards,
+    getRegistrations: getRegistrations,
   },
 
   // Polyfill info

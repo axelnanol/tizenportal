@@ -377,8 +377,12 @@ export default {
     // CORE: Inject geometry spacing CSS for spatial navigation
     injectSpacingCSS();
     
-    // ABS-SPECIFIC: Set up focusable elements and card markers
-    this.setupFocusables();
+    // CORE: Register cards using the new card registration API
+    // This replaces manual setupFocusables() for card elements
+    this.registerCardSelectors();
+    
+    // ABS-SPECIFIC: Set up non-card focusables (siderail, appbar, etc.)
+    this.setupOtherFocusables();
     
     // ABS-SPECIFIC: Apply spacing classes to containers
     this.applySpacingClasses();
@@ -393,7 +397,8 @@ export default {
     // CORE: Observe DOM for dynamic Vue/Nuxt content changes
     stopObserver = observeDOM(function() {
       // Re-run setup when DOM changes (new cards loaded, etc.)
-      self.setupFocusables();
+      // Card selectors are auto-processed by core observer
+      self.setupOtherFocusables();
       self.applySpacingClasses();
       wrapTextInputs(SELECTORS.textInputs);
     }, { debounceMs: 250 });
@@ -585,124 +590,79 @@ export default {
   // ==========================================================================
   
   /**
-   * Set up focusable elements and mark cards
+   * Register card selectors with the core card system
    * 
-   * This is ABS-specific because it knows:
-   * - Which elements should be focusable
-   * - Which elements are "cards" (for Enter/Escape handling)
-   * - Whether cards are single-action or multi-action
-   * - Which containers should have restricted navigation
+   * This replaces the manual tabindex/data-tp-card setup.
+   * Core handles observing DOM and processing new elements.
    */
-  setupFocusables: function() {
+  registerCardSelectors: function() {
+    if (!window.TizenPortal || !window.TizenPortal.cards) {
+      console.warn('TizenPortal [ABS]: Card registration API not available');
+      return;
+    }
+    
+    var cards = window.TizenPortal.cards;
+    
+    // Book cards - multi-action (have hover buttons)
+    cards.register({
+      selector: SELECTORS.bookCards,
+      type: 'multi'
+    });
+    
+    // Series cards - single-action (click navigates to series)
+    cards.register({
+      selector: SELECTORS.seriesCards,
+      type: 'single'
+    });
+    
+    // Collection cards - single-action
+    cards.register({
+      selector: SELECTORS.collectionCards,
+      type: 'single'
+    });
+    
+    // Playlist cards - single-action
+    cards.register({
+      selector: SELECTORS.playlistCards,
+      type: 'single'
+    });
+    
+    // Author cards - single-action
+    cards.register({
+      selector: SELECTORS.authorCards,
+      type: 'single'
+    });
+    
+    // Siderail links - single-action
+    cards.register({
+      selector: SELECTORS.siderailNav,
+      type: 'single'
+    });
+    
+    console.log('TizenPortal [ABS]: Card selectors registered');
+  },
+
+  /**
+   * Set up focusable elements that are NOT cards
+   * 
+   * This handles siderail navigation, appbar, table rows, etc.
+   * Card elements are handled by the core card registration system.
+   */
+  setupOtherFocusables: function() {
     var count = 0;
     
     try {
       // ========================================================================
-      // SIDERAIL - Vertical navigation (up/down only)
+      // SIDERAIL - Mark for vertical-only navigation
       // ========================================================================
       var siderail = document.querySelector(SELECTORS.siderail);
       if (siderail && !siderail.hasAttribute('data-tp-nav')) {
-        // Mark siderail for vertical-only navigation
         siderail.setAttribute('data-tp-nav', 'vertical');
-      }
-      
-      var siderailLinks = document.querySelectorAll(SELECTORS.siderailNav);
-      for (var i = 0; i < siderailLinks.length; i++) {
-        var el = siderailLinks[i];
-        if (el.getAttribute('tabindex') !== '0') {
-          el.setAttribute('tabindex', '0');
-          count++;
-        }
-        // Mark as single-action card (clicking navigates)
-        el.setAttribute('data-tp-card', 'single');
-      }
-      
-      // ========================================================================
-      // BOOK CARDS - Multi-action (Enter enters card for play/edit/more buttons)
-      // ========================================================================
-      // Book cards have hover buttons that appear on mouse hover.
-      // For TV: Enter "enters" the card, then navigate to buttons, Enter activates.
-      var bookCards = document.querySelectorAll(SELECTORS.bookCards);
-      for (var j = 0; j < bookCards.length; j++) {
-        var card = bookCards[j];
-        if (card.getAttribute('tabindex') !== '0') {
-          card.setAttribute('tabindex', '0');
-          count++;
-        }
-        // MULTI-ACTION: Enter enters the card to access hover buttons
-        if (!card.hasAttribute('data-tp-card')) {
-          card.setAttribute('data-tp-card', 'multi');
-        }
-      }
-      
-      // ========================================================================
-      // SERIES CARDS - Focus on the card container directly
-      // ========================================================================
-      // The title placard (categoryPlacard) has opacity-0 overlay issues on Tizen.
-      // Instead, make the series card itself focusable like book cards.
-      // The card already has a click handler from Vue, so we just need tabindex.
-      var seriesCards = document.querySelectorAll(SELECTORS.seriesCards);
-      for (var s = 0; s < seriesCards.length; s++) {
-        var sCard = seriesCards[s];
-        // Make the card itself focusable
-        if (sCard.getAttribute('tabindex') !== '0') {
-          sCard.setAttribute('tabindex', '0');
-          count++;
-        }
-        // Single-action: Enter clicks the card to navigate to series
-        sCard.setAttribute('data-tp-card', 'single');
-      }
-      
-      // ========================================================================
-      // COLLECTION CARDS - Focus on the card itself (not hidden title placard)
-      // ========================================================================
-      var collectionCards = document.querySelectorAll(SELECTORS.collectionCards);
-      for (var c = 0; c < collectionCards.length; c++) {
-        var cCard = collectionCards[c];
-        // Make the collection card itself focusable
-        if (cCard.getAttribute('tabindex') !== '0') {
-          cCard.setAttribute('tabindex', '0');
-          count++;
-        }
-        // Single-action: Enter clicks the card to navigate to collection
-        cCard.setAttribute('data-tp-card', 'single');
-      }
-      
-      // ========================================================================
-      // PLAYLIST CARDS - Single-action
-      // ========================================================================
-      var playlistCards = document.querySelectorAll(SELECTORS.playlistCards);
-      for (var p = 0; p < playlistCards.length; p++) {
-        var pCard = playlistCards[p];
-        if (pCard.getAttribute('tabindex') !== '0') {
-          pCard.setAttribute('tabindex', '0');
-          count++;
-        }
-        if (!pCard.hasAttribute('data-tp-card')) {
-          pCard.setAttribute('data-tp-card', 'single');
-        }
-      }
-      
-      // ========================================================================
-      // AUTHOR CARDS - Focus on the card (has name and image)
-      // ========================================================================
-      var authorCards = document.querySelectorAll(SELECTORS.authorCards);
-      for (var a = 0; a < authorCards.length; a++) {
-        var aCard = authorCards[a];
-        if (aCard.getAttribute('tabindex') !== '0') {
-          aCard.setAttribute('tabindex', '0');
-          count++;
-        }
-        // Single-action: clicking navigates to author page
-        if (!aCard.hasAttribute('data-tp-card')) {
-          aCard.setAttribute('data-tp-card', 'single');
-        }
       }
       
       // ========================================================================
       // GENERIC FOCUSABLE ELEMENTS (links, buttons in content area)
       // ========================================================================
-      // This catches elements on author pages, narrator pages, settings, etc.
       var pageWrapper = document.querySelector(SELECTORS.pageWrapper);
       if (pageWrapper) {
         // Links in content

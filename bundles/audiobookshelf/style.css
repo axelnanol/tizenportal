@@ -635,39 +635,38 @@ button[aria-label*="Options"] {
 }
 
 /* ========================================================================== 
-   SERIES CARD LABELS
-   LazySeriesCard has two label variants:
-   1. standardBottomText: .categoryPlacard with h-6e -bottom-6e (below card)
-   2. detailBottomText: relative div with py-1e (inline below card)
+   SERIES CARD LABELS - HIDDEN
    
-   The card cover area has dynamic height set via :style="{ height: coverHeight + 'px' }"
-   The label placard uses h-6e (1.5em based on card's font-size which is sizeMultiplier rem)
+   Series cards have labels that are problematic on Tizen:
+   - Height calculation issues (using em units with variable parent font-size)
+   - Opacity-0 overlay showing incorrectly
+   
+   Solution: Hide the labels entirely. Users navigate to series cards directly.
+   The card image shows the series name overlay on focus anyway.
    ========================================================================== */
 
-/* Series card label - the categoryPlacard - direct child only */
-[id^="series-card-"] > .categoryPlacard {
-  /* h-6e = 1.5em, but em is relative to parent font-size */
-  /* Series card uses fontSize: sizeMultiplier + 'rem' (default 1rem = 16px) */
-  /* So 1.5em = 24px at default size */
-  height: 24px !important;
-  max-height: 24px !important;
-  min-height: 24px !important;
+/* Hide series card labels - both standard and detail variants */
+[id^="series-card-"] > .categoryPlacard,
+[id^="series-card-"] > div.relative.z-30 {
+  display: none !important;
 }
 
-/* Series hover overlay - contains the title shown on hover */
-/* This is a div with class="opacity-0" that shows title on hover */
-/* It's inside the covers-area div, not a direct child of series-card */
-/* The overlay has classes: bg-black/60 opacity-0 transition-opacity */
-/* In CSS, we need to escape the slash: bg-black\/60 */
-[id^="series-card-"] .opacity-0 {
+/* Also hide collection card labels for consistency */
+[id^="collection-card-"] > .categoryPlacard {
+  display: none !important;
+}
+
+/* Series/collection hover overlay - keep hidden until focus */
+[id^="series-card-"] .opacity-0,
+[id^="collection-card-"] .opacity-0 {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
 }
 
-/* Show overlay on hover/focus */
-[id^="series-card-"]:hover .opacity-0,
-[id^="series-card-"]:focus .opacity-0 {
+/* Show overlay on focus (TV doesn't have hover) */
+[id^="series-card-"]:focus .opacity-0,
+[id^="collection-card-"]:focus .opacity-0 {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
