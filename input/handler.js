@@ -193,7 +193,26 @@ function handleKeyDown(event) {
         return;
       }
     }
-    // Let natural focus/click behavior occur for non-cards
+    
+    // Not a card - click the focused element directly
+    // This handles dropdown items, menu items, list items, etc.
+    if (activeEl && activeEl !== document.body) {
+      // Check if element naturally handles Enter (inputs, buttons, links)
+      var tagName = activeEl.tagName.toUpperCase();
+      if (tagName === 'BUTTON' || tagName === 'A' || tagName === 'INPUT' || tagName === 'SELECT') {
+        // Let natural behavior occur
+        return;
+      }
+      // For other elements (li, div, span, etc.), trigger a click
+      try {
+        activeEl.click();
+        event.preventDefault();
+        event.stopPropagation();
+        console.log('TizenPortal: Clicked non-card element:', tagName);
+      } catch (err) {
+        console.warn('TizenPortal: click() failed:', err.message);
+      }
+    }
     return;
   }
 

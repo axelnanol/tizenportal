@@ -613,16 +613,11 @@ button[aria-label*="Options"] {
   gap: var(--tp-spatial-gap, 4px) !important;
 }
 
-/* Book card container - MUST have gaps for spatial navigation */
+/* Book card container - DO NOT override position - ABS uses absolute + transform */
 [id^="book-card-"],
 [id^="series-card-"] {
-  display: inline-block !important;
-  vertical-align: top !important;
-  /* Remove absolute positioning - it breaks flex flow */
-  position: relative !important;
-  /* CRITICAL: Gaps between cards for spatial navigation - minimum 4px */
-  margin: 16px !important;
-  /* Flex item properties */
+  /* CRITICAL: Do NOT set position - ABS uses position: absolute with transform: translate3d() */
+  /* Only override flex shrink to prevent sizing issues */
   -webkit-flex-shrink: 0 !important;
   flex-shrink: 0 !important;
 }
