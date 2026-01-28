@@ -54,6 +54,31 @@ html, body,
 }
 
 /* ==========================================================================
+   FILTER/SORT BAR - HIDE ON TV
+   The filter/sort/options bar below the appbar takes up space and doesn't
+   look great on TV. Hide it - users can access these via library settings.
+   ========================================================================== */
+
+/* Hide the filter/sort controls bar (the row below appbar with filter, sort, menu) */
+/* This targets the row containing controls-library-filter-select etc. */
+#page-wrapper > .w-full.px-2.md\\:px-4,
+#page-wrapper > .flex.items-center.py-2,
+#page-wrapper > div > .w-full.px-2,
+.bookshelf-toolbar,
+[class*=\"controls-library\"],
+#page-wrapper > .w-full.flex.items-center {
+  display: none !important;
+}
+
+/* But keep dropdown menus visible when they open */
+.ui-dropdown-menu,
+[role=\"menu\"],
+[role=\"listbox\"],
+.dropdown-menu {
+  display: block !important;
+}
+
+/* ==========================================================================
    FILTER/SORT DROPDOWN FIXES
    ABS uses controls-library-filter-select and controls-library-sort-select
    ========================================================================== */
@@ -951,20 +976,10 @@ a[href]:focus:not(#appbar a):not([role="toolbar"] a):not([data-tp-card]) {
   outline-offset: 2px !important;
 }
 
-/* Hint text */
+/* Hide the hint text on input wrappers - not needed on TV */
 .tp-input-wrapper::after {
-  content: "Press OK to edit";
-  position: absolute !important;
-  right: 8px !important;
-  top: 50% !important;
-  -webkit-transform: translateY(-50%) !important;
-  transform: translateY(-50%) !important;
-  font-size: 0.7rem !important;
-  color: #718096 !important; /* gray-500 */
-  pointer-events: none !important;
-}
-.tp-input-wrapper.editing::after {
   display: none !important;
+  content: none !important;
 }
 
 /* ==========================================================================
@@ -1112,28 +1127,18 @@ a[href]:focus:not(#appbar a):not([role="toolbar"] a):not([data-tp-card]) {
   padding-right: 8px !important;
 }
 
-/* Search input container - force wider for TV usability */
-#appbar .relative.w-full,
-#appbar [class*="w-80"],
-#appbar [class*="sm:w-80"],
-#appbar form,
-#appbar form > .relative {
-  width: 400px !important;
-  min-width: 400px !important;
-  max-width: 400px !important;
-}
+/* Search input container - use ABS default width */
+/* Previously forced to 400px, now allowing natural sizing */
 
-/* Search input - ensure it fills container */
+/* Search input - ensure reasonable size */
 #appbar input[type="text"],
 #appbar input[type="search"],
 #appbar input[placeholder*="Search"],
 #appbar input[placeholder="Search.."] {
   height: 40px !important;
-  width: 100% !important;
-  min-width: 350px !important;
   padding: 8px 16px !important;
   border-radius: 4px !important;
-  font-size: 18px !important;
+  font-size: 16px !important;
 }
 
 /* Search input focus state */
