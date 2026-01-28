@@ -112,11 +112,19 @@ function formatArgs(args) {
       parts.push('null');
     } else if (arg === undefined) {
       parts.push('undefined');
+    } else if (arg instanceof Error) {
+      // Special handling for Error objects
+      parts.push('[' + (arg.name || 'Error') + ': ' + (arg.message || '(no message)') + ']');
     } else if (typeof arg === 'object') {
-      try {
-        parts.push(JSON.stringify(arg));
-      } catch (err) {
-        parts.push('[Object]');
+      // Check if it's an Error-like object (has name and message)
+      if (arg.name && arg.message !== undefined) {
+        parts.push('[' + arg.name + ': ' + arg.message + ']');
+      } else {
+        try {
+          parts.push(JSON.stringify(arg));
+        } catch (err) {
+          parts.push('[Object]');
+        }
       }
     } else {
       parts.push(String(arg));

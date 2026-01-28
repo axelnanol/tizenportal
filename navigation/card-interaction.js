@@ -224,7 +224,11 @@ export function handleOK(card) {
   var markedType = card.getAttribute('data-tp-card');
   if (markedType === 'single') {
     // Explicit single-action: click the card directly
-    card.click();
+    try {
+      card.click();
+    } catch (err) {
+      console.warn('TizenPortal [CardInteraction]: click() threw:', err.name, err.message, err);
+    }
     console.log('TizenPortal [CardInteraction]: Activated explicit single-action card');
     return true;
   }
@@ -234,7 +238,11 @@ export function handleOK(card) {
       return true;
     }
     // Fall through if enter failed (no focusables) - click instead
-    card.click();
+    try {
+      card.click();
+    } catch (err) {
+      console.warn('TizenPortal [CardInteraction]: click() threw:', err.name, err.message, err);
+    }
     console.log('TizenPortal [CardInteraction]: Multi-action card had no focusables, clicked instead');
     return true;
   }
