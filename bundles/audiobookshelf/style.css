@@ -12,10 +12,9 @@
 /* Force the entire page to not overflow - TV screens have no scrollbars */
 html, body {
   overflow-x: hidden !important;
-  max-width: 100vw !important;
 }
 
-/* Hide horizontal scrollbars on bookshelf rows - cards should wrap or be calculated per row */
+/* Hide horizontal scrollbars on bookshelf rows */
 .bookshelfRow,
 .categorizedBookshelfRow {
   overflow-x: hidden !important;
@@ -24,60 +23,22 @@ html, body {
 /* Ensure the main content area doesn't overflow horizontally */
 #page-wrapper {
   overflow-x: hidden !important;
-  max-width: 100vw !important;
-  box-sizing: border-box !important;
 }
 
-/* App rail / sidebar - ensure it doesn't push content off screen */
-#appbar,
-.app-rail,
-[class*="app-rail"],
-aside {
-  flex-shrink: 0 !important;
+/* Filter/sort dropdowns in the toolbar - ABS uses ui-dropdown class */
+.ui-dropdown,
+.ui-dropdown-trigger,
+[class*="dropdown"] button,
+[class*="dropdown"] > span {
+  min-width: 140px !important;
 }
 
-/* Main content area should fill remaining space without overflow */
-#app-content,
-.app-content,
-main {
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  overflow-x: hidden !important;
-}
-
-/* Top toolbar / action bar - ensure adequate height and proper layout */
-.page-title-bar,
-[class*="toolbar"],
-[class*="action-bar"],
-.bookshelf-toolbar,
-#bookshelf-toolbar {
-  min-height: 48px !important;
-  height: auto !important;
-  display: flex !important;
-  align-items: center !important;
-  flex-wrap: wrap !important;
-  padding: 8px 12px !important;
-}
-
-/* Filter/sort dropdowns and buttons - ensure readable width */
-.page-title-bar select,
-.page-title-bar button,
-[class*="toolbar"] select,
-[class*="toolbar"] button,
-.bookshelf-toolbar select,
-.bookshelf-toolbar button {
-  min-width: 80px !important;
-  min-height: 36px !important;
-  padding: 4px 8px !important;
-}
-
-/* Dropdown menus / context menus - ensure visible */
-[class*="dropdown"],
-[class*="menu-content"],
-[class*="select-options"] {
-  min-width: 120px !important;
-  max-width: 300px !important;
+/* Dropdown menu items need readable width */
+.ui-dropdown-menu,
+[class*="dropdown-menu"],
+[role="listbox"],
+[role="menu"] {
+  min-width: 160px !important;
 }
 
 /* ==========================================================================
