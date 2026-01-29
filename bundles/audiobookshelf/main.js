@@ -676,7 +676,17 @@ export default {
    * Relocate toolbar elements (filter, sort, options) into the appbar
    * 
    * The #toolbar div below the appbar takes up space on TV.
-   * We move its useful buttons into the appbar for a cleaner look.
+   * We move its actual DOM elements into the appbar for a cleaner look.
+   * This preserves Vue reactivity, nested dropdowns, and all functionality.
+   * 
+   * The toolbar structure is typically:
+   *   #toolbar
+   *     .libraryFilterSelect (dropdown with filters)
+   *     .librarySortSelect (dropdown with sorts)
+   *     .tooltip-container (options menu)
+   *     ... other controls
+   * 
+   * These are moved into #appbar where they appear integrated with search, config, etc.
    */
   relocateToolbarToAppbar: function() {
     var toolbar = document.getElementById('toolbar');
@@ -684,60 +694,91 @@ export default {
     
     if (!toolbar || !appbar) return;
     
-    // Check if we've already relocated
-    if (appbar.querySelector('.tp-toolbar-relocated')) return;
-    
     try {
-      // Find the insertion point in appbar - after search, before stats/config icons
-      // The appbar typically has: library select, search, [gap], stats, config, user
-      var statsLink = appbar.querySelector('a[href*="/stats"]');
-      var insertBefore = statsLink ? statsLink.parentElement : null;
+      // ========================================================================
+      // PART 1: CREATE OR GET CONTAINER IN APPBAR
+      // ========================================================================
+      // Look for existing container (created on initial load)
+      var container = appbar.querySelector('.tp-toolbar-container');
       
-      // If no stats link, try to find config or just append
-      if (!insertBefore) {
-        var configLink = appbar.querySelector('a[href*="/config"]');
-        insertBefore = configLink ? configLink.parentElement : null;
+      if (!container) {
+        // Create container on first run
+        container = document.createElement('div');
+        container.className = 'tp-toolbar-container';
+        container.setAttribute('data-tp-nav', 'horizontal');
+        container.style.cssText = 'display: flex; align-items: center; gap: 0; flex-wrap: wrap;';
+        
+        // Find insertion point - after search/library select, before stats/config
+        var searchBox = appbar.querySelector('input[placeholder*="Search" i]');
+        var statsLink = appbar.querySelector('a[href*="/stats"]');
+        var insertPoint = statsLink || appbar;
+        
+        if (searchBox) {
+          // Insert after search box
+          var searchParent = searchBox.parentElement;
+          if (searchParent && searchParent.nextElementSibling) {
+            searchParent.parentElement.insertBefore(container, searchParent.nextElementSibling);
+          } else {
+            appbar.insertBefore(container, insertPoint);
+          }
+        } else {
+          // Insert before stats link or at end
+          appbar.insertBefore(container, insertPoint);
+        }
       }
       
-      // Create a container for relocated toolbar items
-      var container = document.createElement('div');
-      container.className = 'tp-toolbar-relocated';
-      container.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-left: 16px; margin-right: 16px;';
+      // ========================================================================
+      // PART 2: CLEAR OLD ITEMS AND MOVE NEW ONES
+      // ========================================================================
+      // Remove previous toolbar items from container
+      var previousItems = container.querySelectorAll('[data-tp-toolbar-item]');
+      for (var pi = 0; pi < previousItems.length; pi++) {
+        previousItems[pi].parentElement.removeChild(previousItems[pi]);
+      }
       
-      // Find toolbar buttons/controls to move
-      var toolbarButtons = toolbar.querySelectorAll('button, [role="button"]');
+      // ========================================================================
+      // PART 3: MOVE TOOLBAR ELEMENTS (NOT CLONE!)
+      // ========================================================================
+      // Find all visible, interactive elements in toolbar
+      // These are typically the filter/sort dropdowns and options menu
+      var toolbarChildren = toolbar.children;
       var movedCount = 0;
       
-      for (var i = 0; i < toolbarButtons.length; i++) {
-        var btn = toolbarButtons[i];
-        // Clone the button to avoid breaking Vue bindings
-        var clone = btn.cloneNode(true);
-        clone.setAttribute('tabindex', '0');
+      for (var i = 0; i < toolbarChildren.length; i++) {
+        var child = toolbarChildren[i];
         
-        // Copy click handler by triggering original on clone click
-        (function(originalBtn) {
-          clone.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            originalBtn.click();
-          });
-        })(btn);
+        // Skip if hidden or has display:none
+        if (child.offsetParent === null) continue;
         
-        container.appendChild(clone);
+        // Skip if it's just whitespace/text node
+        if (child.nodeType !== 1) continue; // Not an element node
+        
+        // Move the actual element (not a clone)
+        // This preserves Vue bindings, dropdowns, event listeners, etc.
+        child.setAttribute('data-tp-toolbar-item', 'true');
+        
+        // Adjust styles to fit in appbar
+        child.style.margin = '0 4px'; // Reset margin
+        
+        // Move into container
+        container.appendChild(child);
         movedCount++;
       }
       
-      // Insert into appbar
+      // ========================================================================
+      // PART 4: ENSURE CONTAINER IS VISIBLE IF IT HAS CONTENT
+      // ========================================================================
+      if (movedCount > 0 && container.style.display === 'none') {
+        container.style.display = 'flex';
+      }
+      
+      // Hide container if it's now empty
+      if (movedCount === 0 && container.children.length === 0) {
+        container.style.display = 'none';
+      }
+      
       if (movedCount > 0) {
-        if (insertBefore) {
-          insertBefore.parentElement.insertBefore(container, insertBefore);
-        } else {
-          // Just append to appbar's inner flex container
-          var appbarInner = appbar.querySelector('.flex') || appbar;
-          appbarInner.appendChild(container);
-        }
-        
-        console.log('TizenPortal [ABS]: Relocated', movedCount, 'toolbar buttons to appbar');
+        console.log('TizenPortal [ABS]: Relocated', movedCount, 'toolbar elements to appbar');
       }
     } catch (err) {
       console.warn('TizenPortal [ABS]: Error relocating toolbar:', err.message);
