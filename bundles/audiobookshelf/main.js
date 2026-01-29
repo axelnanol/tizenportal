@@ -387,9 +387,6 @@ export default {
     // This replaces manual setupFocusables() for card elements
     this.registerCardSelectors();
     
-    // ABS-SPECIFIC: Move toolbar elements into appbar (only on initial load)
-    this.relocateToolbarToAppbar();
-    
     // ABS-SPECIFIC: Set up non-card focusables (siderail, appbar, etc.)
     this.setupOtherFocusables();
     
@@ -408,11 +405,6 @@ export default {
       try {
         // Re-run setup when DOM changes (new cards loaded, etc.)
         // Card selectors are auto-processed by core observer
-        // Only relocate toolbar if there are new elements to move
-        var toolbar = document.getElementById('toolbar');
-        if (toolbar && toolbar.children.length > 0) {
-          self.relocateToolbarToAppbar();
-        }
         self.setupOtherFocusables();
         self.applySpacingClasses();
         wrapTextInputs(SELECTORS.textInputs);
@@ -678,130 +670,6 @@ export default {
     });
     
     console.log('TizenPortal [ABS]: Card selectors registered');
-  },
-
-  /**
-   * Relocate toolbar elements (filter, sort, options) into the appbar
-   * 
-   * The #toolbar div below the appbar takes up space on TV.
-   * We move its actual DOM elements into the appbar for a cleaner look.
-   * This preserves Vue reactivity, nested dropdowns, and all functionality.
-   * 
-   * The toolbar structure is typically:
-   *   #toolbar
-   *     .libraryFilterSelect (dropdown with filters)
-   *     .librarySortSelect (dropdown with sorts)
-   *     .tooltip-container (options menu)
-   *     ... other controls
-   * 
-   * These are moved into #appbar where they appear integrated with search, config, etc.
-   */
-  relocateToolbarToAppbar: function() {
-    var toolbar = document.getElementById('toolbar');
-    var appbar = document.getElementById('appbar');
-    
-    if (!toolbar || !appbar) {
-      console.log('TizenPortal [ABS]: relocateToolbarToAppbar - missing toolbar or appbar');
-      return;
-    }
-    
-    console.log('TizenPortal [ABS]: relocateToolbarToAppbar - toolbar children:', toolbar.children.length);
-    
-    // Skip if toolbar has no children to move (but log it)
-    if (toolbar.children.length === 0) {
-      console.log('TizenPortal [ABS]: No toolbar children to move');
-      return;
-    }
-    
-    try {
-      // ========================================================================
-      // PART 1: CREATE OR GET CONTAINER IN APPBAR
-      // ========================================================================
-      // Look for existing container (created on initial load)
-      var container = appbar.querySelector('.tp-toolbar-container');
-      
-      if (!container) {
-        // Create container on first run
-        container = document.createElement('div');
-        container.className = 'tp-toolbar-container';
-        container.setAttribute('data-tp-nav', 'horizontal');
-        container.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 8px;';
-        
-        // Simple approach: append to appbar (will appear at end due to flex)
-        // The margin-left: auto pushes it to the right side
-        appbar.appendChild(container);
-        console.log('TizenPortal [ABS]: Created toolbar container in appbar');
-      }
-      
-      // ========================================================================
-      // PART 2: MOVE TOOLBAR ELEMENTS (NOT CLONE!)
-      // ========================================================================
-      // Find all interactive elements in toolbar
-      // These are typically the filter/sort dropdowns and options menu
-      // IMPORTANT: Convert to array first! toolbar.children is a live collection
-      // that changes as we move elements, causing us to skip items.
-      var toolbarChildren = Array.prototype.slice.call(toolbar.children);
-      var movedCount = 0;
-      
-      for (var i = 0; i < toolbarChildren.length; i++) {
-        var child = toolbarChildren[i];
-        
-        // Skip if it's just whitespace/text node
-        if (child.nodeType !== 1) continue; // Not an element node
-        
-        // NOTE: We do NOT check offsetParent here because #toolbar is hidden
-        // via CSS (display:none), so all children would have offsetParent === null.
-        // We move all elements and let the appbar's display:flex show them.
-        
-        // Move the actual element (not a clone)
-        // This preserves Vue bindings, dropdowns, event listeners, etc.
-        child.setAttribute('data-tp-toolbar-item', 'true');
-        
-        // Adjust styles to fit in appbar
-        child.style.margin = '0';
-        
-        // Move into container
-        container.appendChild(child);
-        movedCount++;
-      }
-      
-      // ========================================================================
-      // PART 3: ENSURE CONTAINER IS VISIBLE IF IT HAS CONTENT
-      // ========================================================================
-      if (container.children.length > 0) {
-        container.style.display = 'flex';
-      } else {
-        container.style.display = 'none';
-      }
-      
-      if (movedCount > 0) {
-        console.log('TizenPortal [ABS]: Relocated', movedCount, 'toolbar elements to appbar');
-      }
-    } catch (err) {
-      console.warn('TizenPortal [ABS]: Error relocating toolbar:', err.message);
-    }
-  },
-  
-  /**
-   * Clear relocated toolbar elements (called on URL change)
-   */
-  clearRelocatedToolbar: function() {
-    try {
-      var appbar = document.getElementById('appbar');
-      if (!appbar) return;
-      
-      var container = appbar.querySelector('.tp-toolbar-container');
-      if (container) {
-        // Remove all children - they'll be stale after page change
-        while (container.firstChild) {
-          container.removeChild(container.firstChild);
-        }
-        container.style.display = 'none';
-        console.log('TizenPortal [ABS]: Cleared relocated toolbar');
-      }
-    } catch (err) {
-      console.warn('TizenPortal [ABS]: Error clearing toolbar:', err.message);
-    }
   },
 
   /**
@@ -1153,9 +1021,6 @@ export default {
           exitCard();
         }
         
-        // Clear old toolbar elements immediately
-        self.clearRelocatedToolbar();
-        
         // Force re-process cards - remove all data-tp-card attributes first
         // so they get re-registered with fresh DOM elements
         var staleCards = document.querySelectorAll('[data-tp-card]');
@@ -1171,9 +1036,6 @@ export default {
             if (window.TizenPortal && window.TizenPortal.cards) {
               window.TizenPortal.cards.process();
             }
-            
-            // Relocate new toolbar elements
-            self.relocateToolbarToAppbar();
             
             // Re-run other focusables
             self.setupOtherFocusables();

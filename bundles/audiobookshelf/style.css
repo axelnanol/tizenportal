@@ -54,42 +54,39 @@ html, body,
 }
 
 /* ==========================================================================
-   FILTER/SORT BAR - HIDE ON TV & RELOCATE TO APPBAR
-   The #toolbar div below the appbar contains filter, sort, and options.
-   Hide the toolbar itself, but move its elements into the appbar for TV.
+   FILTER/SORT BAR - REPOSITION INTO APPBAR VISUALLY
+   Instead of moving DOM elements (which breaks Vue), we use CSS to visually
+   reposition the toolbar to appear inside the appbar area.
    ========================================================================== */
 
-/* Hide the original toolbar container (we move its elements to appbar) */
+/* Position toolbar absolutely to overlay on appbar */
 #toolbar {
-  display: none !important;
-}
-
-/* Container for relocated toolbar elements in appbar */
-.tp-toolbar-container {
+  position: fixed !important;
+  top: 0 !important;
+  right: 120px !important;  /* Leave space for user/config icons */
+  left: auto !important;
+  width: auto !important;
+  height: 64px !important;  /* Match appbar height */
+  z-index: 100 !important;
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
-  margin-left: auto !important;
-  margin-right: 8px !important;
-}
-
-/* Relocated toolbar child elements - ensure they flex properly */
-.tp-toolbar-container > * {
-  display: flex !important;
-  align-items: center !important;
-  flex-shrink: 0 !important;
-  min-width: 0 !important;
+  padding: 0 8px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Fix text color for legibility - white text on dark appbar */
-.tp-toolbar-container,
-.tp-toolbar-container * {
+#toolbar,
+#toolbar * {
   color: #ffffff !important;
 }
 
-/* Relocated buttons in toolbar container */
-.tp-toolbar-container button,
-.tp-toolbar-container [role="button"] {
+/* Toolbar buttons styling */
+#toolbar button,
+#toolbar [role="button"] {
   padding: 8px 12px !important;
   min-height: 40px !important;
   white-space: nowrap !important;
@@ -98,21 +95,17 @@ html, body,
 }
 
 /* Hover/focus state for toolbar buttons */
-.tp-toolbar-container button:hover,
-.tp-toolbar-container button:focus,
-.tp-toolbar-container [role="button"]:hover,
-.tp-toolbar-container [role="button"]:focus {
+#toolbar button:hover,
+#toolbar button:focus,
+#toolbar [role="button"]:hover,
+#toolbar [role="button"]:focus {
   background: rgba(255, 255, 255, 0.1) !important;
   outline: 2px solid #4a9eff !important;
 }
 
-/* Relocated dropdowns in toolbar container */
-.tp-toolbar-container [class*="FilterSelect"],
-.tp-toolbar-container [class*="SortSelect"],
-.tp-toolbar-container .controls-library-filter-select,
-.tp-toolbar-container .controls-library-sort-select {
-  flex-grow: 0 !important;
-  min-width: auto !important;
+/* Remove the old tp-toolbar-container stuff since we're not using it anymore */
+.tp-toolbar-container {
+  display: none !important;
 }
 
 /* ==========================================================================
