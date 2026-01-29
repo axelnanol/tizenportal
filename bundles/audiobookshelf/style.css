@@ -54,14 +54,47 @@ html, body,
 }
 
 /* ==========================================================================
-   FILTER/SORT BAR - HIDE ON TV
+   FILTER/SORT BAR - HIDE ON TV & RELOCATE TO APPBAR
    The #toolbar div below the appbar contains filter, sort, and options.
-   Hide it on TV - it takes up space and doesn't work well with remote.
+   Hide the toolbar itself, but move its elements into the appbar for TV.
    ========================================================================== */
 
-/* Hide the toolbar (filter/sort/options bar below appbar) */
+/* Hide the original toolbar container (we move its elements to appbar) */
 #toolbar {
   display: none !important;
+}
+
+/* Container for relocated toolbar elements in appbar */
+.tp-toolbar-container {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  margin: 0 8px !important;
+}
+
+/* Relocated toolbar child elements - ensure they flex properly */
+.tp-toolbar-container > * {
+  display: flex !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+  min-width: 0 !important;
+}
+
+/* Relocated buttons in toolbar container */
+.tp-toolbar-container button,
+.tp-toolbar-container [role="button"] {
+  padding: 8px 12px !important;
+  min-height: 40px !important;
+  white-space: nowrap !important;
+}
+
+/* Relocated dropdowns in toolbar container */
+.tp-toolbar-container [class*="FilterSelect"],
+.tp-toolbar-container [class*="SortSelect"],
+.tp-toolbar-container .controls-library-filter-select,
+.tp-toolbar-container .controls-library-sort-select {
+  flex-grow: 0 !important;
+  min-width: auto !important;
 }
 
 /* ==========================================================================
