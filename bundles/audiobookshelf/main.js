@@ -407,8 +407,11 @@ export default {
     stopObserver = observeDOM(function() {
       // Re-run setup when DOM changes (new cards loaded, etc.)
       // Card selectors are auto-processed by core observer
-      // NOTE: Do NOT call relocateToolbarToAppbar here - it causes focus issues
-      // Toolbar relocation is handled by watchUrlChanges on page navigation
+      // Only relocate toolbar if there are new elements to move
+      var toolbar = document.getElementById('toolbar');
+      if (toolbar && toolbar.children.length > 0) {
+        self.relocateToolbarToAppbar();
+      }
       self.setupOtherFocusables();
       self.applySpacingClasses();
       wrapTextInputs(SELECTORS.textInputs);
@@ -694,11 +697,15 @@ export default {
     var appbar = document.getElementById('appbar');
     
     if (!toolbar || !appbar) {
+      console.log('TizenPortal [ABS]: relocateToolbarToAppbar - missing toolbar or appbar');
       return;
     }
     
-    // Skip if toolbar has no children to move
+    console.log('TizenPortal [ABS]: relocateToolbarToAppbar - toolbar children:', toolbar.children.length);
+    
+    // Skip if toolbar has no children to move (but log it)
     if (toolbar.children.length === 0) {
+      console.log('TizenPortal [ABS]: No toolbar children to move');
       return;
     }
     
