@@ -584,12 +584,38 @@ export default {
         // Player is at bottom - nowhere to go
         return true; // Consume
       }
+    }
+    
+    // ========================================================================
+    // MEDIA KEYS: Play/Pause/Seek when player is visible
+    // ========================================================================
+    var player = document.querySelector(SELECTORS.playerContainer);
+    if (player && player.offsetParent !== null) {
+      // Player is visible - handle media keys globally
       
-      // Media keys for player (future implementation)
-      // if (keyCode === KEYS.PLAY_PAUSE) {
-      //   this.togglePlayback();
-      //   return true;
-      // }
+      // PLAY/PAUSE
+      if (keyCode === KEYS.PLAY_PAUSE || keyCode === KEYS.PLAY || keyCode === KEYS.PAUSE) {
+        this.togglePlayback();
+        return true;
+      }
+      
+      // FAST FORWARD - seek forward 30 seconds
+      if (keyCode === KEYS.FAST_FORWARD) {
+        this.seekForward();
+        return true;
+      }
+      
+      // REWIND - seek backward 10 seconds
+      if (keyCode === KEYS.REWIND) {
+        this.seekBackward();
+        return true;
+      }
+      
+      // STOP - close player
+      if (keyCode === KEYS.STOP) {
+        this.closePlayer();
+        return true;
+      }
     }
     
     // ========================================================================
@@ -989,6 +1015,66 @@ export default {
     var first = document.querySelector(SELECTORS.siderailNav);
     if (first) {
       first.focus();
+    }
+  },
+  
+  /**
+   * Toggle playback in the media player
+   * Finds and clicks the play/pause button
+   */
+  togglePlayback: function() {
+    // ABS uses #play-pause-btn or a button with aria-label
+    var playBtn = document.querySelector('#play-pause-btn') ||
+                  document.querySelector('[aria-label="Play/Pause"]') ||
+                  document.querySelector('.player-playback-controls button');
+    if (playBtn) {
+      playBtn.click();
+      console.log('TizenPortal [ABS]: Toggle playback');
+    }
+  },
+  
+  /**
+   * Seek forward in the media player
+   * Finds and clicks the jump forward button
+   */
+  seekForward: function() {
+    // ABS jump forward button - look for SVG with forward icon or button
+    var fwdBtn = document.querySelector('#player-jump-forward') ||
+                 document.querySelector('[aria-label="Jump forward"]') ||
+                 document.querySelector('.player-playback-controls button:last-child');
+    if (fwdBtn) {
+      fwdBtn.click();
+      console.log('TizenPortal [ABS]: Seek forward');
+    }
+  },
+  
+  /**
+   * Seek backward in the media player
+   * Finds and clicks the jump backward button
+   */
+  seekBackward: function() {
+    // ABS jump backward button
+    var backBtn = document.querySelector('#player-jump-backward') ||
+                  document.querySelector('[aria-label="Jump backward"]') ||
+                  document.querySelector('.player-playback-controls button:first-child');
+    if (backBtn) {
+      backBtn.click();
+      console.log('TizenPortal [ABS]: Seek backward');
+    }
+  },
+  
+  /**
+   * Close/minimize the media player
+   * Finds and clicks the close button
+   */
+  closePlayer: function() {
+    // ABS close button in player
+    var closeBtn = document.querySelector('#player-close') ||
+                   document.querySelector('.player-container [aria-label="Close"]') ||
+                   document.querySelector('#streamContainer button[aria-label="Close"]');
+    if (closeBtn) {
+      closeBtn.click();
+      console.log('TizenPortal [ABS]: Close player');
     }
   },
   
