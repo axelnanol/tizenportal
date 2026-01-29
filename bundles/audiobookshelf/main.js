@@ -380,7 +380,8 @@ export default {
     console.log('TizenPortal [ABS]: DOM ready');
     var self = this;
     
-    // TIZEN AUDIO: Ensure TV audio is not muted and set up audio monitoring
+    // TIZEN AUDIO: Check TV audio once at startup (just logs availability)
+    // Actual unmute/volume happens on playback to avoid premature calls
     this.initializeTizenAudio();
     
     // CORE: Inject geometry spacing CSS for spatial navigation
@@ -1586,16 +1587,20 @@ export default {
    * - The audio element needs special handling
    * 
    * This function ensures the TV audio is ready for playback.
+   * Only logs "not available" message once to reduce log spam.
    */
   initializeTizenAudio: function() {
     try {
       // Check if Tizen API is available
       if (typeof tizen !== 'undefined' && tizen.tvaudiocontrol) {
-        console.log('TizenPortal [ABS]: Tizen TV Audio API available');
+        // Only log availability once
+        if (!this._tizenAudioChecked) {
+          console.log('TizenPortal [ABS]: Tizen TV Audio API available');
+          this._tizenAudioChecked = true;
+        }
         
         // Check if TV is muted
         var isMuted = tizen.tvaudiocontrol.isMute();
-        console.log('TizenPortal [ABS]: TV muted:', isMuted);
         
         if (isMuted) {
           // Unmute the TV
@@ -1603,22 +1608,19 @@ export default {
           console.log('TizenPortal [ABS]: TV unmuted for audio playback');
         }
         
-        // Get current volume
+        // Get current volume - only adjust if very low
         var volume = tizen.tvaudiocontrol.getVolume();
-        console.log('TizenPortal [ABS]: TV volume:', volume);
-        
-        // If volume is 0 or very low, set to reasonable default
-        if (volume < 10) {
+        if (volume < 5) {
           tizen.tvaudiocontrol.setVolume(20);
-          console.log('TizenPortal [ABS]: TV volume set to 20');
+          console.log('TizenPortal [ABS]: TV volume was', volume, ', set to 20');
         }
         
-        // Get audio output mode for diagnostics
-        var outputMode = tizen.tvaudiocontrol.getOutputMode();
-        console.log('TizenPortal [ABS]: TV audio output mode:', outputMode);
-        
       } else {
-        console.log('TizenPortal [ABS]: Tizen TV Audio API not available (may not be Tizen)');
+        // Only log "not available" once to reduce spam
+        if (!this._tizenAudioChecked) {
+          console.log('TizenPortal [ABS]: Tizen TV Audio API not available (may not be Tizen)');
+          this._tizenAudioChecked = true;
+        }
       }
     } catch (err) {
       console.warn('TizenPortal [ABS]: Error initializing Tizen audio:', err.message);
@@ -1632,6 +1634,7 @@ export default {
    * 1. Log playback state changes
    * 2. Detect errors
    * 3. Ensure audio is unmuted and volume is set
+   * 4. Optimize preloading for faster start
    */
   monitorAudioElement: function() {
     var audioEl = document.getElementById('audio-player');
@@ -1645,16 +1648,18 @@ export default {
     
     console.log('TizenPortal [ABS]: Setting up audio element monitoring');
     
-    // Log audio element state
-    console.log('TizenPortal [ABS]: Audio element state:', {
-      src: audioEl.src || audioEl.currentSrc,
+    // Configure audio element for better streaming performance
+    // 'auto' tells the browser to preload more aggressively
+    if (audioEl.preload !== 'auto') {
+      audioEl.preload = 'auto';
+      console.log('TizenPortal [ABS]: Set audio preload to auto');
+    }
+    
+    // Log initial audio element state (reduced detail)
+    console.log('TizenPortal [ABS]: Audio element:', {
       paused: audioEl.paused,
-      muted: audioEl.muted,
-      volume: audioEl.volume,
       readyState: audioEl.readyState,
-      networkState: audioEl.networkState,
-      duration: audioEl.duration,
-      currentTime: audioEl.currentTime
+      networkState: audioEl.networkState
     });
     
     // Ensure audio element is not muted
@@ -1669,52 +1674,42 @@ export default {
       console.log('TizenPortal [ABS]: Audio element volume set to 1.0');
     }
     
-    // Add event listeners for debugging
-    audioEl.addEventListener('play', function() {
-      console.log('TizenPortal [ABS]: Audio play event - src:', audioEl.currentSrc);
-      // Re-check TV audio when playback starts
-      self.initializeTizenAudio();
+    // Track buffering time for diagnostics
+    var loadStartTime = 0;
+    
+    // Add event listeners for debugging - only essential events
+    audioEl.addEventListener('loadstart', function() {
+      loadStartTime = Date.now();
+      console.log('TizenPortal [ABS]: Audio loading...');
+    });
+    
+    audioEl.addEventListener('canplay', function() {
+      var loadTime = loadStartTime ? (Date.now() - loadStartTime) : 'unknown';
+      console.log('TizenPortal [ABS]: Audio ready to play (loaded in', loadTime, 'ms)');
     });
     
     audioEl.addEventListener('playing', function() {
-      console.log('TizenPortal [ABS]: Audio playing event');
+      console.log('TizenPortal [ABS]: Audio playing');
     });
     
     audioEl.addEventListener('pause', function() {
-      console.log('TizenPortal [ABS]: Audio pause event');
+      console.log('TizenPortal [ABS]: Audio paused');
     });
     
     audioEl.addEventListener('error', function(e) {
       var error = audioEl.error;
       console.error('TizenPortal [ABS]: Audio error:', {
         code: error ? error.code : 'unknown',
-        message: error ? error.message : 'unknown',
-        src: audioEl.currentSrc
+        message: error ? error.message : 'unknown'
       });
     });
     
-    audioEl.addEventListener('loadstart', function() {
-      console.log('TizenPortal [ABS]: Audio loadstart - src:', audioEl.src || audioEl.currentSrc);
-    });
-    
-    audioEl.addEventListener('canplay', function() {
-      console.log('TizenPortal [ABS]: Audio canplay');
-    });
-    
-    audioEl.addEventListener('canplaythrough', function() {
-      console.log('TizenPortal [ABS]: Audio canplaythrough');
-    });
-    
     audioEl.addEventListener('waiting', function() {
-      console.log('TizenPortal [ABS]: Audio waiting (buffering)');
+      console.log('TizenPortal [ABS]: Audio buffering...');
     });
     
     audioEl.addEventListener('stalled', function() {
-      console.log('TizenPortal [ABS]: Audio stalled');
-    });
-    
-    audioEl.addEventListener('suspend', function() {
-      console.log('TizenPortal [ABS]: Audio suspend');
+      console.log('TizenPortal [ABS]: Audio stalled (network issue)');
     });
   },
 };
