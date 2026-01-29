@@ -739,7 +739,7 @@ export default {
       // ========================================================================
       // PART 3: MOVE TOOLBAR ELEMENTS (NOT CLONE!)
       // ========================================================================
-      // Find all visible, interactive elements in toolbar
+      // Find all interactive elements in toolbar
       // These are typically the filter/sort dropdowns and options menu
       // IMPORTANT: Convert to array first! toolbar.children is a live collection
       // that changes as we move elements, causing us to skip items.
@@ -749,11 +749,12 @@ export default {
       for (var i = 0; i < toolbarChildren.length; i++) {
         var child = toolbarChildren[i];
         
-        // Skip if hidden or has display:none
-        if (child.offsetParent === null) continue;
-        
         // Skip if it's just whitespace/text node
         if (child.nodeType !== 1) continue; // Not an element node
+        
+        // NOTE: We do NOT check offsetParent here because #toolbar is hidden
+        // via CSS (display:none), so all children would have offsetParent === null.
+        // We move all elements and let the appbar's display:flex show them.
         
         // Move the actual element (not a clone)
         // This preserves Vue bindings, dropdowns, event listeners, etc.
