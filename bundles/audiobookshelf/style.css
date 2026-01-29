@@ -1656,9 +1656,89 @@ textarea,
    - Clear focus indicators
    ========================================================================== */
 
-/* Player container - ensure it's above other content but don't change layout */
+/* Player container - ensure proper layout and z-index */
 #mediaPlayerContainer {
   z-index: 10000 !important;
+  /* Ensure flexbox layout works - ABS uses Tailwind classes that may not apply */
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-orient: horizontal !important;
+  -webkit-flex-direction: row !important;
+  flex-direction: row !important;
+  -webkit-box-align: start !important;
+  -webkit-align-items: flex-start !important;
+  align-items: flex-start !important;
+  box-sizing: border-box !important;
+  /* Ensure Tailwind position/size classes work */
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 160px !important;  /* lg:h-40 = 160px */
+  padding: 8px 16px 16px 16px !important;  /* px-4 pb-4 pt-2 */
+}
+
+/* Player cover image container - absolutely positioned left */
+#mediaPlayerContainer > div:first-child {
+  position: absolute !important;
+  left: 16px !important;
+  top: 8px !important;
+}
+
+/* Player content container - needs padding-left for cover */
+#mediaPlayerContainer > div.flex,
+#mediaPlayerContainer > div:nth-child(2) {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-align: start !important;
+  -webkit-align-items: flex-start !important;
+  align-items: flex-start !important;
+  padding-left: 140px !important;  /* Make room for cover image */
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Player inner content - ensure it fills width */
+#mediaPlayerContainer > div.flex > div.min-w-0,
+#mediaPlayerContainer > div:nth-child(2) > div:first-child {
+  min-width: 0 !important;
+  width: 100% !important;
+  -webkit-box-flex: 1 !important;
+  -webkit-flex: 1 !important;
+  flex: 1 !important;
+}
+
+/* Player UI component (controls/trackbar wrapper) */
+#mediaPlayerContainer player-ui,
+#mediaPlayerContainer [ref="audioPlayer"] {
+  width: 100% !important;
+}
+
+/* ==========================================================================
+   PLAYER TRACK BAR (SEEKBAR)
+   Ensure the progress bar renders correctly - Tailwind h-2 = 8px
+   ========================================================================== */
+
+/* Track bar container - the main clickable bar */
+#mediaPlayerContainer .w-full.h-2,
+#mediaPlayerContainer [ref="track"] {
+  height: 12px !important;  /* Slightly larger for TV (was h-2 = 8px) */
+  min-height: 12px !important;
+  position: relative !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+}
+
+/* Track bar inner bars (ready, buffer, played) - ensure they show */
+#mediaPlayerContainer .w-full.h-2 > div,
+#mediaPlayerContainer [ref="track"] > div {
+  height: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
 }
 
 /* ==========================================================================
