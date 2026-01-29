@@ -1662,6 +1662,118 @@ textarea,
 }
 
 /* ==========================================================================
+   PLAYER TITLE/AUTHOR AREA (top section, next to cover)
+   
+   Structure from MediaPlayerContainer.vue:
+   - Cover: .absolute.left-2.top-2 (lg:left-4)
+   - Title area: .flex.items-start with dynamic pl-12/pl-18 based on cover aspect
+   
+   Problem: Tailwind responsive padding (pl-12 sm:pl-16) doesn't work in Chrome 47
+   Solution: Apply lg/TV sizes directly since we're always at 1920px
+   ========================================================================== */
+
+/* Title/author flex container - needs padding for cover */
+#mediaPlayerContainer > .flex.items-start {
+  padding-left: 96px !important;  /* pl-24 = 6rem = 96px for square covers */
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-align: start !important;
+  -webkit-align-items: flex-start !important;
+  align-items: flex-start !important;
+  margin-bottom: 0 !important;  /* lg:mb-0 */
+}
+
+/* Inner container with title/author/duration */
+#mediaPlayerContainer > .flex.items-start > .min-w-0 {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+/* Title link */
+#mediaPlayerContainer > .flex.items-start a[href^="/item/"] {
+  display: block !important;
+  font-size: 1.125rem !important;  /* sm:text-lg */
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Author row */
+#mediaPlayerContainer > .flex.items-start .text-gray-400 {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-align: center !important;
+  -webkit-align-items: center !important;
+  align-items: center !important;
+  font-size: 1rem !important;  /* sm:text-base */
+  width: 40% !important;  /* lg:w-2/5 */
+}
+
+/* Duration row with schedule icon */
+#mediaPlayerContainer > .flex.items-start .text-gray-400 .font-mono {
+  font-size: 0.875rem !important;  /* sm:text-sm */
+}
+
+/* Close button - larger for TV */
+#mediaPlayerContainer > .flex.items-start button[aria-label] {
+  padding: 16px !important;  /* lg:p-4 */
+  font-size: 1.5rem !important;  /* sm:text-2xl */
+}
+
+/* ==========================================================================
+   PLAYER-UI COMPONENT
+   
+   Structure from PlayerUi.vue:
+   - Outer: .w-full.-mt-6
+   - Controls row: .w-full.relative.mb-1
+   - Aux buttons: .absolute.-top-10.right-0 (lg:top-0 lg:right-2)
+   ========================================================================== */
+
+/* Player UI wrapper - fix negative margin */
+#mediaPlayerContainer .w-full.-mt-6 {
+  margin-top: -24px !important;  /* -mt-6 = -1.5rem */
+  width: 100% !important;
+}
+
+/* Controls container row */
+#mediaPlayerContainer .w-full.-mt-6 > .w-full.relative {
+  position: relative !important;
+  width: 100% !important;
+  margin-bottom: 4px !important;
+}
+
+/* Auxiliary controls (speed, volume, sleep, bookmarks, chapters, settings) */
+#mediaPlayerContainer .w-full.-mt-6 .absolute.-top-10,
+#mediaPlayerContainer .w-full.relative > .absolute.right-0,
+#mediaPlayerContainer .absolute.-top-10.right-0 {
+  position: absolute !important;
+  top: 0 !important;  /* lg:top-0 */
+  right: 8px !important;  /* lg:right-2 */
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-align: center !important;
+  -webkit-align-items: center !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+
+/* Volume control - show on TV (has hidden sm:block) */
+#mediaPlayerContainer .controls-volume-control,
+#mediaPlayerContainer [class*="volume-control"] {
+  display: block !important;
+}
+
+/* Make aux buttons focusable and larger */
+#mediaPlayerContainer .w-full.-mt-6 button {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  cursor: pointer !important;
+}
+
+/* ==========================================================================
    PLAYER TRACK BAR (SEEKBAR)
    The track bar uses Tailwind classes that may not render in Chrome 47.
    Add explicit styles to ensure visibility.

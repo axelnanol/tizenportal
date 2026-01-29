@@ -199,10 +199,26 @@ function handleKeyDown(event) {
     if (activeEl && activeEl !== document.body) {
       // Check if element naturally handles Enter (inputs, buttons, links)
       var tagName = activeEl.tagName.toUpperCase();
-      if (tagName === 'BUTTON' || tagName === 'A' || tagName === 'INPUT' || tagName === 'SELECT') {
-        // Let natural behavior occur
+      
+      // For INPUT and SELECT, let natural behavior occur
+      if (tagName === 'INPUT' || tagName === 'SELECT') {
         return;
       }
+      
+      // For BUTTON and A, explicitly call click() because Vue's @click.stop
+      // and @mousedown.prevent modifiers can block native Enter key handling
+      if (tagName === 'BUTTON' || tagName === 'A') {
+        try {
+          activeEl.click();
+          event.preventDefault();
+          event.stopPropagation();
+          console.log('TizenPortal: Clicked', tagName);
+        } catch (err) {
+          console.warn('TizenPortal: click() failed:', err.message);
+        }
+        return;
+      }
+      
       // For other elements (li, div, span, etc.), trigger a click
       try {
         activeEl.click();
