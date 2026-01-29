@@ -859,6 +859,42 @@ export default {
       }
       
       // ========================================================================
+      // ITEM DETAIL PAGE - Icon buttons (edit, finished, etc.)
+      // These are inside ui-tooltip wrappers and use ui-icon-btn components
+      // ========================================================================
+      if (window.location.pathname.indexOf('/item/') !== -1) {
+        // Icon buttons row (Play, Queue, Edit, Finished, More)
+        var iconBtns = document.querySelectorAll('.icon-btn, [class*="icon-btn"], button.mx-0\\.5');
+        for (var ib = 0; ib < iconBtns.length; ib++) {
+          var btn = iconBtns[ib];
+          if (btn.getAttribute('tabindex') !== '0' && !btn.disabled) {
+            btn.setAttribute('tabindex', '0');
+            count++;
+          }
+        }
+        
+        // ui-btn components (Play button, Read button)
+        var uiBtns = document.querySelectorAll('#item-page-wrapper button, #page-wrapper .flex.items-center button');
+        for (var ub = 0; ub < uiBtns.length; ub++) {
+          var uiBtn = uiBtns[ub];
+          if (uiBtn.getAttribute('tabindex') !== '0' && !uiBtn.disabled) {
+            uiBtn.setAttribute('tabindex', '0');
+            count++;
+          }
+        }
+        
+        // Links to series/author
+        var detailLinks = document.querySelectorAll('#item-page-wrapper a[href], #page-wrapper .grow a[href]');
+        for (var dl = 0; dl < detailLinks.length; dl++) {
+          var link = detailLinks[dl];
+          if (link.getAttribute('tabindex') !== '0') {
+            link.setAttribute('tabindex', '0');
+            count++;
+          }
+        }
+      }
+      
+      // ========================================================================
       // PLAYER CONTROLS (when player is visible)
       // ========================================================================
       var playerContainer = document.querySelector(SELECTORS.playerContainer);
@@ -868,13 +904,14 @@ export default {
           playerContainer.setAttribute('data-tp-nav', 'horizontal');
         }
         
-        var playerButtons = playerContainer.querySelectorAll('button');
-        for (var pb = 0; pb < playerButtons.length; pb++) {
-          var pBtn = playerButtons[pb];
-          if (pBtn.getAttribute('tabindex') !== '0' &&
-              !pBtn.disabled &&
-              pBtn.getAttribute('aria-hidden') !== 'true') {
-            pBtn.setAttribute('tabindex', '0');
+        // Make ALL interactive elements in player focusable
+        var playerInteractive = playerContainer.querySelectorAll('button, a, [role="button"], [class*="playback-speed"], [class*="volume"]');
+        for (var pi = 0; pi < playerInteractive.length; pi++) {
+          var pEl = playerInteractive[pi];
+          if (pEl.getAttribute('tabindex') !== '0' &&
+              !pEl.disabled &&
+              pEl.getAttribute('aria-hidden') !== 'true') {
+            pEl.setAttribute('tabindex', '0');
             count++;
           }
         }

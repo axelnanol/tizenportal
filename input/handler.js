@@ -27,6 +27,37 @@ import {
 } from '../navigation/card-interaction.js';
 
 /**
+ * Simulate a full click event sequence (mousedown -> mouseup -> click)
+ * This is needed for Vue components that use @mousedown.prevent @mouseup.prevent @click.stop
+ * A simple .click() won't work because Vue intercepts at mousedown/mouseup level
+ * @param {HTMLElement} element 
+ */
+function simulateFullClick(element) {
+  if (!element) return;
+  
+  var rect = element.getBoundingClientRect();
+  var centerX = rect.left + rect.width / 2;
+  var centerY = rect.top + rect.height / 2;
+  
+  var eventInit = {
+    bubbles: true,
+    cancelable: true,
+    view: window,
+    clientX: centerX,
+    clientY: centerY,
+    screenX: centerX,
+    screenY: centerY,
+    button: 0,
+    buttons: 1
+  };
+  
+  // Dispatch full mouse event sequence
+  element.dispatchEvent(new MouseEvent('mousedown', eventInit));
+  element.dispatchEvent(new MouseEvent('mouseup', eventInit));
+  element.dispatchEvent(new MouseEvent('click', eventInit));
+}
+
+/**
  * Long press detection threshold (milliseconds)
  */
 var LONG_PRESS_MS = 500;
@@ -205,28 +236,18 @@ function handleKeyDown(event) {
         return;
       }
       
-      // For BUTTON and A, explicitly call click() because Vue's @click.stop
-      // and @mousedown.prevent modifiers can block native Enter key handling
-      if (tagName === 'BUTTON' || tagName === 'A') {
-        try {
-          activeEl.click();
-          event.preventDefault();
-          event.stopPropagation();
-          console.log('TizenPortal: Clicked', tagName);
-        } catch (err) {
-          console.warn('TizenPortal: click() failed:', err.message);
-        }
-        return;
-      }
-      
-      // For other elements (li, div, span, etc.), trigger a click
+      // For all interactive elements, dispatch proper MouseEvent sequence
+      // Vue components with @mousedown.prevent @mouseup.prevent @click.stop
+      // need proper events, not just .click()
       try {
-        activeEl.click();
+        simulateFullClick(activeEl);
         event.preventDefault();
         event.stopPropagation();
-        console.log('TizenPortal: Clicked non-card element:', tagName);
+        console.log('TizenPortal: Simulated click on', tagName);
       } catch (err) {
-        console.warn('TizenPortal: click() failed:', err.message);
+        console.warn('TizenPortal: Click simulation failed:', err.message);
+        // Fallback to basic click
+        try { activeEl.click(); } catch (e) {}
       }
     }
     return;
