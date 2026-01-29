@@ -413,6 +413,10 @@ export default {
         wrapTextInputs(SELECTORS.textInputs);
         // Monitor audio element when DOM changes (player may have been created)
         self.monitorAudioElement();
+        // Setup player controls for navigation
+        self.setupPlayerControls();
+        // Handle color hints visibility based on player state
+        self.updateColorHintsVisibility();
       } catch (err) {
         console.warn('TizenPortal [ABS]: Error in DOM observer:', err.message);
       }
@@ -498,6 +502,9 @@ export default {
   handleKeyDown: function(event) {
     var keyCode = event.keyCode;
     var active = document.activeElement;
+    
+    // Debug: Log all key presses handled by ABS bundle
+    console.log('TizenPortal [ABS]: handleKeyDown received keyCode:', keyCode);
     
     // ========================================================================
     // SIDERAIL: Vertical-only navigation
@@ -597,29 +604,39 @@ export default {
     var player = document.querySelector(SELECTORS.playerContainer);
     var playerVisible = player && player.offsetParent !== null;
     
+    // Log media key presses for debugging
+    if (keyCode === KEYS.PLAY_PAUSE || keyCode === KEYS.PLAY || keyCode === KEYS.PAUSE ||
+        keyCode === KEYS.FAST_FORWARD || keyCode === KEYS.REWIND || keyCode === KEYS.STOP) {
+      console.log('TizenPortal [ABS]: Media key pressed:', keyCode, 'Player visible:', playerVisible);
+    }
+    
     if (playerVisible) {
       // Player is visible - handle media keys globally
       
       // PLAY/PAUSE - toggle audio playback
       if (keyCode === KEYS.PLAY_PAUSE || keyCode === KEYS.PLAY || keyCode === KEYS.PAUSE) {
+        console.log('TizenPortal [ABS]: Handling PLAY/PAUSE key');
         this.togglePlayback();
         return true;
       }
       
       // FAST FORWARD - seek forward
       if (keyCode === KEYS.FAST_FORWARD) {
+        console.log('TizenPortal [ABS]: Handling FAST_FORWARD key');
         this.seekForward();
         return true;
       }
       
       // REWIND - seek backward
       if (keyCode === KEYS.REWIND) {
+        console.log('TizenPortal [ABS]: Handling REWIND key');
         this.seekBackward();
         return true;
       }
       
       // STOP - close player
       if (keyCode === KEYS.STOP) {
+        console.log('TizenPortal [ABS]: Handling STOP key');
         this.closePlayer();
         return true;
       }
@@ -957,6 +974,91 @@ export default {
       }
     } catch (err) {
       console.warn('TizenPortal [ABS]: Error applying spacing classes:', err.message);
+    }
+  },
+  
+  /**
+   * Setup player controls with proper spacing for spatial navigation
+   * 
+   * The media player has several buttons that need consistent spacing
+   * and data attributes for spatial navigation to work correctly.
+   */
+  setupPlayerControls: function() {
+    try {
+      var playerContainer = document.querySelector(SELECTORS.playerContainer);
+      if (!playerContainer) return;
+      
+      // Mark container for horizontal navigation
+      if (!playerContainer.hasAttribute('data-tp-nav')) {
+        playerContainer.setAttribute('data-tp-nav', 'horizontal');
+      }
+      
+      // Apply spacing class to player container
+      if (!playerContainer.classList.contains(SPACING_CLASS)) {
+        playerContainer.classList.add(SPACING_CLASS);
+      }
+      
+      // Setup all buttons in the player
+      var buttons = playerContainer.querySelectorAll('button');
+      var count = 0;
+      
+      for (var i = 0; i < buttons.length; i++) {
+        var btn = buttons[i];
+        
+        // Skip disabled or hidden buttons
+        if (btn.disabled || btn.getAttribute('aria-hidden') === 'true') {
+          continue;
+        }
+        
+        // Make focusable
+        if (btn.getAttribute('tabindex') !== '0') {
+          btn.setAttribute('tabindex', '0');
+          count++;
+        }
+        
+        // Mark for horizontal navigation within player
+        if (!btn.hasAttribute('data-tp-nav-item')) {
+          btn.setAttribute('data-tp-nav-item', 'true');
+        }
+      }
+      
+      if (count > 0) {
+        console.log('TizenPortal [ABS]: Set up', count, 'player control buttons');
+      }
+    } catch (err) {
+      console.warn('TizenPortal [ABS]: Error setting up player controls:', err.message);
+    }
+  },
+  
+  /**
+   * Update color hints visibility based on player state
+   * 
+   * When the media player is visible, the color hints at the bottom
+   * overlap badly with the player controls. We hide them during playback.
+   */
+  updateColorHintsVisibility: function() {
+    try {
+      var hints = document.querySelector('.tp-site-hints');
+      if (!hints) return;
+      
+      var playerContainer = document.querySelector(SELECTORS.playerContainer);
+      var playerVisible = playerContainer && playerContainer.offsetParent !== null;
+      
+      if (playerVisible) {
+        // Hide color hints when player is visible
+        if (hints.style.display !== 'none') {
+          hints.style.display = 'none';
+          console.log('TizenPortal [ABS]: Hiding color hints (player visible)');
+        }
+      } else {
+        // Show color hints when player is hidden
+        if (hints.style.display === 'none') {
+          hints.style.display = '';
+          console.log('TizenPortal [ABS]: Showing color hints (player hidden)');
+        }
+      }
+    } catch (err) {
+      console.warn('TizenPortal [ABS]: Error updating color hints:', err.message);
     }
   },
   
