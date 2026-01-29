@@ -63,7 +63,7 @@ html, body,
 #toolbar {
   position: fixed !important;
   top: 0 !important;
-  right: 200px !important;  /* More space - leave room for stats/upload/settings/user icons */
+  right: 320px !important;  /* Clear all right icons: stats(40) + upload(40) + settings(40) + user(148) + margins */
   left: auto !important;
   width: auto !important;
   height: 64px !important;  /* Match appbar height */
@@ -110,23 +110,22 @@ html, body,
 
 /* ==========================================================================
    SEARCH BOX - Fix icon overlapping text
+   The search has a magnifying glass icon positioned absolutely inside the input.
+   We need to add left padding to the input so text doesn't appear under the icon.
    ========================================================================== */
 
-/* Move search icon to the right so it doesn't overlap "Search" text */
-#appbar input[type="search"],
-#appbar input[placeholder*="Search" i] {
-  padding-left: 12px !important;  /* Normal left padding for text */
-  padding-right: 36px !important; /* Space for icon on right */
+/* Add left padding to search input for the magnifying glass icon */
+#appbar input,
+#appbar input[type="text"],
+#appbar input[type="search"] {
+  padding-left: 40px !important;  /* Space for magnifying glass on left */
 }
 
-/* Position the search icon further right */
-#appbar .material-symbols[class*="search"],
-#appbar .mdi-magnify,
-#appbar [class*="search-icon"],
-#appbar input + span,
-#appbar input + .material-symbols {
-  right: 8px !important;
-  left: auto !important;
+/* Ensure the magnifying glass icon is positioned correctly */
+#appbar .material-symbols {
+  position: absolute !important;
+  left: 10px !important;
+  pointer-events: none !important;
 }
 
 /* ==========================================================================
