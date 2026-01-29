@@ -1403,31 +1403,32 @@ textarea,
 }
 
 /* ==========================================================================
-   ITEM DETAIL PAGE (/item/_id) - TV OPTIMIZED
+   ITEM DETAIL PAGE (/item/_id) - TV CARD-BASED LAYOUT
    
-   Layout from ABS: 
-   - Left: Cover image (208px wide at lg+)
-   - Right: Metadata (title, author, series, duration, description)
-   - Below: Chapters table, tracks table
+   Design Philosophy:
+   - Group content into distinct "cards" for spatial navigation
+   - Reduce whitespace - compact but readable
+   - Clear visual boundaries between sections
+   - Every card is a navigable unit
    
-   TV Optimizations (10ft viewing distance):
-   - Much larger text for readability
-   - Prominent action buttons with clear focus states
-   - Simplified layout without hover-dependent UI
-   - Clear visual hierarchy and navigation flow
-   - Large touch/focus targets (min 56px)
+   Card Sections:
+   1. Hero Card: Cover + Title + Author + Progress
+   2. Actions Card: Play, Read, Edit buttons
+   3. Info Card: Duration, Series, Narrator, Tags
+   4. Description Card: Expandable synopsis
+   5. Chapters Card: Chapter list
    ========================================================================== */
 
-/* Item page main container - ensure proper layout */
+/* ===== PAGE CONTAINER - Tighter padding ===== */
 #page-wrapper,
 #item-page-wrapper {
-  padding: 32px !important;
-  padding-top: 96px !important;  /* Account for fixed appbar */
-  padding-left: 112px !important;  /* Account for siderail */
-  padding-right: 48px !important;
+  padding: 16px !important;
+  padding-top: 80px !important;  /* Account for fixed appbar */
+  padding-left: 96px !important;  /* Account for siderail */
+  padding-right: 24px !important;
 }
 
-/* Item page flex container - cover + details side by side */
+/* ===== HERO SECTION: Cover + Title side by side ===== */
 #item-page-wrapper > .flex {
   -webkit-box-orient: horizontal !important;
   -webkit-flex-direction: row !important;
@@ -1435,40 +1436,40 @@ textarea,
   -webkit-box-align: start !important;
   -webkit-align-items: flex-start !important;
   align-items: flex-start !important;
-  gap: 48px !important;
+  gap: 24px !important;
+  margin-bottom: 16px !important;
 }
 
-/* Cover section - left side, larger for TV */
+/* Cover section - left side */
 #item-page-wrapper > .flex > div:first-child {
   -webkit-flex-shrink: 0 !important;
   flex-shrink: 0 !important;
-  width: 320px !important;  /* Larger than default 208px for TV */
-  min-width: 320px !important;
+  width: 240px !important;
+  min-width: 240px !important;
 }
 
-/* Item cover image - make it focusable for expand on click */
+/* Cover image */
 #item-page-wrapper .covers-book-cover,
 #item-page-wrapper [class*="book-cover"] {
   cursor: pointer !important;
   width: 100% !important;
   height: auto !important;
+  border-radius: 8px !important;
 }
 
 #item-page-wrapper .covers-book-cover:focus,
 #item-page-wrapper [class*="book-cover"]:focus {
-  outline: 5px solid #1ad691 !important;
-  outline-offset: 6px !important;
-  -webkit-transform: scale(1.02) !important;
-  transform: scale(1.02) !important;
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
 }
 
-/* Progress bar under cover - much thicker for visibility */
+/* Progress bar under cover */
 #item-page-wrapper [class*="h-1"],
 #item-page-wrapper [class*="progress-bar"] {
-  height: 12px !important;
-  min-height: 12px !important;
-  border-radius: 6px !important;
-  margin-top: 16px !important;
+  height: 8px !important;
+  min-height: 8px !important;
+  border-radius: 4px !important;
+  margin-top: 12px !important;
 }
 
 /* Details section - right side */
@@ -1477,123 +1478,110 @@ textarea,
   -webkit-box-flex: 1 !important;
   -webkit-flex-grow: 1 !important;
   flex-grow: 1 !important;
-  max-width: calc(100% - 380px) !important;
-  padding-right: 32px !important;
+  max-width: calc(100% - 280px) !important;
+  padding-right: 16px !important;
 }
 
-/* Item title - MUCH larger for TV (10ft viewing) */
+/* Title - readable but not oversized */
 #item-page-wrapper h1 {
-  font-size: 3rem !important;  /* 48px */
-  line-height: 1.15 !important;
-  margin-bottom: 12px !important;
+  font-size: 2rem !important;  /* 32px */
+  line-height: 1.2 !important;
+  margin-bottom: 4px !important;
   font-weight: 600 !important;
 }
 
 /* Subtitle */
 #item-page-wrapper h1 + p {
-  font-size: 1.75rem !important;  /* 28px */
+  font-size: 1.25rem !important;  /* 20px */
   color: #a0aec0 !important;
-  margin-bottom: 20px !important;
-}
-
-/* Series link - prominent and focusable */
-#item-page-wrapper a[href^="/series/"] {
-  display: inline-block !important;
-  padding: 8px 16px !important;
-  border-radius: 6px !important;
-  font-size: 1.375rem !important;  /* 22px */
-  background: rgba(255, 255, 255, 0.05) !important;
   margin-bottom: 8px !important;
 }
 
-#item-page-wrapper a[href^="/series/"]:focus {
-  outline: 3px solid #1ad691 !important;
-  outline-offset: 3px !important;
-  background: rgba(26, 214, 145, 0.15) !important;
-}
-
-/* Author links - larger for TV */
+/* Author/Series links - inline, compact */
+#item-page-wrapper a[href^="/series/"],
 #item-page-wrapper a[href^="/author/"] {
   display: inline-block !important;
-  padding: 8px 16px !important;
-  border-radius: 6px !important;
-  font-size: 1.5rem !important;  /* 24px */
+  padding: 4px 10px !important;
+  border-radius: 4px !important;
+  font-size: 1rem !important;
   margin-right: 8px !important;
+  margin-bottom: 4px !important;
 }
 
+#item-page-wrapper a[href^="/series/"]:focus,
 #item-page-wrapper a[href^="/author/"]:focus {
-  outline: 3px solid #1ad691 !important;
-  outline-offset: 3px !important;
+  outline: 2px solid #1ad691 !important;
+  outline-offset: 2px !important;
   background: rgba(26, 214, 145, 0.15) !important;
 }
 
 /* ==========================================================================
-   ACTION BUTTONS ROW - HERO SECTION
-   Play, Read, Edit, More buttons - most important interactive elements
+   ACTIONS CARD - Primary interactive section
+   Wrapped in a card with background for visual grouping
    ========================================================================== */
 
-/* Action buttons container */
+/* Actions container - card style */
 #item-page-wrapper .flex.items-center.justify-center,
 #item-page-wrapper .flex.items-center.flex-wrap {
-  gap: 24px !important;
-  margin-top: 32px !important;
-  margin-bottom: 32px !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  padding: 16px 20px !important;
+  gap: 12px !important;
+  margin-top: 16px !important;
+  margin-bottom: 16px !important;
   -webkit-flex-wrap: wrap !important;
   flex-wrap: wrap !important;
 }
 
-/* Play button - HERO button, most prominent */
+/* Play button - prominent but not oversized */
 #item-page-wrapper button[aria-label="Play"],
 #item-page-wrapper button:has(.material-symbols:contains("play")),
 #item-page-wrapper .bg-success {
-  min-width: 200px !important;
-  min-height: 72px !important;
-  padding: 16px 48px !important;
-  font-size: 1.5rem !important;  /* 24px */
+  min-width: 140px !important;
+  min-height: 52px !important;
+  padding: 12px 28px !important;
+  font-size: 1.125rem !important;
   font-weight: 600 !important;
-  border-radius: 12px !important;
+  border-radius: 8px !important;
   background: #1ad691 !important;
   color: #000 !important;
 }
 
 #item-page-wrapper button[aria-label="Play"]:focus,
 #item-page-wrapper .bg-success:focus {
-  outline: 5px solid #fff !important;
-  outline-offset: 5px !important;
-  -webkit-transform: scale(1.08) !important;
-  transform: scale(1.08) !important;
-  box-shadow: 0 0 30px rgba(26, 214, 145, 0.5) !important;
+  outline: 3px solid #fff !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 20px rgba(26, 214, 145, 0.4) !important;
 }
 
-/* Secondary action buttons (Read, etc.) */
+/* Secondary action buttons */
 #item-page-wrapper .ui-btn,
 #item-page-wrapper button.flex.items-center {
-  min-width: 140px !important;
-  min-height: 64px !important;
-  padding: 14px 32px !important;
-  font-size: 1.25rem !important;
-  border-radius: 10px !important;
+  min-width: 100px !important;
+  min-height: 48px !important;
+  padding: 10px 20px !important;
+  font-size: 1rem !important;
+  border-radius: 8px !important;
 }
 
 #item-page-wrapper .ui-btn:focus,
 #item-page-wrapper button.flex.items-center:focus {
-  outline: 4px solid #1ad691 !important;
-  outline-offset: 4px !important;
-  -webkit-transform: scale(1.05) !important;
-  transform: scale(1.05) !important;
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 3px !important;
 }
 
-/* Icon buttons (Edit, More, Bookmark, etc.) */
+/* Icon buttons (Edit, More, Bookmark) */
 #item-page-wrapper button[aria-label*="Edit"],
 #item-page-wrapper button[aria-label*="More"],
 #item-page-wrapper button[aria-label*="Bookmark"],
 #item-page-wrapper .ui-icon-btn,
 #item-page-wrapper .icon-btn {
-  min-width: 64px !important;
-  min-height: 64px !important;
-  padding: 16px !important;
-  border-radius: 10px !important;
-  background: rgba(255, 255, 255, 0.1) !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+  padding: 12px !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
 }
 
 #item-page-wrapper button[aria-label*="Edit"]:focus,
@@ -1601,67 +1589,32 @@ textarea,
 #item-page-wrapper button[aria-label*="Bookmark"]:focus,
 #item-page-wrapper .ui-icon-btn:focus,
 #item-page-wrapper .icon-btn:focus {
-  outline: 4px solid #1ad691 !important;
-  outline-offset: 4px !important;
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 3px !important;
   background: rgba(26, 214, 145, 0.2) !important;
-  -webkit-transform: scale(1.1) !important;
-  transform: scale(1.1) !important;
 }
 
-/* Icon size inside buttons */
+/* Icon size */
 #item-page-wrapper .ui-icon-btn .material-symbols,
 #item-page-wrapper .icon-btn .material-symbols,
 #item-page-wrapper button .material-symbols {
-  font-size: 1.75rem !important;
+  font-size: 1.25rem !important;
 }
 
 /* ==========================================================================
-   DESCRIPTION AND METADATA
+   INFO CARD - Duration, Narrator, Tags in a compact card
    ========================================================================== */
 
-/* Description text - larger line height for readability */
-#item-description {
-  font-size: 1.375rem !important;  /* 22px */
-  line-height: 1.9 !important;
-  max-height: none !important;  /* Don't clamp on TV */
-  margin-top: 24px !important;
-  margin-bottom: 24px !important;
-}
-
-/* Read more/less button */
-#item-page-wrapper button:has(.material-symbols:contains("expand")),
-#item-page-wrapper .text-white-50 {
-  padding: 12px 24px !important;
-  font-size: 1.125rem !important;
-  min-height: 48px !important;
-}
-
-/* Metadata pills (tags, genres) */
-#item-page-wrapper [class*="bg-primary"],
-#item-page-wrapper [class*="tag"],
-#item-page-wrapper [class*="genre"] {
-  padding: 10px 20px !important;
-  font-size: 1.125rem !important;
-  margin: 6px !important;
-  border-radius: 6px !important;
-}
-
-#item-page-wrapper [class*="tag"]:focus,
-#item-page-wrapper [class*="genre"]:focus {
-  outline: 2px solid #1ad691 !important;
-  outline-offset: 2px !important;
-}
-
-/* Duration, size, and other stats - larger */
+/* Duration, size, stats - compact text */
 #item-page-wrapper .text-gray-300,
 #item-page-wrapper .text-gray-400 {
-  font-size: 1.25rem !important;
+  font-size: 0.9375rem !important;  /* 15px */
 }
 
-/* Narrator info */
+/* Narrator link */
 #item-page-wrapper a[href^="/narrator/"] {
-  font-size: 1.25rem !important;
-  padding: 6px 12px !important;
+  font-size: 1rem !important;
+  padding: 4px 8px !important;
   border-radius: 4px !important;
 }
 
@@ -1670,63 +1623,106 @@ textarea,
   background: rgba(26, 214, 145, 0.1) !important;
 }
 
-/* ==========================================================================
-   CHAPTERS TABLE - TV OPTIMIZED
-   From ABS: tables/ChaptersTable.vue
-   Large rows, clear focus, easy D-pad navigation
-   ========================================================================== */
-
-/* Chapters section wrapper */
-#item-page-wrapper [class*="chapters"],
-.chapters-table-wrapper {
-  margin-top: 48px !important;
+/* Metadata pills (tags, genres) - compact */
+#item-page-wrapper [class*="bg-primary"],
+#item-page-wrapper [class*="tag"],
+#item-page-wrapper [class*="genre"] {
+  padding: 6px 12px !important;
+  font-size: 0.875rem !important;
+  margin: 3px !important;
+  border-radius: 4px !important;
 }
 
-/* Chapters table header bar */
+#item-page-wrapper [class*="tag"]:focus,
+#item-page-wrapper [class*="genre"]:focus {
+  outline: 2px solid #1ad691 !important;
+  outline-offset: 1px !important;
+}
+
+/* ==========================================================================
+   DESCRIPTION CARD
+   ========================================================================== */
+
+#item-description {
+  font-size: 1rem !important;
+  line-height: 1.7 !important;
+  max-height: none !important;
+  margin-top: 12px !important;
+  margin-bottom: 12px !important;
+  padding: 12px 16px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Read more/less button */
+#item-page-wrapper button:has(.material-symbols:contains("expand")),
+#item-page-wrapper .text-white-50 {
+  padding: 8px 16px !important;
+  font-size: 0.875rem !important;
+  min-height: 36px !important;
+}
+
+/* ==========================================================================
+   CHAPTERS CARD - Compact list with clear navigation
+   ========================================================================== */
+
+/* Chapters section wrapper - card style */
+#item-page-wrapper [class*="chapters"],
+.chapters-table-wrapper {
+  margin-top: 20px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+/* Chapters header */
 .bg-primary.px-6.py-2,
 [class*="chapters-table"] > div:first-child {
-  padding: 20px 32px !important;
-  font-size: 1.5rem !important;
+  padding: 12px 20px !important;
+  font-size: 1.125rem !important;
   font-weight: 600 !important;
-  border-radius: 8px 8px 0 0 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 0 !important;
 }
 
 /* Chapters count badge */
 .bg-black-400.rounded-xl {
-  padding: 8px 16px !important;
-  font-size: 1.125rem !important;
-  border-radius: 8px !important;
+  padding: 4px 10px !important;
+  font-size: 0.875rem !important;
+  border-radius: 6px !important;
 }
 
-/* Edit chapters button - make it larger */
+/* Edit chapters button */
 .bg-primary.px-6.py-2 .ui-btn,
 [class*="chapters-table"] button {
-  min-height: 52px !important;
-  padding: 12px 24px !important;
-  font-size: 1.125rem !important;
-  border-radius: 8px !important;
+  min-height: 40px !important;
+  padding: 8px 16px !important;
+  font-size: 0.875rem !important;
+  border-radius: 6px !important;
 }
 
 .bg-primary.px-6.py-2 .ui-btn:focus,
 [class*="chapters-table"] button:focus {
-  outline: 3px solid #1ad691 !important;
-  outline-offset: 3px !important;
+  outline: 2px solid #1ad691 !important;
+  outline-offset: 2px !important;
 }
 
-/* Chapters list container - taller scrollable area */
+/* Chapters list container */
 [class*="chapters-table"] > div:last-child,
 .chapters-list {
-  max-height: 700px !important;
+  max-height: 500px !important;
   overflow-y: auto !important;
 }
 
-/* Individual chapter row - LARGE touch targets */
+/* Individual chapter row - compact but navigable */
 [class*="chapters-table"] > div > div,
 .chapter-row {
-  padding: 20px 32px !important;
-  min-height: 80px !important;
-  font-size: 1.25rem !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 12px 20px !important;
+  min-height: 56px !important;
+  font-size: 1rem !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
   cursor: pointer !important;
   display: -webkit-box !important;
   display: -webkit-flex !important;
@@ -1734,37 +1730,38 @@ textarea,
   -webkit-box-align: center !important;
   -webkit-align-items: center !important;
   align-items: center !important;
-  gap: 16px !important;
+  gap: 12px !important;
 }
 
-/* Chapter row focus state - very visible for D-pad navigation */
+/* Chapter row focus - clear indicator */
 [class*="chapters-table"] > div > div:focus,
 .chapter-row:focus {
-  outline: 4px solid #1ad691 !important;
-  outline-offset: -4px !important;
-  background: rgba(26, 214, 145, 0.2) !important;
-  border-left: 6px solid #1ad691 !important;
+  outline: none !important;
+  background: rgba(26, 214, 145, 0.15) !important;
+  border-left: 4px solid #1ad691 !important;
+  padding-left: 16px !important;
 }
 
 /* Currently playing chapter */
 [class*="chapters-table"] [class*="bg-success"],
 .chapter-row.current {
-  background: rgba(26, 214, 145, 0.15) !important;
-  border-left: 6px solid #1ad691 !important;
+  background: rgba(26, 214, 145, 0.1) !important;
+  border-left: 4px solid #1ad691 !important;
+  padding-left: 16px !important;
 }
 
 /* Chapter number */
 .chapter-row .text-gray-500,
 [class*="chapters-table"] .font-mono {
-  font-size: 1.125rem !important;
-  min-width: 80px !important;
+  font-size: 0.875rem !important;
+  min-width: 50px !important;
   color: #9ca3af !important;
 }
 
 /* Chapter title */
 .chapter-row p,
 [class*="chapters-table"] p {
-  font-size: 1.25rem !important;
+  font-size: 1rem !important;
   -webkit-box-flex: 1 !important;
   -webkit-flex-grow: 1 !important;
   flex-grow: 1 !important;
@@ -1773,35 +1770,43 @@ textarea,
 /* Chapter timestamp */
 .chapter-row .text-gray-400,
 [class*="chapters-table"] .font-mono.text-gray-400 {
-  font-size: 1.125rem !important;
-  min-width: 100px !important;
+  font-size: 0.875rem !important;
+  min-width: 70px !important;
   text-align: right !important;
 }
 
 /* ==========================================================================
-   TRACKS TABLE - TV OPTIMIZED  
-   For audiobooks with multiple audio files
+   TRACKS TABLE - Same card style as chapters
    ========================================================================== */
 
-/* Tracks table styling - similar to chapters */
+[class*="tracks-table"] {
+  margin-top: 16px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
 [class*="tracks-table"] > div:first-child {
-  padding: 20px 32px !important;
-  font-size: 1.5rem !important;
+  padding: 12px 20px !important;
+  font-size: 1.125rem !important;
   font-weight: 600 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
 }
 
 [class*="tracks-table"] > div > div {
-  padding: 16px 32px !important;
-  min-height: 72px !important;
-  font-size: 1.125rem !important;
+  padding: 10px 20px !important;
+  min-height: 52px !important;
+  font-size: 0.9375rem !important;
   cursor: pointer !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
 [class*="tracks-table"] > div > div:focus {
-  outline: 4px solid #1ad691 !important;
-  outline-offset: -4px !important;
-  background: rgba(26, 214, 145, 0.2) !important;
-  border-left: 6px solid #1ad691 !important;
+  outline: none !important;
+  background: rgba(26, 214, 145, 0.15) !important;
+  border-left: 4px solid #1ad691 !important;
+  padding-left: 16px !important;
 }
 
 /* ==========================================================================
