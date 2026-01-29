@@ -387,7 +387,7 @@ export default {
     // This replaces manual setupFocusables() for card elements
     this.registerCardSelectors();
     
-    // ABS-SPECIFIC: Move toolbar elements into appbar
+    // ABS-SPECIFIC: Move toolbar elements into appbar (only on initial load)
     this.relocateToolbarToAppbar();
     
     // ABS-SPECIFIC: Set up non-card focusables (siderail, appbar, etc.)
@@ -407,7 +407,8 @@ export default {
     stopObserver = observeDOM(function() {
       // Re-run setup when DOM changes (new cards loaded, etc.)
       // Card selectors are auto-processed by core observer
-      self.relocateToolbarToAppbar();
+      // NOTE: Do NOT call relocateToolbarToAppbar here - it causes focus issues
+      // Toolbar relocation is handled by watchUrlChanges on page navigation
       self.setupOtherFocusables();
       self.applySpacingClasses();
       wrapTextInputs(SELECTORS.textInputs);
@@ -692,14 +693,14 @@ export default {
     var toolbar = document.getElementById('toolbar');
     var appbar = document.getElementById('appbar');
     
-    console.log('TizenPortal [ABS]: relocateToolbarToAppbar - toolbar:', toolbar, 'appbar:', appbar);
-    
     if (!toolbar || !appbar) {
-      console.log('TizenPortal [ABS]: Missing toolbar or appbar, skipping relocation');
       return;
     }
     
-    console.log('TizenPortal [ABS]: toolbar.children.length:', toolbar.children.length);
+    // Skip if toolbar has no children to move
+    if (toolbar.children.length === 0) {
+      return;
+    }
     
     try {
       // ========================================================================
@@ -713,7 +714,7 @@ export default {
         container = document.createElement('div');
         container.className = 'tp-toolbar-container';
         container.setAttribute('data-tp-nav', 'horizontal');
-        container.style.cssText = 'display: flex; align-items: center; gap: 4px; margin-left: auto; margin-right: 8px;';
+        container.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 8px;';
         
         // Simple approach: append to appbar (will appear at end due to flex)
         // The margin-left: auto pushes it to the right side
@@ -722,17 +723,7 @@ export default {
       }
       
       // ========================================================================
-      // PART 2: CLEAR OLD ITEMS - move them back to toolbar first
-      // ========================================================================
-      // Move previous items back to toolbar so they can be re-evaluated
-      var previousItems = Array.prototype.slice.call(container.querySelectorAll('[data-tp-toolbar-item]'));
-      for (var pi = 0; pi < previousItems.length; pi++) {
-        previousItems[pi].removeAttribute('data-tp-toolbar-item');
-        toolbar.appendChild(previousItems[pi]);
-      }
-      
-      // ========================================================================
-      // PART 3: MOVE TOOLBAR ELEMENTS (NOT CLONE!)
+      // PART 2: MOVE TOOLBAR ELEMENTS (NOT CLONE!)
       // ========================================================================
       // Find all interactive elements in toolbar
       // These are typically the filter/sort dropdowns and options menu
@@ -756,36 +747,45 @@ export default {
         child.setAttribute('data-tp-toolbar-item', 'true');
         
         // Adjust styles to fit in appbar
-        child.style.margin = '0 4px'; // Reset margin
-        
-        console.log('TizenPortal [ABS]: Moving child:', child.tagName, child.className, child.id);
+        child.style.margin = '0';
         
         // Move into container
         container.appendChild(child);
         movedCount++;
       }
       
-      console.log('TizenPortal [ABS]: Container now has', container.children.length, 'children, movedCount:', movedCount);
-      
       // ========================================================================
-      // PART 4: ENSURE CONTAINER IS VISIBLE IF IT HAS CONTENT
+      // PART 3: ENSURE CONTAINER IS VISIBLE IF IT HAS CONTENT
       // ========================================================================
-      if (movedCount > 0 && container.style.display === 'none') {
+      if (container.children.length > 0) {
         container.style.display = 'flex';
-      }
-      
-      // Hide container if it's now empty
-      if (movedCount === 0 && container.children.length === 0) {
+      } else {
         container.style.display = 'none';
       }
       
       if (movedCount > 0) {
         console.log('TizenPortal [ABS]: Relocated', movedCount, 'toolbar elements to appbar');
-      } else {
-        console.log('TizenPortal [ABS]: No toolbar elements to relocate');
       }
     } catch (err) {
-      console.warn('TizenPortal [ABS]: Error relocating toolbar:', err.message, err);
+      console.warn('TizenPortal [ABS]: Error relocating toolbar:', err.message);
+    }
+  },
+  
+  /**
+   * Clear relocated toolbar elements (called on URL change)
+   */
+  clearRelocatedToolbar: function() {
+    var appbar = document.getElementById('appbar');
+    if (!appbar) return;
+    
+    var container = appbar.querySelector('.tp-toolbar-container');
+    if (container) {
+      // Remove all children - they'll be stale after page change
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+      container.style.display = 'none';
+      console.log('TizenPortal [ABS]: Cleared relocated toolbar');
     }
   },
 
@@ -1116,6 +1116,7 @@ export default {
    * page reload. When the URL changes, we need to:
    * 1. Force re-process all card registrations (some DOM elements are stale)
    * 2. Reset focus to something sensible on the new page
+   * 3. Clear and re-relocate toolbar elements
    * 
    * @returns {Function} Cleanup function to stop watching
    */
@@ -1136,6 +1137,9 @@ export default {
         exitCard();
       }
       
+      // Clear old toolbar elements immediately
+      self.clearRelocatedToolbar();
+      
       // Force re-process cards - remove all data-tp-card attributes first
       // so they get re-registered with fresh DOM elements
       var staleCards = document.querySelectorAll('[data-tp-card]');
@@ -1150,6 +1154,9 @@ export default {
         if (window.TizenPortal && window.TizenPortal.cards) {
           window.TizenPortal.cards.processCards();
         }
+        
+        // Relocate new toolbar elements
+        self.relocateToolbarToAppbar();
         
         // Re-run other focusables
         self.setupOtherFocusables();

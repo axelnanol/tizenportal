@@ -68,8 +68,9 @@ html, body,
 .tp-toolbar-container {
   display: flex !important;
   align-items: center !important;
-  gap: 4px !important;
-  margin: 0 8px !important;
+  gap: 8px !important;
+  margin-left: auto !important;
+  margin-right: 8px !important;
 }
 
 /* Relocated toolbar child elements - ensure they flex properly */
@@ -80,12 +81,29 @@ html, body,
   min-width: 0 !important;
 }
 
+/* Fix text color for legibility - white text on dark appbar */
+.tp-toolbar-container,
+.tp-toolbar-container * {
+  color: #ffffff !important;
+}
+
 /* Relocated buttons in toolbar container */
 .tp-toolbar-container button,
 .tp-toolbar-container [role="button"] {
   padding: 8px 12px !important;
   min-height: 40px !important;
   white-space: nowrap !important;
+  color: #ffffff !important;
+  background: transparent !important;
+}
+
+/* Hover/focus state for toolbar buttons */
+.tp-toolbar-container button:hover,
+.tp-toolbar-container button:focus,
+.tp-toolbar-container [role="button"]:hover,
+.tp-toolbar-container [role="button"]:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+  outline: 2px solid #4a9eff !important;
 }
 
 /* Relocated dropdowns in toolbar container */
