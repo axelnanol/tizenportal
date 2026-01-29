@@ -1656,16 +1656,9 @@ textarea,
    - Clear focus indicators
    ========================================================================== */
 
-/* Player container - fixed at bottom, full width */
-/* IMPORTANT: Don't override colors or layout - just positioning */
+/* Player container - ensure it's above other content but don't change layout */
 #mediaPlayerContainer {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
   z-index: 10000 !important;
-  overflow: visible !important;
 }
 
 /* ==========================================================================

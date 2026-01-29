@@ -603,7 +603,8 @@ export default {
     // MEDIA KEYS: Play/Pause/Seek when player is visible
     // ========================================================================
     var player = document.querySelector(SELECTORS.playerContainer);
-    var playerVisible = player && player.offsetParent !== null;
+    // offsetParent doesn't work for fixed positioned elements - check computed style
+    var playerVisible = player && getComputedStyle(player).display !== 'none';
     
     // Log media key presses for debugging
     if (keyCode === KEYS.PLAY_PAUSE || keyCode === KEYS.PLAY || keyCode === KEYS.PAUSE ||
@@ -1093,7 +1094,8 @@ export default {
    */
   isPlayerActive: function() {
     var player = document.querySelector(SELECTORS.playerContainer);
-    return player && player.offsetParent !== null;
+    // offsetParent doesn't work for fixed elements
+    return player && getComputedStyle(player).display !== 'none';
   },
   
   /**
