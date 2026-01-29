@@ -1705,6 +1705,64 @@ textarea,
 }
 
 /* ==========================================================================
+   PLAYER TIME ROW (below track bar)
+   Row with: [current time / %] [chapter title (x/y)] [time remaining]
+   Tailwind uses flex justify-between and transform which may not work
+   ========================================================================== */
+
+/* The row container - flex with space-between */
+#mediaPlayerContainer .relative.flex.items-center.justify-between {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-pack: justify !important;
+  -webkit-justify-content: space-between !important;
+  justify-content: space-between !important;
+  -webkit-box-align: center !important;
+  -webkit-align-items: center !important;
+  align-items: center !important;
+  position: relative !important;
+  width: 100% !important;
+}
+
+/* Left side - current time / percentage */
+#mediaPlayerContainer .relative.flex.items-center.justify-between > .grow:first-child {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-align: center !important;
+  -webkit-align-items: center !important;
+  align-items: center !important;
+  -webkit-box-flex: 1 !important;
+  -webkit-flex-grow: 1 !important;
+  flex-grow: 1 !important;
+}
+
+/* Center - chapter title, absolutely positioned */
+#mediaPlayerContainer .relative.flex.items-center.justify-between > .absolute {
+  position: absolute !important;
+  left: 50% !important;
+  -webkit-transform: translateX(-50%) !important;
+  transform: translateX(-50%) !important;
+}
+
+/* Right side - time remaining */
+#mediaPlayerContainer .relative.flex.items-center.justify-between > .grow:last-child {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-box-align: center !important;
+  -webkit-align-items: center !important;
+  align-items: center !important;
+  -webkit-box-pack: end !important;
+  -webkit-justify-content: flex-end !important;
+  justify-content: flex-end !important;
+  -webkit-box-flex: 1 !important;
+  -webkit-flex-grow: 1 !important;
+  flex-grow: 1 !important;
+}
+
+/* ==========================================================================
    PLAYER FOCUS STATES ONLY
    Don't override ABS colors/layout - just add focus indicators for TV nav
    ========================================================================== */
