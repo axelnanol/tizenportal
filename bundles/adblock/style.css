@@ -31,10 +31,18 @@
 [class*="googlead"],
 [class*="doubleclick"],
 [class*="adsense"],
+[class*="adchoices"],
+[class*="ad-choices"],
+[class*="sponsored"],
+[class*="promoted"],
+[class*="native-ad"],
+[class*="native_ad"],
 [class*="prebid"],
 [class*="taboola"],
 [class*="outbrain"],
-[class*="revcontent"] {
+[class*="revcontent"],
+[class*="mgid"],
+[class*="zergnet"] {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
@@ -62,7 +70,11 @@
 [id*="dfp-"],
 [id*="gpt-ad"],
 [id*="taboola"],
-[id*="outbrain"] {
+[id*="outbrain"],
+[id*="promoted"],
+[id*="sponsored"],
+[id*="native-ad"],
+[id*="adchoices"] {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
@@ -90,7 +102,13 @@ iframe[src*="ads."],
 iframe[src*="/ads/"],
 iframe[id*="google_ads"],
 iframe[id*="aswift"],
-iframe[name*="google_ads"] {
+iframe[name*="google_ads"],
+iframe[src*="adsrvr"],
+iframe[src*="adnxs"],
+iframe[src*="rubicon"],
+iframe[src*="openx"],
+iframe[src*="doubleverify"],
+iframe[src*="scorecardresearch"] {
   display: none !important;
   visibility: hidden !important;
   height: 0 !important;
@@ -148,7 +166,10 @@ iframe[name*="google_ads"] {
 [class*="promoted-content"],
 [class*="promoted-post"],
 [class*="paid-content"],
-[class*="paid-post"] {
+[class*="paid-post"],
+[class*="sponsored-content"],
+[class*="sponsored-post"],
+[class*="sponsored-story"] {
   display: none !important;
 }
 
@@ -168,6 +189,39 @@ iframe[name*="google_ads"] {
 .ytp-ad-image-overlay {
   display: none !important;
   visibility: hidden !important;
+}
+
+/* Data-attribute based ad markers */
+[data-ad],
+[data-ads],
+[data-advert],
+[data-advertisement],
+[data-ad-client],
+[data-ad-slot],
+[data-ad-unit],
+[data-ad-format],
+[data-adtest],
+[data-sponsored],
+[data-sponsor],
+[data-promoted] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+}
+
+/* ARIA label ad markers */
+[aria-label*="Sponsored"],
+[aria-label*="sponsored"],
+[aria-label*="Advertisement"],
+[aria-label*="advertisement"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  overflow: hidden !important;
 }
 
 /* ==========================================================================
