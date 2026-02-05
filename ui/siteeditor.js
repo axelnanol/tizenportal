@@ -236,6 +236,7 @@ function handleEditorKeyDown(event) {
  * @param {Function} onComplete - Callback when complete
  */
 export function showAddSiteEditor(onComplete) {
+  console.log('TizenPortal: showAddSiteEditor called');
   state.isEdit = false;
   state.card = {
     name: '',
@@ -245,6 +246,7 @@ export function showAddSiteEditor(onComplete) {
     icon: '',
   };
   state.onComplete = onComplete;
+  console.log('TizenPortal: state.card set to:', JSON.stringify(state.card));
   
   openEditor();
 }
@@ -255,6 +257,11 @@ export function showAddSiteEditor(onComplete) {
  * @param {Function} onComplete - Callback when complete
  */
 export function showEditSiteEditor(card, onComplete) {
+  console.log('TizenPortal: showEditSiteEditor called with card:', card ? card.name : 'null');
+  if (!card) {
+    console.error('TizenPortal: showEditSiteEditor called with null card!');
+    return;
+  }
   state.isEdit = true;
   state.card = {
     id: card.id,
@@ -265,6 +272,7 @@ export function showEditSiteEditor(card, onComplete) {
     icon: card.icon || '',
   };
   state.onComplete = onComplete;
+  console.log('TizenPortal: state.card set to:', JSON.stringify(state.card));
   
   openEditor();
 }
@@ -273,8 +281,12 @@ export function showEditSiteEditor(card, onComplete) {
  * Open the editor
  */
 function openEditor() {
+  console.log('TizenPortal: openEditor called, state.card =', state.card ? 'set' : 'null');
   var editor = document.getElementById('tp-site-editor');
-  if (!editor) return;
+  if (!editor) {
+    console.error('TizenPortal: editor element not found!');
+    return;
+  }
 
   // Set title
   var title = editor.querySelector('#tp-editor-title');
@@ -369,26 +381,39 @@ function updateYellowHintText(text) {
  * Save and close
  */
 function saveAndClose() {
-  console.log('TizenPortal: saveAndClose called, state.card =', JSON.stringify(state.card));
+  console.log('TizenPortal: ===== saveAndClose() called =====');
+  console.log('TizenPortal: state object:', state);
+  console.log('TizenPortal: state.card:', state.card);
+  console.log('TizenPortal: state.isEdit:', state.isEdit);
+  console.log('TizenPortal: state.active:', state.active);
+  console.log('TizenPortal: typeof state.card:', typeof state.card);
   
   // Guard against null state
   if (!state.card) {
-    console.error('TizenPortal: state.card is null in saveAndClose');
+    console.error('TizenPortal: BLOCKED - state.card is null in saveAndClose');
+    console.error('TizenPortal: state object at time of error:', JSON.stringify(state, null, 2));
     showEditorToast('Error: No card data');
     return;
   }
+  
+  console.log('TizenPortal: state.card validated, proceeding with save');
   
   // Validate - use defensive checks
   var cardName = state.card.name || '';
   var cardUrl = state.card.url || '';
   
+  console.log('TizenPortal: cardName =', cardName);
+  console.log('TizenPortal: cardUrl =', cardUrl);
+  
   if (!cardName.trim()) {
+    console.log('TizenPortal: cardName is empty, showing toast');
     showEditorToast('Please enter a site name');
     focusField('name');
     return;
   }
 
   if (!cardUrl.trim()) {
+    console.log('TizenPortal: cardUrl is empty, showing toast');
     showEditorToast('Please enter a URL');
     focusField('url');
     return;
@@ -401,8 +426,11 @@ function saveAndClose() {
     state.card.url = url;
   }
 
+  console.log('TizenPortal: about to save, state.isEdit =', state.isEdit);
+  
   // Save
   if (state.isEdit) {
+    console.log('TizenPortal: calling updateCard with id =', state.card.id);
     updateCard(state.card.id, {
       name: cardName.trim(),
       url: url,
@@ -412,6 +440,7 @@ function saveAndClose() {
     });
     showEditorToast('Updated: ' + cardName);
   } else {
+    console.log('TizenPortal: calling addCard');
     addCard({
       name: cardName.trim(),
       url: url,
@@ -422,12 +451,15 @@ function saveAndClose() {
     showEditorToast('Added: ' + cardName);
   }
 
+  console.log('TizenPortal: save complete, calling closeSiteEditor');
   closeSiteEditor();
 
   // Callback
   if (state.onComplete) {
+    console.log('TizenPortal: calling onComplete callback');
     state.onComplete();
   }
+  console.log('TizenPortal: saveAndClose() complete');
 }
 
 /**
