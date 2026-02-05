@@ -388,12 +388,42 @@ function saveAndClose() {
   console.log('TizenPortal: state.active:', state.active);
   console.log('TizenPortal: typeof state.card:', typeof state.card);
   
-  // Guard against null state
+  // If state.card is null, try to reconstruct from form fields
   if (!state.card) {
-    console.error('TizenPortal: BLOCKED - state.card is null in saveAndClose');
-    console.error('TizenPortal: state object at time of error:', JSON.stringify(state, null, 2));
-    showEditorToast('Error: No card data');
-    return;
+    console.warn('TizenPortal: state.card is null, attempting to read from form...');
+    var editor = document.getElementById('tp-site-editor');
+    var fields = editor ? editor.querySelectorAll('.tp-field-row') : [];
+    
+    // Try to build card from form values
+    var reconstructedCard = {
+      name: '',
+      url: '',
+      featureBundle: null,
+      userAgent: 'tizen',
+      icon: '',
+    };
+    
+    for (var i = 0; i < fields.length; i++) {
+      var field = fields[i];
+      var fieldName = field.dataset.field;
+      var fieldValue = field.querySelector('.tp-field-value');
+      if (fieldValue && fieldName) {
+        // Don't use placeholder, skip empty values
+        var text = fieldValue.textContent || '';
+        if (text && text !== fieldValue.dataset.placeholder) {
+          reconstructedCard[fieldName] = text;
+        }
+      }
+    }
+    
+    console.log('TizenPortal: reconstructed card from form:', reconstructedCard);
+    state.card = reconstructedCard;
+    
+    if (!state.card.name || !state.card.url) {
+      console.error('TizenPortal: Unable to recover card data from form');
+      showEditorToast('Error: Unable to save - form data lost');
+      return;
+    }
   }
   
   console.log('TizenPortal: state.card validated, proceeding with save');

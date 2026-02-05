@@ -47,6 +47,7 @@ import {
 import { initPortal, showPortal, hidePortal, refreshPortal } from '../ui/portal.js';
 import { initModal } from '../ui/modal.js';
 import { initSiteEditor, showAddSiteEditor, showEditSiteEditor, isSiteEditorOpen } from '../ui/siteeditor.js';
+import { initPreferences, showPreferences, closePreferences, isPreferencesOpen, applyPortalPreferences } from '../ui/preferences.js';
 import { initAddressBar, showAddressBar, hideAddressBar, toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
 import { initBundleMenu, showBundleMenu, hideBundleMenu, toggleBundleMenu, isBundleMenuVisible, cycleBundle } from '../ui/bundlemenu.js';
 import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
@@ -183,6 +184,10 @@ async function initPortalPage() {
   // Initialize site editor
   initSiteEditor();
   log('Site editor initialized');
+
+  // Initialize preferences
+  initPreferences();
+  log('Preferences initialized');
 
   // Initialize address bar
   initAddressBar();

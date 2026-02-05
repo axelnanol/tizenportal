@@ -1,39 +1,204 @@
 /**
  * TizenPortal Preferences UI
  * 
- * Settings modal for portal appearance and global site features.
+ * Full-screen preferences modal with D-pad navigation.
+ * Mirrors the site editor's keyboard interaction model.
  */
+
+/**
+ * Preferences state
+ */
+var prefsState = {
+  active: false,
+  currentRow: 0,
+  settings: {},
+};
+
+/**
+ * Preference rows definition
+ */
+var PREFERENCE_ROWS = [
+  { id: 'theme', label: 'Theme', type: 'select', options: ['Dark', 'Light'], key: 'theme', config: 'portal' },
+  { id: 'backgroundColor', label: 'Background Color', type: 'text', key: 'backgroundColor', config: 'portal' },
+  { id: 'backgroundImage', label: 'Background Image URL', type: 'text', key: 'backgroundImage', config: 'portal' },
+  { id: 'focusStyling', label: 'Focus Styling (blue outline)', type: 'toggle', key: 'focusStyling', config: 'features' },
+  { id: 'tabindexInjection', label: 'Auto-focusable Elements', type: 'toggle', key: 'tabindexInjection', config: 'features' },
+  { id: 'scrollIntoView', label: 'Scroll-into-view on Focus', type: 'toggle', key: 'scrollIntoView', config: 'features' },
+  { id: 'safeArea', label: 'TV Safe Area (5% inset)', type: 'toggle', key: 'safeArea', config: 'features' },
+  { id: 'gpuHints', label: 'GPU Acceleration Hints', type: 'toggle', key: 'gpuHints', config: 'features' },
+  { id: 'cssReset', label: 'CSS Normalization', type: 'toggle', key: 'cssReset', config: 'features' },
+];
+
+/**
+ * Initialize preferences UI
+ */
+export function initPreferences() {
+  // Create preferences container
+  var prefs = document.createElement('div');
+  prefs.id = 'tp-preferences';
+  prefs.className = 'tp-preferences';
+  prefs.innerHTML = createPreferencesHTML();
+  document.body.appendChild(prefs);
+  
+  // Set up event listeners
+  setupPreferencesListeners(prefs);
+  
+  console.log('TizenPortal: Preferences initialized');
+}
+
+/**
+ * Create preferences HTML
+ */
+function createPreferencesHTML() {
+  return '' +
+    '<div class="tp-prefs-backdrop"></div>' +
+    '<div class="tp-prefs-panel">' +
+      '<div class="tp-prefs-header">' +
+        '<h2 id="tp-prefs-title">Preferences</h2>' +
+        '<div class="tp-prefs-hint">Navigate with D-pad | ENTER to edit/toggle</div>' +
+      '</div>' +
+      '<div class="tp-prefs-body">' +
+        '<div class="tp-prefs-rows" id="tp-prefs-rows"></div>' +
+      '</div>' +
+      '<div class="tp-prefs-footer">' +
+        '<button type="button" class="tp-prefs-btn tp-prefs-btn-cancel" id="tp-prefs-cancel" tabindex="0">' +
+          'Cancel' +
+        '</button>' +
+        '<button type="button" class="tp-prefs-btn tp-prefs-btn-save" id="tp-prefs-save" tabindex="0">' +
+          '<span class="tp-btn-icon">✓</span> Save' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+}
+
+/**
+ * Set up event listeners
+ */
+function setupPreferencesListeners(prefs) {
+  // Cancel button
+  var cancelBtn = prefs.querySelector('#tp-prefs-cancel');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      closePreferences();
+    });
+    cancelBtn.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        closePreferences();
+      }
+    });
+  }
+
+  // Save button
+  var saveBtn = prefs.querySelector('#tp-prefs-save');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      saveAndClosePreferences();
+    });
+    saveBtn.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        saveAndClosePreferences();
+      }
+    });
+  }
+
+  // Backdrop click
+  var backdrop = prefs.querySelector('.tp-prefs-backdrop');
+  if (backdrop) {
+    backdrop.addEventListener('click', function() {
+      closePreferences();
+    });
+  }
+
+  // Keyboard handler
+  prefs.addEventListener('keydown', handlePreferencesKeyDown);
+}
+
+/**
+ * Handle keyboard events in preferences
+ */
+function handlePreferencesKeyDown(event) {
+  var keyCode = event.keyCode;
+  
+  // Escape/Back - close
+  if (keyCode === 27 || keyCode === 10009) {
+    event.preventDefault();
+    event.stopPropagation();
+    closePreferences();
+    return;
+  }
+
+  // Arrow Up/Down - navigate rows
+  if (keyCode === 38 || keyCode === 40) { // Up or Down
+    event.preventDefault();
+    event.stopPropagation();
+    var direction = keyCode === 38 ? -1 : 1;
+    navigatePreferences(direction);
+    return;
+  }
+
+  // Enter on focused element
+  if (keyCode === 13) {
+    var active = document.activeElement;
+    if (active && active.id === 'tp-prefs-save') {
+      event.preventDefault();
+      saveAndClosePreferences();
+      return;
+    }
+    if (active && active.id === 'tp-prefs-cancel') {
+      event.preventDefault();
+      closePreferences();
+      return;
+    }
+    if (active && active.classList && active.classList.contains('tp-prefs-row')) {
+      event.preventDefault();
+      activatePreferenceRow(active);
+      return;
+    }
+  }
+}
 
 /**
  * Show preferences modal
  */
 export function showPreferences() {
+  console.log('TizenPortal: showPreferences called');
   if (!window.TizenPortal) {
     console.error('TizenPortal not initialized');
     return;
   }
   
-  // Get current configuration
-  var portalConfig = TizenPortal.config.get('tp_portal') || getDefaultPortalConfig();
-  var featuresConfig = TizenPortal.config.get('tp_features') || getDefaultFeaturesConfig();
-  
-  // Create modal content
-  var modalContent = createPreferencesForm(portalConfig, featuresConfig);
-  
-  // Show modal (reusing existing modal system)
-  if (window.TizenPortal.modal && window.TizenPortal.modal.show) {
-    TizenPortal.modal.show('Preferences', modalContent, function(form) {
-      return handleSavePreferences(form);
-    });
-  } else {
-    // Fallback if modal system not available
-    showPreferencesStandalone(modalContent);
+  var prefs = document.getElementById('tp-preferences');
+  if (!prefs) {
+    console.error('TizenPortal: preferences element not found');
+    return;
   }
+  
+  // Load current settings
+  prefsState.settings = {
+    portalConfig: TizenPortal.config.get('tp_portal') || getDefaultPortalConfig(),
+    featuresConfig: TizenPortal.config.get('tp_features') || getDefaultFeaturesConfig(),
+  };
+  
+  prefsState.currentRow = 0;
+  prefsState.active = true;
+  
+  // Render preferences UI
+  renderPreferencesUI();
+  
+  // Show preferences
+  prefs.classList.add('visible');
+  
+  // Focus first row
+  setTimeout(function() {
+    focusPreferencesRow(0);
+  }, 50);
 }
+
 
 /**
  * Get default portal configuration
- * @returns {Object}
  */
 function getDefaultPortalConfig() {
   return {
@@ -45,7 +210,6 @@ function getDefaultPortalConfig() {
 
 /**
  * Get default features configuration
- * @returns {Object}
  */
 function getDefaultFeaturesConfig() {
   return {
@@ -59,243 +223,208 @@ function getDefaultFeaturesConfig() {
 }
 
 /**
- * Create preferences form
- * @param {Object} portalConfig
- * @param {Object} featuresConfig
- * @returns {HTMLElement}
+ * Render preferences rows
  */
-function createPreferencesForm(portalConfig, featuresConfig) {
-  var form = document.createElement('form');
-  form.className = 'tp-preferences-form';
-  form.setAttribute('data-focus-group', 'preferences-form');
-  
-  // Portal Appearance Section
-  var portalSection = document.createElement('div');
-  portalSection.className = 'tp-prefs-section';
-  
-  var portalHeading = document.createElement('h3');
-  portalHeading.className = 'tp-prefs-heading';
-  portalHeading.textContent = 'Portal Appearance';
-  portalSection.appendChild(portalHeading);
-  
-  // Theme
-  var themeField = createSelectField('theme', 'Theme', [
-    { value: 'dark', label: 'Dark' },
-    { value: 'light', label: 'Light' },
-  ], portalConfig.theme);
-  portalSection.appendChild(themeField);
-  
-  // Background Color
-  var bgColorField = createTextField('backgroundColor', 'Background Color', portalConfig.backgroundColor);
-  portalSection.appendChild(bgColorField);
-  
-  // Background Image
-  var bgImageField = createTextField('backgroundImage', 'Background Image URL', portalConfig.backgroundImage);
-  portalSection.appendChild(bgImageField);
-  
-  form.appendChild(portalSection);
-  
-  // Global Site Settings Section
-  var featuresSection = document.createElement('div');
-  featuresSection.className = 'tp-prefs-section';
-  
-  var featuresHeading = document.createElement('h3');
-  featuresHeading.className = 'tp-prefs-heading';
-  featuresHeading.textContent = 'Global Site Settings';
-  featuresSection.appendChild(featuresHeading);
-  
-  var featuresDesc = document.createElement('p');
-  featuresDesc.className = 'tp-prefs-description';
-  featuresDesc.textContent = 'These settings apply to all sites';
-  featuresSection.appendChild(featuresDesc);
-  
-  // Feature checkboxes
-  var features = [
-    { key: 'focusStyling', label: 'Focus styling (blue outline)' },
-    { key: 'tabindexInjection', label: 'Auto-focusable elements' },
-    { key: 'scrollIntoView', label: 'Scroll-into-view on focus' },
-    { key: 'safeArea', label: 'TV safe area (5% inset)' },
-    { key: 'gpuHints', label: 'GPU acceleration hints' },
-    { key: 'cssReset', label: 'CSS normalization' },
-  ];
-  
-  features.forEach(function(feature) {
-    var checkboxField = createCheckboxField(
-      feature.key,
-      feature.label,
-      featuresConfig[feature.key]
-    );
-    featuresSection.appendChild(checkboxField);
-  });
-  
-  form.appendChild(featuresSection);
-  
-  return form;
-}
+function renderPreferencesUI() {
+  var container = document.getElementById('tp-prefs-rows');
+  if (!container) return;
 
-/**
- * Create a text input field
- * @param {string} name
- * @param {string} label
- * @param {string} value
- * @returns {HTMLElement}
- */
-function createTextField(name, label, value) {
-  var field = document.createElement('div');
-  field.className = 'tp-prefs-field';
-  
-  var labelEl = document.createElement('label');
-  labelEl.className = 'tp-prefs-label';
-  labelEl.textContent = label;
-  labelEl.htmlFor = 'tp-pref-' + name;
-  field.appendChild(labelEl);
-  
-  var input = document.createElement('input');
-  input.type = 'text';
-  input.id = 'tp-pref-' + name;
-  input.name = name;
-  input.className = 'tp-prefs-input';
-  input.value = value || '';
-  input.setAttribute('tabindex', '0');
-  field.appendChild(input);
-  
-  return field;
-}
+  var html = '';
 
-/**
- * Create a select field
- * @param {string} name
- * @param {string} label
- * @param {Array} options
- * @param {string} value
- * @returns {HTMLElement}
- */
-function createSelectField(name, label, options, value) {
-  var field = document.createElement('div');
-  field.className = 'tp-prefs-field';
-  
-  var labelEl = document.createElement('label');
-  labelEl.className = 'tp-prefs-label';
-  labelEl.textContent = label;
-  labelEl.htmlFor = 'tp-pref-' + name;
-  field.appendChild(labelEl);
-  
-  var select = document.createElement('select');
-  select.id = 'tp-pref-' + name;
-  select.name = name;
-  select.className = 'tp-prefs-select';
-  select.setAttribute('tabindex', '0');
-  
-  options.forEach(function(option) {
-    var opt = document.createElement('option');
-    opt.value = option.value;
-    opt.textContent = option.label;
-    if (option.value === value) {
-      opt.selected = true;
-    }
-    select.appendChild(opt);
-  });
-  
-  field.appendChild(select);
-  
-  return field;
-}
+  for (var i = 0; i < PREFERENCE_ROWS.length; i++) {
+    var row = PREFERENCE_ROWS[i];
+    var value = getValue(row);
+    var displayValue = formatDisplayValue(row, value);
 
-/**
- * Create a checkbox field
- * @param {string} name
- * @param {string} label
- * @param {boolean} checked
- * @returns {HTMLElement}
- */
-function createCheckboxField(name, label, checked) {
-  var field = document.createElement('div');
-  field.className = 'tp-prefs-field tp-prefs-checkbox-field';
-  
-  var wrapper = document.createElement('label');
-  wrapper.className = 'tp-prefs-checkbox-wrapper';
-  wrapper.setAttribute('tabindex', '0');
-  wrapper.setAttribute('role', 'checkbox');
-  wrapper.setAttribute('aria-checked', checked ? 'true' : 'false');
-  
-  var checkbox = document.createElement('input');
-  checkbox.type = 'checkbox';
-  checkbox.id = 'tp-pref-' + name;
-  checkbox.name = name;
-  checkbox.className = 'tp-prefs-checkbox';
-  checkbox.checked = checked;
-  checkbox.setAttribute('tabindex', '-1'); // Wrapper handles focus
-  
-  var labelEl = document.createElement('span');
-  labelEl.className = 'tp-prefs-checkbox-label';
-  labelEl.textContent = label;
-  
-  // Toggle checkbox on Enter/Space
-  wrapper.addEventListener('keydown', function(e) {
-    if (e.keyCode === 13 || e.keyCode === 32) { // Enter or Space
-      e.preventDefault();
-      checkbox.checked = !checkbox.checked;
-      wrapper.setAttribute('aria-checked', checkbox.checked ? 'true' : 'false');
-      wrapper.classList.toggle('checked', checkbox.checked);
-    }
-  });
-  
-  // Update visual state on change
-  checkbox.addEventListener('change', function() {
-    wrapper.setAttribute('aria-checked', checkbox.checked ? 'true' : 'false');
-    wrapper.classList.toggle('checked', checkbox.checked);
-  });
-  
-  // Initial state
-  if (checked) {
-    wrapper.classList.add('checked');
+    html += '' +
+      '<div class="tp-prefs-row" data-index="' + i + '" data-id="' + row.id + '" tabindex="0">' +
+        '<div class="tp-prefs-label">' + row.label + '</div>' +
+        '<div class="tp-prefs-value">' + displayValue + '</div>' +
+      '</div>';
   }
-  
-  wrapper.appendChild(checkbox);
-  wrapper.appendChild(labelEl);
-  field.appendChild(wrapper);
-  
-  return field;
+
+  container.innerHTML = html;
+
+  // Set up row listeners
+  var rows = container.querySelectorAll('.tp-prefs-row');
+  for (var j = 0; j < rows.length; j++) {
+    rows[j].addEventListener('click', function() {
+      activatePreferenceRow(this);
+    });
+  }
 }
 
 /**
- * Handle save preferences
- * @param {HTMLFormElement} form
- * @returns {boolean} Success
+ * Get current value for a preference row
  */
-function handleSavePreferences(form) {
-  // Extract portal config
-  var portalConfig = {
-    theme: form.theme.value,
-    backgroundColor: form.backgroundColor.value.trim() || '#1a1a2e',
-    backgroundImage: form.backgroundImage.value.trim() || '',
-  };
+function getValue(row) {
+  var config = row.config === 'portal' ? prefsState.settings.portalConfig : prefsState.settings.featuresConfig;
+  return config[row.key];
+}
+
+/**
+ * Set value for a preference row
+ */
+function setValue(row, value) {
+  var config = row.config === 'portal' ? prefsState.settings.portalConfig : prefsState.settings.featuresConfig;
+  config[row.key] = value;
+}
+
+/**
+ * Format value for display
+ */
+function formatDisplayValue(row, value) {
+  if (row.type === 'toggle') {
+    return value ? '✓ On' : '○ Off';
+  }
+  if (row.type === 'select') {
+    return value || 'dark';
+  }
+  // Text field
+  return value || '(not set)';
+}
+
+/**
+ * Navigate preferences (Up/Down)
+ */
+function navigatePreferences(direction) {
+  var newIndex = prefsState.currentRow + direction;
   
-  // Extract features config
-  var featuresConfig = {
-    focusStyling: form.focusStyling.checked,
-    tabindexInjection: form.tabindexInjection.checked,
-    scrollIntoView: form.scrollIntoView.checked,
-    safeArea: form.safeArea.checked,
-    gpuHints: form.gpuHints.checked,
-    cssReset: form.cssReset.checked,
-  };
+  // Clamp to valid range
+  if (newIndex < 0) newIndex = 0;
+  if (newIndex >= PREFERENCE_ROWS.length) newIndex = PREFERENCE_ROWS.length - 1;
   
-  // Save to config
-  TizenPortal.config.set('tp_portal', portalConfig);
-  TizenPortal.config.set('tp_features', featuresConfig);
+  if (newIndex !== prefsState.currentRow) {
+    prefsState.currentRow = newIndex;
+    focusPreferencesRow(newIndex);
+  }
+}
+
+/**
+ * Focus a preferences row
+ */
+function focusPreferencesRow(index) {
+  var container = document.getElementById('tp-prefs-rows');
+  if (!container) return;
+
+  var rows = container.querySelectorAll('.tp-prefs-row');
+  if (rows[index]) {
+    rows[index].focus();
+  }
+}
+
+/**
+ * Activate a preference row (edit/toggle)
+ */
+function activatePreferenceRow(rowEl) {
+  var index = parseInt(rowEl.dataset.index, 10);
+  var row = PREFERENCE_ROWS[index];
+
+  if (!row) return;
+
+  console.log('TizenPortal: Activate preference row:', row.id, 'type:', row.type);
+
+  if (row.type === 'toggle') {
+    // Toggle boolean value
+    var currentValue = getValue(row);
+    setValue(row, !currentValue);
+    renderPreferencesUI();
+    focusPreferencesRow(index);
+  } else if (row.type === 'select') {
+    // Cycle through select options
+    cycleSelectOption(row, index);
+  } else if (row.type === 'text') {
+    // Show text input prompt
+    showTextInputPrompt(row, index);
+  }
+}
+
+/**
+ * Cycle through select options
+ */
+function cycleSelectOption(row, index) {
+  var currentValue = getValue(row);
+  var options = row.options;
+  
+  // Find current index
+  var currentIndex = options.indexOf(currentValue);
+  if (currentIndex === -1) currentIndex = 0;
+  
+  // Move to next option
+  var nextIndex = (currentIndex + 1) % options.length;
+  var nextValue = options[nextIndex];
+  
+  setValue(row, nextValue.toLowerCase());
+  renderPreferencesUI();
+  focusPreferencesRow(index);
+}
+
+/**
+ * Show text input prompt
+ */
+function showTextInputPrompt(row, index) {
+  var currentValue = getValue(row) || '';
+  var newValue = prompt(row.label + ':', currentValue);
+  
+  if (newValue !== null) {
+    setValue(row, newValue);
+    renderPreferencesUI();
+    focusPreferencesRow(index);
+  }
+}
+
+/**
+ * Close preferences
+ */
+export function closePreferences() {
+  var prefs = document.getElementById('tp-preferences');
+  if (prefs) {
+    prefs.classList.remove('visible');
+  }
+  prefsState.active = false;
+  
+  // Restore focus to portal
+  restoreFocusToPortal();
+}
+
+/**
+ * Restore focus to portal
+ */
+function restoreFocusToPortal() {
+  var card = document.querySelector('.tp-card:focus');
+  if (card) {
+    card.focus();
+  } else {
+    var firstCard = document.querySelector('.tp-card');
+    if (firstCard) {
+      firstCard.focus();
+    }
+  }
+}
+
+/**
+ * Save and close preferences
+ */
+function saveAndClosePreferences() {
+  console.log('TizenPortal: Saving preferences');
+  
+  // Save portal config
+  TizenPortal.config.set('tp_portal', prefsState.settings.portalConfig);
+  
+  // Save features config
+  TizenPortal.config.set('tp_features', prefsState.settings.featuresConfig);
+  
+  console.log('TizenPortal: Preferences saved:', prefsState.settings);
   
   // Apply portal preferences immediately
-  applyPortalPreferences(portalConfig);
+  applyPortalPreferences(prefsState.settings.portalConfig);
   
-  // Show toast about reloading sites
-  if (window.TizenPortal.showToast) {
-    TizenPortal.showToast('Preferences saved. Site feature changes will apply when you reload sites.');
+  // Show toast
+  if (window.TizenPortal && window.TizenPortal.showToast) {
+    TizenPortal.showToast('Preferences saved. Feature changes apply when sites reload.');
   }
   
-  TizenPortal.log('Preferences saved:', portalConfig, featuresConfig);
-  
-  return true; // Close modal
+  closePreferences();
 }
 
 /**
@@ -334,63 +463,8 @@ export function applyPortalPreferences(config) {
 }
 
 /**
- * Standalone preferences modal (fallback if modal system not integrated)
- * @param {HTMLElement} content
+ * Check if preferences is open
  */
-function showPreferencesStandalone(content) {
-  // Create simple modal overlay
-  var overlay = document.createElement('div');
-  overlay.className = 'tp-prefs-overlay';
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
-  
-  var modal = document.createElement('div');
-  modal.className = 'tp-prefs-modal';
-  modal.style.cssText = 'background:#2a2a4e;padding:40px;border-radius:8px;max-width:800px;max-height:80%;overflow-y:auto;';
-  
-  var title = document.createElement('h2');
-  title.textContent = 'Preferences';
-  title.style.cssText = 'margin-top:0;color:#fff;';
-  modal.appendChild(title);
-  
-  modal.appendChild(content);
-  
-  var buttons = document.createElement('div');
-  buttons.style.cssText = 'margin-top:30px;display:flex;gap:20px;justify-content:flex-end;';
-  
-  var saveBtn = document.createElement('button');
-  saveBtn.textContent = 'Save';
-  saveBtn.setAttribute('tabindex', '0');
-  saveBtn.style.cssText = 'padding:10px 30px;background:#0066cc;color:#fff;border:none;border-radius:4px;cursor:pointer;';
-  saveBtn.onclick = function() {
-    if (handleSavePreferences(content)) {
-      document.body.removeChild(overlay);
-    }
-  };
-  buttons.appendChild(saveBtn);
-  
-  var cancelBtn = document.createElement('button');
-  cancelBtn.textContent = 'Cancel';
-  cancelBtn.setAttribute('tabindex', '0');
-  cancelBtn.style.cssText = 'padding:10px 30px;background:#444;color:#fff;border:none;border-radius:4px;cursor:pointer;';
-  cancelBtn.onclick = function() {
-    document.body.removeChild(overlay);
-  };
-  buttons.appendChild(cancelBtn);
-  
-  modal.appendChild(buttons);
-  overlay.appendChild(modal);
-  document.body.appendChild(overlay);
-  
-  // Focus first field
-  setTimeout(function() {
-    var firstInput = content.querySelector('select, input, [tabindex="0"]');
-    if (firstInput) firstInput.focus();
-  }, 100);
+export function isPreferencesOpen() {
+  return prefsState.active;
 }
-
-export default {
-  showPreferences: showPreferences,
-  applyPortalPreferences: applyPortalPreferences,
-  getDefaultPortalConfig: getDefaultPortalConfig,
-  getDefaultFeaturesConfig: getDefaultFeaturesConfig,
-};
