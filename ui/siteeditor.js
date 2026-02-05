@@ -457,10 +457,12 @@ function saveAndClose() {
   }
 
   console.log('TizenPortal: about to save, state.isEdit =', state.isEdit);
+  console.log('TizenPortal: state.card.id =', state.card.id);
+  console.log('TizenPortal: full state.card =', JSON.stringify(state.card));
   
   // Save
-  if (state.isEdit) {
-    console.log('TizenPortal: calling updateCard with id =', state.card.id);
+  if (state.isEdit && state.card.id) {
+    console.log('TizenPortal: IN EDIT MODE - calling updateCard with id =', state.card.id);
     updateCard(state.card.id, {
       name: cardName.trim(),
       url: url,
@@ -496,7 +498,15 @@ function saveAndClose() {
  * Delete and close
  */
 function deleteAndClose() {
-  if (!state.card || !state.isEdit || !state.card.id) return;
+  console.log('TizenPortal: deleteAndClose called');
+  console.log('TizenPortal: state.card =', state.card);
+  console.log('TizenPortal: state.isEdit =', state.isEdit);
+  console.log('TizenPortal: state.card.id =', state.card ? state.card.id : 'null');
+  
+  if (!state.card || !state.isEdit || !state.card.id) {
+    console.log('TizenPortal: Cannot delete - missing card, isEdit, or id');
+    return;
+  }
   
   var cardName = state.card.name || 'Site';
 
