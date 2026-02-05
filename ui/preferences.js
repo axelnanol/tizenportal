@@ -55,17 +55,14 @@ function createPreferencesHTML() {
     '<div class="tp-prefs-panel">' +
       '<div class="tp-prefs-header">' +
         '<h2 id="tp-prefs-title">Preferences</h2>' +
-        '<div class="tp-prefs-hint">Navigate with D-pad | ENTER to edit/toggle</div>' +
+        '<div class="tp-prefs-hint">Navigate with D-pad | Changes auto-save</div>' +
       '</div>' +
       '<div class="tp-prefs-body">' +
         '<div class="tp-prefs-rows" id="tp-prefs-rows"></div>' +
       '</div>' +
       '<div class="tp-prefs-footer">' +
         '<button type="button" class="tp-prefs-btn tp-prefs-btn-cancel" id="tp-prefs-cancel" tabindex="0">' +
-          'Cancel' +
-        '</button>' +
-        '<button type="button" class="tp-prefs-btn tp-prefs-btn-save" id="tp-prefs-save" tabindex="0">' +
-          '<span class="tp-btn-icon">✓</span> Save' +
+          'Close' +
         '</button>' +
       '</div>' +
     '</div>';
@@ -85,20 +82,6 @@ function setupPreferencesListeners(prefs) {
       if (e.keyCode === 13) {
         e.preventDefault();
         closePreferences();
-      }
-    });
-  }
-
-  // Save button
-  var saveBtn = prefs.querySelector('#tp-prefs-save');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', function() {
-      saveAndClosePreferences();
-    });
-    saveBtn.addEventListener('keydown', function(e) {
-      if (e.keyCode === 13) {
-        e.preventDefault();
-        saveAndClosePreferences();
       }
     });
   }
@@ -141,11 +124,6 @@ function handlePreferencesKeyDown(event) {
   // Enter on focused element
   if (keyCode === 13) {
     var active = document.activeElement;
-    if (active && active.id === 'tp-prefs-save') {
-      event.preventDefault();
-      saveAndClosePreferences();
-      return;
-    }
     if (active && active.id === 'tp-prefs-cancel') {
       event.preventDefault();
       closePreferences();
@@ -330,6 +308,7 @@ function activatePreferenceRow(rowEl) {
     setValue(row, !currentValue);
     renderPreferencesUI();
     focusPreferencesRow(index);
+    savePreferencesAuto('toggle:' + row.id);
   } else if (row.type === 'select') {
     // Cycle through select options
     cycleSelectOption(row, index);
@@ -357,6 +336,7 @@ function cycleSelectOption(row, index) {
   setValue(row, nextValue.toLowerCase());
   renderPreferencesUI();
   focusPreferencesRow(index);
+  savePreferencesAuto('select:' + row.id);
 }
 
 /**
@@ -370,6 +350,7 @@ function showTextInputPrompt(row, index) {
     setValue(row, newValue);
     renderPreferencesUI();
     focusPreferencesRow(index);
+    savePreferencesAuto('text:' + row.id);
   }
 }
 
@@ -405,26 +386,21 @@ function restoreFocusToPortal() {
 /**
  * Save and close preferences
  */
-function saveAndClosePreferences() {
-  console.log('TizenPortal: Saving preferences');
-  
+function savePreferencesAuto(reason) {
+  console.log('TizenPortal: Auto-saving preferences', reason || '');
+
   // Save portal config
   TizenPortal.config.set('tp_portal', prefsState.settings.portalConfig);
-  
+
   // Save features config
   TizenPortal.config.set('tp_features', prefsState.settings.featuresConfig);
-  
-  console.log('TizenPortal: Preferences saved:', prefsState.settings);
-  
+
   // Apply portal preferences immediately
   applyPortalPreferences(prefsState.settings.portalConfig);
-  
-  // Show toast
+
   if (window.TizenPortal && window.TizenPortal.showToast) {
-    TizenPortal.showToast('Preferences saved. Feature changes apply when sites reload.');
+    TizenPortal.showToast('Saved');
   }
-  
-  closePreferences();
 }
 
 /**

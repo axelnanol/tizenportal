@@ -5,7 +5,7 @@
  * Replaces the old modal-based card forms.
  */
 
-import { addCard, updateCard, deleteCard } from './cards.js';
+import { addCard, updateCard, deleteCard, getCards } from './cards.js';
 import { getFeatureBundles } from '../bundles/registry.js';
 
 /**
@@ -60,7 +60,7 @@ function createEditorHTML() {
     '<div class="tp-editor-panel">' +
       '<div class="tp-editor-header">' +
         '<h2 id="tp-editor-title">Add Site</h2>' +
-        '<div class="tp-editor-hint">Navigate with D-pad | ENTER to edit/select</div>' +
+        '<div class="tp-editor-hint">Navigate with D-pad | Changes auto-save</div>' +
       '</div>' +
       '<div class="tp-editor-body">' +
         '<div class="tp-editor-fields" id="tp-editor-fields"></div>' +
@@ -78,10 +78,7 @@ function createEditorHTML() {
         '</button>' +
         '<div class="tp-editor-footer-right">' +
           '<button type="button" class="tp-editor-btn tp-editor-btn-cancel" id="tp-editor-cancel" tabindex="0">' +
-            'Cancel' +
-          '</button>' +
-          '<button type="button" class="tp-editor-btn tp-editor-btn-save" id="tp-editor-save" tabindex="0">' +
-            '<span class="tp-btn-icon">✓</span> Save' +
+            'Close' +
           '</button>' +
         '</div>' +
       '</div>' +
@@ -103,22 +100,6 @@ function setupEventListeners(editor) {
         e.preventDefault();
         e.stopPropagation();
         closeSiteEditor();
-      }
-    });
-  }
-
-  // Save button - click AND keydown for Enter
-  var saveBtn = editor.querySelector('#tp-editor-save');
-  if (saveBtn) {
-    saveBtn.addEventListener('click', function() {
-      saveAndClose();
-    });
-    saveBtn.addEventListener('keydown', function(e) {
-      if (e.keyCode === 13) { // Enter
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('TizenPortal: Save button keydown Enter');
-        saveAndClose();
       }
     });
   }
@@ -172,15 +153,6 @@ function handleEditorKeyDown(event) {
     console.log('TizenPortal: - id:', active ? active.id : 'null');
     console.log('TizenPortal: - className:', active ? active.className : 'null');
     console.log('TizenPortal: - tagName:', active ? active.tagName : 'null');
-    
-    // If on the save button, save and close
-    if (active && active.id === 'tp-editor-save') {
-      console.log('TizenPortal: Enter on save button, calling saveAndClose');
-      event.preventDefault();
-      event.stopPropagation();
-      saveAndClose();
-      return;
-    }
     
     // If on the cancel button, close
     if (active && active.id === 'tp-editor-cancel') {
@@ -291,6 +263,8 @@ function openEditor() {
     return;
   }
 
+  editor.dataset.cardId = state.card && state.card.id ? state.card.id : '';
+
   // Set title
   var title = editor.querySelector('#tp-editor-title');
   if (title) {
@@ -327,8 +301,8 @@ function openEditor() {
     if (firstField) {
       firstField.focus();
     }
-    // Update yellow hint to show "Save"
-    updateYellowHintText('Save');
+    // Update yellow hint to show "Close"
+    updateYellowHintText('Close');
   }, 100);
 }
 
@@ -389,120 +363,84 @@ function updateYellowHintText(text) {
 }
 
 /**
- * Save and close
+ * Resolve active card for actions (fallback to editor dataset)
  */
-function saveAndClose() {
-  console.log('TizenPortal: ===== saveAndClose() called =====');
-  console.log('TizenPortal: state object:', state);
-  console.log('TizenPortal: state.card:', state.card);
-  console.log('TizenPortal: state.isEdit:', state.isEdit);
-  console.log('TizenPortal: state.active:', state.active);
-  console.log('TizenPortal: typeof state.card:', typeof state.card);
-  
-  // If state.card is null, try to reconstruct from form fields
-  if (!state.card) {
-    console.warn('TizenPortal: state.card is null, attempting to read from form...');
-    var editor = document.getElementById('tp-site-editor');
-    var fields = editor ? editor.querySelectorAll('.tp-field-row') : [];
-    
-    // Try to build card from form values
-    var reconstructedCard = {
-      name: '',
-      url: '',
-      featureBundle: null,
-      userAgent: 'tizen',
-      icon: '',
-    };
-    
-    for (var i = 0; i < fields.length; i++) {
-      var field = fields[i];
-      var fieldName = field.dataset.field;
-      var fieldValue = field.querySelector('.tp-field-value');
-      if (fieldValue && fieldName) {
-        // Don't use placeholder, skip empty values
-        var text = fieldValue.textContent || '';
-        if (text && text !== fieldValue.dataset.placeholder) {
-          reconstructedCard[fieldName] = text;
-        }
+function getActiveCardForAction() {
+  if (state.card) {
+    return state.card;
+  }
+
+  var editor = document.getElementById('tp-site-editor');
+  var cardId = editor ? editor.dataset.cardId : '';
+  if (cardId) {
+    var cards = getCards();
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].id === cardId) {
+        state.card = cards[i];
+        state.isEdit = true;
+        return state.card;
       }
     }
-    
-    console.log('TizenPortal: reconstructed card from form:', reconstructedCard);
-    state.card = reconstructedCard;
-    
-    if (!state.card.name || !state.card.url) {
-      console.error('TizenPortal: Unable to recover card data from form');
-      showEditorToast('Error: Unable to save - form data lost');
-      return;
-    }
   }
-  
-  console.log('TizenPortal: state.card validated, proceeding with save');
-  
-  // Validate - use defensive checks
-  var cardName = state.card.name || '';
-  var cardUrl = state.card.url || '';
-  
-  console.log('TizenPortal: cardName =', cardName);
-  console.log('TizenPortal: cardUrl =', cardUrl);
-  
-  if (!cardName.trim()) {
-    console.log('TizenPortal: cardName is empty, showing toast');
-    showEditorToast('Please enter a site name');
-    focusField('name');
+
+  return state.card;
+}
+
+/**
+ * Auto-save on changes (no Save button)
+ */
+function autoSaveCard(reason) {
+  var card = getActiveCardForAction();
+  if (!card) {
+    console.log('TizenPortal: Auto-save skipped - no card', reason || '');
     return;
   }
 
-  if (!cardUrl.trim()) {
-    console.log('TizenPortal: cardUrl is empty, showing toast');
-    showEditorToast('Please enter a URL');
-    focusField('url');
+  var cardName = (card.name || '').trim();
+  var cardUrl = (card.url || '').trim();
+
+  if (cardUrl && cardUrl.indexOf('://') === -1) {
+    cardUrl = 'https://' + cardUrl;
+    card.url = cardUrl;
+  }
+
+  if (!cardName || !cardUrl) {
+    console.log('TizenPortal: Auto-save skipped - missing name/url', reason || '');
     return;
   }
 
-  // Ensure URL has protocol
-  var url = cardUrl.trim();
-  if (url.indexOf('://') === -1) {
-    url = 'https://' + url;
-    state.card.url = url;
-  }
+  var payload = {
+    name: cardName,
+    url: cardUrl,
+    featureBundle: card.featureBundle || null,
+    userAgent: card.userAgent || 'tizen',
+    icon: card.icon || null,
+  };
 
-  console.log('TizenPortal: about to save, state.isEdit =', state.isEdit);
-  console.log('TizenPortal: state.card.id =', state.card.id);
-  console.log('TizenPortal: full state.card =', JSON.stringify(state.card));
-  
-  // Save
-  if (state.isEdit && state.card.id) {
-    console.log('TizenPortal: IN EDIT MODE - calling updateCard with id =', state.card.id);
-    updateCard(state.card.id, {
-      name: cardName.trim(),
-      url: url,
-      featureBundle: state.card.featureBundle || null,
-      userAgent: state.card.userAgent || 'tizen',
-      icon: state.card.icon || null,
-    });
-    showEditorToast('Updated: ' + cardName);
+  if (state.isEdit && card.id) {
+    updateCard(card.id, payload);
+    showEditorToast('Saved');
   } else {
-    console.log('TizenPortal: calling addCard');
-    addCard({
-      name: cardName.trim(),
-      url: url,
-      featureBundle: state.card.featureBundle || null,
-      userAgent: state.card.userAgent || 'tizen',
-      icon: state.card.icon || null,
-    });
-    showEditorToast('Added: ' + cardName);
+    var created = addCard(payload);
+    state.card = created;
+    state.isEdit = true;
+
+    var editor = document.getElementById('tp-site-editor');
+    if (editor) {
+      editor.dataset.cardId = created.id;
+    }
+
+    var deleteBtn = document.getElementById('tp-editor-delete');
+    if (deleteBtn) {
+      deleteBtn.style.display = 'flex';
+    }
+
+    showEditorToast('Added');
   }
 
-  console.log('TizenPortal: save complete, calling closeSiteEditor');
-  closeSiteEditor();
-
-  // Callback
   if (state.onComplete) {
-    console.log('TizenPortal: calling onComplete callback');
     state.onComplete();
   }
-  console.log('TizenPortal: saveAndClose() complete');
 }
 
 /**
@@ -510,21 +448,22 @@ function saveAndClose() {
  */
 function deleteAndClose() {
   console.log('TizenPortal: deleteAndClose called');
-  console.log('TizenPortal: state.card =', state.card);
+
+  var activeCard = getActiveCardForAction();
+  console.log('TizenPortal: activeCard =', activeCard);
   console.log('TizenPortal: state.isEdit =', state.isEdit);
-  console.log('TizenPortal: state.card.id =', state.card ? state.card.id : 'null');
-  
-  if (!state.card || !state.isEdit || !state.card.id) {
-    console.log('TizenPortal: Cannot delete - missing card, isEdit, or id');
+
+  if (!activeCard || !activeCard.id) {
+    console.log('TizenPortal: Cannot delete - missing card or id');
     return;
   }
-  
-  var cardName = state.card.name || 'Site';
+
+  var cardName = activeCard.name || 'Site';
 
   // Simple confirmation via toast + second press
   var deleteBtn = document.getElementById('tp-editor-delete');
   if (deleteBtn && deleteBtn.dataset.confirmDelete === 'true') {
-    deleteCard(state.card.id);
+    deleteCard(activeCard.id);
     showEditorToast('Deleted: ' + cardName);
     closeSiteEditor();
 
@@ -775,6 +714,7 @@ function cycleSelectOption(fieldName, field) {
   
   // Re-render fields
   renderFields();
+  autoSaveCard('select:' + fieldName);
   
   // Re-focus the field
   focusField(fieldName);
@@ -792,6 +732,7 @@ function showTextInputPrompt(fieldName, field) {
     state.card[fieldName] = newValue;
     renderFields();
     updatePreview();
+    autoSaveCard('text:' + fieldName);
   }
   
   // Re-focus the field
@@ -810,6 +751,7 @@ function selectBundleOption(option) {
   
   // Re-render fields
   renderFields();
+  autoSaveCard('bundle');
   
   // Re-focus the bundle option
   setTimeout(function() {
@@ -911,6 +853,7 @@ function handleFetchFavicon() {
     renderFields();
     updatePreview();
     refocusFetchButton();
+    autoSaveCard('favicon');
     showEditorToast('Found site favicon');
   };
   img.onerror = function() {
@@ -922,6 +865,7 @@ function handleFetchFavicon() {
     renderFields();
     updatePreview();
     refocusFetchButton();
+    autoSaveCard('favicon');
     showEditorToast('Using Google favicon');
   };
   img.src = localFaviconUrl;
