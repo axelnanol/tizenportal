@@ -282,6 +282,9 @@ export function showEditSiteEditor(card, onComplete) {
  */
 function openEditor() {
   console.log('TizenPortal: openEditor called, state.card =', state.card ? 'set' : 'null');
+  console.log('TizenPortal: openEditor - state.isEdit =', state.isEdit);
+  console.log('TizenPortal: openEditor - state.card.id =', state.card ? state.card.id : 'no card');
+  
   var editor = document.getElementById('tp-site-editor');
   if (!editor) {
     console.error('TizenPortal: editor element not found!');
@@ -292,15 +295,18 @@ function openEditor() {
   var title = editor.querySelector('#tp-editor-title');
   if (title) {
     title.textContent = state.isEdit ? 'Edit Site' : 'Add Site';
+    console.log('TizenPortal: Set title to:', title.textContent);
   }
 
   // Show/hide delete button
   var deleteBtn = editor.querySelector('#tp-editor-delete');
   if (deleteBtn) {
     deleteBtn.style.display = state.isEdit ? 'flex' : 'none';
+    console.log('TizenPortal: Delete button display:', deleteBtn.style.display);
   }
 
   // Render fields
+  console.log('TizenPortal: About to render fields, state.card =', state.card);
   renderFields();
 
   // Update preview
@@ -309,6 +315,11 @@ function openEditor() {
   // Show editor
   state.active = true;
   editor.classList.add('visible');
+  
+  console.log('TizenPortal: Editor shown. Final state check:');
+  console.log('TizenPortal: - state.isEdit =', state.isEdit);
+  console.log('TizenPortal: - state.card =', state.card);
+  console.log('TizenPortal: - state.card.id =', state.card ? state.card.id : 'no card');
 
   // Focus first field
   setTimeout(function() {
