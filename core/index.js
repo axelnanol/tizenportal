@@ -237,7 +237,7 @@ async function initTargetSite() {
   if (!matchedCard) {
     matchedCard = findMatchingCard(window.location.href);
     if (matchedCard) {
-      log('Matched card from localStorage: ' + matchedCard.name + ' (bundle: ' + (matchedCard.bundle || 'default') + ')');
+      log('Matched card from localStorage: ' + matchedCard.name + ' (bundle: ' + (matchedCard.featureBundle || 'default') + ')');
       tpHud('Card (storage): ' + matchedCard.name);
     }
   }
@@ -301,7 +301,7 @@ function getCardFromHash() {
       _payload: payload
     };
     
-    log('Card from URL hash: ' + card.name + ' (bundle: ' + card.bundle + ')');
+    log('Card from URL hash: ' + card.name + ' (bundle: ' + (card.featureBundle || 'default') + ')');
     return card;
   } catch (e) {
     error('Failed to parse hash card: ' + e.message);
@@ -354,7 +354,7 @@ function findMatchingCard(url) {
  * @param {Object} card - Card with bundle info
  */
 async function applyBundleToPage(card) {
-  var bundleName = card.bundle || 'default';
+  var bundleName = card.featureBundle || 'default';
   tpHud('Bundle: ' + bundleName);
   var bundle = getBundle(bundleName);
   
@@ -837,7 +837,7 @@ function loadSite(card) {
   state.currentCard = card;
   
   // Get the bundle for this card
-  var bundleName = card.bundle || 'default';
+  var bundleName = card.featureBundle || 'default';
   var bundle = getBundle(bundleName);
   
   // Build payload with bundle info: { css, js, ua, bundleName }
