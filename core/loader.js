@@ -2,9 +2,11 @@
  * TizenPortal Bundle Loader
  * 
  * Loads bundles into iframes and manages lifecycle hooks.
+ * Uses new cascade: mandatory → global features → feature bundle
  */
 
-import { getBundle, getDefaultBundle, getBundleNames } from '../bundles/registry.js';
+import { getBundle, getBundleNames } from '../bundles/registry.js';
+import featureLoader from '../features/index.js';
 
 /**
  * Currently active bundle instance
@@ -24,7 +26,7 @@ var activeCard = null;
 /**
  * Load a bundle for the given iframe and card
  * @param {HTMLIFrameElement} iframe
- * @param {Object} card - Card with bundle property
+ * @param {Object} card - Card with featureBundle property
  * @returns {Promise<Object|null>} Loaded bundle or null
  */
 export async function loadBundle(iframe, card) {
@@ -33,22 +35,21 @@ export async function loadBundle(iframe, card) {
     return null;
   }
 
-  var bundleName = card.bundle || 'default';
-  console.log('TizenPortal Loader: Loading bundle "' + bundleName + '" for ' + card.url);
-
-  // Get bundle from registry
-  var bundle = getBundle(bundleName);
+  // Get feature bundle name (may be null)
+  var bundleName = card.featureBundle || card.bundle || null; // Support old 'bundle' field
   
-  // Fallback to default if bundle not found
-  if (!bundle) {
-    console.warn('TizenPortal Loader: Bundle "' + bundleName + '" not found, using default');
-    bundle = getDefaultBundle();
-    bundleName = 'default';
+  if (bundleName) {
+    console.log('TizenPortal Loader: Loading feature bundle "' + bundleName + '" for ' + card.url);
+  } else {
+    console.log('TizenPortal Loader: Loading with global features only for ' + card.url);
   }
 
-  if (!bundle) {
-    console.error('TizenPortal Loader: No default bundle available');
-    return null;
+  // Get bundle from registry (may be null if no feature bundle)
+  var bundle = bundleName ? getBundle(bundleName) : null;
+  
+  if (bundleName && !bundle) {
+    console.warn('TizenPortal Loader: Feature bundle "' + bundleName + '" not found');
+    // Continue without feature bundle
   }
 
   // Store active state
@@ -57,45 +58,50 @@ export async function loadBundle(iframe, card) {
   activeCard = card;
 
   try {
-    // Step 1: Call onBeforeLoad (before we touch the iframe content)
-    if (typeof bundle.onBeforeLoad === 'function') {
-      console.log('TizenPortal Loader: Calling onBeforeLoad');
+    // Step 1: Call bundle onBeforeLoad (if bundle exists)
+    if (bundle && typeof bundle.onBeforeLoad === 'function') {
+      console.log('TizenPortal Loader: Calling bundle onBeforeLoad');
       await bundle.onBeforeLoad(iframe, card);
     }
 
-    // Step 2: Inject TizenPortal API into iframe (same-origin only)
+    // Step 2: Inject TizenPortal API into iframe (MANDATORY - same-origin only)
     injectAPI(iframe);
 
-    // Step 3: Inject key event forwarder (forwards color buttons to shell)
+    // Step 3: Inject key event forwarder (MANDATORY - forwards color buttons to shell)
     injectKeyForwarder(iframe);
 
-    // Step 4: Inject bundle CSS
-    if (bundle.style) {
+    // Step 4: Apply global features (from tp_features config)
+    console.log('TizenPortal Loader: Applying global features');
+    featureLoader.applyFeatures(iframe);
+
+    // Step 5: Inject feature bundle CSS (if bundle exists)
+    if (bundle && bundle.style) {
       injectCSS(iframe, bundle.style);
     }
 
-    // Step 5: Inject bundle JS (if bundle provides inline code)
-    if (bundle.code) {
+    // Step 6: Inject feature bundle JS (if bundle provides inline code)
+    if (bundle && bundle.code) {
       injectJS(iframe, bundle.code);
     }
 
-    // Step 6: Call onAfterLoad
-    if (typeof bundle.onAfterLoad === 'function') {
-      console.log('TizenPortal Loader: Calling onAfterLoad');
+    // Step 7: Call bundle onAfterLoad
+    if (bundle && typeof bundle.onAfterLoad === 'function') {
+      console.log('TizenPortal Loader: Calling bundle onAfterLoad');
       await bundle.onAfterLoad(iframe, card);
     }
 
-    // Step 7: Call onActivate
-    if (typeof bundle.onActivate === 'function') {
-      console.log('TizenPortal Loader: Calling onActivate');
+    // Step 8: Call bundle onActivate
+    if (bundle && typeof bundle.onActivate === 'function') {
+      console.log('TizenPortal Loader: Calling bundle onActivate');
       await bundle.onActivate(iframe, card);
     }
 
-    console.log('TizenPortal Loader: Bundle "' + bundleName + '" loaded successfully');
+    var loadType = bundle ? 'feature bundle "' + bundleName + '"' : 'global features only';
+    console.log('TizenPortal Loader: Loaded ' + loadType + ' successfully');
     return bundle;
 
   } catch (err) {
-    console.error('TizenPortal Loader: Error loading bundle:', err.message);
+    console.error('TizenPortal Loader: Error loading:', err.message);
     return null;
   }
 }

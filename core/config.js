@@ -18,6 +18,23 @@ var DEFAULT_CONFIG = {
   safeMode: false,
   lastVisitedUrl: null,
   diagnosticsEnabled: false,
+  
+  // Portal preferences
+  tp_portal: {
+    theme: 'dark',
+    backgroundColor: '#1a1a2e',
+    backgroundImage: '',
+  },
+  
+  // Global site features
+  tp_features: {
+    focusStyling: true,
+    tabindexInjection: true,
+    scrollIntoView: true,
+    safeArea: false,
+    gpuHints: true,
+    cssReset: true,
+  },
 };
 
 /**
@@ -177,4 +194,41 @@ export function configReset() {
  */
 export function configGetAll() {
   return Object.assign({}, loadConfig());
+}
+
+/**
+ * Get a config value with deep merging of defaults
+ * Useful for structured configs like tp_portal, tp_features
+ * @param {string} key
+ * @returns {*}
+ */
+export function configGet(key) {
+  var value = configRead(key);
+  
+  // If value doesn't exist, return default
+  if (value === undefined && DEFAULT_CONFIG.hasOwnProperty(key)) {
+    return DEFAULT_CONFIG[key];
+  }
+  
+  // If value is object and default is object, merge
+  if (value && typeof value === 'object' && DEFAULT_CONFIG.hasOwnProperty(key) && typeof DEFAULT_CONFIG[key] === 'object') {
+    var merged = {};
+    for (var k in DEFAULT_CONFIG[key]) {
+      if (DEFAULT_CONFIG[key].hasOwnProperty(k)) {
+        merged[k] = value.hasOwnProperty(k) ? value[k] : DEFAULT_CONFIG[key][k];
+      }
+    }
+    return merged;
+  }
+  
+  return value;
+}
+
+/**
+ * Set a config value (alias for configWrite)
+ * @param {string} key
+ * @param {*} value
+ */
+export function configSet(key, value) {
+  configWrite(key, value);
 }

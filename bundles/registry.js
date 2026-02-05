@@ -4,15 +4,13 @@
  * Manages bundle registration and lookup.
  */
 
-import defaultBundle from './default/main.js';
 import adblockBundle from './adblock/main.js';
 import audiobookshelfBundle from './audiobookshelf/main.js';
 
 /**
- * Registered bundles
+ * Registered bundles (feature bundles only, no default)
  */
 var bundles = {
-  'default': defaultBundle,
   'adblock': adblockBundle,
   'audiobookshelf': audiobookshelfBundle,
 };
@@ -48,18 +46,35 @@ export function getBundle(name) {
 
 /**
  * Get the default bundle
- * @returns {Object}
+ * @returns {Object|null}
+ * @deprecated Default bundle has been replaced by global features
  */
 export function getDefaultBundle() {
-  return bundles['default'];
+  console.warn('TizenPortal: getDefaultBundle is deprecated, use global features instead');
+  return null;
 }
 
 /**
- * Get all registered bundle names
+ * Get all registered feature bundle names
  * @returns {string[]}
  */
 export function getBundleNames() {
   return Object.keys(bundles);
+}
+
+/**
+ * Get list of feature bundles with metadata
+ * @returns {Array<Object>}
+ */
+export function getFeatureBundles() {
+  return Object.keys(bundles).map(function(key) {
+    var bundle = bundles[key];
+    return {
+      name: key,
+      displayName: bundle.displayName || key,
+      description: bundle.description || 'No description available',
+    };
+  });
 }
 
 /**

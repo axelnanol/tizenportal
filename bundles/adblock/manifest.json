@@ -2,6 +2,6 @@
   "name": "adblock",
   "displayName": "Ad Blocker",
   "version": "1.0.0",
-  "description": "Lightweight generic ad blocking for TV browsing",
+  "description": "Blocks advertisements and tracking scripts for cleaner browsing",
   "author": "TizenPortal"
 }

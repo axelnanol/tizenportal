@@ -7,6 +7,7 @@
 import { getCards, addCard, updateCard, deleteCard } from './cards.js';
 import { showAddCardModal, showEditCardModal, setRefreshPortalFn } from './modal.js';
 import { showAddSiteEditor, showEditSiteEditor } from './siteeditor.js';
+import { applyPortalPreferences } from './preferences.js';
 
 /**
  * Portal container element
@@ -37,6 +38,9 @@ export function initPortal() {
 
   // Set up modal refresh callback to avoid circular dependency
   setRefreshPortalFn(refreshPortal);
+
+  // Apply portal preferences (theme, background)
+  applyPortalPreferences();
 
   renderCards();
   focusCard(0);

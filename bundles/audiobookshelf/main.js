@@ -336,7 +336,7 @@ var stopUrlWatcher = null;
 export default {
   name: 'audiobookshelf',
   displayName: 'Audiobookshelf',
-  description: 'TV support for Audiobookshelf audiobook server',
+  description: 'Media controls, library navigation, and player integration for Audiobookshelf',
   
   /**
    * CSS to inject (imported from style.css)

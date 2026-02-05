@@ -6,7 +6,7 @@
  */
 
 import { addCard, updateCard, deleteCard } from './cards.js';
-import { getBundleNames, getBundle } from '../bundles/registry.js';
+import { getFeatureBundles } from '../bundles/registry.js';
 
 /**
  * Editor state
@@ -25,7 +25,7 @@ var state = {
 var FIELDS = [
   { name: 'name', label: 'Site Name', type: 'text', placeholder: 'My Site', required: true },
   { name: 'url', label: 'URL', type: 'text', placeholder: 'https://example.com', required: true },
-  { name: 'bundle', label: 'Bundle', type: 'bundle', required: false },
+  { name: 'featureBundle', label: 'Site-specific Bundle', type: 'bundle', required: false },
   { name: 'userAgent', label: 'User Agent', type: 'select', options: [
     { value: 'tizen', label: 'Tizen TV (Default)' },
     { value: 'mobile', label: 'Mobile' },
@@ -240,7 +240,7 @@ export function showAddSiteEditor(onComplete) {
   state.card = {
     name: '',
     url: '',
-    bundle: 'default',
+    featureBundle: null,
     userAgent: 'tizen',
     icon: '',
   };
@@ -260,7 +260,7 @@ export function showEditSiteEditor(card, onComplete) {
     id: card.id,
     name: card.name || '',
     url: card.url || '',
-    bundle: card.bundle || 'default',
+    featureBundle: card.featureBundle || null,
     userAgent: card.userAgent || 'tizen',
     icon: card.icon || '',
   };
@@ -406,7 +406,7 @@ function saveAndClose() {
     updateCard(state.card.id, {
       name: cardName.trim(),
       url: url,
-      bundle: state.card.bundle || 'default',
+      featureBundle: state.card.featureBundle || null,
       userAgent: state.card.userAgent || 'tizen',
       icon: state.card.icon || null,
     });
@@ -415,7 +415,7 @@ function saveAndClose() {
     addCard({
       name: cardName.trim(),
       url: url,
-      bundle: state.card.bundle || 'default',
+      featureBundle: state.card.featureBundle || null,
       userAgent: state.card.userAgent || 'tizen',
       icon: state.card.icon || null,
     });
@@ -552,18 +552,30 @@ function renderSelectField(field, value) {
  * Render the bundle field with visual options
  */
 function renderBundleField(field, value) {
-  var bundles = getBundleNames();
+  var bundles = getFeatureBundles(); // Returns array of {name, displayName, description}
   
   var html = '<div class="tp-field-section">';
   html += '<div class="tp-field-section-label">' + field.label + '</div>';
   html += '<div class="tp-bundle-list">';
   
+  // Add "None" option
+  var isNoneSelected = !value || value === null;
+  html += '' +
+    '<div class="tp-bundle-option' + (isNoneSelected ? ' selected' : '') + '" data-bundle="none" tabindex="0">' +
+      '<div class="tp-bundle-check">' + (isNoneSelected ? '●' : '○') + '</div>' +
+      '<div class="tp-bundle-info">' +
+        '<div class="tp-bundle-name">None</div>' +
+        '<div class="tp-bundle-desc">Use only global site settings</div>' +
+      '</div>' +
+    '</div>';
+  
+  // Add feature bundles
   for (var i = 0; i < bundles.length; i++) {
-    var bundleName = bundles[i];
-    var bundle = getBundle(bundleName);
+    var bundle = bundles[i];
+    var bundleName = bundle.name;
     var isSelected = bundleName === value;
-    var displayName = bundle && bundle.displayName ? bundle.displayName : bundleName;
-    var description = bundle && bundle.description ? bundle.description : 'No description';
+    var displayName = bundle.displayName || bundleName;
+    var description = bundle.description || 'No description';
     
     html += '' +
       '<div class="tp-bundle-option' + (isSelected ? ' selected' : '') + '" data-bundle="' + bundleName + '" tabindex="0">' +
@@ -710,7 +722,8 @@ function showTextInputPrompt(fieldName, field) {
  */
 function selectBundleOption(option) {
   var bundleName = option.dataset.bundle;
-  state.card.bundle = bundleName;
+  // "none" means null for featureBundle
+  state.card.featureBundle = bundleName === 'none' ? null : bundleName;
   
   // Re-render fields
   renderFields();

@@ -11,6 +11,7 @@ import { toggleDiagnosticsPanel, clearDiagnosticsLogs, isDiagnosticsPanelVisible
 import { toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
 import { toggleBundleMenu, isBundleMenuVisible, cycleBundle } from '../ui/bundlemenu.js';
 import { showAddSiteEditor, showEditSiteEditor, isSiteEditorOpen, closeSiteEditor } from '../ui/siteeditor.js';
+import { showPreferences } from '../ui/preferences.js';
 import { getFocusedCard } from '../ui/portal.js';
 import { isPointerActive, handlePointerKeyDown, handlePointerKeyUp, togglePointer } from './pointer.js';
 import {
@@ -372,29 +373,8 @@ export function executeColorAction(action) {
       }
       break;
 
-    case 'bundleMenu':
-      // Portal only - bundle menu doesn't exist on target sites
-      if (!isOnPortal) {
-        // On target sites, Yellow returns to portal
-        if (window.TizenPortal && window.TizenPortal.returnToPortal) {
-          window.TizenPortal.returnToPortal();
-        }
-        break;
-      }
-      // If diagnostics panel is open, clear logs instead
-      if (isDiagnosticsPanelVisible()) {
-        clearDiagnosticsLogs();
-        if (window.TizenPortal) {
-          window.TizenPortal.showToast('Logs cleared');
-        }
-      } else {
-        // Toggle bundle menu (legacy)
-        toggleBundleMenu();
-      }
-      break;
-
-    case 'editSite':
-      // Portal only
+    case 'preferences':
+      // Portal only - show preferences modal
       if (!isOnPortal) {
         // On target site, Yellow returns to portal
         if (window.TizenPortal && window.TizenPortal.returnToPortal) {
@@ -402,36 +382,25 @@ export function executeColorAction(action) {
         }
         break;
       }
-      // If site editor is open, Yellow = Save
-      if (isSiteEditorOpen()) {
-        console.log('TizenPortal: Yellow pressed in editor, triggering save');
-        var saveBtn = document.getElementById('tp-editor-save');
-        console.log('TizenPortal: Save button found:', saveBtn);
-        if (saveBtn) {
-          saveBtn.click();
+      // Open preferences modal
+      showPreferences();
+      break;
+
+    case 'addSite':
+      // Portal only - add new site
+      if (!isOnPortal) {
+        // On target site, Yellow returns to portal
+        if (window.TizenPortal && window.TizenPortal.returnToPortal) {
+          window.TizenPortal.returnToPortal();
         }
-        return;
+        break;
       }
-      // On portal page, use focused card (not currentCard which is for target sites)
-      var focusedCard = getFocusedCard();
-      console.log('TizenPortal: Yellow pressed on portal, focusedCard =', focusedCard);
-      if (focusedCard) {
-        // Edit the focused card
-        console.log('TizenPortal: Opening edit editor for card:', focusedCard.name);
-        showEditSiteEditor(focusedCard, function() {
-          if (window.TizenPortal && window.TizenPortal._refreshPortal) {
-            window.TizenPortal._refreshPortal();
-          }
-        });
-      } else {
-        // No card focused (Add Site button focused, or no focus), show add instead
-        console.log('TizenPortal: Opening add editor (no card focused)');
-        showAddSiteEditor(function() {
-          if (window.TizenPortal && window.TizenPortal._refreshPortal) {
-            window.TizenPortal._refreshPortal();
-          }
-        });
-      }
+      // Open add site editor
+      showAddSiteEditor(function() {
+        if (window.TizenPortal && window.TizenPortal._refreshPortal) {
+          window.TizenPortal._refreshPortal();
+        }
+      });
       break;
 
     case 'addSite':

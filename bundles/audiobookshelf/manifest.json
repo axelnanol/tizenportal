@@ -2,7 +2,7 @@
   "name": "audiobookshelf",
   "displayName": "Audiobookshelf",
   "version": "1.0.0",
-  "description": "Enhanced TV support for Audiobookshelf",
+  "description": "Media controls, library navigation, and player integration for Audiobookshelf",
   "author": "TizenPortal",
   "homepage": "https://www.audiobookshelf.org/"
 }

@@ -51,6 +51,34 @@ function loadCards() {
       if (!Array.isArray(cardCache)) {
         cardCache = [];
       }
+      
+      // Migration: Convert old 'bundle' field to 'featureBundle'
+      var needsSave = false;
+      for (var i = 0; i < cardCache.length; i++) {
+        var card = cardCache[i];
+        if (card.bundle && !card.featureBundle) {
+          // Migrate old bundle field
+          if (card.bundle === 'default') {
+            // Default bundle is now global features, so no feature bundle
+            card.featureBundle = null;
+          } else {
+            // Other bundles become feature bundles
+            card.featureBundle = card.bundle;
+          }
+          delete card.bundle;
+          needsSave = true;
+        }
+        // Ensure featureBundle field exists
+        if (!card.hasOwnProperty('featureBundle')) {
+          card.featureBundle = null;
+          needsSave = true;
+        }
+      }
+      
+      if (needsSave) {
+        console.log('TizenPortal: Migrated', cardCache.length, 'cards to new bundle format');
+        saveCards();
+      }
     } else {
       cardCache = [];
     }
@@ -88,7 +116,7 @@ export function getCards() {
 
 /**
  * Add a new card
- * @param {Object} cardData - Card data (name, url, bundle, userAgent, icon)
+ * @param {Object} cardData - Card data (name, url, featureBundle, userAgent, icon)
  * @returns {Object} The created card
  */
 export function addCard(cardData) {
@@ -98,7 +126,7 @@ export function addCard(cardData) {
     id: generateId(),
     name: cardData.name || 'Untitled',
     url: cardData.url || '',
-    bundle: cardData.bundle || 'default',
+    featureBundle: cardData.featureBundle || null,
     userAgent: cardData.userAgent || 'tizen',
     icon: cardData.icon || null,
     order: cards.length,

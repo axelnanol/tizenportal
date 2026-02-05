@@ -33,7 +33,7 @@ import '../navigation/spatial-navigation-polyfill.js';
 // ============================================================================
 
 // Import core modules
-import { configRead, configWrite, configOnChange, configInit } from './config.js';
+import { configRead, configWrite, configOnChange, configInit, configGet, configSet } from './config.js';
 import { initPolyfills, hasPolyfill, getLoadedPolyfills } from '../polyfills/index.js';
 import { KEYS } from '../input/keys.js';
 import { initInputHandler, executeColorAction, registerKeyHandler } from '../input/handler.js';
@@ -963,6 +963,8 @@ var TizenPortalAPI = {
   config: {
     read: configRead,
     write: configWrite,
+    get: configGet,
+    set: configSet,
     onChange: configOnChange,
   },
 

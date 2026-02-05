@@ -91,7 +91,7 @@ var state = {
 export default {
   name: 'adblock',
   displayName: 'Ad Blocker',
-  description: 'Block common web advertisements',
+  description: 'Blocks advertisements and tracking scripts for cleaner browsing',
   
   /**
    * CSS to inject
