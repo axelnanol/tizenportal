@@ -824,6 +824,27 @@ function showEditorToast(message) {
 }
 
 /**
+ * Common favicon paths to try (in order of preference)
+ */
+var FAVICON_PATHS = [
+  '/favicon.ico',
+  '/favicon.svg',
+  '/favicon.png',
+  '/apple-touch-icon.png',
+  '/apple-touch-icon-precomposed.png',
+  '/static/favicon.ico',
+  '/static/favicon.svg',
+  '/static/favicon.png',
+  '/assets/favicon.ico',
+  '/assets/favicon.svg',
+  '/assets/favicon.png',
+  '/images/favicon.ico',
+  '/images/favicon.png',
+  '/img/favicon.ico',
+  '/img/favicon.png',
+];
+
+/**
  * Handle fetch favicon button click
  */
 function handleFetchFavicon() {
@@ -853,24 +874,21 @@ function handleFetchFavicon() {
     return;
   }
   
-  showEditorToast('Trying site favicon...');
+  showEditorToast('Searching for favicon...');
   
-  // Try the site's own favicon first
-  var localFaviconUrl = baseUrl + '/favicon.ico';
-  
-  // Test if the local favicon exists by loading it in an Image
-  var img = new Image();
-  img.onload = function() {
-    // Local favicon works!
-    state.card.icon = localFaviconUrl;
-    renderFields();
-    updatePreview();
-    refocusFetchButton();
-    autoSaveCard('favicon');
-    showEditorToast('Found site favicon');
-  };
-  img.onerror = function() {
-    // Local favicon failed, try Google's service
+  // Try common favicon paths sequentially
+  tryFaviconPaths(baseUrl, domain, 0);
+}
+
+/**
+ * Try favicon paths one by one
+ * @param {string} baseUrl - Base URL (protocol + domain)
+ * @param {string} domain - Domain only
+ * @param {number} index - Current path index
+ */
+function tryFaviconPaths(baseUrl, domain, index) {
+  // If we've exhausted all paths, fall back to Google
+  if (index >= FAVICON_PATHS.length) {
     showEditorToast('Trying Google favicon service...');
     var googleFaviconUrl = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=64';
     
@@ -880,8 +898,27 @@ function handleFetchFavicon() {
     refocusFetchButton();
     autoSaveCard('favicon');
     showEditorToast('Using Google favicon');
+    return;
+  }
+  
+  var faviconUrl = baseUrl + FAVICON_PATHS[index];
+  
+  // Test if this favicon exists by loading it in an Image
+  var img = new Image();
+  img.onload = function() {
+    // Found a working favicon!
+    state.card.icon = faviconUrl;
+    renderFields();
+    updatePreview();
+    refocusFetchButton();
+    autoSaveCard('favicon');
+    showEditorToast('Found: ' + FAVICON_PATHS[index]);
   };
-  img.src = localFaviconUrl;
+  img.onerror = function() {
+    // This path failed, try the next one
+    tryFaviconPaths(baseUrl, domain, index + 1);
+  };
+  img.src = faviconUrl;
 }
 
 /**
