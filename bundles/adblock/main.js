@@ -99,9 +99,9 @@ export default {
   style: adblockStyles,
 
   /**
-   * Called before iframe content loads
+   * Called before page content loads
    */
-  onBeforeLoad: function(iframe, card) {
+  onBeforeLoad: function(win, card) {
     console.log('TizenPortal [AdBlock]: Preparing');
     state.blocked = 0;
     state.enabled = true;
@@ -109,17 +109,16 @@ export default {
   },
 
   /**
-   * Called after iframe content has loaded
+   * Called after page content has loaded
    */
-  onAfterLoad: function(iframe, card) {
+  onAfterLoad: function(win, card) {
     console.log('TizenPortal [AdBlock]: Loaded, starting ad blocking');
 
     try {
-      var doc = iframe.contentDocument;
-      var win = iframe.contentWindow;
+      var doc = win.document || document;
       
       if (!doc || !win) {
-        console.warn('TizenPortal [AdBlock]: Cannot access iframe (cross-origin)');
+        console.warn('TizenPortal [AdBlock]: Cannot access document');
         return;
       }
 
@@ -143,14 +142,14 @@ export default {
   /**
    * Called when bundle is activated
    */
-  onActivate: function(iframe, card) {
+  onActivate: function(win, card) {
     console.log('TizenPortal [AdBlock]: Activated');
   },
 
   /**
    * Called when bundle is deactivated
    */
-  onDeactivate: function(iframe, card) {
+  onDeactivate: function(win, card) {
     console.log('TizenPortal [AdBlock]: Deactivated - blocked', state.blocked, 'ads');
     this.cleanup();
   },

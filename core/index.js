@@ -52,7 +52,7 @@ import { initAddressBar, showAddressBar, hideAddressBar, toggleAddressBar, isAdd
 import { initBundleMenu, showBundleMenu, hideBundleMenu, toggleBundleMenu, isBundleMenuVisible, cycleBundle } from '../ui/bundlemenu.js';
 import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
 import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggleDiagnosticsPanel } from '../ui/diagnostics.js';
-import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown } from './loader.js';
+import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, setActiveBundle } from './loader.js';
 import { getBundleNames, getBundle } from '../bundles/registry.js';
 import featureLoader from '../features/index.js';
 import { 
@@ -374,6 +374,9 @@ async function applyBundleToPage(card) {
   log('Applying bundle: ' + bundle.name);
   tpHud('Applying: ' + bundle.name);
   state.currentBundle = bundle.name;
+  
+  // Track active bundle for state management
+  setActiveBundle(bundle, card);
   
   // Inject bundle CSS (bundles export as 'style' property)
   var cssContent = bundle.style || '';

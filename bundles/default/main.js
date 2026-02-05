@@ -13,59 +13,59 @@ export default {
   description: 'Basic TV browser support with focus styling',
   
   /**
-   * CSS to inject into iframe
+   * CSS to inject
    */
   style: defaultStyles,
 
   /**
-   * Called before iframe content loads
-   * @param {HTMLIFrameElement} iframe
+   * Called before page content loads
+   * @param {Window} win
    * @param {Object} card
    */
-  onBeforeLoad: function(iframe, card) {
+  onBeforeLoad: function(win, card) {
     console.log('TizenPortal [default]: Loading', card.url);
   },
 
   /**
-   * Called after iframe content has loaded
-   * @param {HTMLIFrameElement} iframe
+   * Called after page content has loaded
+   * @param {Window} win
    * @param {Object} card
    */
-  onAfterLoad: function(iframe, card) {
+  onAfterLoad: function(win, card) {
     console.log('TizenPortal [default]: Loaded', card.url);
 
     // Try to inject basic focusable styling
     try {
-      var doc = iframe.contentDocument;
+      var doc = win.document || document;
       if (doc) {
         this.injectBasicStyles(doc);
         this.makeFocusable(doc);
       }
     } catch (err) {
-      console.warn('TizenPortal [default]: Cross-origin, limited access');
+      console.warn('TizenPortal [default]: Error accessing document');
     }
   },
 
   /**
    * Called when bundle is activated
-   * @param {HTMLIFrameElement} iframe
+   * @param {Window} win
    * @param {Object} card
    */
-  onActivate: function(iframe, card) {
+  onActivate: function(win, card) {
     console.log('TizenPortal [default]: Activated');
   },
 
   /**
    * Called when bundle is deactivated
-   * @param {HTMLIFrameElement} iframe
+   * @param {Window} win
    * @param {Object} card
    */
-  onDeactivate: function(iframe, card) {
+  onDeactivate: function(win, card) {
     console.log('TizenPortal [default]: Deactivated');
   },
 
   /**
-   * Called when navigation occurs within iframe
+   * Called when navigation occurs
    * @param {string} url
    */
   onNavigate: function(url) {
