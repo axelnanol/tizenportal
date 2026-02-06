@@ -34,6 +34,7 @@ function getDefaults() {
     safeArea: false,
     gpuHints: true,
     cssReset: true,
+    wrapTextInputs: true,
   };
 }
 

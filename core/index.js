@@ -105,6 +105,105 @@ const state = {
 };
 
 /**
+ * Persist last matched card for cross-site navigation
+ */
+var LAST_CARD_KEY = 'tp_last_card';
+
+/**
+ * Text input protection state
+ */
+var textInputObserver = null;
+var textInputInterval = null;
+
+/**
+ * Selector for text inputs to wrap (exclude TizenPortal UI inputs)
+ */
+var TEXT_INPUT_SELECTOR = 'input[type="text"]:not([id^="tp-"]):not([class*="tp-"]), '
+  + 'input[type="search"]:not([id^="tp-"]):not([class*="tp-"]), '
+  + 'input[type="email"]:not([id^="tp-"]):not([class*="tp-"]), '
+  + 'input[type="url"]:not([id^="tp-"]):not([class*="tp-"]), '
+  + 'input[type="password"]:not([id^="tp-"]):not([class*="tp-"]), '
+  + 'textarea:not([id^="tp-"]):not([class*="tp-"])';
+
+function saveLastCard(card) {
+  if (!card) return;
+  try {
+    var payload = {
+      name: card.name || '',
+      url: card.url || '',
+      featureBundle: card.featureBundle || 'default',
+      userAgent: card.userAgent || 'tizen',
+      icon: card.icon || null,
+      bundleOptions: card.bundleOptions || {},
+      bundleOptionData: card.bundleOptionData || {},
+    };
+    sessionStorage.setItem(LAST_CARD_KEY, JSON.stringify(payload));
+  } catch (err) {
+    // Ignore
+  }
+}
+
+function loadLastCard() {
+  try {
+    var stored = sessionStorage.getItem(LAST_CARD_KEY);
+    if (!stored) return null;
+    var card = JSON.parse(stored);
+    return card || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function startTextInputProtection() {
+  wrapTextInputs(TEXT_INPUT_SELECTOR);
+
+  if (textInputObserver) {
+    textInputObserver.disconnect();
+    textInputObserver = null;
+  }
+  if (textInputInterval) {
+    clearInterval(textInputInterval);
+    textInputInterval = null;
+  }
+
+  if (typeof MutationObserver !== 'undefined') {
+    textInputObserver = new MutationObserver(function() {
+      wrapTextInputs(TEXT_INPUT_SELECTOR);
+    });
+    var target = document.body || document.documentElement;
+    if (target) {
+      textInputObserver.observe(target, { childList: true, subtree: true });
+    }
+  } else {
+    textInputInterval = setInterval(function() {
+      wrapTextInputs(TEXT_INPUT_SELECTOR);
+    }, 2000);
+  }
+}
+
+function stopTextInputProtection() {
+  if (textInputObserver) {
+    textInputObserver.disconnect();
+    textInputObserver = null;
+  }
+  if (textInputInterval) {
+    clearInterval(textInputInterval);
+    textInputInterval = null;
+  }
+  unwrapTextInputs(TEXT_INPUT_SELECTOR);
+}
+
+function applyTextInputProtectionFromConfig() {
+  var features = configGet('tp_features') || {};
+  var enabled = features.wrapTextInputs !== false;
+  if (enabled) {
+    startTextInputProtection();
+  } else {
+    stopTextInputProtection();
+  }
+}
+
+/**
  * Check if we're on the portal page vs injected into a target site
  */
 function detectContext() {
@@ -225,6 +324,7 @@ async function initTargetSite() {
     log('Card from URL hash: ' + hashCard.name);
     matchedCard = hashCard;
     tpHud('Card (hash): ' + hashCard.name);
+    saveLastCard(hashCard);
     // Clear hash after reading (clean URL)
     try {
       var cleanUrl = window.location.href.replace(/[#&]tp=[^&#]+/, '');
@@ -240,6 +340,20 @@ async function initTargetSite() {
     if (matchedCard) {
       log('Matched card from localStorage: ' + matchedCard.name + ' (bundle: ' + (matchedCard.featureBundle || 'default') + ')');
       tpHud('Card (storage): ' + matchedCard.name);
+      saveLastCard(matchedCard);
+    }
+  }
+
+  // If still no match, reuse last card bundle from session
+  if (!matchedCard) {
+    var lastCard = loadLastCard();
+    if (lastCard) {
+      matchedCard = Object.assign({}, lastCard, {
+        url: window.location.href,
+        name: lastCard.name || document.title || 'Unknown Site'
+      });
+      log('Using last card bundle: ' + (matchedCard.featureBundle || 'default'));
+      tpHud('Card (last): ' + (matchedCard.name || 'Last Card'));
     }
   }
   
@@ -252,6 +366,7 @@ async function initTargetSite() {
       url: window.location.href,
       featureBundle: 'default'
     };
+    saveLastCard(matchedCard);
   }
   
   state.currentCard = matchedCard;
@@ -259,6 +374,9 @@ async function initTargetSite() {
   // Apply bundle to the current page
   tpHud('Applying bundle...');
   await applyBundleToPage(matchedCard);
+
+  // Protect text inputs from TV keyboard auto-popup
+  applyTextInputProtectionFromConfig();
 
   // Initialize standard UI components (same as portal, they create their own elements)
   initAddressBar();
