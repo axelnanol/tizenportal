@@ -528,6 +528,10 @@ export function closePreferences() {
     prefs.classList.remove('visible');
   }
   prefsState.active = false;
+
+  if (window.TizenPortal && window.TizenPortal.refreshYellowHint) {
+    window.TizenPortal.refreshYellowHint();
+  }
   
   // Restore focus to portal
   restoreFocusToPortal();

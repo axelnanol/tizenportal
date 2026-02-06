@@ -233,6 +233,7 @@ function updateInfo() {
     prefs.push('Tab=' + (features.tabindexInjection === false ? 'off' : 'on'));
     prefs.push('CSS=' + (features.cssReset === false ? 'off' : 'on'));
     prefs.push('GPU=' + (features.gpuHints === false ? 'off' : 'on'));
+    prefs.push('Hints=' + (portal.showHints === false ? 'off' : 'on'));
     info.push('Prefs: ' + prefs.join(','));
   } catch (err) {
     // Ignore

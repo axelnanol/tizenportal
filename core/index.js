@@ -1195,6 +1195,7 @@ var TizenPortalAPI = {
   closeSite: closeSite,
   returnToPortal: returnToPortal,
   setPortalHintsVisible: setPortalHintsVisible,
+  refreshYellowHint: refreshYellowHint,
   getCurrentCard: function() {
     return state.currentCard;
   },

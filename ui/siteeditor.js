@@ -398,6 +398,9 @@ export function closeSiteEditor() {
     editor.classList.remove('visible');
   }
   state.active = false;
+  if (window.TizenPortal && window.TizenPortal.refreshYellowHint) {
+    window.TizenPortal.refreshYellowHint();
+  }
   
   // Restore focus to the portal grid
   restoreFocusToPortal();
