@@ -227,6 +227,18 @@ export function disableScrollIntoView() {
 }
 
 /**
+ * Enable or disable scroll-into-view
+ * @param {boolean} enabled
+ */
+export function setScrollEnabled(enabled) {
+  if (enabled) {
+    enableScrollIntoView();
+  } else {
+    disableScrollIntoView();
+  }
+}
+
+/**
  * Scroll an element into view with margins
  * @param {HTMLElement} el - Element to scroll into view
  * @param {Object} options - Scroll options

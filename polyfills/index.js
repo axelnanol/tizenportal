@@ -209,6 +209,53 @@ function polyfillObjectValues() {
 }
 
 /**
+ * AbortController polyfill (minimal)
+ */
+function polyfillAbortController() {
+  if (typeof window.AbortController === 'function') {
+    return false; // Already exists
+  }
+
+  function AbortSignal() {
+    this.aborted = false;
+    this.onabort = null;
+    this._listeners = [];
+  }
+
+  AbortSignal.prototype.addEventListener = function(type, listener) {
+    if (type !== 'abort' || typeof listener !== 'function') return;
+    this._listeners.push(listener);
+  };
+
+  AbortSignal.prototype.removeEventListener = function(type, listener) {
+    if (type !== 'abort') return;
+    var idx = this._listeners.indexOf(listener);
+    if (idx !== -1) this._listeners.splice(idx, 1);
+  };
+
+  AbortSignal.prototype._dispatch = function() {
+    if (typeof this.onabort === 'function') {
+      try { this.onabort(); } catch (err) {}
+    }
+    for (var i = 0; i < this._listeners.length; i++) {
+      try { this._listeners[i](); } catch (err) {}
+    }
+  };
+
+  window.AbortController = function AbortController() {
+    this.signal = new AbortSignal();
+  };
+
+  window.AbortController.prototype.abort = function() {
+    if (this.signal.aborted) return;
+    this.signal.aborted = true;
+    this.signal._dispatch();
+  };
+
+  return true;
+}
+
+/**
  * String.prototype.startsWith polyfill
  */
 function polyfillStringStartsWith() {
@@ -468,6 +515,9 @@ export function initPolyfills() {
   // String methods
   if (polyfillStringStartsWith()) loaded.push('String.startsWith');
   if (polyfillStringEndsWith()) loaded.push('String.endsWith');
+
+  // AbortController
+  if (polyfillAbortController()) loaded.push('AbortController');
 
   return loaded;
 }

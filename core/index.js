@@ -40,7 +40,7 @@ import { initInputHandler, executeColorAction, registerKeyHandler } from '../inp
 import { initPointer, isPointerActive, togglePointer } from '../input/pointer.js';
 import { wrapTextInputs, unwrapTextInputs, activateInput, deactivateInput } from '../input/text-input.js';
 import { 
-  enableScrollIntoView, disableScrollIntoView, scrollElementIntoView,
+  enableScrollIntoView, disableScrollIntoView, setScrollEnabled, scrollElementIntoView,
   setInitialFocus, lockViewport, unlockViewport,
   observeDOM, stopObservingDOM 
 } from '../focus/manager.js';
@@ -1009,6 +1009,7 @@ var TizenPortalAPI = {
   focus: {
     enableScrollIntoView: enableScrollIntoView,
     disableScrollIntoView: disableScrollIntoView,
+    setScrollEnabled: setScrollEnabled,
     scrollElementIntoView: scrollElementIntoView,
     setInitialFocus: setInitialFocus,
     lockViewport: lockViewport,
