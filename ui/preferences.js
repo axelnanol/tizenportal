@@ -112,7 +112,12 @@ export function initPreferences() {
   prefs.id = 'tp-preferences';
   prefs.className = 'tp-preferences';
   prefs.innerHTML = createPreferencesHTML();
-  document.body.appendChild(prefs);
+  var shell = document.getElementById('tp-shell');
+  if (shell) {
+    shell.appendChild(prefs);
+  } else {
+    document.body.appendChild(prefs);
+  }
   
   // Set up event listeners
   setupPreferencesListeners(prefs);
@@ -249,6 +254,10 @@ export function showPreferences() {
   
   prefsState.currentRow = 0;
   prefsState.active = true;
+
+  if (window.TizenPortal && window.TizenPortal.updatePortalHints) {
+    window.TizenPortal.updatePortalHints();
+  }
   
   // Render preferences UI
   renderPreferencesUI();
@@ -528,6 +537,10 @@ export function closePreferences() {
     prefs.classList.remove('visible');
   }
   prefsState.active = false;
+
+  if (window.TizenPortal && window.TizenPortal.updatePortalHints) {
+    window.TizenPortal.updatePortalHints();
+  }
   
   // Restore focus to portal
   restoreFocusToPortal();

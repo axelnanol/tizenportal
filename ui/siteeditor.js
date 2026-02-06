@@ -116,7 +116,12 @@ export function initSiteEditor() {
   editor.id = 'tp-site-editor';
   editor.className = 'tp-site-editor';
   editor.innerHTML = createEditorHTML();
-  document.body.appendChild(editor);
+  var shell = document.getElementById('tp-shell');
+  if (shell) {
+    shell.appendChild(editor);
+  } else {
+    document.body.appendChild(editor);
+  }
 
   // Set up event listeners
   setupEventListeners(editor);
@@ -380,6 +385,10 @@ function openEditor() {
   state.active = true;
   editor.classList.add('visible');
 
+  if (window.TizenPortal && window.TizenPortal.updatePortalHints) {
+    window.TizenPortal.updatePortalHints();
+  }
+
   // Focus first field
   setTimeout(function() {
     var firstField = editor.querySelector('.tp-field-row');
@@ -398,6 +407,10 @@ export function closeSiteEditor() {
     editor.classList.remove('visible');
   }
   state.active = false;
+
+  if (window.TizenPortal && window.TizenPortal.updatePortalHints) {
+    window.TizenPortal.updatePortalHints();
+  }
   
   // Restore focus to the portal grid
   restoreFocusToPortal();

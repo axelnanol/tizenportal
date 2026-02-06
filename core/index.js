@@ -966,14 +966,32 @@ function initColorHints() {
  */
 function updateYellowHint() {
   var hintText = document.getElementById('tp-hint-yellow-text');
-  if (!hintText) return;
+  var hintSub = null;
+  var yellowKey = document.querySelector('#tp-hints .tp-hint-key.yellow');
+  if (yellowKey && yellowKey.parentNode) {
+    var textContainer = yellowKey.parentNode.querySelector('.tp-hint-text');
+    if (textContainer) {
+      hintSub = textContainer.querySelector('.tp-hint-sub');
+    }
+  }
+
+  if (!hintText && !hintSub) return;
 
   if (isSiteEditorOpen() || isPreferencesOpen()) {
-    hintText.textContent = 'Disabled';
+    if (hintText) hintText.textContent = 'Disabled';
+    if (hintSub) hintSub.textContent = 'Hold: Disabled';
     return;
   }
 
-  hintText.textContent = 'Preferences';
+  if (hintText) hintText.textContent = 'Preferences';
+  if (hintSub) hintSub.textContent = 'Hold: Add Site';
+}
+
+/**
+ * Refresh portal hint labels (yellow short/long)
+ */
+function updatePortalHints() {
+  updateYellowHint();
 }
 
 /**
@@ -1195,6 +1213,7 @@ var TizenPortalAPI = {
   closeSite: closeSite,
   returnToPortal: returnToPortal,
   setPortalHintsVisible: setPortalHintsVisible,
+  updatePortalHints: updatePortalHints,
   getCurrentCard: function() {
     return state.currentCard;
   },
