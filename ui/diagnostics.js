@@ -5,6 +5,7 @@
  */
 
 import { getLogEntries, clearLogEntries, onLogEntry, formatTimestamp } from '../diagnostics/console.js';
+import { configGet } from '../core/config.js';
 
 /**
  * Panel element
@@ -192,6 +193,25 @@ function updateInfo() {
     var used = Math.round(window.performance.memory.usedJSHeapSize / 1048576);
     var total = Math.round(window.performance.memory.jsHeapSizeLimit / 1048576);
     info.push('Memory: ' + used + '/' + total + 'MB');
+  }
+
+  // Preferences snapshot
+  try {
+    var portal = configGet('tp_portal') || {};
+    var features = configGet('tp_features') || {};
+    var prefs = [];
+    prefs.push('Theme=' + (portal.theme || 'dark'));
+    prefs.push('HUD=' + (portal.hudPosition || 'off'));
+    prefs.push('Wrap=' + (features.wrapTextInputs === false ? 'off' : 'on'));
+    prefs.push('Scroll=' + (features.scrollIntoView === false ? 'off' : 'on'));
+    prefs.push('Safe=' + (features.safeArea ? 'on' : 'off'));
+    prefs.push('Focus=' + (features.focusStyling === false ? 'off' : 'on'));
+    prefs.push('Tab=' + (features.tabindexInjection === false ? 'off' : 'on'));
+    prefs.push('CSS=' + (features.cssReset === false ? 'off' : 'on'));
+    prefs.push('GPU=' + (features.gpuHints === false ? 'off' : 'on'));
+    info.push('Prefs: ' + prefs.join(','));
+  } catch (err) {
+    // Ignore
   }
 
   infoElement.textContent = info.join(' | ');
