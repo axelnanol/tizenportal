@@ -1,15 +1,15 @@
 # 📺 TizenPortal
 
-![Version](https://img.shields.io/badge/version-0421-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
+![Version](https://img.shields.io/badge/version-0422-blue) ![Tizen](https://img.shields.io/badge/Tizen-3.0%2B-blueviolet) ![License](https://img.shields.io/badge/license-MIT-green)
 
-**TizenPortal** is a browser shell for Samsung Smart TVs running Tizen OS. It provides a launcher for managing self-hosted web applications (like **Audiobookshelf**, **Jellyfin**, etc.) and injects site-specific fixes for TV compatibility.
+**TizenPortal** is a browser shell for Samsung Smart TVs running Tizen OS. It provides a launcher for managing any websites and injects site-specific fixes for TV compatibility (self-hosted apps like **Audiobookshelf** are a great fit, but not required).
 
 ---
 
 ## ✨ Features
 
 ### 🚀 Portal Launcher
-A clean, dark gradient interface to manage all your self-hosted web apps in one place.
+A TV-friendly launcher with customizable themes to manage your sites in one place.
 - Grid-based layout optimized for TV remote navigation
 - Site editor for adding/editing apps with custom names and icons
 - Bundle selector for choosing compatibility fixes per-site
@@ -35,7 +35,7 @@ Runs as a TizenBrew module to inject fixes into any site.
 This project is designed to be loaded via **TizenBrew** on your Samsung TV.
 
 1. **Open TizenBrew** on your Samsung TV
-2. **Add Module:** `alexnolan/tizenportal@0421`
+2. **Add Module:** `alexnolan/tizenportal@0422`
 3. **Launch** TizenPortal from your TizenBrew dashboard
 
 TizenBrew will open the portal and inject the runtime into all navigated pages.
@@ -49,8 +49,12 @@ TizenBrew will open the portal and inject the runtime into all navigated pages.
 2. Fill in the site details:
    - **Name:** Display name for the card
    - **URL:** Full URL including `http://` or `https://`
-   - **Bundle:** Select a compatibility bundle (or "default")
+  - **Bundle:** Select a compatibility bundle
    - **Icon:** Optional - click "Fetch Favicon" or enter a custom URL
+
+### Editing Sites
+- Focus a site card and **long-press Enter** to open the editor
+- Changes auto-save; press **Close** when finished
 
 ### Navigating Sites
 1. Select a site card and press **Enter** to open
@@ -68,7 +72,7 @@ TizenBrew will open the portal and inject the runtime into all navigated pages.
 |--------|-------------|------------|
 | 🔴 Red | Address Bar | Reload Page |
 | 🟢 Green | Toggle Mouse | Focus Highlight |
-| 🟡 Yellow | Preferences (portal) / Return to portal (sites) | Cycle Bundles |
+| 🟡 Yellow | Preferences (portal) / Return to portal (sites) | Add Site |
 | 🔵 Blue | Diagnostics | Safe Mode |
 
 ---

@@ -764,6 +764,17 @@ function injectOverlayStyles() {
     '  align-items: center;',
     '  margin-right: 40px;',
     '}',
+    '.tp-site-hint-text {',
+    '  display: flex;',
+    '  flex-direction: column;',
+    '  line-height: 1.1;',
+    '}',
+    '.tp-site-hint-sub {',
+    '  font-size: 11px;',
+    '  color: #aaa;',
+    '  opacity: 0.75;',
+    '  margin-top: 2px;',
+    '}',
     '.tp-site-hint-key {',
     '  width: 24px;',
     '  height: 24px;',
@@ -850,10 +861,10 @@ function createSiteHints() {
   var hints = document.createElement('div');
   hints.className = 'tp-site-hints';
   hints.innerHTML = [
-    '<div class="tp-site-hint"><div class="tp-site-hint-key red"></div><span>Address</span></div>',
-    '<div class="tp-site-hint"><div class="tp-site-hint-key green"></div><span>Mouse</span></div>',
-    '<div class="tp-site-hint"><div class="tp-site-hint-key yellow"></div><span>Portal</span></div>',
-    '<div class="tp-site-hint"><div class="tp-site-hint-key blue"></div><span>Console</span></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key red"></div><div class="tp-site-hint-text"><span>Address</span><span class="tp-site-hint-sub">Hold: Reload</span></div></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key green"></div><div class="tp-site-hint-text"><span>Mouse</span><span class="tp-site-hint-sub">Hold: Focus</span></div></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key yellow"></div><div class="tp-site-hint-text"><span>Portal</span><span class="tp-site-hint-sub">Hold: Cycle</span></div></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key blue"></div><div class="tp-site-hint-text"><span>Console</span><span class="tp-site-hint-sub">Hold: Safe Mode</span></div></div>',
   ].join('');
   document.body.appendChild(hints);
 }

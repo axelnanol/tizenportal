@@ -459,6 +459,19 @@
       margin-right: 40px;
       transition: opacity 0.2s ease, color 0.2s ease;
     }
+
+    .tp-hint-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .tp-hint-sub {
+      font-size: 12px;
+      color: #888;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
     
     .tp-hint:hover {
       opacity: 1;
@@ -1625,19 +1638,31 @@
     <div id="tp-hints">
       <div class="tp-hint">
         <div class="tp-hint-key red"></div>
-        <span>Address</span>
+        <div class="tp-hint-text">
+          <span>Address</span>
+          <span class="tp-hint-sub">Hold: Reload</span>
+        </div>
       </div>
       <div class="tp-hint">
         <div class="tp-hint-key green"></div>
-        <span>Mouse</span>
+        <div class="tp-hint-text">
+          <span>Mouse</span>
+          <span class="tp-hint-sub">Hold: Focus</span>
+        </div>
       </div>
       <div class="tp-hint">
         <div class="tp-hint-key yellow"></div>
-        <span id="tp-hint-yellow-text">Preferences</span>
+        <div class="tp-hint-text">
+          <span id="tp-hint-yellow-text">Preferences</span>
+          <span class="tp-hint-sub">Hold: Add Site</span>
+        </div>
       </div>
       <div class="tp-hint">
         <div class="tp-hint-key blue"></div>
-        <span>Console</span>
+        <div class="tp-hint-text">
+          <span>Console</span>
+          <span class="tp-hint-sub">Hold: Safe Mode</span>
+        </div>
       </div>
     </div>
     
