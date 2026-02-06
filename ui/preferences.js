@@ -255,11 +255,6 @@ export function showPreferences() {
   
   // Show preferences
   prefs.classList.add('visible');
-
-  // Hide color hints while preferences open
-  if (window.TizenPortal && window.TizenPortal.setPortalHintsVisible) {
-    window.TizenPortal.setPortalHintsVisible(false);
-  }
   
   // Focus first row
   setTimeout(function() {
@@ -533,11 +528,6 @@ export function closePreferences() {
     prefs.classList.remove('visible');
   }
   prefsState.active = false;
-
-  // Show color hints again
-  if (window.TizenPortal && window.TizenPortal.setPortalHintsVisible) {
-    window.TizenPortal.setPortalHintsVisible(true);
-  }
   
   // Restore focus to portal
   restoreFocusToPortal();
@@ -630,6 +620,11 @@ export function applyPortalPreferences(config) {
   } else {
     // Dark theme gradient (default)
     shell.style.background = 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%)';
+  }
+
+  // Apply color hints visibility
+  if (window.TizenPortal && window.TizenPortal.setPortalHintsVisible) {
+    window.TizenPortal.setPortalHintsVisible(true);
   }
 
   // Apply HUD position

@@ -380,19 +380,12 @@ function openEditor() {
   state.active = true;
   editor.classList.add('visible');
 
-  // Hide color hints while editor open
-  if (window.TizenPortal && window.TizenPortal.setPortalHintsVisible) {
-    window.TizenPortal.setPortalHintsVisible(false);
-  }
-
   // Focus first field
   setTimeout(function() {
     var firstField = editor.querySelector('.tp-field-row');
     if (firstField) {
       firstField.focus();
     }
-    // Update yellow hint to show "Close"
-    updateYellowHintText('Close');
   }, 100);
 }
 
@@ -405,13 +398,6 @@ export function closeSiteEditor() {
     editor.classList.remove('visible');
   }
   state.active = false;
-  // Update yellow hint back to context-appropriate text
-  updateYellowHintText('Preferences');
-
-  // Show color hints again
-  if (window.TizenPortal && window.TizenPortal.setPortalHintsVisible) {
-    window.TizenPortal.setPortalHintsVisible(true);
-  }
   
   // Restore focus to the portal grid
   restoreFocusToPortal();

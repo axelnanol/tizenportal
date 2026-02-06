@@ -968,28 +968,11 @@ function updateYellowHint() {
   var hintText = document.getElementById('tp-hint-yellow-text');
   if (!hintText) return;
 
-  // Hide hints while overlays are open
   if (isSiteEditorOpen() || isPreferencesOpen()) {
-    setPortalHintsVisible(false);
-    hintText.textContent = 'Close';
+    hintText.textContent = 'Disabled';
     return;
   }
 
-  setPortalHintsVisible(true);
-  
-  // Check if site editor is open
-  if (isSiteEditorOpen()) {
-    hintText.textContent = 'Close';
-    return;
-  }
-
-  // Check if preferences is open
-  if (isPreferencesOpen()) {
-    hintText.textContent = 'Close';
-    return;
-  }
-
-  // Portal default
   hintText.textContent = 'Preferences';
 }
 

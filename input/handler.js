@@ -402,6 +402,9 @@ export function executeColorAction(action) {
         }
         break;
       }
+      if (isSiteEditorOpen() || isPreferencesOpen()) {
+        break;
+      }
       // Open add site editor
       showAddSiteEditor(function() {
         if (window.TizenPortal && window.TizenPortal._refreshPortal) {
@@ -413,6 +416,9 @@ export function executeColorAction(action) {
     case 'addSite':
       // Portal only
       if (!isOnPortal) break;
+      if (isSiteEditorOpen() || isPreferencesOpen()) {
+        return;
+      }
       // Quick add new site
       if (isSiteEditorOpen()) {
         return;
