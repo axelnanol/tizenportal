@@ -26,6 +26,17 @@ var THEME_OPTIONS = [
 ];
 
 /**
+ * HUD position options
+ */
+var HUD_OPTIONS = [
+  { value: 'off', label: 'Off' },
+  { value: 'top-right', label: 'Top Right' },
+  { value: 'top-left', label: 'Top Left' },
+  { value: 'bottom-right', label: 'Bottom Right' },
+  { value: 'bottom-left', label: 'Bottom Left' },
+];
+
+/**
  * Normalize stored theme value to valid option
  * @param {*} value
  * @returns {string}
@@ -55,6 +66,7 @@ function normalizeThemeValue(value) {
  */
 var PREFERENCE_ROWS = [
   { id: 'theme', label: 'Theme Mode', type: 'select', options: THEME_OPTIONS, key: 'theme', config: 'portal' },
+  { id: 'hudPosition', label: 'Debug HUD', type: 'select', options: HUD_OPTIONS, key: 'hudPosition', config: 'portal' },
   { id: 'customColor1', label: 'Gradient Color 1', type: 'color', key: 'customColor1', config: 'portal', showIf: 'custom' },
   { id: 'customColor2', label: 'Gradient Color 2', type: 'color', key: 'customColor2', config: 'portal', showIf: 'custom' },
   { id: 'backgroundImage', label: 'Backdrop Image URL', type: 'text', key: 'backgroundImage', config: 'portal', showIf: 'backdrop' },
@@ -236,6 +248,7 @@ function getDefaultPortalConfig() {
     customColor1: '#0d1117',
     customColor2: '#161b22',
     backgroundImage: '',
+    hudPosition: 'off',
   };
 }
 
@@ -587,6 +600,45 @@ export function applyPortalPreferences(config) {
   } else {
     // Dark theme gradient (default)
     shell.style.background = 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%)';
+  }
+
+  // Apply HUD position
+  applyHudPosition(config.hudPosition || 'off');
+}
+
+/**
+ * Apply debug HUD position or hide it
+ * @param {string} position
+ */
+function applyHudPosition(position) {
+  var hud = document.getElementById('tp-hud');
+  if (!hud) return;
+
+  var pos = position || 'off';
+  if (pos === 'off') {
+    hud.style.display = 'none';
+    return;
+  }
+
+  hud.style.display = 'block';
+  hud.style.top = '';
+  hud.style.right = '';
+  hud.style.bottom = '';
+  hud.style.left = '';
+
+  if (pos === 'top-left') {
+    hud.style.top = '0';
+    hud.style.left = '0';
+  } else if (pos === 'bottom-right') {
+    hud.style.bottom = '0';
+    hud.style.right = '0';
+  } else if (pos === 'bottom-left') {
+    hud.style.bottom = '0';
+    hud.style.left = '0';
+  } else {
+    // default top-right
+    hud.style.top = '0';
+    hud.style.right = '0';
   }
 }
 

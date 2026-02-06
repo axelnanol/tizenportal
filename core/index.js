@@ -79,6 +79,16 @@ function tpHud(msg) {
       // Append to documentElement if body doesn't exist yet
       (document.body || document.documentElement).appendChild(h);
     }
+
+    // Respect HUD preference (off by default)
+    if (window.TizenPortal && window.TizenPortal.config) {
+      var portalCfg = TizenPortal.config.get('tp_portal') || {};
+      if (portalCfg.hudPosition === 'off') {
+        h.style.display = 'none';
+        return;
+      }
+    }
+
     h.textContent = '[TP ' + VERSION + '] ' + msg;
     // Auto-hide after 8 seconds
     if (h._timer) clearTimeout(h._timer);
