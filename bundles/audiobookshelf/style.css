@@ -903,6 +903,20 @@ body {
    This section only contains non-card element focus styles.
    ========================================================================== */
 
+/* Global focus mode overrides (set by core) */
+body.tp-focus-mode-on *:focus {
+  outline-color: #00a8ff !important;
+}
+
+body.tp-focus-mode-high *:focus {
+  outline-color: #fcd34d !important;
+}
+
+body.tp-focus-mode-off *:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* Siderail navigation links */
 [role="toolbar"][aria-orientation="vertical"] a:focus,
 #siderail-buttons-container a:focus {

@@ -162,6 +162,64 @@ function resolveUserAgentMode(card) {
   return features.uaMode || 'tizen';
 }
 
+function getUserAgentString(mode) {
+  if (!mode) return null;
+
+  // Allow explicit UA strings
+  if (mode.indexOf('Mozilla/') === 0) {
+    return mode;
+  }
+
+  if (mode === 'desktop') {
+    return 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+  }
+
+  if (mode === 'mobile') {
+    return 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
+  }
+
+  return null;
+}
+
+function applyUserAgentOverride(mode) {
+  var uaString = getUserAgentString(mode);
+  if (!uaString) return;
+
+  try {
+    var navigatorProto = window.navigator && window.navigator.__proto__;
+    if (navigatorProto && Object.defineProperty) {
+      Object.defineProperty(navigatorProto, 'userAgent', {
+        get: function() { return uaString; },
+        configurable: true
+      });
+      Object.defineProperty(navigatorProto, 'appVersion', {
+        get: function() { return uaString; },
+        configurable: true
+      });
+    }
+    log('UA override applied: ' + mode);
+  } catch (err) {
+    warn('UA override failed: ' + err.message);
+  }
+}
+
+function applyFocusModeClass(mode) {
+  var target = document.body || document.documentElement;
+  if (!target || !target.classList) return;
+
+  target.classList.remove('tp-focus-mode-on');
+  target.classList.remove('tp-focus-mode-high');
+  target.classList.remove('tp-focus-mode-off');
+
+  if (mode === 'high') {
+    target.classList.add('tp-focus-mode-high');
+  } else if (mode === 'off') {
+    target.classList.add('tp-focus-mode-off');
+  } else {
+    target.classList.add('tp-focus-mode-on');
+  }
+}
+
 function shouldLockViewportAuto() {
   var width = window.innerWidth || document.documentElement.clientWidth || 1920;
   var screenWidth = (window.screen && window.screen.width) ? window.screen.width : width;
@@ -204,6 +262,8 @@ function applyGlobalFeaturesForCard(card, bundle) {
   } catch (e) {
     error('Failed to apply features: ' + e.message);
   }
+
+  applyFocusModeClass(focusMode);
 
   applyViewportMode(viewportMode);
 }
@@ -478,6 +538,8 @@ async function initTargetSite() {
   }
   
   state.currentCard = matchedCard;
+
+  applyUserAgentOverride(resolveUserAgentMode(matchedCard));
 
   // Apply bundle to the current page
   tpHud('Applying bundle...');

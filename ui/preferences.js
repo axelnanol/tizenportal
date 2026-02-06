@@ -339,13 +339,30 @@ function getDefaultFeaturesConfig() {
 function getVisibleRows() {
   var currentTheme = normalizeThemeValue(prefsState.settings.portalConfig.theme || 'dark');
   var visible = [];
+  var deferred = [];
   
   for (var i = 0; i < PREFERENCE_ROWS.length; i++) {
     var row = PREFERENCE_ROWS[i];
-    // Show row if no condition, or condition matches current theme
-    if (!row.showIf || row.showIf === currentTheme) {
+    if (row.showIf && row.showIf !== currentTheme) {
+      continue;
+    }
+
+    if (row.showIf) {
+      deferred.push(row);
+    } else {
       visible.push(row);
     }
+  }
+
+  if (deferred.length) {
+    var insertAt = 1;
+    for (var j = 0; j < visible.length; j++) {
+      if (visible[j].id === 'theme') {
+        insertAt = j + 1;
+        break;
+      }
+    }
+    visible.splice.apply(visible, [insertAt, 0].concat(deferred));
   }
   
   return visible;

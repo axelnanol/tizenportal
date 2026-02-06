@@ -618,6 +618,7 @@ TizenPortal.input.isIMEActive();
 3. **Handle errors gracefully** — Uncaught exceptions crash Tizen
 4. **Log everything** — Use `TizenPortal.log()` for visibility
 5. **Test incrementally** — Build after each change
+6. **Write descriptive commit messages** — Include scope + intent (no generic “bump” only)
 
 ### Critical Reminders
 
