@@ -13,6 +13,7 @@ import { showAddSiteEditor, showEditSiteEditor, isSiteEditorOpen, closeSiteEdito
 import { showPreferences, isPreferencesOpen } from '../ui/preferences.js';
 import { getFocusedCard } from '../ui/portal.js';
 import { isPointerActive, handlePointerKeyDown, handlePointerKeyUp, togglePointer } from './pointer.js';
+import { isIMEActive, setIMEActive } from './text-input.js';
 import {
   isSingleActionCard,
   isMultiActionCard,
@@ -67,10 +68,6 @@ var LONG_PRESS_MS = 500;
  */
 var keyDownTimes = {};
 
-/**
- * Track if we're in IME (text input) mode
- */
-var imeActive = false;
 
 /**
  * Custom key handlers registered by bundles
@@ -152,7 +149,7 @@ function handleKeyDown(event) {
   if (keyCode === KEYS.IME_DONE || keyCode === KEYS.IME_CANCEL) {
     event.preventDefault();
     event.stopPropagation();
-    imeActive = false;
+    setIMEActive(false);
     return;
   }
 
@@ -197,7 +194,7 @@ function handleKeyDown(event) {
   }
 
   // If IME is active, let text input handle most keys
-  if (imeActive && !isColorButton(keyCode)) {
+  if (isIMEActive() && !isColorButton(keyCode)) {
     return;
   }
 
@@ -496,18 +493,3 @@ export function registerKeyHandler(handler) {
   };
 }
 
-/**
- * Set IME active state
- * @param {boolean} active
- */
-export function setIMEActive(active) {
-  imeActive = active;
-}
-
-/**
- * Check if IME is active
- * @returns {boolean}
- */
-export function isIMEActive() {
-  return imeActive;
-}

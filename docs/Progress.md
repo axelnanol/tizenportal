@@ -1,7 +1,7 @@
 # TizenPortal Progress Tracker
 
 > **Last Updated:** February 7, 2026  
-> **Current Version:** 0439  
+> **Current Version:** 0440  
 > **Architecture:** Universal Runtime
 
 ---
@@ -43,7 +43,7 @@ TizenPortal uses a single unified runtime (`tizenportal.js`) on all pages:
 
 ## Version History
 
-### v0439 (Current)
+### v0440 (Current)
 
 - Audiobookshelf bundle refactored as best-practice example
 - Core utilities in focus/manager.js and input/text-input.js

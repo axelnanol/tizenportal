@@ -2,7 +2,7 @@
 
 > **Version:** 3.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v0439)  
+> **Status:** Universal Runtime (v0440)  
 
 ---
 
@@ -44,7 +44,7 @@ Version format is 4-digit numeric for easy TV remote entry:
 
 | Format | Example | Meaning |
 |--------|---------|---------|
-| `XXYY` | `0439` | Major 04, Minor 39 |
+| `XXYY` | `0440` | Major 04, Minor 40 |
 
 ```js
 // Check version
@@ -62,7 +62,7 @@ if (parseInt(TizenPortal.version) >= 300) {
 ```typescript
 interface TizenPortal {
   // Metadata
-  version: string;           // "0439"
+  version: string;           // "0440"
   
   // Sub-APIs
   config: ConfigAPI;
@@ -264,8 +264,6 @@ if (TizenPortal.input.isPointerMode()) {
 ### input.isIMEActive
 
 Check if TV keyboard/IME is active.
-
-> Note: `isIMEActive()` currently returns `false` (placeholder until IME tracking is implemented).
 
 ```js
 if (TizenPortal.input.isIMEActive()) {

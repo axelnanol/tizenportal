@@ -38,7 +38,7 @@ import { initPolyfills, hasPolyfill, getLoadedPolyfills } from '../polyfills/ind
 import { KEYS } from '../input/keys.js';
 import { initInputHandler, executeColorAction, registerKeyHandler } from '../input/handler.js';
 import { initPointer, isPointerActive, togglePointer } from '../input/pointer.js';
-import { wrapTextInputs, unwrapTextInputs, activateInput, deactivateInput } from '../input/text-input.js';
+import { wrapTextInputs, unwrapTextInputs, activateInput, deactivateInput, isIMEActive } from '../input/text-input.js';
 import { 
   enableScrollIntoView, disableScrollIntoView, setScrollEnabled, scrollElementIntoView,
   setInitialFocus, lockViewport, unlockViewport,
@@ -1409,7 +1409,7 @@ var TizenPortalAPI = {
     isPointerMode: isPointerActive,
     togglePointer: togglePointer,
     registerKeyHandler: registerKeyHandler,
-    isIMEActive: function() { return false; }, // TODO: implement IME tracking
+    isIMEActive: isIMEActive,
     // Text input wrapping for TV keyboard handling
     wrapTextInputs: wrapTextInputs,
     unwrapTextInputs: unwrapTextInputs,

@@ -26,6 +26,11 @@ import { KEYS } from './keys.js';
 var wrappedInputs = new WeakMap();
 
 /**
+ * Track IME active state
+ */
+var imeActive = false;
+
+/**
  * Default options
  */
 var defaultOptions = {
@@ -233,6 +238,8 @@ export function activateInput(input) {
   } catch (err) {
     console.warn('TizenPortal [TextInput]: Focus error:', err.message);
   }
+
+  imeActive = true;
   
   // Call custom handler
   if (typeof opts.onActivate === 'function') {
@@ -273,6 +280,8 @@ export function deactivateInput(input) {
   if (typeof opts.onDeactivate === 'function') {
     opts.onDeactivate(input);
   }
+
+  imeActive = false;
   
   console.log('TizenPortal [TextInput]: Input deactivated');
 }
@@ -297,7 +306,24 @@ export function unwrapInput(input) {
   input.style.display = '';
   
   wrappedInputs.delete(input);
+  imeActive = false;
   console.log('TizenPortal [TextInput]: Input unwrapped');
+}
+
+/**
+ * Check if IME/keyboard is active
+ * @returns {boolean}
+ */
+export function isIMEActive() {
+  return imeActive;
+}
+
+/**
+ * Force IME active state
+ * @param {boolean} value
+ */
+export function setIMEActive(value) {
+  imeActive = !!value;
 }
 
 /**
