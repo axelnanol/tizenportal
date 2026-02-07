@@ -567,6 +567,17 @@ async function initTargetSite() {
       // Ignore - some sites may block history manipulation
     }
   }
+
+  if (!matchedCard) {
+    var hashHasTp = false;
+    try {
+      var h = window.location.hash || '';
+      hashHasTp = /[#&]tp=/.test(h);
+    } catch (e) {
+      // Ignore
+    }
+    log('Card hash present: ' + (hashHasTp ? 'yes' : 'no'));
+  }
   
   // Fallback: check window.name (cross-origin persistence).
   // When the portal navigates to a different-origin target site,
@@ -583,6 +594,17 @@ async function initTargetSite() {
       tpHud('Card (window): ' + (matchedCard.name || 'Window'));
       // Save to sessionStorage for this origin's future navigations
       saveLastCard(matchedCard);
+    } else {
+      var nameState = 'empty';
+      try {
+        var wn = window.name;
+        if (wn && typeof wn === 'string') {
+          nameState = wn.indexOf('tp:') === 0 ? 'tp: present (parse failed)' : 'non-tp value';
+        }
+      } catch (e) {
+        nameState = 'read error';
+      }
+      log('Card window.name: ' + nameState);
     }
   }
 
@@ -598,6 +620,8 @@ async function initTargetSite() {
       });
       log('Using last card bundle: ' + (matchedCard.featureBundle || 'default'));
       tpHud('Card (session): ' + (matchedCard.name || 'Last Card'));
+    } else {
+      log('Card sessionStorage: empty');
     }
   }
 
@@ -608,6 +632,8 @@ async function initTargetSite() {
       log('Matched card from localStorage: ' + matchedCard.name + ' (bundle: ' + (matchedCard.featureBundle || 'default') + ')');
       tpHud('Card (storage): ' + matchedCard.name);
       saveLastCard(matchedCard);
+    } else {
+      log('Card localStorage: no match for ' + window.location.href);
     }
   }
   
