@@ -1,7 +1,7 @@
 # TizenPortal Progress Tracker
 
 > **Last Updated:** February 7, 2026  
-> **Current Version:** 0445  
+> **Current Version:** 0446  
 > **Architecture:** Universal Runtime
 
 ---
@@ -43,7 +43,12 @@ TizenPortal uses a single unified runtime (`tizenportal.js`) on all pages:
 
 ## Version History
 
-### v0445 (Current)
+### v0446 (Current)
+
+- Fix: save card to sessionStorage before navigation (survives redirects)
+- Fix: session card fallback now checked before URL matching (login redirects no longer lose bundle)
+
+### v0445
 
 - Shared escapeHtml from core/utils.js (replaced local copies in modal, siteeditor)
 - URL validation via sanitizeUrl in address bar, modal, siteeditor

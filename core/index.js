@@ -543,17 +543,10 @@ async function initTargetSite() {
     }
   }
   
-  // Fallback to localStorage match
-  if (!matchedCard) {
-    matchedCard = findMatchingCard(window.location.href);
-    if (matchedCard) {
-      log('Matched card from localStorage: ' + matchedCard.name + ' (bundle: ' + (matchedCard.featureBundle || 'default') + ')');
-      tpHud('Card (storage): ' + matchedCard.name);
-      saveLastCard(matchedCard);
-    }
-  }
-
-  // If still no match, reuse last card bundle from session
+  // Fallback: reuse last card from session (explicitly selected by user)
+  // Check this BEFORE localStorage URL matching — the session card is
+  // authoritative because the user chose it on the portal. URL matching
+  // can fail when sites redirect (e.g. login pages).
   if (!matchedCard) {
     var lastCard = loadLastCard();
     if (lastCard) {
@@ -562,7 +555,17 @@ async function initTargetSite() {
         name: lastCard.name || document.title || 'Unknown Site'
       });
       log('Using last card bundle: ' + (matchedCard.featureBundle || 'default'));
-      tpHud('Card (last): ' + (matchedCard.name || 'Last Card'));
+      tpHud('Card (session): ' + (matchedCard.name || 'Last Card'));
+    }
+  }
+
+  // Fallback: try matching current URL against saved cards in localStorage
+  if (!matchedCard) {
+    matchedCard = findMatchingCard(window.location.href);
+    if (matchedCard) {
+      log('Matched card from localStorage: ' + matchedCard.name + ' (bundle: ' + (matchedCard.featureBundle || 'default') + ')');
+      tpHud('Card (storage): ' + matchedCard.name);
+      saveLastCard(matchedCard);
     }
   }
   
@@ -1257,6 +1260,11 @@ function loadSite(card) {
 
   // Store current card in state
   state.currentCard = card;
+  
+  // Pre-save card to sessionStorage BEFORE navigating.
+  // If the target site redirects (e.g. to a login page), the #tp= hash
+  // will be stripped. Saving here ensures loadLastCard() can recover it.
+  saveLastCard(card);
   
   // Get the bundle for this card
   var bundleName = card.featureBundle || 'default';

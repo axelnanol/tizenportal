@@ -2,7 +2,7 @@
 
 > **Version:** 5.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v0445)
+> **Status:** Universal Runtime (v0446)
 
 ---
 
@@ -28,7 +28,8 @@ TizenPortal operates as a **TizenBrew Module** (`packageType: "mods"`) that prov
 | Tag | Semantic | Notes |
 |-----|----------|-------|
 | `0100` | 0.1.00 | Starting version |
-| `0445` | 0.4.45 | Current - URL validation, shared escapeHtml, preferences hardening |
+| `0446` | 0.4.46 | Current - fix bundle persistence across redirects |
+| `0445` | 0.4.45 | URL validation, shared escapeHtml, preferences hardening |
 | `0444` | 0.4.44 | CSP, postMessage, adblock hardening |
 | `0443` | 0.4.43 | Re-tag of 0440 baseline |
 | `0440` | 0.4.40 | Unified runtime |
