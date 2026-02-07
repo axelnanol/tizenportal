@@ -34,7 +34,7 @@ Launch TizenBrew on your Samsung TV from the app list.
 2. Select **Add Module**
 3. Enter the module identifier:
    ```
-   alexnolan/tizenportal@0454
+   alexnolan/tizenportal@0455
    ```
 4. Confirm the addition
 

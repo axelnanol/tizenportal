@@ -1430,10 +1430,9 @@ function loadSite(card) {
       bundleOptionData: card.bundleOptionData || {}
     };
     
-    // Add bundle CSS
-    if (bundle && bundle.style) {
-      payload.css = bundle.style;
-    }
+    // NOTE: Do NOT embed bundle CSS in the URL payload.
+    // It can exceed URL length limits and cause load failures.
+    // Bundles are resolved locally by name at runtime.
     
     // Add bundle JS initialization code (if needed)
     // The bundle object has methods, so we can't directly serialize it

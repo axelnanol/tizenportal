@@ -1,7 +1,7 @@
 # TizenPortal Progress Tracker
 
 > **Last Updated:** February 7, 2026  
-> **Current Version:** 0454  
+> **Current Version:** 0455  
 > **Architecture:** Universal Runtime
 
 ---
@@ -43,7 +43,7 @@ TizenPortal uses a single unified runtime (`tizenportal.js`) on all pages:
 
 ## Version History
 
-### v0454 (Current)
+### v0455 (Current)
 
 - Re-tag of v0446 with correct build
 
