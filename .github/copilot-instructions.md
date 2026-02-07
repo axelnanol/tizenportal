@@ -1,7 +1,7 @@
 # Copilot Instructions for TizenPortal
 
 > **Last Updated:** February 6, 2026  
-> **Current Version:** 0440  
+> **Current Version:** 0443  
 > **Architecture:** Universal Runtime
 
 ---
@@ -530,7 +530,7 @@ TizenPortal.input.isIMEActive();
 | Tag | Semantic | Example |
 |-----|----------|--------|
 | `0100` | 0.1.00 | Starting version |
-| `0440` | 0.4.40 | Current version |
+| `0443` | 0.4.43 | Current version |
 | `1000` | 1.0.00 | 1.0 release |
 
 **Why:** Typing `alexnolan/tizenportal@0301` on a TV remote is much faster than `@v0.3.1`.
@@ -668,7 +668,7 @@ This project uses code from the following open-source projects:
 
 | Component | Status |
 |-----------|--------|
-| Universal Runtime | ✅ Deployed (v0440) |
+| Universal Runtime | ✅ Deployed (v0443) |
 | Portal launcher | ✅ Working |
 | Bundle injection | ✅ Working |
 | Address bar overlay | ✅ Working |

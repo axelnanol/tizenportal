@@ -2,7 +2,7 @@
 
 > **Version:** 5.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v0440)
+> **Status:** Universal Runtime (v0443)
 
 ---
 
@@ -28,7 +28,8 @@ TizenPortal operates as a **TizenBrew Module** (`packageType: "mods"`) that prov
 | Tag | Semantic | Notes |
 |-----|----------|-------|
 | `0100` | 0.1.00 | Starting version |
-| `0440` | 0.4.40 | Current - unified runtime |
+| `0443` | 0.4.43 | Current - re-tag of 0440 baseline |
+| `0440` | 0.4.40 | Unified runtime |
 | `1000` | 1.0.00 | 1.0 release milestone |
 
 **Version Source:** `package.json` is the single source of truth. Version is injected at build time via `@rollup/plugin-replace`.
