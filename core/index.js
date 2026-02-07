@@ -162,6 +162,37 @@ function resolveUserAgentMode(card) {
   return features.uaMode || 'tizen';
 }
 
+function getCardOverrideValue(card, key) {
+  if (!card) return null;
+  if (card.hasOwnProperty(key) && card[key] !== null && card[key] !== undefined) {
+    return card[key];
+  }
+  return null;
+}
+
+function buildFeatureOverrides(card) {
+  var overrides = {};
+  var keys = [
+    'tabindexInjection',
+    'scrollIntoView',
+    'safeArea',
+    'gpuHints',
+    'cssReset',
+    'hideScrollbars',
+    'wrapTextInputs',
+  ];
+
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var value = getCardOverrideValue(card, key);
+    if (value !== null && value !== undefined) {
+      overrides[key] = value;
+    }
+  }
+
+  return overrides;
+}
+
 function getUserAgentString(mode) {
   if (!mode) return null;
 
@@ -197,7 +228,8 @@ function applyUserAgentOverride(mode) {
         configurable: true
       });
     }
-    log('UA override applied: ' + mode);
+    document.documentElement.setAttribute('data-tp-ua', mode);
+    log('UA override applied (JS only): ' + mode);
   } catch (err) {
     warn('UA override failed: ' + err.message);
   }
@@ -256,9 +288,11 @@ function applyViewportMode(mode) {
 function applyGlobalFeaturesForCard(card, bundle) {
   var focusMode = resolveFocusOutlineMode(card);
   var viewportMode = resolveViewportMode(card, bundle);
+  var overrides = buildFeatureOverrides(card);
+  overrides.focusOutlineMode = focusMode;
 
   try {
-    featureLoader.applyFeatures(document, { focusOutlineMode: focusMode });
+    featureLoader.applyFeatures(document, overrides);
   } catch (e) {
     error('Failed to apply features: ' + e.message);
   }
@@ -283,6 +317,13 @@ function saveLastCard(card) {
       viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
       focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
       userAgent: resolvedUserAgent,
+      tabindexInjection: card.hasOwnProperty('tabindexInjection') ? card.tabindexInjection : null,
+      scrollIntoView: card.hasOwnProperty('scrollIntoView') ? card.scrollIntoView : null,
+      safeArea: card.hasOwnProperty('safeArea') ? card.safeArea : null,
+      gpuHints: card.hasOwnProperty('gpuHints') ? card.gpuHints : null,
+      cssReset: card.hasOwnProperty('cssReset') ? card.cssReset : null,
+      hideScrollbars: card.hasOwnProperty('hideScrollbars') ? card.hideScrollbars : null,
+      wrapTextInputs: card.hasOwnProperty('wrapTextInputs') ? card.wrapTextInputs : null,
       icon: card.icon || null,
       bundleOptions: card.bundleOptions || {},
       bundleOptionData: card.bundleOptionData || {},
@@ -358,9 +399,13 @@ function stopTextInputProtection() {
   }
 }
 
-function applyTextInputProtectionFromConfig() {
+function applyTextInputProtectionFromConfig(card) {
   var features = configGet('tp_features') || {};
   var enabled = features.wrapTextInputs !== false;
+  var override = getCardOverrideValue(card, 'wrapTextInputs');
+  if (override !== null && override !== undefined) {
+    enabled = override;
+  }
   if (window.TizenPortal && window.TizenPortal.log) {
     TizenPortal.log('TextInput: wrapTextInputs=' + enabled);
   }
@@ -546,12 +591,12 @@ async function initTargetSite() {
   await applyBundleToPage(matchedCard);
 
   // Protect text inputs from TV keyboard auto-popup
-  applyTextInputProtectionFromConfig();
+  applyTextInputProtectionFromConfig(state.currentCard);
 
   // Re-apply when preferences change
   configOnChange(function(event) {
     if (event && event.key === 'tp_features') {
-      applyTextInputProtectionFromConfig();
+      applyTextInputProtectionFromConfig(state.currentCard);
       applyGlobalFeaturesForCard(state.currentCard, getBundle(state.currentBundle || 'default'));
     }
   });
@@ -597,6 +642,13 @@ function getCardFromHash() {
       viewportMode: payload.viewportMode || null,
       focusOutlineMode: payload.focusOutlineMode || null,
       userAgent: payload.ua || null,
+      tabindexInjection: payload.hasOwnProperty('tabindexInjection') ? payload.tabindexInjection : null,
+      scrollIntoView: payload.hasOwnProperty('scrollIntoView') ? payload.scrollIntoView : null,
+      safeArea: payload.hasOwnProperty('safeArea') ? payload.safeArea : null,
+      gpuHints: payload.hasOwnProperty('gpuHints') ? payload.gpuHints : null,
+      cssReset: payload.hasOwnProperty('cssReset') ? payload.cssReset : null,
+      hideScrollbars: payload.hasOwnProperty('hideScrollbars') ? payload.hideScrollbars : null,
+      wrapTextInputs: payload.hasOwnProperty('wrapTextInputs') ? payload.wrapTextInputs : null,
       bundleOptions: payload.bundleOptions || {},
       bundleOptionData: payload.bundleOptionData || {},
       // Store raw payload for CSS/JS injection

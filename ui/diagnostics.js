@@ -226,15 +226,38 @@ function updateInfo() {
     var prefs = [];
     prefs.push('Theme=' + (portal.theme || 'dark'));
     prefs.push('HUD=' + (portal.hudPosition || 'off'));
+    prefs.push('View=' + (features.viewportMode || 'locked'));
+    prefs.push('FocusMode=' + (features.focusOutlineMode || (features.focusStyling === false ? 'off' : 'on')));
+    prefs.push('UA=' + (features.uaMode || 'tizen'));
     prefs.push('Wrap=' + (features.wrapTextInputs === false ? 'off' : 'on'));
     prefs.push('Scroll=' + (features.scrollIntoView === false ? 'off' : 'on'));
     prefs.push('Safe=' + (features.safeArea ? 'on' : 'off'));
     prefs.push('Focus=' + (features.focusStyling === false ? 'off' : 'on'));
     prefs.push('Tab=' + (features.tabindexInjection === false ? 'off' : 'on'));
     prefs.push('CSS=' + (features.cssReset === false ? 'off' : 'on'));
+    prefs.push('Scrollbars=' + (features.hideScrollbars ? 'hidden' : 'shown'));
     prefs.push('GPU=' + (features.gpuHints === false ? 'off' : 'on'));
     info.push('Prefs: ' + prefs.join(','));
   } catch (err) {
+    // Ignore
+  }
+
+  try {
+    if (window.TizenPortal && window.TizenPortal.getState) {
+      var state = window.TizenPortal.getState();
+      var card = state && state.currentCard ? state.currentCard : null;
+      var bundle = window.TizenPortal.bundles && window.TizenPortal.bundles.getActive ? window.TizenPortal.bundles.getActive() : null;
+      if (card) {
+        var cardView = card.hasOwnProperty('viewportMode') ? (card.viewportMode || 'global') : 'global';
+        var cardFocus = card.hasOwnProperty('focusOutlineMode') ? (card.focusOutlineMode || 'global') : 'global';
+        var cardUa = card.hasOwnProperty('userAgent') ? (card.userAgent || 'global') : 'global';
+        info.push('Card: View=' + cardView + ',Focus=' + cardFocus + ',UA=' + cardUa);
+      }
+      if (bundle) {
+        info.push('Bundle: ' + (bundle.name || 'unknown') + ' (Viewport=' + (bundle.viewportLock === 'force' || bundle.viewportLock === true ? 'force' : 'inherit') + ')');
+      }
+    }
+  } catch (err2) {
     // Ignore
   }
 

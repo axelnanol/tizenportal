@@ -38,6 +38,7 @@ var DEFAULT_CONFIG = {
     safeArea: false,
     gpuHints: true,
     cssReset: true,
+    hideScrollbars: false,
     wrapTextInputs: true,
     viewportMode: 'locked',
     uaMode: 'tizen',

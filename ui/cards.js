@@ -97,6 +97,41 @@ function loadCards() {
           needsSave = true;
         }
 
+        if (!card.hasOwnProperty('tabindexInjection')) {
+          card.tabindexInjection = null;
+          needsSave = true;
+        }
+
+        if (!card.hasOwnProperty('scrollIntoView')) {
+          card.scrollIntoView = null;
+          needsSave = true;
+        }
+
+        if (!card.hasOwnProperty('safeArea')) {
+          card.safeArea = null;
+          needsSave = true;
+        }
+
+        if (!card.hasOwnProperty('gpuHints')) {
+          card.gpuHints = null;
+          needsSave = true;
+        }
+
+        if (!card.hasOwnProperty('cssReset')) {
+          card.cssReset = null;
+          needsSave = true;
+        }
+
+        if (!card.hasOwnProperty('hideScrollbars')) {
+          card.hideScrollbars = null;
+          needsSave = true;
+        }
+
+        if (!card.hasOwnProperty('wrapTextInputs')) {
+          card.wrapTextInputs = null;
+          needsSave = true;
+        }
+
         // Ensure bundle options storage exists
         if (!card.hasOwnProperty('bundleOptions') || typeof card.bundleOptions !== 'object' || card.bundleOptions === null) {
           card.bundleOptions = {};
@@ -164,6 +199,13 @@ export function addCard(cardData) {
     viewportMode: cardData.hasOwnProperty('viewportMode') ? cardData.viewportMode : null,
     focusOutlineMode: cardData.hasOwnProperty('focusOutlineMode') ? cardData.focusOutlineMode : null,
     userAgent: cardData.hasOwnProperty('userAgent') ? cardData.userAgent : null,
+    tabindexInjection: cardData.hasOwnProperty('tabindexInjection') ? cardData.tabindexInjection : null,
+    scrollIntoView: cardData.hasOwnProperty('scrollIntoView') ? cardData.scrollIntoView : null,
+    safeArea: cardData.hasOwnProperty('safeArea') ? cardData.safeArea : null,
+    gpuHints: cardData.hasOwnProperty('gpuHints') ? cardData.gpuHints : null,
+    cssReset: cardData.hasOwnProperty('cssReset') ? cardData.cssReset : null,
+    hideScrollbars: cardData.hasOwnProperty('hideScrollbars') ? cardData.hideScrollbars : null,
+    wrapTextInputs: cardData.hasOwnProperty('wrapTextInputs') ? cardData.wrapTextInputs : null,
     icon: cardData.icon || null,
     bundleOptions: cardData.bundleOptions || {},
     bundleOptionData: cardData.bundleOptionData || {},

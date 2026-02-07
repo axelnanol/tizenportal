@@ -12,7 +12,51 @@ export default {
   /**
    * CSS to inject
    */
-  getCSS: function() {
+  getCSS: function(options) {
+    var hideScrollbars = options && options.hideScrollbars === true;
+    var scrollbarCSS = [];
+
+    if (hideScrollbars) {
+      scrollbarCSS = [
+        '/* Hide scrollbars globally (keep scroll) */',
+        '::-webkit-scrollbar {',
+        '  width: 0px;',
+        '  height: 0px;',
+        '}',
+        '',
+        '::-webkit-scrollbar-track {',
+        '  background: transparent;',
+        '}',
+        '',
+        '::-webkit-scrollbar-thumb {',
+        '  background: transparent;',
+        '}',
+        '',
+      ];
+    } else {
+      scrollbarCSS = [
+        '/* Scrollbar styling for TV */',
+        '::-webkit-scrollbar {',
+        '  width: 8px;',
+        '  height: 8px;',
+        '}',
+        '',
+        '::-webkit-scrollbar-track {',
+        '  background: rgba(0, 0, 0, 0.2);',
+        '}',
+        '',
+        '::-webkit-scrollbar-thumb {',
+        '  background: rgba(255, 255, 255, 0.3);',
+        '  border-radius: 4px;',
+        '}',
+        '',
+        '::-webkit-scrollbar-thumb:hover {',
+        '  background: rgba(255, 255, 255, 0.5);',
+        '}',
+        '',
+      ];
+    }
+
     return [
       '/* TizenPortal CSS Reset */',
       '',
@@ -21,25 +65,7 @@ export default {
       '  box-sizing: border-box;',
       '}',
       '',
-      '/* Scrollbar styling for TV */',
-      '::-webkit-scrollbar {',
-      '  width: 8px;',
-      '  height: 8px;',
-      '}',
-      '',
-      '::-webkit-scrollbar-track {',
-      '  background: rgba(0, 0, 0, 0.2);',
-      '}',
-      '',
-      '::-webkit-scrollbar-thumb {',
-      '  background: rgba(255, 255, 255, 0.3);',
-      '  border-radius: 4px;',
-      '}',
-      '',
-      '::-webkit-scrollbar-thumb:hover {',
-      '  background: rgba(255, 255, 255, 0.5);',
-      '}',
-      '',
+      scrollbarCSS.join('\n'),
       '/* Prevent text selection on TV (can interfere with navigation) */',
       '* {',
       '  -webkit-user-select: none;',
@@ -74,12 +100,12 @@ export default {
    * Apply feature to iframe document
    * @param {Document} doc
    */
-  apply: function(doc) {
+  apply: function(doc, options) {
     if (!doc) return;
     
     var style = doc.createElement('style');
     style.id = 'tp-css-reset';
-    style.textContent = this.getCSS();
+    style.textContent = this.getCSS(options || {});
     
     var head = doc.head || doc.documentElement;
     if (head) {

@@ -129,6 +129,7 @@ var PREFERENCE_ROWS = [
   { id: 'safeArea', label: 'TV Safe Area (5% inset)', type: 'toggle', key: 'safeArea', config: 'features' },
   { id: 'gpuHints', label: 'GPU Acceleration Hints', type: 'toggle', key: 'gpuHints', config: 'features' },
   { id: 'cssReset', label: 'CSS Normalization', type: 'toggle', key: 'cssReset', config: 'features' },
+  { id: 'hideScrollbars', label: 'Hide Scrollbars', type: 'toggle', key: 'hideScrollbars', config: 'features' },
   { id: 'wrapTextInputs', label: 'Protect Text Inputs (TV Keyboard)', type: 'toggle', key: 'wrapTextInputs', config: 'features' },
 ];
 
@@ -327,6 +328,7 @@ function getDefaultFeaturesConfig() {
     safeArea: false,
     gpuHints: true,
     cssReset: true,
+    hideScrollbars: false,
     wrapTextInputs: true,
     viewportMode: 'locked',
     uaMode: 'tizen',

@@ -35,6 +35,7 @@ function getDefaults() {
     safeArea: false,
     gpuHints: true,
     cssReset: true,
+    hideScrollbars: false,
     wrapTextInputs: true,
     viewportMode: 'locked',
     uaMode: 'tizen',
@@ -69,20 +70,29 @@ function applyFeatures(doc, overrides) {
   }
   
   var config = getConfig();
-  var focusMode = config.focusOutlineMode || (config.focusStyling ? 'on' : 'off');
-  if (overrides && overrides.focusOutlineMode) {
-    focusMode = overrides.focusOutlineMode;
+  var effectiveConfig = Object.assign({}, config);
+  if (overrides) {
+    Object.keys(overrides).forEach(function(key) {
+      if (overrides.hasOwnProperty(key) && overrides[key] !== null && overrides[key] !== undefined) {
+        effectiveConfig[key] = overrides[key];
+      }
+    });
+  }
+
+  var focusMode = effectiveConfig.focusOutlineMode || (effectiveConfig.focusStyling ? 'on' : 'off');
+  if (effectiveConfig.focusStyling === false) {
+    focusMode = 'off';
   }
   
   try {
     // Apply scroll-into-view (doesn't need document)
-    if (config.scrollIntoView && features.scrollIntoView) {
+    if (effectiveConfig.scrollIntoView && features.scrollIntoView) {
       features.scrollIntoView.apply();
     }
     
     // Apply document-based features
-    if (config.cssReset && features.cssReset) {
-      features.cssReset.apply(doc);
+    if (effectiveConfig.cssReset && features.cssReset) {
+      features.cssReset.apply(doc, { hideScrollbars: effectiveConfig.hideScrollbars === true });
     }
     
     if (features.focusStyling) {
@@ -93,15 +103,15 @@ function applyFeatures(doc, overrides) {
       }
     }
     
-    if (config.gpuHints && features.gpuHints) {
+    if (effectiveConfig.gpuHints && features.gpuHints) {
       features.gpuHints.apply(doc);
     }
     
-    if (config.safeArea && features.safeArea) {
+    if (effectiveConfig.safeArea && features.safeArea) {
       features.safeArea.apply(doc);
     }
     
-    if (config.tabindexInjection && features.tabindexInjection) {
+    if (effectiveConfig.tabindexInjection && features.tabindexInjection) {
       features.tabindexInjection.apply(doc);
     }
     

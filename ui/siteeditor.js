@@ -67,6 +67,12 @@ var UA_MODE_OPTIONS = [
   { value: 'desktop', label: 'Desktop' },
 ];
 
+var FEATURE_TOGGLE_OPTIONS = [
+  { value: null, label: 'Global (default)' },
+  { value: true, label: 'On' },
+  { value: false, label: 'Off' },
+];
+
 var FIELDS = [
   { name: 'name', label: 'Site Name', type: 'text', placeholder: 'My Site', required: true },
   { name: 'url', label: 'URL', type: 'text', placeholder: 'https://example.com', required: true },
@@ -74,6 +80,13 @@ var FIELDS = [
   { name: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_MODE_OPTIONS },
   { name: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS },
   { name: 'userAgent', label: 'User Agent Mode', type: 'select', options: UA_MODE_OPTIONS },
+  { name: 'tabindexInjection', label: 'Auto-focusable Elements', type: 'select', options: FEATURE_TOGGLE_OPTIONS },
+  { name: 'scrollIntoView', label: 'Scroll-into-view on Focus', type: 'select', options: FEATURE_TOGGLE_OPTIONS },
+  { name: 'safeArea', label: 'TV Safe Area (5% inset)', type: 'select', options: FEATURE_TOGGLE_OPTIONS },
+  { name: 'gpuHints', label: 'GPU Acceleration Hints', type: 'select', options: FEATURE_TOGGLE_OPTIONS },
+  { name: 'cssReset', label: 'CSS Normalization', type: 'select', options: FEATURE_TOGGLE_OPTIONS },
+  { name: 'hideScrollbars', label: 'Hide Scrollbars', type: 'select', options: FEATURE_TOGGLE_OPTIONS },
+  { name: 'wrapTextInputs', label: 'Protect Text Inputs (TV Keyboard)', type: 'select', options: FEATURE_TOGGLE_OPTIONS },
   { name: 'icon', label: 'Icon URL', type: 'text', placeholder: 'https://... (optional)', required: false },
 ];
 
@@ -326,6 +339,13 @@ export function showAddSiteEditor(onComplete) {
     viewportMode: null,
     focusOutlineMode: null,
     userAgent: null,
+    tabindexInjection: null,
+    scrollIntoView: null,
+    safeArea: null,
+    gpuHints: null,
+    cssReset: null,
+    hideScrollbars: null,
+    wrapTextInputs: null,
     icon: '',
     bundleOptions: {},
     bundleOptionData: {},
@@ -358,6 +378,13 @@ export function showEditSiteEditor(card, onComplete) {
     viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
     focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
     userAgent: card.hasOwnProperty('userAgent') ? card.userAgent : null,
+    tabindexInjection: card.hasOwnProperty('tabindexInjection') ? card.tabindexInjection : null,
+    scrollIntoView: card.hasOwnProperty('scrollIntoView') ? card.scrollIntoView : null,
+    safeArea: card.hasOwnProperty('safeArea') ? card.safeArea : null,
+    gpuHints: card.hasOwnProperty('gpuHints') ? card.gpuHints : null,
+    cssReset: card.hasOwnProperty('cssReset') ? card.cssReset : null,
+    hideScrollbars: card.hasOwnProperty('hideScrollbars') ? card.hideScrollbars : null,
+    wrapTextInputs: card.hasOwnProperty('wrapTextInputs') ? card.wrapTextInputs : null,
     icon: card.icon || '',
     bundleOptions: card.bundleOptions || {},
     bundleOptionData: card.bundleOptionData || {},
@@ -521,6 +548,13 @@ function autoSaveCard(reason) {
     viewportMode: state.card.hasOwnProperty('viewportMode') ? state.card.viewportMode : null,
     focusOutlineMode: state.card.hasOwnProperty('focusOutlineMode') ? state.card.focusOutlineMode : null,
     userAgent: state.card.hasOwnProperty('userAgent') ? state.card.userAgent : null,
+    tabindexInjection: state.card.hasOwnProperty('tabindexInjection') ? state.card.tabindexInjection : null,
+    scrollIntoView: state.card.hasOwnProperty('scrollIntoView') ? state.card.scrollIntoView : null,
+    safeArea: state.card.hasOwnProperty('safeArea') ? state.card.safeArea : null,
+    gpuHints: state.card.hasOwnProperty('gpuHints') ? state.card.gpuHints : null,
+    cssReset: state.card.hasOwnProperty('cssReset') ? state.card.cssReset : null,
+    hideScrollbars: state.card.hasOwnProperty('hideScrollbars') ? state.card.hideScrollbars : null,
+    wrapTextInputs: state.card.hasOwnProperty('wrapTextInputs') ? state.card.wrapTextInputs : null,
     icon: state.card.icon || null,
     bundleOptions: state.card.bundleOptions || {},
     bundleOptionData: state.card.bundleOptionData || {},
