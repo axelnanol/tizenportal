@@ -75,7 +75,7 @@ function tpHud(msg) {
     if (!h) {
       h = document.createElement('div');
       h.id = 'tp-hud';
-      h.style.cssText = 'position:fixed;top:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;padding:10px;font-size:12px;font-family:monospace;z-index:2147483647;border-left:2px solid #0f0;border-bottom:2px solid #0f0;max-width:400px;word-break:break-all;';
+      h.style.cssText = 'position:fixed;top:0;right:0;background:rgba(0,0,0,0.9);color:#0f0;padding:10px;font-size:12px;font-family:monospace;z-index:2147483647;border:2px solid #0f0;max-width:400px;word-break:break-all;';
       // Append to documentElement if body doesn't exist yet
       (document.body || document.documentElement).appendChild(h);
     }
@@ -1379,44 +1379,6 @@ function hideLoading() {
   }
 }
 
-/**
- * Open a URL in the native Tizen browser (if available)
- * @param {string} url
- * @returns {boolean} True if launch attempted
- */
-function openInTizenBrowser(url) {
-  if (!url) return false;
-
-  if (typeof window.tizen === 'undefined' || !tizen || !tizen.application || !tizen.ApplicationControl) {
-    warn('Tizen API not available for native browser launch');
-    if (window.TizenPortal && window.TizenPortal.showToast) {
-      window.TizenPortal.showToast('Tizen API not available');
-    }
-    return false;
-  }
-
-  try {
-    var appControl = new tizen.ApplicationControl(
-      'http://tizen.org/appcontrol/operation/view',
-      url,
-      null,
-      null
-    );
-    tizen.application.launchAppControl(
-      appControl,
-      null,
-      function() { log('Launched Tizen browser'); },
-      function(err) { warn('Failed to launch Tizen browser:', err.message); }
-    );
-    return true;
-  } catch (err) {
-    warn('Tizen browser launch failed:', err.message);
-    if (window.TizenPortal && window.TizenPortal.showToast) {
-      window.TizenPortal.showToast('Cannot open Tizen browser');
-    }
-    return false;
-  }
-}
 
 /**
  * Global TizenPortal API
@@ -1508,7 +1470,6 @@ var TizenPortalAPI = {
   showToast: showToast,
   showLoading: showLoading,
   hideLoading: hideLoading,
-  openInTizenBrowser: openInTizenBrowser,
   
   // Site overlay controls
   toggleSiteAddressBar: toggleSiteAddressBar,

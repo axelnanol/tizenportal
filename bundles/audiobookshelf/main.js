@@ -42,19 +42,12 @@ import absStyles from './style.css';
 // CORE IMPORTS - Use these instead of reimplementing!
 // ============================================================================
 
-// Focus utilities: scroll-into-view, initial focus, viewport, DOM observation
+// Focus utilities: initial focus, DOM observation
 import { 
-  enableScrollIntoView,
-  disableScrollIntoView,
   setInitialFocus,
   observeDOM,
   stopObservingDOM,
 } from '../../focus/manager.js';
-
-// Text input wrapping for TV-friendly keyboard handling
-import {
-  wrapTextInputs,
-} from '../../input/text-input.js';
 
 // NOTE: registerKeyHandler is accessed via window.TizenPortal.input.registerKeyHandler
 // to avoid circular dependency (handler.js -> bundlemenu.js -> registry.js -> this file)
@@ -293,21 +286,6 @@ function getInitialFocusSelectors() {
   return INITIAL_FOCUS_SELECTORS.default;
 }
 
-/**
- * Scroll-into-view configuration for ABS layout
- * 
- * These options are passed to enableScrollIntoView() from core.
- * Customize for ABS's specific layout (appbar height, siderail width).
- */
-var SCROLL_OPTIONS = {
-  topOffset: 64,        // ABS appbar height in pixels
-  leftOffset: 80,       // ABS siderail width in pixels  
-  marginTop: 100,       // Start scrolling when element is within 100px of top
-  marginBottom: 200,    // Start scrolling when element is within 200px of bottom
-  marginLeft: 100,
-  marginRight: 100,
-  scrollContainer: '.bookshelfRow, .categorizedBookshelfRow', // Horizontal scroll containers
-};
 
 // ============================================================================
 // BUNDLE STATE
@@ -394,12 +372,7 @@ export default {
     // ABS-SPECIFIC: Apply spacing classes to containers
     this.applySpacingClasses();
     
-    // CORE: Wrap text inputs for TV keyboard handling
-    // Uses the core utility with ABS-specific selector
-    wrapTextInputs(SELECTORS.textInputs);
-    
-    // CORE: Enable scroll-into-view with ABS-specific layout options
-    enableScrollIntoView(SCROLL_OPTIONS);
+    // Global features handle text input wrapping and scroll-into-view.
     
     // CORE: Observe DOM for dynamic Vue/Nuxt content changes
     stopObserver = observeDOM(function() {
@@ -408,7 +381,7 @@ export default {
         // Card selectors are auto-processed by core observer
         self.setupOtherFocusables();
         self.applySpacingClasses();
-        wrapTextInputs(SELECTORS.textInputs);
+        // Global features handle text input wrapping.
         // Monitor audio element when DOM changes (player may have been created)
         self.monitorAudioElement();
         // Setup player controls for navigation
@@ -469,8 +442,6 @@ export default {
       stopUrlWatcher = null;
     }
     
-    // Clean up scroll-into-view listener
-    disableScrollIntoView();
     
     // Exit any entered card
     if (isInsideCard()) {
@@ -1446,7 +1417,7 @@ export default {
             // Re-run other focusables
             self.setupOtherFocusables();
             self.applySpacingClasses();
-            wrapTextInputs(SELECTORS.textInputs);
+            // Global features handle text input wrapping.
             
             // Setup detail page elements if on item/collection/playlist page
             self.setupDetailPageFocusables();

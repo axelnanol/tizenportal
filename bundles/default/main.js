@@ -26,7 +26,7 @@ function tpWarn() {
 export default {
   name: 'default',
   displayName: 'Default',
-  description: 'Basic TV browser support with focus styling',
+  description: 'Basic TV browser support using global features',
   
   /**
    * CSS to inject
@@ -84,74 +84,5 @@ export default {
    */
   onKeyDown: function(event) {
     return false; // Let default handling proceed
-  },
-
-  // Helper methods
-
-  /**
-   * Inject basic focus styling
-   * @param {Document} doc
-   */
-  injectBasicStyles: function(doc) {
-    if (!doc || doc.getElementById('tp-default-styles')) {
-      return;
-    }
-
-    var style = doc.createElement('style');
-    style.id = 'tp-default-styles';
-    style.textContent = [
-      '/* TizenPortal Default Bundle Styles */',
-      ':focus {',
-      '  outline: 3px solid #00a8ff !important;',
-      '  outline-offset: 2px;',
-      '}',
-      '',
-      'a:focus, button:focus, [role="button"]:focus {',
-      '  outline: 3px solid #00a8ff !important;',
-      '  outline-offset: 2px;',
-      '}',
-    ].join('\n');
-
-    var head = doc.head || doc.documentElement;
-    if (head) {
-      head.appendChild(style);
-    }
-  },
-
-  /**
-   * Make interactive elements focusable
-   * @param {Document} doc
-   */
-  makeFocusable: function(doc) {
-    var selectors = [
-      'a[href]',
-      'button',
-      '[role="button"]',
-      '[role="link"]',
-      'input',
-      'select',
-      'textarea',
-    ];
-
-    var elements = doc.querySelectorAll(selectors.join(','));
-    var changed = 0;
-
-    for (var i = 0; i < elements.length; i++) {
-      var el = elements[i];
-      var disabled = el.disabled || el.getAttribute('aria-disabled') === 'true';
-      if (disabled) continue;
-
-      var tabindex = el.getAttribute('tabindex');
-      if (tabindex !== null) {
-        var tabindexValue = parseInt(tabindex, 10);
-        if (!isNaN(tabindexValue) && tabindexValue < 0) continue;
-        continue;
-      }
-
-      el.setAttribute('tabindex', '0');
-      changed++;
-    }
-
-    tpLog('TizenPortal [default]: Made', changed, 'elements focusable');
   },
 };

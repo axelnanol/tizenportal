@@ -5,28 +5,9 @@
  * Designed to work with Tailwind CSS v4 and Nuxt.
  */
 
-/* ==========================================================================
-   CRITICAL TV LAYOUT FIXES - SCROLLBAR HIDING
-   TV screens don't need visible scrollbars. Hide them while keeping scroll.
-   ========================================================================== */
-
-/* Hide scrollbars globally - webkit (Chrome/Tizen) */
-::-webkit-scrollbar {
-  width: 0px !important;
-  height: 0px !important;
-  display: none !important;
-}
-
-/* Ensure content can still scroll but scrollbars are hidden */
-html, body,
-#page-wrapper,
-#bookshelf,
-.bookshelfRow,
-.categorizedBookshelfRow,
-.bookshelf-row {
-  scrollbar-width: none !important;  /* Firefox */
-  -ms-overflow-style: none !important;  /* IE/Edge */
-}
+/* ========================================================================== */
+/* Scrollbar behavior is handled by global features (hideScrollbars/cssReset). */
+/* ========================================================================== */
 
 /* ==========================================================================
    SHELF LABEL VISIBILITY FIX
@@ -1364,46 +1345,9 @@ a[href]:focus:not(#appbar a):not([role="toolbar"] a):not([data-tp-card]) {
   z-index: 9000 !important;
 }
 
-/* ==========================================================================
-   SCROLLBAR STYLING
-   TV-friendly scrollbars.
-   ========================================================================== */
-
-::-webkit-scrollbar {
-  width: 12px !important;
-  height: 12px !important;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(35, 35, 35, 0.8) !important;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1ad691 !important;
-  border-radius: 6px !important;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #15b578 !important;
-}
-
-/* ==========================================================================
-   TEXT SELECTION
-   Disable text selection (not useful on TV).
-   ========================================================================== */
-
-* {
-  -webkit-user-select: none !important;
-  user-select: none !important;
-}
-
-/* Allow selection in inputs */
-input,
-textarea,
-[contenteditable="true"] {
-  -webkit-user-select: text !important;
-  user-select: text !important;
-}
+/* ========================================================================== */
+/* Scrollbar styling and text selection are handled by global features. */
+/* ========================================================================== */
 
 /* ==========================================================================
    PLAYER BAR (placeholder for future)

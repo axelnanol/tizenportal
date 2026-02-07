@@ -50,7 +50,6 @@ function createAddressBar() {
   
   // SVG icons for better visual quality
   var homeIcon = '<svg viewBox="0 0 24 24" fill="currentColor" class="tp-btn-svg"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>';
-  var tizenIcon = '<svg viewBox="0 0 24 24" fill="currentColor" class="tp-btn-svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>';
   var portalIcon = '<svg viewBox="0 0 24 24" fill="currentColor" class="tp-btn-svg"><path d="M3 5v14h18V5H3zm4 2h4v4H7V7zm-2 10v-4h4v4H5zm12 0h-4v-4h4v4zm2-6h-4V7h4v4z"/></svg>';
   
   bar.innerHTML = '' +
@@ -83,10 +82,6 @@ function createAddressBar() {
       // Go button
       '<button type="button" class="tp-addressbar-btn tp-addressbar-go" id="tp-addressbar-go" tabindex="0" title="Go">' +
         '<span class="tp-btn-icon">→</span>' +
-      '</button>' +
-      // Open in Tizen Browser button
-      '<button type="button" class="tp-addressbar-btn" id="tp-addressbar-tizen" tabindex="0" title="Open in Tizen Browser">' +
-        tizenIcon +
       '</button>' +
     '</div>';
   
@@ -161,14 +156,6 @@ function attachEventHandlers(bar) {
     });
   }
   
-  // Tizen Browser button
-  var tizenBtn = bar.querySelector('#tp-addressbar-tizen');
-  if (tizenBtn) {
-    tizenBtn.addEventListener('click', handleTizenBrowser);
-    tizenBtn.addEventListener('keydown', function(e) {
-      if (e.keyCode === 13) handleTizenBrowser();
-    });
-  }
   
   // URL container - Enter key focuses the input
   var urlContainer = bar.querySelector('#tp-addressbar-url-container');
@@ -473,62 +460,6 @@ function handleHome() {
   hideAddressBar();
 }
 
-/**
- * Handle Tizen Browser button - open current URL in Tizen browser
- */
-function handleTizenBrowser() {
-  console.log('TizenPortal: Address bar - Open in Tizen Browser');
-  
-  // Get current URL from input field
-  var url = urlInputElement ? urlInputElement.value.trim() : '';
-  
-  if (!url) {
-    // Try to get from iframe
-    var iframe = document.getElementById('tp-iframe');
-    if (iframe) {
-      try {
-        url = iframe.contentWindow.location.href;
-      } catch (err) {
-        url = iframe.src || '';
-      }
-    }
-  }
-  
-  if (!url) {
-    if (window.TizenPortal) {
-      window.TizenPortal.showToast('No URL to open');
-    }
-    return;
-  }
-  
-  hideAddressBar();
-  
-  // Use TizenPortal API to open in Tizen browser
-  if (window.TizenPortal && window.TizenPortal.openInTizenBrowser) {
-    window.TizenPortal.openInTizenBrowser(url);
-  } else {
-    // Fallback - try direct Tizen API
-    try {
-      var appControl = new tizen.ApplicationControl(
-        'http://tizen.org/appcontrol/operation/view',
-        url,
-        null,
-        null
-      );
-      tizen.application.launchAppControl(
-        appControl,
-        null,
-        function() { console.log('TizenPortal: Launched Tizen browser'); },
-        function(err) { console.error('TizenPortal: Failed to launch browser:', err.message); }
-      );
-    } catch (err) {
-      console.error('TizenPortal: Tizen API not available:', err.message);
-      if (window.TizenPortal) {
-        window.TizenPortal.showToast('Cannot open Tizen browser');
-      }
-    }
-  }
-}
 
 /**
  * Handle Back button - go back in history
