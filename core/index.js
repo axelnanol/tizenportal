@@ -1401,7 +1401,9 @@ function loadSite(card) {
   }
 
   log('Navigating to site: ' + card.url);
-  showToast('Loading ' + (card.name || card.url) + '...');
+  var bundleName = card.featureBundle || 'default';
+  showToast('Loading ' + (card.name || card.url) + ' (bundle: ' + bundleName + ')...');
+  tpHud('Launch: ' + (card.name || card.url) + ' | bundle: ' + bundleName);
 
   // Store current card in state
   state.currentCard = card;
@@ -1412,7 +1414,6 @@ function loadSite(card) {
   saveLastCard(card);
   
   // Get the bundle for this card
-  var bundleName = card.featureBundle || 'default';
   var bundle = getBundle(bundleName);
   var resolvedUa = resolveUserAgentMode(card);
   
@@ -1459,6 +1460,7 @@ function loadSite(card) {
     }
     
     log('Payload size: ' + json.length + ' bytes, encoded: ' + encoded.length);
+    tpHud('Payload: ' + json.length + 'b, encoded ' + encoded.length + 'b');
   } catch (e) {
     error('Failed to encode payload: ' + e.message);
     // Continue without hash
