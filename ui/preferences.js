@@ -5,6 +5,8 @@
  * Mirrors the site editor's keyboard interaction model.
  */
 
+import { isValidHexColor, isValidHttpUrl } from '../core/utils.js';
+
 /**
  * Preferences state
  */
@@ -740,14 +742,14 @@ export function applyPortalPreferences(config) {
   
   // Apply theme-specific styles
   if (theme === 'custom') {
-    // Custom gradient colors
-    var color1 = config.customColor1 || '#0d1117';
-    var color2 = config.customColor2 || '#161b22';
+    // Custom gradient colors — validate hex before injecting into CSS
+    var color1 = isValidHexColor(config.customColor1) ? config.customColor1 : '#0d1117';
+    var color2 = isValidHexColor(config.customColor2) ? config.customColor2 : '#161b22';
     shell.style.background = 'linear-gradient(135deg, ' + color1 + ' 0%, ' + color2 + ' 100%)';
   } else if (theme === 'backdrop') {
-    // Custom backdrop image
-    if (config.backgroundImage) {
-      shell.style.backgroundImage = 'url(' + config.backgroundImage + ')';
+    // Custom backdrop image — validate URL before injecting into CSS
+    if (config.backgroundImage && isValidHttpUrl(config.backgroundImage)) {
+      shell.style.backgroundImage = 'url(' + encodeURI(config.backgroundImage) + ')';
       shell.style.backgroundSize = 'cover';
       shell.style.backgroundPosition = 'center';
       shell.style.backgroundColor = '#0d1117'; // Fallback

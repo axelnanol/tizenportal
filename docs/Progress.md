@@ -1,7 +1,7 @@
 # TizenPortal Progress Tracker
 
 > **Last Updated:** February 7, 2026  
-> **Current Version:** 0444  
+> **Current Version:** 0445  
 > **Architecture:** Universal Runtime
 
 ---
@@ -43,7 +43,14 @@ TizenPortal uses a single unified runtime (`tizenportal.js`) on all pages:
 
 ## Version History
 
-### v0444 (Current)
+### v0445 (Current)
+
+- Shared escapeHtml from core/utils.js (replaced local copies in modal, siteeditor)
+- URL validation via sanitizeUrl in address bar, modal, siteeditor
+- Preferences: hex color and background URL validation before CSS injection
+- Replaced innerHTML+onerror with DOM API in siteeditor icon preview
+
+### v0444
 
 - CSP meta tag on portal page
 - postMessage origin scoping in pointer

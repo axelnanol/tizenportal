@@ -2,7 +2,7 @@
 
 > **Version:** 3.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v0444)  
+> **Status:** Universal Runtime (v0445)  
 
 ---
 
@@ -446,7 +446,7 @@ const plugins = [
 
 Source files use placeholder:
 ```js
-const VERSION = '__VERSION__';  // Becomes "0444" at build time
+const VERSION = '__VERSION__';  // Becomes "0445" at build time
 ```
 
 ### 7.3 tizenportal.js Structure (IIFE)
@@ -455,7 +455,7 @@ const VERSION = '__VERSION__';  // Becomes "0444" at build time
 (function () {
   'use strict';
   
-  const VERSION = '0444';
+  const VERSION = '0445';
   
   // Polyfills (core-js, fetch, DOMRect, spatial-navigation)
   // Config (localStorage wrapper)
