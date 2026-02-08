@@ -581,6 +581,32 @@ async function initPortalPage() {
 }
 
 /**
+ * Wait briefly for #tp= or ?tp= payload to appear in the URL
+ */
+function waitForPayload(maxWaitMs, intervalMs) {
+  return new Promise(function(resolve) {
+    var start = Date.now();
+    var interval = intervalMs || 50;
+
+    function hasPayload() {
+      var hash = window.location.hash || '';
+      var search = window.location.search || '';
+      return /[#&]tp=/.test(hash) || /[?&]tp=/.test(search);
+    }
+
+    function check() {
+      if (hasPayload() || (Date.now() - start) >= maxWaitMs) {
+        resolve(hasPayload());
+        return;
+      }
+      setTimeout(check, interval);
+    }
+
+    check();
+  });
+}
+
+/**
  * Initialize when injected into a target site
  */
 async function initTargetSite() {
@@ -588,6 +614,9 @@ async function initTargetSite() {
   
   // Inject base CSS for overlay components (pointer, address bar, etc.)
   injectOverlayStyles();
+
+  // Give the URL a brief moment to settle (hash/query payload may arrive late)
+  await waitForPayload(200, 50);
   
   // Try to get card config from URL hash first, then localStorage
   var matchedCard = null;
@@ -1398,7 +1427,7 @@ function toggleSiteDiagnostics() {
 function returnToPortal() {
   log('Returning to portal...');
   // Navigate to portal using absolute URL (works from any site)
-  window.location.href = 'https://alexnolan.github.io/tizenportal/dist/index.html';
+  window.location.href = 'https://alexnolan.github.io/tizenportal/dist/index.html?v=' + encodeURIComponent(VERSION);
 }
 
 /**
