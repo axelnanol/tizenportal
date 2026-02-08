@@ -1,19 +1,11 @@
 /**
  * Audiobookshelf Bundle Styles for TizenPortal
- * 
- * TV-optimized styles for Audiobookshelf.
- * Designed to work with Tailwind CSS v4 and Nuxt.
+ * TV-optimized styles for ABS (Tailwind v4 + Nuxt).
  */
 
-/* ========================================================================== */
-/* Scrollbar behavior is handled by global features (hideScrollbars/cssReset). */
-/* ========================================================================== */
+/* Scrollbars are handled by global features (hideScrollbars/cssReset). */
 
-/* ==========================================================================
-   SHELF LABEL VISIBILITY FIX
-   Labels below cards get hidden under the wooden shelf divider bar.
-   Fix by ensuring cards and their labels have higher z-index than divider.
-   ========================================================================== */
+/* SHELF LABEL VISIBILITY FIX: keep labels above the divider bar. */
 
 /* The shelf divider (wooden bar) - LOWER z-index */
 .bookshelfDividerCategorized {
@@ -34,11 +26,7 @@
   z-index: 30 !important;
 }
 
-/* ==========================================================================
-   FILTER/SORT BAR - REPOSITION INTO APPBAR VISUALLY
-   Instead of moving DOM elements (which breaks Vue), we use CSS to visually
-   reposition the toolbar to appear inside the appbar area.
-   ========================================================================== */
+/* FILTER/SORT BAR: visually place toolbar in appbar (no DOM moves). */
 
 /* Position toolbar absolutely to overlay on appbar - left of the icons */
 #toolbar {
@@ -89,11 +77,7 @@
   display: none !important;
 }
 
-/* ==========================================================================
-   SEARCH BOX - Fix icon overlapping text
-   The search has a magnifying glass icon positioned absolutely inside the input.
-   We need to add left padding to the input so text doesn't appear under the icon.
-   ========================================================================== */
+/* SEARCH BOX: add padding so text clears the magnifier icon. */
 
 /* Add left padding to search input for the magnifying glass icon */
 #appbar input,
@@ -104,10 +88,7 @@
 
 /* NOTE: Do NOT style #appbar .material-symbols broadly - it breaks the nav icons! */
 
-/* ==========================================================================
-   FILTER/SORT DROPDOWN FIXES
-   ABS uses controls-library-filter-select and controls-library-sort-select
-   ========================================================================== */
+/* FILTER/SORT DROPDOWNS: widen and improve focusability. */
 
 /* Filter/sort control wrappers */
 .libraryFilterMenu,
@@ -187,13 +168,7 @@ button[aria-label*="Sort" i],
   background: rgba(26, 214, 145, 0.2) !important;
 }
 
-/* ==========================================================================
-   CSS VARIABLE POLYFILL FOR CHROME 47
-   Chrome 47 doesn't support CSS custom properties (var()).
-   Tailwind CSS v4 uses calc(var(--spacing)*N) for all utility classes.
-   We must provide explicit fallback values.
-   --spacing: 0.25rem = 4px (at 16px base font-size)
-   ========================================================================== */
+/* CSS VAR POLYFILL (Chrome 47): explicit Tailwind spacing fallbacks. */
 
 /* Image constraints - CRITICAL for Chrome 47 */
 img {

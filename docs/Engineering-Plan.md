@@ -2,7 +2,7 @@
 
 > **Version:** 5.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v0455)
+> **Status:** Universal Runtime (v0456)
 
 ---
 
@@ -28,7 +28,7 @@ TizenPortal operates as a **TizenBrew Module** (`packageType: "mods"`) that prov
 | Tag | Semantic | Notes |
 |-----|----------|-------|
 | `0100` | 0.1.00 | Starting version |
-| `0455` | 0.4.55 | Current - avoid bundle CSS in URL payload |
+| `0456` | 0.4.56 | Current - trim ABS comments/unused import |
 | `0446` | 0.4.46 | Fix bundle persistence (stale build) |
 | `0445` | 0.4.45 | URL validation, shared escapeHtml, preferences hardening |
 | `0444` | 0.4.44 | CSP, postMessage, adblock hardening |

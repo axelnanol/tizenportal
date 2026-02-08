@@ -42,7 +42,7 @@ Before diving into specific issues, try these quick fixes:
 
 1. **Check the module name** — Ensure you typed it correctly:
    ```
-   alexnolan/tizenportal@0455
+   alexnolan/tizenportal@0456
    ```
 
 2. **Check your internet connection** — TizenBrew needs to download from GitHub

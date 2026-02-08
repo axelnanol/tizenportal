@@ -38,7 +38,7 @@ No, TizenPortal runs through TizenBrew, which handles any necessary permissions.
 ### How do I install TizenPortal?
 
 1. Install [TizenBrew](https://github.com/reisxd/TizenBrew) on your TV
-2. Add the module: `alexnolan/tizenportal@0455`
+2. Add the module: `alexnolan/tizenportal@0456`
 3. Launch TizenPortal from TizenBrew
 
 See the [Getting Started](Getting-Started.md) guide for detailed instructions.

@@ -1,39 +1,14 @@
 /**
  * Audiobookshelf Bundle for TizenPortal
- * 
  * TV support for Audiobookshelf (https://www.audiobookshelf.org/)
- * 
- * ============================================================================
- * BUNDLE BEST PRACTICES DEMONSTRATED
- * ============================================================================
- * 
- * This bundle is an exemplary example of how to create a TizenPortal bundle
- * for a complex SPA website. It demonstrates:
- * 
- * 1. USE CORE UTILITIES
- *    Import from focus/manager.js and input/text-input.js instead of
- *    reimplementing common TV patterns.
- * 
- * 2. OVERRIDE VIA registerKeyHandler()
- *    Register a custom key handler that runs BEFORE core handlers.
- *    Return true to consume the event, false to let core handle it.
- * 
- * 3. SITE-SPECIFIC SELECTORS
- *    Define CSS selectors for the target site's DOM structure in one place.
- *    Update these when the site changes its HTML.
- * 
- * 4. CARD MARKING
- *    Mark focusable elements with data-tp-card="single" or "multi" so core
- *    knows how to handle Enter/Escape on those elements.
- * 
- * 5. LIFECYCLE HOOKS
- *    Use onActivate/onDeactivate for setup/cleanup. Always clean up listeners!
- * 
- * 6. CONFIGURATION OBJECTS
- *    Define site-specific options (scroll margins, focus targets) as objects
- *    that are passed to core utilities.
- * 
- * ============================================================================
+ *
+ * Bundle practices (short):
+ * - Use core utilities (focus/input) instead of reimplementing.
+ * - registerKeyHandler() to override core keys safely.
+ * - Keep site selectors centralized and updated.
+ * - Mark focusable elements with data-tp-card.
+ * - Clean up listeners in onDeactivate.
+ * - Prefer config objects for site-specific behavior.
  */
 
 import absStyles from './style.css';
@@ -46,7 +21,6 @@ import absStyles from './style.css';
 import { 
   setInitialFocus,
   observeDOM,
-  stopObservingDOM,
 } from '../../focus/manager.js';
 
 // NOTE: registerKeyHandler is accessed via window.TizenPortal.input.registerKeyHandler
