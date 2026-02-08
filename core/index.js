@@ -115,6 +115,11 @@ const state = {
 };
 
 /**
+ * Bundle matcher registry (used when payload is stripped)
+ */
+var bundleMatchers = [];
+
+/**
  * Persist last matched card for cross-site navigation
  */
 var LAST_CARD_KEY = 'tp_last_card';
@@ -441,16 +446,38 @@ function applyTextInputProtectionFromConfig(card) {
   }
 }
 
-function isAudiobookshelfSite() {
-  try {
-    var title = (document.title || '').toLowerCase();
-    if (title.indexOf('audiobookshelf') !== -1) return true;
-    if (document.querySelector('#siderail-buttons-container') && document.querySelector('#appbar')) return true;
-    if (document.querySelector('#mediaPlayerContainer')) return true;
-  } catch (err) {
-    // Ignore
+function registerBundleMatcher(matcher) {
+  if (!matcher || typeof matcher !== 'object') return;
+  if (!matcher.bundleName || typeof matcher.bundleName !== 'string') return;
+  bundleMatchers.push(matcher);
+}
+
+function matchBundleFromRegistry() {
+  for (var i = 0; i < bundleMatchers.length; i++) {
+    var matcher = bundleMatchers[i];
+    try {
+      if (typeof matcher.match === 'function') {
+        if (matcher.match()) return matcher.bundleName;
+      } else {
+        var title = (document.title || '').toLowerCase();
+        if (matcher.titleContains && matcher.titleContains.length) {
+          for (var t = 0; t < matcher.titleContains.length; t++) {
+            var token = String(matcher.titleContains[t] || '').toLowerCase();
+            if (token && title.indexOf(token) !== -1) return matcher.bundleName;
+          }
+        }
+        if (matcher.selectors && matcher.selectors.length) {
+          for (var s = 0; s < matcher.selectors.length; s++) {
+            var sel = matcher.selectors[s];
+            if (sel && document.querySelector(sel)) return matcher.bundleName;
+          }
+        }
+      }
+    } catch (err) {
+      // Ignore matcher errors
+    }
   }
-  return false;
+  return null;
 }
 
 /**
@@ -681,16 +708,19 @@ async function initTargetSite() {
     }
   }
 
-  // Heuristic fallback for Audiobookshelf when payload is stripped
-  if (!matchedCard && isAudiobookshelfSite()) {
-    matchedCard = {
-      name: 'Audiobookshelf',
-      url: window.location.href,
-      featureBundle: 'audiobookshelf'
-    };
-    log('Heuristic bundle match: audiobookshelf');
-    tpHud('Card (heuristic): Audiobookshelf');
-    saveLastCard(matchedCard);
+  // Heuristic fallback using bundle matchers (when payload is stripped)
+  if (!matchedCard) {
+    var matchedBundle = matchBundleFromRegistry();
+    if (matchedBundle) {
+      matchedCard = {
+        name: document.title || matchedBundle,
+        url: window.location.href,
+        featureBundle: matchedBundle
+      };
+      log('Heuristic bundle match: ' + matchedBundle);
+      tpHud('Card (heuristic): ' + matchedBundle);
+      saveLastCard(matchedCard);
+    }
   }
   
   // Final fallback - create pseudo-card
@@ -1748,6 +1778,9 @@ var TizenPortalAPI = {
       siteActive: state.siteActive,
     };
   },
+
+  // Bundle matcher registration
+  registerBundleMatcher: registerBundleMatcher,
 
   // Internal API (not for bundle use)
   _internal: {

@@ -249,6 +249,9 @@ var lastUrl = '';
 /** Cleanup function for URL change detection */
 var stopUrlWatcher = null;
 
+/** Bundle matcher registration flag */
+var matcherRegistered = false;
+
 // Bundle export
 
 export default {
@@ -280,6 +283,15 @@ export default {
     
     console.log('TizenPortal [ABS]: Activating');
     isActivated = true;
+
+    if (!matcherRegistered && window.TizenPortal && window.TizenPortal.registerBundleMatcher) {
+      window.TizenPortal.registerBundleMatcher({
+        bundleName: 'audiobookshelf',
+        titleContains: ['audiobookshelf'],
+        selectors: ['#siderail-buttons-container', '#appbar', '#mediaPlayerContainer']
+      });
+      matcherRegistered = true;
+    }
     
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
