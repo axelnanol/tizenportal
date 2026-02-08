@@ -620,12 +620,14 @@ async function initTargetSite() {
   
   // Try to get card config from URL hash first, then localStorage
   var matchedCard = null;
+  var directPayloadFound = false;
   
   // Try URL hash (passed by portal when navigating)
   var hashCard = getCardFromHash();
   if (hashCard) {
     log('Card from URL hash: ' + hashCard.name);
     matchedCard = hashCard;
+    directPayloadFound = true;
     tpHud('Card (hash): ' + hashCard.name);
     saveLastCard(hashCard);
     // Clear hash after reading (clean URL)
@@ -643,6 +645,7 @@ async function initTargetSite() {
     if (queryCard) {
       log('Card from URL query: ' + queryCard.name);
       matchedCard = queryCard;
+      directPayloadFound = true;
       tpHud('Card (query): ' + queryCard.name);
       saveLastCard(queryCard);
       // Clear query after reading (clean URL)
@@ -771,6 +774,9 @@ async function initTargetSite() {
   // Apply bundle to the current page
   tpHud('Applying bundle...');
   await applyBundleToPage(matchedCard);
+
+  // If we started without a direct payload, poll briefly for a late payload
+  scheduleLatePayloadRetry(directPayloadFound, matchedCard);
 
   // Protect text inputs from TV keyboard auto-popup
   applyTextInputProtectionFromConfig(state.currentCard);
@@ -950,6 +956,53 @@ function getCardFromQuery() {
   } catch (e) {
     error('Failed to parse query card: ' + e.message);
     return null;
+  }
+}
+
+/**
+ * Briefly poll for a late-arriving payload and re-apply the correct bundle
+ */
+var latePayloadHandled = false;
+function scheduleLatePayloadRetry(directPayloadFound, initialCard) {
+  if (directPayloadFound || latePayloadHandled) return;
+  if (!initialCard || initialCard.featureBundle !== 'default') return;
+
+  var start = Date.now();
+  var maxWaitMs = 1500;
+  var intervalMs = 100;
+
+  function check() {
+    if (latePayloadHandled) return;
+    if ((Date.now() - start) > maxWaitMs) return;
+
+    var lateCard = getCardFromHash() || getCardFromQuery();
+    if (lateCard && lateCard.featureBundle && lateCard.featureBundle !== 'default') {
+      latePayloadHandled = true;
+      log('Late payload detected, switching bundle to: ' + lateCard.featureBundle);
+      tpHud('Late payload: ' + lateCard.featureBundle);
+      applyLateCardBundle(lateCard);
+      return;
+    }
+
+    setTimeout(check, intervalMs);
+  }
+
+  setTimeout(check, intervalMs);
+}
+
+async function applyLateCardBundle(card) {
+  try {
+    // Unload current bundle and remove CSS
+    await unloadBundle();
+    var style = document.getElementById('tp-bundle-css');
+    if (style && style.parentNode) style.parentNode.removeChild(style);
+    shutdownCards();
+
+    state.currentCard = card;
+    applyUserAgentOverride(resolveUserAgentMode(card));
+    await applyBundleToPage(card);
+  } catch (e) {
+    error('Late payload apply failed: ' + e.message);
   }
 }
 
