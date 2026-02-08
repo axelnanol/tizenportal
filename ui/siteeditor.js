@@ -1265,7 +1265,11 @@ function setupFieldListeners(container) {
   // Userscript rows (handled separately)
   var userscriptRows = container.querySelectorAll('.tp-userscript-row');
   for (var u = 0; u < userscriptRows.length; u++) {
-    userscriptRows[u].addEventListener('click', function() {
+    userscriptRows[u].addEventListener('click', function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       activateUserscriptInput(this);
     });
     userscriptRows[u].addEventListener('keydown', function(e) {
@@ -1279,7 +1283,11 @@ function setupFieldListeners(container) {
 
   var userscriptActions = container.querySelectorAll('.tp-userscript-action');
   for (var ua = 0; ua < userscriptActions.length; ua++) {
-    userscriptActions[ua].addEventListener('click', function() {
+    userscriptActions[ua].addEventListener('click', function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
       handleUserscriptAction(this);
     });
     userscriptActions[ua].addEventListener('keydown', function(e) {
@@ -1327,6 +1335,16 @@ function activateFieldInput(row) {
   var fieldName = row.dataset.field;
   var fieldType = row.dataset.type || 'text';
   var field = getFieldDef(fieldName);
+
+  if (row.dataset.userscriptField) {
+    activateUserscriptInput(row);
+    return;
+  }
+
+  if (row.dataset.userscriptAction) {
+    handleUserscriptAction(row);
+    return;
+  }
 
   if (fieldType === 'section') {
     toggleSection(row.dataset.section);
