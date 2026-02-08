@@ -196,9 +196,14 @@ function createEditorHTML() {
         '</div>' +
       '</div>' +
       '<div class="tp-editor-footer">' +
-        '<button type="button" class="tp-editor-btn tp-editor-btn-delete" id="tp-editor-delete" tabindex="0">' +
-          '<span class="tp-btn-icon">🗑</span> Delete' +
-        '</button>' +
+        '<div class="tp-editor-footer-left">' +
+          '<button type="button" class="tp-editor-btn tp-editor-btn-delete" id="tp-editor-delete" tabindex="0">' +
+            '<span class="tp-btn-icon">🗑</span> Delete' +
+          '</button>' +
+          '<button type="button" class="tp-editor-btn tp-editor-btn-purge" id="tp-editor-purge" tabindex="0">' +
+            '<span class="tp-btn-icon">🧹</span> Purge Data' +
+          '</button>' +
+        '</div>' +
         '<div class="tp-editor-footer-right">' +
           '<button type="button" class="tp-editor-btn tp-editor-btn-cancel" id="tp-editor-cancel" tabindex="0">' +
             'Close' +
@@ -238,6 +243,21 @@ function setupEventListeners(editor) {
         e.preventDefault();
         e.stopPropagation();
         deleteAndClose();
+      }
+    });
+  }
+
+  // Purge button - click AND keydown for Enter
+  var purgeBtn = editor.querySelector('#tp-editor-purge');
+  if (purgeBtn) {
+    purgeBtn.addEventListener('click', function() {
+      purgeSiteData();
+    });
+    purgeBtn.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) { // Enter
+        e.preventDefault();
+        e.stopPropagation();
+        purgeSiteData();
       }
     });
   }
@@ -292,6 +312,15 @@ function handleEditorKeyDown(event) {
       event.preventDefault();
       event.stopPropagation();
       deleteAndClose();
+      return;
+    }
+
+    // If on the purge button, purge
+    if (active && active.id === 'tp-editor-purge') {
+      console.log('TizenPortal: Enter on purge button');
+      event.preventDefault();
+      event.stopPropagation();
+      purgeSiteData();
       return;
     }
     
@@ -433,6 +462,14 @@ function openEditor() {
   var deleteBtn = editor.querySelector('#tp-editor-delete');
   if (deleteBtn) {
     deleteBtn.style.display = isEdit ? 'flex' : 'none';
+    resetDeleteButtonState(deleteBtn);
+  }
+
+  // Show/hide purge button
+  var purgeBtn = editor.querySelector('#tp-editor-purge');
+  if (purgeBtn) {
+    purgeBtn.style.display = isEdit ? 'flex' : 'none';
+    resetPurgeButtonState(purgeBtn);
   }
 
   // Ensure bundle options are initialized
@@ -651,6 +688,104 @@ function deleteAndClose() {
       }, 3000);
     }
     showEditorToast('Press Delete again to confirm');
+  }
+}
+
+function resetDeleteButtonState(deleteBtn) {
+  if (!deleteBtn) return;
+  deleteBtn.dataset.confirmDelete = '';
+  var icon = deleteBtn.querySelector('.tp-btn-icon');
+  if (icon) icon.textContent = '🗑';
+  if (deleteBtn.childNodes[1]) {
+    deleteBtn.childNodes[1].textContent = ' Delete';
+  }
+}
+
+function resetPurgeButtonState(purgeBtn) {
+  if (!purgeBtn) return;
+  purgeBtn.dataset.confirmPurge = '';
+  var icon = purgeBtn.querySelector('.tp-btn-icon');
+  if (icon) icon.textContent = '🧹';
+  if (purgeBtn.childNodes[1]) {
+    purgeBtn.childNodes[1].textContent = ' Purge Data';
+  }
+}
+
+function normalizeUrlForMatch(url) {
+  if (!url || typeof url !== 'string') return '';
+  var normalized = url.toLowerCase();
+  normalized = normalized.split('#')[0].split('?')[0];
+  if (normalized.length > 1 && normalized.charAt(normalized.length - 1) === '/') {
+    normalized = normalized.substring(0, normalized.length - 1);
+  }
+  return normalized;
+}
+
+function purgeSiteData() {
+  var mode = getEditorMode();
+  var cardId = getEditorCardId();
+
+  console.log('TizenPortal: purgeSiteData mode=' + mode + ' cardId=' + cardId);
+
+  if (mode !== 'edit' || !cardId) {
+    console.log('TizenPortal: Cannot purge - not in edit mode or no card ID');
+    return;
+  }
+
+  var purgeBtn = document.getElementById('tp-editor-purge');
+  if (purgeBtn && purgeBtn.dataset.confirmPurge === 'true') {
+    var cardName = state.card ? state.card.name : 'Site';
+    var cardUrl = state.card ? state.card.url : '';
+    var matchUrl = normalizeUrlForMatch(cardUrl);
+
+    // Clear last-card cache for this site (portal origin only)
+    try {
+      var stored = sessionStorage.getItem('tp_last_card');
+      if (stored) {
+        var storedCard = JSON.parse(stored);
+        var storedUrl = normalizeUrlForMatch(storedCard && storedCard.url ? storedCard.url : '');
+        if (storedUrl && matchUrl && storedUrl === matchUrl) {
+          sessionStorage.removeItem('tp_last_card');
+        }
+      }
+    } catch (err) {
+      // Ignore
+    }
+
+    // Clear window.name payload if it matches this site
+    try {
+      var name = window.name;
+      if (name && typeof name === 'string' && name.indexOf('tp:') === 0) {
+        var payload = JSON.parse(name.substring(3));
+        var payloadUrl = normalizeUrlForMatch(payload && payload.url ? payload.url : '');
+        if (payloadUrl && matchUrl && payloadUrl === matchUrl) {
+          window.name = '';
+        }
+      }
+    } catch (err2) {
+      // Ignore
+    }
+
+    // Clear bundle runtime data stored on the card
+    if (state.card) {
+      state.card.bundleOptionData = {};
+      updateCard(cardId, { bundleOptionData: {} });
+    }
+
+    resetPurgeButtonState(purgeBtn);
+    showEditorToast('Purged portal data for: ' + cardName + ' (site cookies unchanged)');
+  } else {
+    if (purgeBtn) {
+      purgeBtn.dataset.confirmPurge = 'true';
+      purgeBtn.querySelector('.tp-btn-icon').textContent = '⚠';
+      purgeBtn.childNodes[1].textContent = ' Press again to confirm';
+
+      // Reset after 3 seconds
+      setTimeout(function() {
+        resetPurgeButtonState(purgeBtn);
+      }, 3000);
+    }
+    showEditorToast('Press Purge again to confirm');
   }
 }
 

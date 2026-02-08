@@ -351,6 +351,17 @@
       background: #e53935;
     }
 
+    #tp-shell[data-theme="light"] .tp-editor-btn-purge {
+      background: #d47a00;
+      border-color: #d47a00;
+      color: #fff;
+    }
+
+    #tp-shell[data-theme="light"] .tp-editor-btn-purge:focus {
+      border-color: #ffcc80;
+      background: #e68a00;
+    }
+
     /* Light theme - Preferences */
     #tp-shell[data-theme="light"] .tp-prefs-backdrop {
       background: rgba(255, 255, 255, 0.9);
@@ -922,6 +933,11 @@
       align-items: center;
       flex-shrink: 0;
     }
+
+    .tp-editor-footer-left {
+      display: flex;
+      align-items: center;
+    }
     
     .tp-editor-footer-right {
       display: flex;
@@ -981,6 +997,16 @@
     .tp-editor-btn-delete:focus {
       border-color: #ff6b6b;
       background: #a52a2a;
+    }
+
+    .tp-editor-btn-purge {
+      background: #7a4b00;
+      border-color: #7a4b00;
+    }
+
+    .tp-editor-btn-purge:focus {
+      border-color: #ffb74d;
+      background: #8a5300;
     }
     
     /* Preferences Container */
@@ -1691,7 +1717,7 @@
     <div id="tp-modal-container"></div>
   </div>
   
-  <script src="tizenportal.js?v=0463"></script>
+  <script src="tizenportal.js?v=0464"></script>
   <script>
     // Update version display from TizenPortal runtime
     (function() {
