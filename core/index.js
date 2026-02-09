@@ -335,6 +335,8 @@ function saveLastCard(card) {
       bundleOptions: card.bundleOptions || {},
       bundleOptionData: card.bundleOptionData || {},
       userscripts: card.userscripts || [],
+      userscriptToggles: card.userscriptToggles || {},
+      bundleUserscriptToggles: card.bundleUserscriptToggles || {},
       globalUserscripts: userscriptEngine.getGlobalUserscriptsForPayload(),
     };
     var json = JSON.stringify(payload);
@@ -383,6 +385,28 @@ function mergeUserscriptsFromWindow(card) {
     }
     if (!Array.isArray(card._payload.globalUserscripts) || !card._payload.globalUserscripts.length) {
       card._payload.globalUserscripts = windowCard.globalUserscripts;
+    }
+  }
+
+  if (windowCard.userscriptToggles && typeof windowCard.userscriptToggles === 'object') {
+    if (!card.userscriptToggles || typeof card.userscriptToggles !== 'object') {
+      card.userscriptToggles = {};
+    }
+    for (var key in windowCard.userscriptToggles) {
+      if (windowCard.userscriptToggles.hasOwnProperty(key) && !card.userscriptToggles.hasOwnProperty(key)) {
+        card.userscriptToggles[key] = windowCard.userscriptToggles[key];
+      }
+    }
+  }
+
+  if (windowCard.bundleUserscriptToggles && typeof windowCard.bundleUserscriptToggles === 'object') {
+    if (!card.bundleUserscriptToggles || typeof card.bundleUserscriptToggles !== 'object') {
+      card.bundleUserscriptToggles = {};
+    }
+    for (var bundleKey in windowCard.bundleUserscriptToggles) {
+      if (windowCard.bundleUserscriptToggles.hasOwnProperty(bundleKey) && !card.bundleUserscriptToggles.hasOwnProperty(bundleKey)) {
+        card.bundleUserscriptToggles[bundleKey] = windowCard.bundleUserscriptToggles[bundleKey];
+      }
     }
   }
 }
@@ -665,6 +689,13 @@ async function initTargetSite() {
   
   // Inject base CSS for overlay components (pointer, address bar, etc.)
   injectOverlayStyles();
+
+  // Apply portal theme to target sites (dark mode)
+  try {
+    applyPortalPreferences();
+  } catch (e) {
+    warn('Failed to apply site theme: ' + e.message);
+  }
 
   // Give the URL a brief moment to settle (hash/query payload may arrive late)
   await waitForPayload(200, 50);

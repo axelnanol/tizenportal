@@ -389,7 +389,7 @@ function normalizeUserscripts(list) {
     normalized.push({
       id: entry.id || ('us-' + Date.now() + '-' + Math.floor(Math.random() * 100000)),
       name: entry.name || 'Custom Script ' + (i + 1),
-      enabled: entry.enabled === true,
+      enabled: entry.enabled !== false,
       source: entry.source === 'url' ? 'url' : 'inline',
       url: typeof entry.url === 'string' ? entry.url : '',
       inline: typeof entry.inline === 'string' ? entry.inline : '',
@@ -511,6 +511,8 @@ function renderPreferencesUI() {
   var container = document.getElementById('tp-prefs-rows');
   if (!container) return;
 
+  var scrollTop = container.scrollTop;
+
   ensureSectionState();
   var visibleRows = getVisibleRowsWithSections();
   var html = '';
@@ -568,6 +570,8 @@ function renderPreferencesUI() {
       }
     });
   }
+
+  container.scrollTop = scrollTop;
 }
 
 function renderUserscriptRow(row, index) {
@@ -576,7 +580,6 @@ function renderUserscriptRow(row, index) {
   var script = scripts[row.scriptIndex] || {};
   var nameValue = script.name || ('Custom Script ' + (row.scriptIndex + 1));
   var sourceLabel = script.source === 'url' ? 'URL' : 'Inline';
-  var enabledLabel = script.enabled ? 'On' : 'Off';
   var hasData = script.source === 'url' ? !!script.cached : !!script.inline;
   var status = sourceLabel + (hasData ? ' (saved)' : ' (empty)');
   var canRemove = scripts.length > 1;
@@ -586,10 +589,9 @@ function renderUserscriptRow(row, index) {
     '<div class="tp-prefs-row tp-prefs-userscript-row" data-index="' + index + '" data-type="userscript" data-script-index="' + row.scriptIndex + '" tabindex="0">' +
       '<div class="tp-prefs-label">' + row.label + '</div>' +
       '<div class="tp-prefs-value tp-userscript-inline">' +
-        '<span class="tp-userscript-status">' + escapeHtml(nameValue) + ' • ' + enabledLabel + ' • ' + status + '</span>' +
+        '<span class="tp-userscript-status">' + escapeHtml(nameValue) + ' • ' + status + '</span>' +
         '<span class="tp-userscript-actions">' +
           '<button type="button" class="tp-userscript-btn" data-userscript-action="rename" data-script-index="' + row.scriptIndex + '" tabindex="0">Rename</button>' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle" data-script-index="' + row.scriptIndex + '" tabindex="0">On/Off</button>' +
           '<button type="button" class="tp-userscript-btn" data-userscript-action="source" data-script-index="' + row.scriptIndex + '" tabindex="0">Source: ' + sourceLabel + '</button>' +
           '<button type="button" class="tp-userscript-btn" data-userscript-action="edit" data-script-index="' + row.scriptIndex + '" tabindex="0">Edit</button>' +
           '<button type="button" class="tp-userscript-btn" data-userscript-action="refresh" data-script-index="' + row.scriptIndex + '" tabindex="0"' + refreshDisabled + '>Refresh</button>' +
@@ -663,8 +665,7 @@ function getUserscriptRowDisplay(row) {
     var source = script.source === 'url' ? 'URL' : 'Inline';
     var hasData = script.source === 'url' ? !!script.cached : !!script.inline;
     var status = source + (hasData ? ' (saved)' : ' (empty)');
-    var enabledLabel = script.enabled ? 'On' : 'Off';
-    return (script.name || ('Custom Script ' + (idx + 1))) + ' • ' + enabledLabel + ' • ' + status;
+    return (script.name || ('Custom Script ' + (idx + 1))) + ' • ' + status;
   }
   if (row.type === 'userscript-refresh') return '↻';
   if (row.type === 'userscript-remove') return '🗑';
@@ -912,14 +913,6 @@ function handleUserscriptButtonAction(btn) {
     return;
   }
 
-  if (action === 'toggle') {
-    script.enabled = !script.enabled;
-    renderPreferencesUI();
-    focusUserscriptPrefButton(scriptIndex, action);
-    savePreferencesAuto('userscript:enabled');
-    return;
-  }
-
   if (action === 'source') {
     script.source = script.source === 'url' ? 'inline' : 'url';
     renderPreferencesUI();
@@ -1106,9 +1099,6 @@ export function applyPortalPreferences(config) {
     config = getDefaultPortalConfig();
   }
   
-  var shell = document.getElementById('tp-shell');
-  if (!shell) return;
-  
   var theme = normalizeThemeValue(config.theme || 'dark');
   
   // Handle automatic theme (sunset-based)
@@ -1116,34 +1106,39 @@ export function applyPortalPreferences(config) {
     theme = isNightTime() ? 'dark' : 'light';
   }
   
-  // Apply theme attribute for CSS
-  shell.setAttribute('data-theme', theme);
-  
-  // Clear existing background styles
-  shell.style.backgroundColor = '';
-  shell.style.backgroundImage = '';
-  shell.style.background = '';
-  
-  // Apply theme-specific styles
-  if (theme === 'custom') {
-    // Custom gradient colors — validate hex before injecting into CSS
-    var color1 = isValidHexColor(config.customColor1) ? config.customColor1 : '#0d1117';
-    var color2 = isValidHexColor(config.customColor2) ? config.customColor2 : '#161b22';
-    shell.style.background = 'linear-gradient(135deg, ' + color1 + ' 0%, ' + color2 + ' 100%)';
-  } else if (theme === 'backdrop') {
-    // Custom backdrop image — validate URL before injecting into CSS
-    if (config.backgroundImage && isValidHttpUrl(config.backgroundImage)) {
-      shell.style.backgroundImage = 'url(' + encodeURI(config.backgroundImage) + ')';
-      shell.style.backgroundSize = 'cover';
-      shell.style.backgroundPosition = 'center';
-      shell.style.backgroundColor = '#0d1117'; // Fallback
+  applySiteTheme(theme);
+
+  var shell = document.getElementById('tp-shell');
+  if (shell) {
+    // Apply theme attribute for CSS
+    shell.setAttribute('data-theme', theme);
+
+    // Clear existing background styles
+    shell.style.backgroundColor = '';
+    shell.style.backgroundImage = '';
+    shell.style.background = '';
+
+    // Apply theme-specific styles
+    if (theme === 'custom') {
+      // Custom gradient colors — validate hex before injecting into CSS
+      var color1 = isValidHexColor(config.customColor1) ? config.customColor1 : '#0d1117';
+      var color2 = isValidHexColor(config.customColor2) ? config.customColor2 : '#161b22';
+      shell.style.background = 'linear-gradient(135deg, ' + color1 + ' 0%, ' + color2 + ' 100%)';
+    } else if (theme === 'backdrop') {
+      // Custom backdrop image — validate URL before injecting into CSS
+      if (config.backgroundImage && isValidHttpUrl(config.backgroundImage)) {
+        shell.style.backgroundImage = 'url(' + encodeURI(config.backgroundImage) + ')';
+        shell.style.backgroundSize = 'cover';
+        shell.style.backgroundPosition = 'center';
+        shell.style.backgroundColor = '#0d1117'; // Fallback
+      }
+    } else if (theme === 'light') {
+      // Light theme gradient
+      shell.style.background = 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)';
+    } else {
+      // Dark theme gradient (default)
+      shell.style.background = 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%)';
     }
-  } else if (theme === 'light') {
-    // Light theme gradient
-    shell.style.background = 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)';
-  } else {
-    // Dark theme gradient (default)
-    shell.style.background = 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%)';
   }
 
   // Apply color hints visibility
@@ -1153,6 +1148,66 @@ export function applyPortalPreferences(config) {
 
   // Apply HUD position
   applyHudPosition(normalizeHudPosition(config.hudPosition || 'off'));
+}
+
+function applySiteTheme(theme) {
+  var isPortal = !!document.getElementById('tp-shell');
+  var htmlEl = document.documentElement;
+  if (!htmlEl) return;
+
+  if (isPortal) {
+    htmlEl.classList.remove('tp-dark-mode');
+    var portalStyle = document.getElementById('tp-site-theme');
+    if (portalStyle && portalStyle.parentNode) {
+      portalStyle.parentNode.removeChild(portalStyle);
+    }
+    return;
+  }
+
+  var enableDark = theme === 'dark';
+  if (!enableDark) {
+    htmlEl.classList.remove('tp-dark-mode');
+  } else if (!htmlEl.classList.contains('tp-dark-mode')) {
+    htmlEl.classList.add('tp-dark-mode');
+  }
+
+  var style = document.getElementById('tp-site-theme');
+  if (!enableDark) {
+    if (style && style.parentNode) {
+      style.parentNode.removeChild(style);
+    }
+    return;
+  }
+
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'tp-site-theme';
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  style.textContent = [
+    '/* TizenPortal Site Dark Mode */',
+    'html.tp-dark-mode {',
+    '  background: #111 !important;',
+    '  filter: invert(1) hue-rotate(180deg);',
+    '}',
+    'html.tp-dark-mode body {',
+    '  background: #111 !important;',
+    '}',
+    'html.tp-dark-mode img,',
+    'html.tp-dark-mode video,',
+    'html.tp-dark-mode canvas,',
+    'html.tp-dark-mode iframe {',
+    '  filter: invert(1) hue-rotate(180deg) !important;',
+    '}',
+    'html.tp-dark-mode .tp-site-hints,',
+    'html.tp-dark-mode #tp-toast,',
+    'html.tp-dark-mode .tp-addressbar,',
+    'html.tp-dark-mode #tp-diagnostics,',
+    'html.tp-dark-mode .tp-pointer {',
+    '  filter: invert(1) hue-rotate(180deg) !important;',
+    '}',
+  ].join('\n');
 }
 
 /**

@@ -88,21 +88,75 @@ var sectionCollapsed = {
 
 var SANDBOX_SAMPLE_SCRIPTS = [
   {
+    id: 'sandbox-readability',
     name: 'TV Readability Booster',
     enabled: true,
     inline: "(function(){var s=document.createElement('style');s.textContent='body,p,span,div,li,td,th,a,h1,h2,h3{font-size:clamp(18px,2.5vw,32px)!important;line-height:1.7!important}a{text-decoration:underline!important;outline:2px solid cyan!important}';document.head.appendChild(s)})();",
   },
   {
+    id: 'sandbox-autoscroll',
     name: 'Auto Scroll (Slow)',
     enabled: false,
     inline: "(function(){var t=setInterval(function(){window.scrollBy(0,1);},50);window.addEventListener('keydown',function(e){if(e.keyCode===19||e.keyCode===415){clearInterval(t);}},{once:true});})();",
   },
   {
+    id: 'sandbox-dark-invert',
     name: 'Dark Invert',
     enabled: false,
     inline: "(function(){var s=document.createElement('style');s.textContent='html{filter:invert(1) hue-rotate(180deg) !important;}img,video,canvas{filter:invert(1) hue-rotate(180deg) !important;}';document.head.appendChild(s)})();",
   },
 ];
+
+function getUserscriptsScopeKey(bundleName) {
+  return bundleName || 'default';
+}
+
+function getBundleUserscripts(bundleName) {
+  if (!bundleName) return null;
+  var bundle = getBundle(bundleName);
+  if (bundle && Array.isArray(bundle.userscripts) && bundle.userscripts.length) {
+    return bundle.userscripts;
+  }
+  if (bundleName === 'userscript-sandbox') {
+    return SANDBOX_SAMPLE_SCRIPTS;
+  }
+  return null;
+}
+
+function getGlobalUserscripts() {
+  var cfg = null;
+  if (window.TizenPortal && window.TizenPortal.config) {
+    cfg = TizenPortal.config.get('tp_userscripts');
+  }
+  var list = cfg && Array.isArray(cfg.scripts) ? cfg.scripts : [];
+  return normalizeUserscripts(list);
+}
+
+function ensureSiteUserscriptToggles() {
+  if (!state.card) return {};
+  if (!state.card.userscriptToggles || typeof state.card.userscriptToggles !== 'object') {
+    state.card.userscriptToggles = {};
+  }
+  return state.card.userscriptToggles;
+}
+
+function ensureBundleUserscriptToggles(bundleName) {
+  if (!state.card) return {};
+  if (!state.card.bundleUserscriptToggles || typeof state.card.bundleUserscriptToggles !== 'object') {
+    state.card.bundleUserscriptToggles = {};
+  }
+  if (!bundleName) return {};
+  if (!state.card.bundleUserscriptToggles[bundleName] || typeof state.card.bundleUserscriptToggles[bundleName] !== 'object') {
+    state.card.bundleUserscriptToggles[bundleName] = {};
+  }
+  return state.card.bundleUserscriptToggles[bundleName];
+}
+
+function getBundleUserscriptId(bundleName, script, index) {
+  if (script && script.id) return script.id;
+  var name = script && script.name ? script.name : 'Script ' + (index + 1);
+  return 'bundle:' + (bundleName || 'default') + ':' + name;
+}
 
 var FIELDS = [
   { name: 'name', label: 'Site Name', type: 'text', placeholder: 'My Site', required: true, section: 'details' },
@@ -171,9 +225,6 @@ function resetBundleOptionsForBundle(bundleName) {
     if (!opt || !opt.key) continue;
     state.card.bundleOptions[opt.key] = opt.hasOwnProperty('default') ? opt.default : null;
   }
-
-  // Seed userscript sandbox samples when selecting the sandbox bundle
-  maybeSeedSandboxUserscripts(bundleName);
 }
 
 function createDefaultUserscript(index) {
@@ -214,17 +265,41 @@ function normalizeUserscripts(list) {
   return normalized;
 }
 
-function ensureUserscriptsInitialized() {
+function ensureUserscriptsByBundle() {
   if (!state.card) return;
-  if (!Array.isArray(state.card.userscripts)) {
-    state.card.userscripts = normalizeUserscripts([]);
-  } else {
-    state.card.userscripts = normalizeUserscripts(state.card.userscripts);
+  if (!state.card.userscriptsByBundle || typeof state.card.userscriptsByBundle !== 'object') {
+    state.card.userscriptsByBundle = {};
+  }
+}
+
+function saveUserscriptsForBundle(bundleName) {
+  if (!state.card) return;
+  ensureUserscriptsByBundle();
+  var key = getUserscriptsScopeKey(bundleName);
+  state.card.userscriptsByBundle[key] = normalizeUserscripts(state.card.userscripts || []);
+}
+
+function loadUserscriptsForBundle(bundleName) {
+  if (!state.card) return;
+  ensureUserscriptsByBundle();
+  var key = getUserscriptsScopeKey(bundleName);
+  if (!state.card.userscriptsByBundle[key]) {
+    var bundleScripts = getBundleUserscripts(bundleName);
+    if (bundleScripts && bundleScripts.length) {
+      state.card.userscriptsByBundle[key] = normalizeUserscripts(bundleScripts);
+    } else if (Array.isArray(state.card.userscripts) && state.card.userscripts.length) {
+      state.card.userscriptsByBundle[key] = normalizeUserscripts(state.card.userscripts);
+    } else {
+      state.card.userscriptsByBundle[key] = normalizeUserscripts([]);
+    }
   }
 
-  if (state.card.featureBundle === 'userscript-sandbox') {
-    maybeSeedSandboxUserscripts(state.card.featureBundle);
-  }
+  state.card.userscripts = normalizeUserscripts(state.card.userscriptsByBundle[key]);
+}
+
+function ensureUserscriptsInitialized() {
+  if (!state.card) return;
+  loadUserscriptsForBundle(state.card.featureBundle);
 }
 
 function hasCustomUserscripts(scripts) {
@@ -727,6 +802,9 @@ function autoSaveCard(reason) {
     bundleOptions: state.card.bundleOptions || {},
     bundleOptionData: state.card.bundleOptionData || {},
     userscripts: state.card.userscripts || [],
+    userscriptsByBundle: state.card.userscriptsByBundle || {},
+    userscriptToggles: state.card.userscriptToggles || {},
+    bundleUserscriptToggles: state.card.bundleUserscriptToggles || {},
   };
 
   // Use DOM mode - this is bulletproof
@@ -915,6 +993,7 @@ function renderFields() {
     return;
   }
 
+  var scrollTop = container.scrollTop;
   ensureSectionState();
   ensureUserscriptsInitialized();
 
@@ -949,6 +1028,8 @@ function renderFields() {
 
   // Set up field event listeners
   setupFieldListeners(container);
+
+  container.scrollTop = scrollTop;
 }
 
 function ensureSectionState() {
@@ -1141,42 +1222,66 @@ function renderBundleOptionsHeader() {
 }
 
 function renderUserscriptsField() {
-  ensureUserscriptsInitialized();
-
   var html = '<div class="tp-field-section">';
 
-  var scripts = state.card.userscripts || [];
-  var canRemove = scripts.length > 1;
+  var bundleName = state.card ? state.card.featureBundle : null;
+  var bundleScripts = getBundleUserscripts(bundleName) || [];
+  var bundleToggles = ensureBundleUserscriptToggles(bundleName);
 
-  for (var i = 0; i < scripts.length; i++) {
-    var s = scripts[i] || {};
-    var indexLabel = (i + 1);
-    var nameValue = s.name || ('Custom Script ' + indexLabel);
-    var sourceLabel = s.source === 'url' ? 'URL' : 'Inline';
-    var hasData = s.source === 'url' ? !!(s.cached && s.cached.length) : !!(s.inline && s.inline.length);
-    var enabledLabel = s.enabled ? 'On' : 'Off';
-    var status = sourceLabel + (hasData ? ' (saved)' : ' (empty)');
-    var refreshDisabled = s.source !== 'url' ? ' disabled' : '';
+  if (bundleScripts.length) {
+    html += '<div class="tp-field-section-label">Bundle Scripts</div>';
+    for (var i = 0; i < bundleScripts.length; i++) {
+      var b = bundleScripts[i] || {};
+      var bId = getBundleUserscriptId(bundleName, b, i);
+      var bName = b.name || ('Bundle Script ' + (i + 1));
+      var bSource = b.source === 'url' ? 'URL' : 'Inline';
+      var bEnabled = b.enabled !== false;
+      if (bundleToggles && bundleToggles.hasOwnProperty(bId)) {
+        bEnabled = bundleToggles[bId] === true;
+      }
+      var bStatus = bSource + (b.enabled !== false ? '' : ' (off)');
 
-    html += '' +
-      '<div class="tp-userscript-line tp-userscript-row" data-userscript-id="' + s.id + '" data-userscript-index="' + i + '" tabindex="0">' +
-        '<div class="tp-userscript-label">Script ' + indexLabel + ': ' + escapeHtml(nameValue) + ' • ' + enabledLabel + ' • ' + status + '</div>' +
-        '<div class="tp-userscript-actions">' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="rename" data-userscript-id="' + s.id + '" data-userscript-index="' + i + '" tabindex="0">Rename</button>' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle" data-userscript-id="' + s.id + '" data-userscript-index="' + i + '" tabindex="0">On/Off</button>' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="source" data-userscript-id="' + s.id + '" data-userscript-index="' + i + '" tabindex="0">Source: ' + sourceLabel + '</button>' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="edit" data-userscript-id="' + s.id + '" data-userscript-index="' + i + '" tabindex="0">Edit</button>' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="refresh" data-userscript-id="' + s.id + '" data-userscript-index="' + i + '" tabindex="0"' + refreshDisabled + '>Refresh</button>' +
-          (canRemove ? '<button type="button" class="tp-userscript-btn" data-userscript-action="remove" data-userscript-id="' + s.id + '" data-userscript-index="' + i + '" tabindex="0">Remove</button>' : '') +
-        '</div>' +
-      '</div>';
+      html += '' +
+        '<div class="tp-userscript-line tp-userscript-row" data-userscript-scope="bundle" data-userscript-id="' + escapeHtml(bId) + '" data-userscript-index="' + i + '" tabindex="0">' +
+          '<div class="tp-userscript-label">' + escapeHtml(bName) + ' • ' + (bEnabled ? 'On' : 'Off') + ' • ' + bStatus + '</div>' +
+          '<div class="tp-userscript-actions">' +
+            '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle-bundle" data-userscript-scope="bundle" data-userscript-id="' + escapeHtml(bId) + '" data-userscript-index="' + i + '" tabindex="0">On/Off</button>' +
+            '<button type="button" class="tp-userscript-btn" data-userscript-action="source" data-userscript-scope="bundle" data-userscript-id="' + escapeHtml(bId) + '" data-userscript-index="' + i + '" tabindex="0" disabled>Source: ' + bSource + '</button>' +
+            '<button type="button" class="tp-userscript-btn" data-userscript-action="edit" data-userscript-scope="bundle" data-userscript-id="' + escapeHtml(bId) + '" data-userscript-index="' + i + '" tabindex="0" disabled>Edit</button>' +
+            '<button type="button" class="tp-userscript-btn" data-userscript-action="remove" data-userscript-scope="bundle" data-userscript-id="' + escapeHtml(bId) + '" data-userscript-index="' + i + '" tabindex="0" disabled>Remove</button>' +
+          '</div>' +
+        '</div>';
+    }
   }
 
-  html += '' +
-    '<div class="tp-field-row tp-userscript-action" data-userscript-action="add" tabindex="0">' +
-      '<div class="tp-field-label">Add Script</div>' +
-      '<div class="tp-field-value">＋</div>' +
+  var globalScripts = getGlobalUserscripts();
+  var siteToggles = ensureSiteUserscriptToggles();
+
+  html += '<div class="tp-field-section-label">Site Scripts (from Preferences)</div>';
+
+  if (!globalScripts.length) {
+    html += '<div class="tp-field-row" tabindex="-1">' +
+      '<div class="tp-field-label">No scripts</div>' +
+      '<div class="tp-field-value">Add scripts in Preferences</div>' +
     '</div>';
+  } else {
+    for (var j = 0; j < globalScripts.length; j++) {
+      var s = globalScripts[j] || {};
+      var sId = s.id || ('global-' + j);
+      var sName = s.name || ('Script ' + (j + 1));
+      var sSource = s.source === 'url' ? 'URL' : 'Inline';
+      var sEnabled = siteToggles[sId] === true;
+      var sStatus = sSource + ((sSource === 'url' ? s.cached : s.inline) ? ' (saved)' : ' (empty)');
+
+      html += '' +
+        '<div class="tp-userscript-line tp-userscript-row" data-userscript-scope="site" data-userscript-id="' + escapeHtml(sId) + '" data-userscript-index="' + j + '" tabindex="0">' +
+          '<div class="tp-userscript-label">' + escapeHtml(sName) + ' • ' + (sEnabled ? 'On' : 'Off') + ' • ' + sStatus + '</div>' +
+          '<div class="tp-userscript-actions">' +
+            '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle-site" data-userscript-scope="site" data-userscript-id="' + escapeHtml(sId) + '" data-userscript-index="' + j + '" tabindex="0">On/Off</button>' +
+          '</div>' +
+        '</div>';
+    }
+  }
 
   html += '</div>';
   return html;
@@ -1460,6 +1565,7 @@ function activateUserscriptInput(row) {
 
   if (field === 'enabled') {
     script.enabled = !script.enabled;
+    saveUserscriptsForBundle(state.card.featureBundle);
     renderFields();
     autoSaveCard('userscript:enabled');
     return;
@@ -1469,6 +1575,7 @@ function activateUserscriptInput(row) {
     var newName = prompt('Script Name:', script.name || '');
     if (newName !== null) {
       script.name = newName;
+      saveUserscriptsForBundle(state.card.featureBundle);
       renderFields();
       autoSaveCard('userscript:name');
     }
@@ -1485,6 +1592,7 @@ function activateUserscriptInput(row) {
           return;
         }
         script.url = newUrl;
+        saveUserscriptsForBundle(state.card.featureBundle);
         renderFields();
         autoSaveCard('userscript:url');
         fetchUserscriptUrl(scriptId);
@@ -1492,6 +1600,7 @@ function activateUserscriptInput(row) {
         script.url = '';
         script.cached = '';
         script.lastFetched = 0;
+        saveUserscriptsForBundle(state.card.featureBundle);
         renderFields();
         autoSaveCard('userscript:url');
       }
@@ -1503,6 +1612,7 @@ function activateUserscriptInput(row) {
     var newInline = prompt('Inline Script:', script.inline || '');
     if (newInline !== null) {
       script.inline = newInline;
+      saveUserscriptsForBundle(state.card.featureBundle);
       renderFields();
       autoSaveCard('userscript:inline');
     }
@@ -1512,11 +1622,46 @@ function activateUserscriptInput(row) {
 function handleUserscriptAction(row) {
   var action = row.dataset.userscriptAction || '';
   var scriptId = row.dataset.userscriptId || '';
+  var scope = row.dataset.userscriptScope || '';
+
+  if (action === 'toggle-site' && scriptId) {
+    var siteToggles = ensureSiteUserscriptToggles();
+    siteToggles[scriptId] = siteToggles[scriptId] === true ? false : true;
+    renderFields();
+    autoSaveCard('userscript:toggle-site');
+    return;
+  }
+
+  if (action === 'toggle-bundle' && scriptId) {
+    var bundleName = state.card ? state.card.featureBundle : null;
+    var bundleToggles = ensureBundleUserscriptToggles(bundleName);
+    var bundleScripts = getBundleUserscripts(bundleName) || [];
+    var current = false;
+
+    for (var bi = 0; bi < bundleScripts.length; bi++) {
+      var b = bundleScripts[bi] || {};
+      var bId = getBundleUserscriptId(bundleName, b, bi);
+      if (bId === scriptId) {
+        current = b.enabled !== false;
+        break;
+      }
+    }
+
+    if (bundleToggles && bundleToggles.hasOwnProperty(scriptId)) {
+      current = bundleToggles[scriptId] === true;
+    }
+
+    bundleToggles[scriptId] = !current;
+    renderFields();
+    autoSaveCard('userscript:toggle-bundle');
+    return;
+  }
 
   if (action === 'add') {
     ensureUserscriptsInitialized();
     var nextIndex = (state.card.userscripts || []).length + 1;
     state.card.userscripts.push(createDefaultUserscript(nextIndex));
+    saveUserscriptsForBundle(state.card.featureBundle);
     renderFields();
     autoSaveCard('userscript:add');
     return;
@@ -1531,6 +1676,7 @@ function handleUserscriptAction(row) {
         break;
       }
     }
+    saveUserscriptsForBundle(state.card.featureBundle);
     renderFields();
     autoSaveCard('userscript:remove');
     return;
@@ -1545,6 +1691,7 @@ function handleUserscriptAction(row) {
     var newName = prompt('Script Name:', script.name || '');
     if (newName !== null) {
       script.name = newName;
+      saveUserscriptsForBundle(state.card.featureBundle);
       renderFields();
       focusUserscriptButton(scriptId, action);
       autoSaveCard('userscript:name');
@@ -1554,6 +1701,7 @@ function handleUserscriptAction(row) {
 
   if (action === 'toggle') {
     script.enabled = !script.enabled;
+    saveUserscriptsForBundle(state.card.featureBundle);
     renderFields();
     focusUserscriptButton(scriptId, action);
     autoSaveCard('userscript:enabled');
@@ -1562,6 +1710,7 @@ function handleUserscriptAction(row) {
 
   if (action === 'source') {
     script.source = script.source === 'url' ? 'inline' : 'url';
+    saveUserscriptsForBundle(state.card.featureBundle);
     renderFields();
     focusUserscriptButton(scriptId, action);
     autoSaveCard('userscript:source');
@@ -1579,6 +1728,7 @@ function handleUserscriptAction(row) {
             return;
           }
           script.url = newUrl;
+          saveUserscriptsForBundle(state.card.featureBundle);
           renderFields();
           focusUserscriptButton(scriptId, action);
           autoSaveCard('userscript:url');
@@ -1587,6 +1737,7 @@ function handleUserscriptAction(row) {
           script.url = '';
           script.cached = '';
           script.lastFetched = 0;
+          saveUserscriptsForBundle(state.card.featureBundle);
           renderFields();
           focusUserscriptButton(scriptId, action);
           autoSaveCard('userscript:url');
@@ -1596,6 +1747,7 @@ function handleUserscriptAction(row) {
       var newInline = prompt('Inline Script:', script.inline || '');
       if (newInline !== null) {
         script.inline = newInline;
+        saveUserscriptsForBundle(state.card.featureBundle);
         renderFields();
         focusUserscriptButton(scriptId, action);
         autoSaveCard('userscript:inline');
@@ -1871,11 +2023,15 @@ function showTextInputPrompt(fieldName, field) {
  */
 function selectBundleOption(option) {
   var bundleName = option.dataset.bundle;
+  var previousBundle = state.card.featureBundle || null;
+  saveUserscriptsForBundle(previousBundle);
   // "none" means null for featureBundle
   state.card.featureBundle = bundleName === 'none' ? null : bundleName;
 
   // Reset bundle options when bundle changes
   resetBundleOptionsForBundle(state.card.featureBundle);
+
+  loadUserscriptsForBundle(state.card.featureBundle);
   
   // Re-render fields
   renderFields();

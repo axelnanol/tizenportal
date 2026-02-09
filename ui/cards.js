@@ -72,6 +72,24 @@ function normalizeUserscripts(userscripts) {
   return normalized;
 }
 
+function normalizeUserscriptsByBundle(map, fallbackScripts, bundleName) {
+  var result = {};
+  var source = map && typeof map === 'object' ? map : {};
+
+  for (var key in source) {
+    if (source.hasOwnProperty(key)) {
+      result[key] = normalizeUserscripts(source[key]);
+    }
+  }
+
+  var scopeKey = bundleName || 'default';
+  if (!result[scopeKey]) {
+    result[scopeKey] = normalizeUserscripts(fallbackScripts || []);
+  }
+
+  return result;
+}
+
 /**
  * Load cards from localStorage
  * @returns {Array}
@@ -181,6 +199,24 @@ function loadCards() {
           }
         }
 
+        var normalizedByBundle = normalizeUserscriptsByBundle(card.userscriptsByBundle, card.userscripts, card.featureBundle);
+        if (!card.hasOwnProperty('userscriptsByBundle') || typeof card.userscriptsByBundle !== 'object' || card.userscriptsByBundle === null) {
+          card.userscriptsByBundle = normalizedByBundle;
+          needsSave = true;
+        } else {
+          try {
+            var before = JSON.stringify(card.userscriptsByBundle);
+            var after = JSON.stringify(normalizedByBundle);
+            if (before !== after) {
+              card.userscriptsByBundle = normalizedByBundle;
+              needsSave = true;
+            }
+          } catch (e) {
+            card.userscriptsByBundle = normalizedByBundle;
+            needsSave = true;
+          }
+        }
+
         // Ensure bundle options storage exists
         if (!card.hasOwnProperty('bundleOptions') || typeof card.bundleOptions !== 'object' || card.bundleOptions === null) {
           card.bundleOptions = {};
@@ -189,6 +225,16 @@ function loadCards() {
 
         if (!card.hasOwnProperty('bundleOptionData') || typeof card.bundleOptionData !== 'object' || card.bundleOptionData === null) {
           card.bundleOptionData = {};
+          needsSave = true;
+        }
+
+        if (!card.hasOwnProperty('userscriptToggles') || typeof card.userscriptToggles !== 'object' || card.userscriptToggles === null) {
+          card.userscriptToggles = {};
+          needsSave = true;
+        }
+
+        if (!card.hasOwnProperty('bundleUserscriptToggles') || typeof card.bundleUserscriptToggles !== 'object' || card.bundleUserscriptToggles === null) {
+          card.bundleUserscriptToggles = {};
           needsSave = true;
         }
       }
@@ -259,6 +305,9 @@ export function addCard(cardData) {
     bundleOptions: cardData.bundleOptions || {},
     bundleOptionData: cardData.bundleOptionData || {},
     userscripts: normalizeUserscripts(cardData.userscripts || []),
+    userscriptsByBundle: normalizeUserscriptsByBundle(cardData.userscriptsByBundle, cardData.userscripts, cardData.featureBundle),
+    userscriptToggles: cardData.userscriptToggles || {},
+    bundleUserscriptToggles: cardData.bundleUserscriptToggles || {},
     order: cards.length,
     createdAt: Date.now(),
     updatedAt: Date.now(),

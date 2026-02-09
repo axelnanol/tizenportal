@@ -32,7 +32,7 @@ function normalizeScriptEntry(entry, index) {
 
   if (!normalized.id) normalized.id = generateId();
   if (!normalized.name) normalized.name = 'Custom Script ' + (index + 1);
-  normalized.enabled = normalized.enabled === true;
+  normalized.enabled = normalized.enabled !== false;
   normalized.source = normalized.source === 'url' ? 'url' : 'inline';
   normalized.url = typeof normalized.url === 'string' ? normalized.url : '';
   normalized.inline = typeof normalized.inline === 'string' ? normalized.inline : '';
@@ -115,7 +115,7 @@ function cloneScripts(scripts) {
     cloned.push({
       id: s.id || generateId(),
       name: s.name || 'Custom Script ' + (i + 1),
-      enabled: s.enabled === true,
+      enabled: s.enabled !== false,
       source: s.source === 'url' ? 'url' : 'inline',
       url: s.url || '',
       inline: s.inline || '',
@@ -193,28 +193,50 @@ function clearUserscripts() {
 function applyUserscripts(card, bundle) {
   clearUserscripts();
 
-  var globalScripts = [];
-  if (card && Array.isArray(card.globalUserscripts)) {
-    globalScripts = normalizeScriptsArray(card.globalUserscripts);
-  } else if (card && card._payload && Array.isArray(card._payload.globalUserscripts)) {
-    globalScripts = normalizeScriptsArray(card._payload.globalUserscripts);
-  } else {
-    globalScripts = getUserscriptsConfig().scripts;
+  var globalScripts = getUserscriptsConfig().scripts || [];
+  var siteToggleMap = card && card.userscriptToggles && typeof card.userscriptToggles === 'object' ? card.userscriptToggles : null;
+  var bundleToggleMap = null;
+
+  if (card && bundle && card.bundleUserscriptToggles && card.bundleUserscriptToggles[bundle.name]) {
+    bundleToggleMap = card.bundleUserscriptToggles[bundle.name];
   }
 
-  var siteScripts = [];
+  var bundleScripts = [];
+  if (bundle && Array.isArray(bundle.userscripts)) {
+    bundleScripts = normalizeScriptsArray(bundle.userscripts);
+  }
+
+  var legacySiteScripts = [];
   if (card && Array.isArray(card.userscripts)) {
-    siteScripts = normalizeScriptsArray(card.userscripts);
+    legacySiteScripts = normalizeScriptsArray(card.userscripts);
   } else if (card && card._payload && Array.isArray(card._payload.userscripts)) {
-    siteScripts = normalizeScriptsArray(card._payload.userscripts);
+    legacySiteScripts = normalizeScriptsArray(card._payload.userscripts);
   }
 
-  var scripts = globalScripts.concat(siteScripts);
+  for (var i = 0; i < bundleScripts.length; i++) {
+    var bScript = bundleScripts[i];
+    if (!bScript) continue;
+    var bundleEnabled = bScript.enabled !== false;
+    if (bundleToggleMap && bundleToggleMap.hasOwnProperty(bScript.id)) {
+      bundleEnabled = bundleToggleMap[bScript.id] === true;
+    }
+    if (bundleEnabled) {
+      executeUserscript(bScript, card, bundle);
+    }
+  }
 
-  for (var i = 0; i < scripts.length; i++) {
-    var script = scripts[i];
-    if (!script || script.enabled !== true) continue;
-    executeUserscript(script, card, bundle);
+  for (var j = 0; j < globalScripts.length; j++) {
+    var gScript = globalScripts[j];
+    if (!gScript) continue;
+    if (siteToggleMap && siteToggleMap[gScript.id] === true) {
+      executeUserscript(gScript, card, bundle);
+    }
+  }
+
+  for (var k = 0; k < legacySiteScripts.length; k++) {
+    var lScript = legacySiteScripts[k];
+    if (!lScript || lScript.enabled !== true) continue;
+    executeUserscript(lScript, card, bundle);
   }
 }
 
