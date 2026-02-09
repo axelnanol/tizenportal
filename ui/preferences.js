@@ -5,7 +5,7 @@
  * Mirrors the site editor's keyboard interaction model.
  */
 
-import { isValidHexColor, isValidHttpUrl } from '../core/utils.js';
+import { isValidHexColor, isValidHttpUrl, escapeHtml } from '../core/utils.js';
 
 /**
  * Preferences state
@@ -525,7 +525,7 @@ function renderPreferencesUI() {
           '<div class="tp-prefs-label">' + row.label + '</div>' +
           '<div class="tp-prefs-value">' + indicator + '</div>' +
         '</div>';
-    } else if (row.type && row.type.indexOf('userscript-') === 0) {
+    } else if (row.type && row.type === 'userscript') {
       html += renderUserscriptRow(row, i);
     } else {
       var value = getValue(row);
@@ -547,14 +547,52 @@ function renderPreferencesUI() {
       activatePreferenceRow(this);
     });
   }
+
+  var userscriptButtons = container.querySelectorAll('.tp-userscript-btn');
+  for (var k = 0; k < userscriptButtons.length; k++) {
+    userscriptButtons[k].addEventListener('click', function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      handleUserscriptButtonAction(this);
+    });
+    userscriptButtons[k].addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleUserscriptButtonAction(this);
+      }
+    });
+  }
 }
 
 function renderUserscriptRow(row, index) {
-  var info = getUserscriptRowDisplay(row);
+  ensureUserscriptsConfig();
+  var scripts = prefsState.settings.userscriptsConfig.scripts || [];
+  var script = scripts[row.scriptIndex] || {};
+  var nameValue = script.name || ('Custom Script ' + (row.scriptIndex + 1));
+  var sourceLabel = script.source === 'url' ? 'URL' : 'Inline';
+  var enabledLabel = script.enabled ? 'On' : 'Off';
+  var hasData = script.source === 'url' ? !!script.cached : !!script.inline;
+  var status = sourceLabel + (hasData ? ' (saved)' : ' (empty)');
+  var canRemove = scripts.length > 1;
+  var refreshDisabled = script.source !== 'url' ? ' disabled' : '';
+
   return '' +
-    '<div class="tp-prefs-row tp-prefs-userscript-row" data-index="' + index + '" data-type="' + row.type + '" data-script-index="' + (row.scriptIndex != null ? row.scriptIndex : '') + '" tabindex="0">' +
+    '<div class="tp-prefs-row tp-prefs-userscript-row" data-index="' + index + '" data-type="userscript" data-script-index="' + row.scriptIndex + '" tabindex="0">' +
       '<div class="tp-prefs-label">' + row.label + '</div>' +
-      '<div class="tp-prefs-value">' + info + '</div>' +
+      '<div class="tp-prefs-value tp-userscript-inline">' +
+        '<span class="tp-userscript-status">' + escapeHtml(nameValue) + ' • ' + enabledLabel + ' • ' + status + '</span>' +
+        '<span class="tp-userscript-actions">' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="rename" data-script-index="' + row.scriptIndex + '" tabindex="0">Rename</button>' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle" data-script-index="' + row.scriptIndex + '" tabindex="0">On/Off</button>' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="source" data-script-index="' + row.scriptIndex + '" tabindex="0">Source: ' + sourceLabel + '</button>' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="edit" data-script-index="' + row.scriptIndex + '" tabindex="0">Edit</button>' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="refresh" data-script-index="' + row.scriptIndex + '" tabindex="0"' + refreshDisabled + '>Refresh</button>' +
+          (canRemove ? '<button type="button" class="tp-userscript-btn" data-userscript-action="remove" data-script-index="' + row.scriptIndex + '" tabindex="0">Remove</button>' : '') +
+        '</span>' +
+      '</div>' +
     '</div>';
 }
 
@@ -735,7 +773,14 @@ function handleUserscriptPreferenceRow(row, index) {
   if (!script) return;
 
   if (row.type === 'userscript') {
-    showUserscriptPreferencesMenu(scriptIndex, index);
+    var rowEl = document.querySelector('.tp-prefs-row[data-index="' + index + '"]');
+    if (rowEl) {
+      var firstBtn = rowEl.querySelector('.tp-userscript-btn');
+      if (firstBtn) {
+        firstBtn.focus();
+        return;
+      }
+    }
   }
 }
 
@@ -843,56 +888,41 @@ function fetchUserscriptUrl(scriptIndex, focusIndex) {
   }
 }
 
-function showUserscriptPreferencesMenu(scriptIndex, focusIndex) {
+function handleUserscriptButtonAction(btn) {
   ensureUserscriptsConfig();
+  var action = btn.dataset.userscriptAction || '';
+  var scriptIndex = parseInt(btn.dataset.scriptIndex, 10);
+  if (isNaN(scriptIndex)) return;
+
   var scripts = prefsState.settings.userscriptsConfig.scripts || [];
   var script = scripts[scriptIndex];
   if (!script) return;
 
-  var canRemove = scripts.length > 1;
-  var options = [
-    '1) Rename',
-    '2) Toggle On/Off',
-    '3) Set Source (URL/Inline)',
-    '4) Edit Script Content',
-    '5) Refresh URL',
-    canRemove ? '6) Remove Script' : null
-  ];
-  var promptText = 'Script Action:\n' + options.filter(Boolean).join('\n') + '\n\nEnter a number:';
-  var choice = prompt(promptText, '');
-  if (choice === null) return;
-
-  if (choice === '1') {
+  if (action === 'rename') {
     var newName = prompt('Script Name:', script.name || '');
     if (newName !== null) {
       script.name = newName;
       renderPreferencesUI();
-      focusPreferencesRow(focusIndex);
       savePreferencesAuto('userscript:name');
     }
     return;
   }
 
-  if (choice === '2') {
+  if (action === 'toggle') {
     script.enabled = !script.enabled;
     renderPreferencesUI();
-    focusPreferencesRow(focusIndex);
     savePreferencesAuto('userscript:enabled');
     return;
   }
 
-  if (choice === '3') {
-    var newSource = prompt('Source (url/inline):', script.source || 'inline');
-    if (newSource !== null) {
-      script.source = (newSource && newSource.toLowerCase() === 'url') ? 'url' : 'inline';
-      renderPreferencesUI();
-      focusPreferencesRow(focusIndex);
-      savePreferencesAuto('userscript:source');
-    }
+  if (action === 'source') {
+    script.source = script.source === 'url' ? 'inline' : 'url';
+    renderPreferencesUI();
+    savePreferencesAuto('userscript:source');
     return;
   }
 
-  if (choice === '4') {
+  if (action === 'edit') {
     if (script.source === 'url') {
       var newUrl = prompt('Script URL:', script.url || '');
       if (newUrl !== null) {
@@ -905,15 +935,13 @@ function showUserscriptPreferencesMenu(scriptIndex, focusIndex) {
           }
           script.url = newUrl;
           renderPreferencesUI();
-          focusPreferencesRow(focusIndex);
           savePreferencesAuto('userscript:url');
-          fetchUserscriptUrl(scriptIndex, focusIndex);
+          fetchUserscriptUrl(scriptIndex, null);
         } else {
           script.url = '';
           script.cached = '';
           script.lastFetched = 0;
           renderPreferencesUI();
-          focusPreferencesRow(focusIndex);
           savePreferencesAuto('userscript:url');
         }
       }
@@ -922,22 +950,23 @@ function showUserscriptPreferencesMenu(scriptIndex, focusIndex) {
       if (newInline !== null) {
         script.inline = newInline;
         renderPreferencesUI();
-        focusPreferencesRow(focusIndex);
         savePreferencesAuto('userscript:inline');
       }
     }
     return;
   }
 
-  if (choice === '5') {
-    fetchUserscriptUrl(scriptIndex, focusIndex);
+  if (action === 'refresh') {
+    if (script.source === 'url') {
+      fetchUserscriptUrl(scriptIndex, null);
+    }
     return;
   }
 
-  if (choice === '6' && canRemove) {
+  if (action === 'remove') {
+    if (scripts.length <= 1) return;
     scripts.splice(scriptIndex, 1);
     renderPreferencesUI();
-    focusPreferencesRow(focusIndex);
     savePreferencesAuto('userscript:remove');
   }
 }

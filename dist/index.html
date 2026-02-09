@@ -838,6 +838,54 @@
       color: #00a8ff;
       background: #1a2a3a;
     }
+
+    .tp-userscript-line {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: #1e1e1e;
+      border: 2px solid #333;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .tp-userscript-label {
+      flex: 1;
+      font-size: 14px;
+      color: #ddd;
+      margin-right: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tp-userscript-actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tp-userscript-btn {
+      padding: 6px 10px;
+      margin-left: 8px;
+      background: #2a2a2a;
+      border: 2px solid #444;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .tp-userscript-btn:focus {
+      outline: none;
+      border-color: #00a8ff;
+      box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.3);
+    }
+
+    .tp-userscript-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
     
     /* Bundle Section */
     .tp-field-section {
@@ -1114,6 +1162,31 @@
       color: #fff;
       padding: 0 16px;
       text-align: right;
+    }
+
+    .tp-prefs-row.tp-prefs-userscript-row .tp-prefs-value {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .tp-userscript-inline {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      width: 100%;
+    }
+
+    .tp-userscript-status {
+      flex: 1;
+      margin-right: 12px;
+      color: #ddd;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     
     .tp-prefs-footer {
@@ -1717,7 +1790,7 @@
     <div id="tp-modal-container"></div>
   </div>
   
-  <script src="tizenportal.js?v=1007"></script>
+  <script src="tizenportal.js?v=1008"></script>
   <script>
     // Update version display from TizenPortal runtime
     (function() {

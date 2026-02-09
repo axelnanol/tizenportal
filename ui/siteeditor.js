@@ -1146,20 +1146,29 @@ function renderUserscriptsField() {
   var html = '<div class="tp-field-section">';
 
   var scripts = state.card.userscripts || [];
+  var canRemove = scripts.length > 1;
 
   for (var i = 0; i < scripts.length; i++) {
     var s = scripts[i] || {};
     var indexLabel = (i + 1);
     var nameValue = s.name || ('Custom Script ' + indexLabel);
-    var source = s.source === 'url' ? 'URL' : 'Inline';
+    var sourceLabel = s.source === 'url' ? 'URL' : 'Inline';
     var hasData = s.source === 'url' ? !!(s.cached && s.cached.length) : !!(s.inline && s.inline.length);
     var enabledLabel = s.enabled ? 'On' : 'Off';
-    var status = source + (hasData ? ' (saved)' : ' (empty)');
+    var status = sourceLabel + (hasData ? ' (saved)' : ' (empty)');
+    var refreshDisabled = s.source !== 'url' ? ' disabled' : '';
 
     html += '' +
-      '<div class="tp-field-row tp-userscript-row" data-userscript-id="' + s.id + '" data-userscript-field="menu" tabindex="0">' +
-        '<div class="tp-field-label">Script ' + indexLabel + '</div>' +
-        '<div class="tp-field-value">' + escapeHtml(nameValue) + ' • ' + enabledLabel + ' • ' + status + '</div>' +
+      '<div class="tp-userscript-line" data-userscript-id="' + s.id + '">' +
+        '<div class="tp-userscript-label">Script ' + indexLabel + ': ' + escapeHtml(nameValue) + ' • ' + enabledLabel + ' • ' + status + '</div>' +
+        '<div class="tp-userscript-actions">' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="rename" data-userscript-id="' + s.id + '" tabindex="0">Rename</button>' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle" data-userscript-id="' + s.id + '" tabindex="0">On/Off</button>' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="source" data-userscript-id="' + s.id + '" tabindex="0">Source: ' + sourceLabel + '</button>' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="edit" data-userscript-id="' + s.id + '" tabindex="0">Edit</button>' +
+          '<button type="button" class="tp-userscript-btn" data-userscript-action="refresh" data-userscript-id="' + s.id + '" tabindex="0"' + refreshDisabled + '>Refresh</button>' +
+          (canRemove ? '<button type="button" class="tp-userscript-btn" data-userscript-action="remove" data-userscript-id="' + s.id + '" tabindex="0">Remove</button>' : '') +
+        '</div>' +
       '</div>';
   }
 
@@ -1243,25 +1252,7 @@ function setupFieldListeners(container) {
   }
 
   // Userscript rows (handled separately)
-  var userscriptRows = container.querySelectorAll('.tp-userscript-row');
-  for (var u = 0; u < userscriptRows.length; u++) {
-    userscriptRows[u].addEventListener('click', function(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      activateUserscriptInput(this);
-    });
-    userscriptRows[u].addEventListener('keydown', function(e) {
-      if (e.keyCode === 13) {
-        e.preventDefault();
-        e.stopPropagation();
-        activateUserscriptInput(this);
-      }
-    });
-  }
-
-  var userscriptActions = container.querySelectorAll('.tp-userscript-action');
+  var userscriptActions = container.querySelectorAll('.tp-userscript-action, .tp-userscript-btn');
   for (var ua = 0; ua < userscriptActions.length; ua++) {
     userscriptActions[ua].addEventListener('click', function(e) {
       if (e) {
@@ -1398,10 +1389,7 @@ function activateUserscriptInput(row) {
   var script = getUserscriptById(scriptId);
   if (!script) return;
 
-  if (field === 'menu') {
-    showUserscriptActionMenu(scriptId);
-    return;
-  }
+  if (!field) return;
 
   if (field === 'enabled') {
     script.enabled = !script.enabled;
@@ -1454,24 +1442,39 @@ function activateUserscriptInput(row) {
   }
 }
 
-function showUserscriptActionMenu(scriptId) {
+function handleUserscriptAction(row) {
+  var action = row.dataset.userscriptAction || '';
+  var scriptId = row.dataset.userscriptId || '';
+
+  if (action === 'add') {
+    ensureUserscriptsInitialized();
+    var nextIndex = (state.card.userscripts || []).length + 1;
+    state.card.userscripts.push(createDefaultUserscript(nextIndex));
+    renderFields();
+    autoSaveCard('userscript:add');
+    return;
+  }
+
+  if (action === 'remove') {
+    ensureUserscriptsInitialized();
+    if (state.card.userscripts.length <= 1) return;
+    for (var i = 0; i < state.card.userscripts.length; i++) {
+      if (state.card.userscripts[i].id === scriptId) {
+        state.card.userscripts.splice(i, 1);
+        break;
+      }
+    }
+    renderFields();
+    autoSaveCard('userscript:remove');
+    return;
+  }
+
+  if (!scriptId) return;
+
   var script = getUserscriptById(scriptId);
   if (!script) return;
 
-  var canRemove = state.card.userscripts && state.card.userscripts.length > 1;
-  var options = [
-    '1) Rename',
-    '2) Toggle On/Off',
-    '3) Set Source (URL/Inline)',
-    '4) Edit Script Content',
-    '5) Refresh URL',
-    canRemove ? '6) Remove Script' : null
-  ];
-  var promptText = 'Script Action:\n' + options.filter(Boolean).join('\n') + '\n\nEnter a number:';
-  var choice = prompt(promptText, '');
-  if (choice === null) return;
-
-  if (choice === '1') {
+  if (action === 'rename') {
     var newName = prompt('Script Name:', script.name || '');
     if (newName !== null) {
       script.name = newName;
@@ -1481,24 +1484,21 @@ function showUserscriptActionMenu(scriptId) {
     return;
   }
 
-  if (choice === '2') {
+  if (action === 'toggle') {
     script.enabled = !script.enabled;
     renderFields();
     autoSaveCard('userscript:enabled');
     return;
   }
 
-  if (choice === '3') {
-    var newSource = prompt('Source (url/inline):', script.source || 'inline');
-    if (newSource !== null) {
-      script.source = (newSource && newSource.toLowerCase() === 'url') ? 'url' : 'inline';
-      renderFields();
-      autoSaveCard('userscript:source');
-    }
+  if (action === 'source') {
+    script.source = script.source === 'url' ? 'inline' : 'url';
+    renderFields();
+    autoSaveCard('userscript:source');
     return;
   }
 
-  if (choice === '4') {
+  if (action === 'edit') {
     if (script.source === 'url') {
       var newUrl = prompt('Script URL:', script.url || '');
       if (newUrl !== null) {
@@ -1531,45 +1531,10 @@ function showUserscriptActionMenu(scriptId) {
     return;
   }
 
-  if (choice === '5') {
-    fetchUserscriptUrl(scriptId);
-    return;
-  }
-
-  if (choice === '6' && canRemove) {
-    handleUserscriptAction({ dataset: { userscriptAction: 'remove', userscriptId: scriptId } });
-  }
-}
-
-function handleUserscriptAction(row) {
-  var action = row.dataset.userscriptAction || '';
-  var scriptId = row.dataset.userscriptId || '';
-
-  if (action === 'add') {
-    ensureUserscriptsInitialized();
-    var nextIndex = (state.card.userscripts || []).length + 1;
-    state.card.userscripts.push(createDefaultUserscript(nextIndex));
-    renderFields();
-    autoSaveCard('userscript:add');
-    return;
-  }
-
-  if (action === 'remove') {
-    ensureUserscriptsInitialized();
-    if (state.card.userscripts.length <= 1) return;
-    for (var i = 0; i < state.card.userscripts.length; i++) {
-      if (state.card.userscripts[i].id === scriptId) {
-        state.card.userscripts.splice(i, 1);
-        break;
-      }
-    }
-    renderFields();
-    autoSaveCard('userscript:remove');
-    return;
-  }
-
   if (action === 'refresh') {
-    fetchUserscriptUrl(scriptId);
+    if (script.source === 'url') {
+      fetchUserscriptUrl(scriptId);
+    }
   }
 }
 
