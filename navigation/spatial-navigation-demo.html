@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial Navigation Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: white;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .subtitle {
+      font-size: 1.2em;
+      opacity: 0.9;
+    }
+    
+    .controls {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .control-group {
+      margin-bottom: 20px;
+    }
+    
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+    
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 0.95em;
+    }
+    
+    select, input[type="number"], input[type="range"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 14px;
+      outline: none;
+    }
+    
+    select option {
+      background: #764ba2;
+      color: white;
+    }
+    
+    input[type="range"] {
+      padding: 5px;
+      cursor: pointer;
+    }
+    
+    .range-value {
+      display: inline-block;
+      margin-left: 10px;
+      font-weight: bold;
+      color: #ffd700;
+    }
+    
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    
+    .demo-section {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .demo-title {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+      border-bottom: 2px solid rgba(255,255,255,0.3);
+      padding-bottom: 10px;
+    }
+    
+    /* Grid Demo */
+    .grid-demo {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    /* Irregular Demo */
+    .irregular-demo {
+      position: relative;
+      height: 400px;
+      margin-top: 20px;
+    }
+    
+    /* Button Styles */
+    .nav-button {
+      background: rgba(255,255,255,0.2);
+      border: 2px solid rgba(255,255,255,0.4);
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    
+    .nav-button:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    .nav-button:focus {
+      outline: 3px solid #ffd700;
+      outline-offset: 2px;
+      background: rgba(255,255,255,0.35);
+      box-shadow: 0 0 20px rgba(255,215,0,0.5);
+      transform: scale(1.05);
+    }
+    
+    .irregular-demo .nav-button {
+      position: absolute;
+      min-width: 120px;
+    }
+    
+    /* Instructions */
+    .instructions {
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #ffd700;
+    }
+    
+    .instructions h3 {
+      margin-bottom: 10px;
+      color: #ffd700;
+    }
+    
+    .instructions ul {
+      list-style-position: inside;
+      line-height: 1.8;
+    }
+    
+    /* Status Bar */
+    .status-bar {
+      background: rgba(0,0,0,0.3);
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    
+    .status-item {
+      margin: 5px 0;
+    }
+    
+    .status-label {
+      color: #ffd700;
+      font-weight: bold;
+    }
+    
+    /* Reset Button */
+    .reset-button {
+      background: rgba(255,59,48,0.8);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 15px;
+      transition: all 0.2s;
+    }
+    
+    .reset-button:hover {
+      background: rgba(255,59,48,1);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🧭 Spatial Navigation Demo</h1>
+      <div class="subtitle">Experience Geometric vs Directional Navigation</div>
+    </header>
+    
+    <div class="instructions">
+      <h3>📖 How to Use</h3>
+      <ul>
+        <li>Use <strong>Arrow Keys</strong> (↑ ↓ ← →) to navigate between buttons</li>
+        <li>Switch between <strong>Geometric</strong> and <strong>Directional</strong> modes</li>
+        <li>Adjust configuration options to see how they affect navigation</li>
+        <li>Watch the status bar to see what's happening</li>
+      </ul>
+    </div>
+    
+    <div class="controls">
+      <div class="control-group">
+        <label for="mode">Navigation Mode</label>
+        <select id="mode">
+          <option value="geometric">Geometric (Axis-Aligned)</option>
+          <option value="directional" selected>Directional (Cone-Based)</option>
+        </select>
+      </div>
+      
+      <div class="control-group" id="cone-angle-group">
+        <label for="coneAngle">
+          Cone Angle: <span class="range-value" id="cone-angle-value">30°</span>
+        </label>
+        <input type="range" id="coneAngle" min="10" max="90" value="30" step="5">
+      </div>
+      
+      <div class="control-group" id="primary-weight-group">
+        <label for="primaryWeight">
+          Primary Weight: <span class="range-value" id="primary-weight-value">1.0</span>
+        </label>
+        <input type="range" id="primaryWeight" min="0.1" max="3" value="1" step="0.1">
+      </div>
+      
+      <div class="control-group" id="secondary-weight-group">
+        <label for="secondaryWeight">
+          Secondary Weight: <span class="range-value" id="secondary-weight-value">0.5</span>
+        </label>
+        <input type="range" id="secondaryWeight" min="0.1" max="2" value="0.5" step="0.1">
+      </div>
+      
+      <div class="control-group" id="overlap-bonus-group">
+        <label class="checkbox-group">
+          <input type="checkbox" id="overlapBonus" checked>
+          <span>Enable Overlap Bonus</span>
+        </label>
+      </div>
+      
+      <div class="control-group" id="row-column-bias-group">
+        <label class="checkbox-group">
+          <input type="checkbox" id="rowColumnBias" checked>
+          <span>Enable Row/Column Bias</span>
+        </label>
+      </div>
+      
+      <div class="control-group" id="fallback-group">
+        <label for="fallback">Fallback Behavior</label>
+        <select id="fallback">
+          <option value="none">None</option>
+          <option value="nearest" selected>Nearest</option>
+          <option value="wrap">Wrap</option>
+        </select>
+      </div>
+      
+      <button class="reset-button" onclick="resetToDefaults()">Reset to Defaults</button>
+    </div>
+    
+    <div class="demo-section">
+      <div class="demo-title">📐 Grid Layout Demo</div>
+      <p style="margin-bottom: 15px;">A perfect 4×3 grid. Try both modes to see the difference!</p>
+      <div class="grid-demo" id="grid-demo">
+        <button class="nav-button" tabindex="0">A1</button>
+        <button class="nav-button" tabindex="0">A2</button>
+        <button class="nav-button" tabindex="0">A3</button>
+        <button class="nav-button" tabindex="0">A4</button>
+        <button class="nav-button" tabindex="0">B1</button>
+        <button class="nav-button" tabindex="0">B2</button>
+        <button class="nav-button" tabindex="0">B3</button>
+        <button class="nav-button" tabindex="0">B4</button>
+        <button class="nav-button" tabindex="0">C1</button>
+        <button class="nav-button" tabindex="0">C2</button>
+        <button class="nav-button" tabindex="0">C3</button>
+        <button class="nav-button" tabindex="0">C4</button>
+      </div>
+    </div>
+    
+    <div class="demo-section">
+      <div class="demo-title">🎯 Irregular Layout Demo</div>
+      <p style="margin-bottom: 15px;">Random positioning. Directional mode shines here!</p>
+      <div class="irregular-demo" id="irregular-demo">
+        <button class="nav-button" tabindex="0" style="left: 20px; top: 30px;">Home</button>
+        <button class="nav-button" tabindex="0" style="left: 180px; top: 45px;">Movies</button>
+        <button class="nav-button" tabindex="0" style="left: 350px; top: 20px;">TV Shows</button>
+        <button class="nav-button" tabindex="0" style="left: 520px; top: 50px;">Music</button>
+        <button class="nav-button" tabindex="0" style="left: 40px; top: 150px;">Settings</button>
+        <button class="nav-button" tabindex="0" style="left: 200px; top: 180px;">Profile</button>
+        <button class="nav-button" tabindex="0" style="left: 380px; top: 160px;">Search</button>
+        <button class="nav-button" tabindex="0" style="left: 540px; top: 185px;">Help</button>
+        <button class="nav-button" tabindex="0" style="left: 60px; top: 280px;">Downloads</button>
+        <button class="nav-button" tabindex="0" style="left: 220px; top: 300px;">History</button>
+        <button class="nav-button" tabindex="0" style="left: 400px; top: 290px;">Playlists</button>
+        <button class="nav-button" tabindex="0" style="left: 560px; top: 310px;">About</button>
+      </div>
+    </div>
+    
+    <div class="status-bar" id="status-bar">
+      <div class="status-item">
+        <span class="status-label">Current Mode:</span>
+        <span id="status-mode">directional</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Focused Element:</span>
+        <span id="status-focused">None</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Last Navigation:</span>
+        <span id="status-nav">None</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">Candidates Found:</span>
+        <span id="status-candidates">-</span>
+      </div>
+    </div>
+  </div>
+  
+  <script src="spatial-navigation.js"></script>
+  <script>
+    // Initialize with directional mode
+    updateConfig();
+    
+    // Focus first button
+    setTimeout(() => {
+      const firstButton = document.querySelector('.nav-button');
+      if (firstButton) {
+        firstButton.focus();
+        updateStatus();
+      }
+    }, 100);
+    
+    // Handle keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      const directions = {
+        37: 'left',
+        38: 'up',
+        39: 'right',
+        40: 'down'
+      };
+      
+      const direction = directions[e.keyCode];
+      if (direction) {
+        e.preventDefault();
+        
+        const origin = document.activeElement;
+        const next = SpatialNavigation.findNextFocusable(origin, direction);
+        
+        // Update status
+        document.getElementById('status-nav').textContent = direction;
+        document.getElementById('status-candidates').textContent = next ? 'Found' : 'None';
+        
+        if (next) {
+          next.focus();
+        } else {
+          console.log('No candidate found in direction:', direction);
+        }
+        
+        updateStatus();
+      }
+    });
+    
+    // Update status on focus change
+    document.addEventListener('focusin', updateStatus);
+    
+    // Configuration change handlers
+    document.getElementById('mode').addEventListener('change', (e) => {
+      const mode = e.target.value;
+      toggleModeOptions(mode);
+      updateConfig();
+    });
+    
+    document.getElementById('coneAngle').addEventListener('input', (e) => {
+      document.getElementById('cone-angle-value').textContent = e.target.value + '°';
+      updateConfig();
+    });
+    
+    document.getElementById('primaryWeight').addEventListener('input', (e) => {
+      document.getElementById('primary-weight-value').textContent = parseFloat(e.target.value).toFixed(1);
+      updateConfig();
+    });
+    
+    document.getElementById('secondaryWeight').addEventListener('input', (e) => {
+      document.getElementById('secondary-weight-value').textContent = parseFloat(e.target.value).toFixed(1);
+      updateConfig();
+    });
+    
+    document.getElementById('overlapBonus').addEventListener('change', updateConfig);
+    document.getElementById('rowColumnBias').addEventListener('change', updateConfig);
+    document.getElementById('fallback').addEventListener('change', updateConfig);
+    
+    function updateConfig() {
+      const mode = document.getElementById('mode').value;
+      const config = {
+        mode: mode
+      };
+      
+      if (mode === 'directional') {
+        config.coneAngle = parseInt(document.getElementById('coneAngle').value);
+        config.primaryWeight = parseFloat(document.getElementById('primaryWeight').value);
+        config.secondaryWeight = parseFloat(document.getElementById('secondaryWeight').value);
+        config.overlapBonus = document.getElementById('overlapBonus').checked;
+        config.rowColumnBias = document.getElementById('rowColumnBias').checked;
+        config.fallback = document.getElementById('fallback').value;
+      }
+      
+      SpatialNavigation.configure(config);
+      document.getElementById('status-mode').textContent = mode;
+      
+      console.log('Configuration updated:', config);
+    }
+    
+    function toggleModeOptions(mode) {
+      const directionalOptions = [
+        'cone-angle-group',
+        'primary-weight-group',
+        'secondary-weight-group',
+        'overlap-bonus-group',
+        'row-column-bias-group',
+        'fallback-group'
+      ];
+      
+      directionalOptions.forEach(id => {
+        const element = document.getElementById(id);
+        element.style.display = mode === 'directional' ? 'block' : 'none';
+      });
+    }
+    
+    function updateStatus() {
+      const focused = document.activeElement;
+      if (focused && focused.classList.contains('nav-button')) {
+        document.getElementById('status-focused').textContent = focused.textContent;
+      } else {
+        document.getElementById('status-focused').textContent = 'None';
+      }
+    }
+    
+    function resetToDefaults() {
+      SpatialNavigation.resetConfig();
+      
+      document.getElementById('mode').value = 'geometric';
+      document.getElementById('coneAngle').value = 30;
+      document.getElementById('primaryWeight').value = 1;
+      document.getElementById('secondaryWeight').value = 0.5;
+      document.getElementById('overlapBonus').checked = true;
+      document.getElementById('rowColumnBias').checked = true;
+      document.getElementById('fallback').value = 'none';
+      
+      document.getElementById('cone-angle-value').textContent = '30°';
+      document.getElementById('primary-weight-value').textContent = '1.0';
+      document.getElementById('secondary-weight-value').textContent = '0.5';
+      
+      toggleModeOptions('geometric');
+      updateConfig();
+    }
+    
+    // Initialize mode options visibility
+    toggleModeOptions('directional');
+  </script>
+</body>
+</html>
