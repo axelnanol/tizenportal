@@ -116,6 +116,41 @@ Sites appear in the order they were added. To reorder:
 | 🟢 Green | Toggle mouse mode for precise control |
 | 🟡 Yellow | Return to portal |
 
+### Card Interaction Model
+
+Many sites display content as cards (media items, books, albums, etc.). TizenPortal provides special handling for cards with multiple interactive elements.
+
+#### Single-Action Cards
+
+Cards with one button or link:
+- Press **Enter** to activate immediately
+- Focus moves to the next card after activation
+
+**Example:** Simple list items with one "Open" button
+
+#### Multi-Action Cards
+
+Cards with multiple buttons (Play, Info, Options, etc.):
+1. Navigate to the card with **Arrow Keys**
+2. Press **Enter** to "enter" the card
+3. Use **Arrow Keys** to navigate between buttons inside the card
+4. Press **Enter** to activate a button
+5. Press **Back** to "exit" the card and return to card-level navigation
+
+**Example:** Media cards with Play, Info, and Add to Library buttons
+
+#### Visual Indicators
+
+- **Card-level focus**: Entire card has blue outline
+- **Element-level focus**: Individual button inside card has outline
+- When inside a card, only elements within that card are focusable
+
+#### Tips for Card Navigation
+
+- Most bundles automatically configure cards for your site
+- If a site's cards don't navigate properly, try mouse mode (🟢 Green)
+- Some sites work better with the `default` bundle if custom bundles have issues
+
 ### Scrolling
 
 - Use **Up/Down arrows** to scroll the page
@@ -439,8 +474,42 @@ Press **🔵 Blue** to cycle through diagnostics states:
 When the panel is open:
 - **Up Arrow** — Scroll up through log history
 - **Down Arrow** — Scroll down through log history
-- **Left/Right Arrow** — Cycle log filter (All / Log / Info / Warn / Error)
-- **🟡 Yellow** — Clear logs
+- **Left/Right Arrow** — Cycle log filter (All / Log / Warn / Error)
+- **🟡 Yellow** — Clear all logs
+
+### Log Levels
+
+Diagnostics displays three types of log entries:
+
+| Level | Color | Purpose |
+|-------|-------|---------|
+| LOG | White | General information |
+| WARN | Yellow | Warnings and deprecations |
+| ERROR | Red | Errors and failures |
+
+### Log Filtering
+
+Use **Left/Right arrows** to cycle through filters:
+
+1. **All** — Shows all log entries (default)
+2. **Log** — Shows only LOG entries
+3. **Warn** — Shows only WARN entries
+4. **Error** — Shows only ERROR entries
+
+The current filter is shown in the panel header.
+
+### Clearing Logs
+
+Two ways to clear the log history:
+
+1. Press **🟡 Yellow** while diagnostics is open
+2. Use programmatically: `TizenPortal.clearDiagnosticsLogs()`
+
+### Log Storage
+
+- Logs are stored in a circular buffer (not persisted)
+- Maximum log entries: ~100 (older entries are discarded)
+- Logs are lost when you navigate away or reload
 
 ### Safe Mode
 
@@ -453,14 +522,27 @@ Long-press **🔵 Blue** to enter safe mode:
 
 ## Keyboard Input
 
-Text inputs are protected by default to prevent the TV keyboard from opening on focus.
+TizenPortal protects text inputs by default to prevent the on-screen keyboard from opening automatically when you focus an input field. This gives you better control over when the keyboard appears.
+
+### Text Input Protection
+
+**How it works:**
+- When you focus a text input, the keyboard does **not** open automatically
+- Press **Enter** to activate the input and open the keyboard
+- This prevents accidental keyboard popups when navigating
+
+**Enabling/Disabling:**
+- Global setting in Preferences: "Protect Text Inputs (TV Keyboard)"
+- Per-site override in Site Options
+- Default: **Enabled**
 
 ### Using the TV Keyboard
 
-1. Navigate to a text input field
+1. Navigate to a text input field with **Arrow Keys**
 2. Press **Enter** to activate the keyboard
 3. Use the on-screen keyboard to type
-4. Press **Done** or **Enter** to confirm
+4. Press **Done** (65376) or **Enter** to confirm
+5. Press **Cancel** (65385) to cancel without changes
 
 ### Keyboard Tips
 

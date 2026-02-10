@@ -999,6 +999,204 @@ if (hasBundle('my-bundle')) {
 }
 ```
 
+### Lifecycle Hooks
+
+Bundles can define lifecycle hooks that are called at specific points:
+
+#### onBeforeLoad
+
+Called before the page's DOM is fully loaded.
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onBeforeLoad(window, card) {
+    // Runs before DOMContentLoaded
+    // Use for early script injection
+    TizenPortal.log('Preparing site...');
+  }
+};
+```
+
+**Use cases:** Early script injection, preload resources
+
+#### onAfterLoad
+
+Called after the page's DOM is fully loaded.
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onAfterLoad(window, card) {
+    // Runs after DOMContentLoaded
+    // DOM is ready for manipulation
+    registerCards();
+    setInitialFocus();
+  }
+};
+```
+
+**Use cases:** DOM manipulation, focus setup, card registration
+
+#### onActivate
+
+Called when the bundle becomes active (user navigates to site).
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onActivate(window, card) {
+    // Bundle is now active
+    TizenPortal.log('Bundle activated:', card.name);
+    
+    // Setup event listeners
+    document.addEventListener('myEvent', handleEvent);
+  }
+};
+```
+
+**Use cases:** Event listener setup, initialization, state setup
+
+#### onDeactivate
+
+Called when the bundle is deactivated (user navigates away).
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onDeactivate(window, card) {
+    // Bundle is being deactivated
+    TizenPortal.log('Cleaning up...');
+    
+    // Remove event listeners
+    document.removeEventListener('myEvent', handleEvent);
+    
+    // Clear intervals/timeouts
+    clearInterval(myInterval);
+  }
+};
+```
+
+**Use cases:** Cleanup, remove listeners, clear timers
+
+#### onNavigate
+
+Called when URL changes within the same site (SPA navigation).
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onNavigate(url) {
+    // URL changed (SPA navigation)
+    TizenPortal.log('Navigated to:', url);
+    
+    // Re-process cards for new content
+    setTimeout(function() {
+      TizenPortal.cards.process();
+    }, 500);
+  }
+};
+```
+
+**Use cases:** SPA navigation handling, re-processing cards
+
+**Note:** Not currently triggered by core, may need manual invocation or URL watching.
+
+#### onKeyDown
+
+Intercept key events before core processing.
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onKeyDown(event) {
+    // Intercept Play key for custom behavior
+    if (event.keyCode === TizenPortal.keys.PLAY) {
+      playCurrentItem();
+      return true;  // Consumed - stop propagation
+    }
+    
+    return false;  // Let core handle
+  }
+};
+```
+
+**Return values:**
+- `true` - Event consumed, stop further handling
+- `false` - Pass to core handling
+
+**Use cases:** Custom key bindings, media key handling
+
+### Complete Bundle Example
+
+```js
+import myStyles from './style.css';
+
+export default {
+  name: 'my-bundle',
+  displayName: 'My Bundle',
+  description: 'Enhances My Site for TV',
+  style: myStyles,
+  
+  userscripts: [
+    {
+      id: 'fix-nav',
+      name: 'Fix Navigation',
+      enabled: true,
+      source: 'inline',
+      inline: 'document.querySelector(".nav").style.display = "flex";'
+    }
+  ],
+  
+  onBeforeLoad(window, card) {
+    TizenPortal.log('Preparing:', card.name);
+  },
+  
+  onAfterLoad(window, card) {
+    // Register multi-action cards
+    TizenPortal.cards.register({
+      selector: '.media-card',
+      type: 'multi'
+    });
+    
+    // Process cards
+    setTimeout(function() {
+      var count = TizenPortal.cards.process();
+      TizenPortal.log('Processed', count, 'cards');
+    }, 500);
+    
+    // Set initial focus
+    TizenPortal.focus.setInitialFocus([
+      '.media-card:first-child',
+      'button:first-of-type'
+    ]);
+  },
+  
+  onActivate(window, card) {
+    TizenPortal.log('Bundle active');
+  },
+  
+  onDeactivate(window, card) {
+    TizenPortal.cards.clear();
+    TizenPortal.log('Cleaned up');
+  },
+  
+  onKeyDown(event) {
+    if (event.keyCode === TizenPortal.keys.PLAY) {
+      playCurrentMedia();
+      return true;
+    }
+    return false;
+  }
+};
+```
+
 ---
 
 ## 10. Events
