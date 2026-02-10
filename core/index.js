@@ -359,6 +359,7 @@ function saveLastCard(card) {
     }
     var resolvedUserAgent = resolveUserAgentMode(card);
     var payload = {
+      cardId: card.id || null,
       name: card.name || '',
       url: card.url || '',
       featureBundle: featureBundle || 'default',
@@ -415,6 +416,12 @@ function mergeUserscriptsFromWindow(card) {
   if (!card) return;
   var windowCard = loadCardFromWindowName();
   if (!windowCard) return;
+
+  var cardId = card.id || card.cardId || null;
+  var windowCardId = windowCard.cardId || windowCard.id || null;
+  if (cardId && windowCardId && cardId !== windowCardId) {
+    return;
+  }
 
   if ((!card.userscripts || !card.userscripts.length) && Array.isArray(windowCard.userscripts)) {
     card.userscripts = windowCard.userscripts;
@@ -951,6 +958,7 @@ function getCardFromHash() {
 
     // Convert payload to card format
     var card = {
+      id: payload.cardId || null,
       name: payload.cardName || 'Unknown Site',
       url: window.location.href.replace(/[#&]tp=[^&#]+/, ''),
       featureBundle: payload.bundleName || 'default',
@@ -998,6 +1006,10 @@ function normalizePayload(payload) {
 
   if (typeof payload.cardName === 'string') {
     normalized.cardName = payload.cardName;
+  }
+
+  if (typeof payload.cardId === 'string') {
+    normalized.cardId = payload.cardId;
   }
 
   if (typeof payload.ua === 'string') {
@@ -1068,6 +1080,7 @@ function getCardFromQuery() {
     log('Decoded payload from query: ' + JSON.stringify(payload));
 
     var card = {
+      id: payload.cardId || null,
       name: payload.cardName || 'Unknown Site',
       url: window.location.href.replace(/[?&]tp=[^&#]+/, ''),
       featureBundle: payload.bundleName || 'default',
@@ -1825,6 +1838,7 @@ function loadSite(card) {
     var payload = {
       css: '',
       js: '',
+      cardId: card.id || null,
       ua: resolvedUa,
       viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
       focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
