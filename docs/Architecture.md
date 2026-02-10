@@ -2,7 +2,7 @@
 
 > **Version:** 3.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v1000)  
+> **Status:** Universal Runtime (v1018)  
 
 ---
 
@@ -209,6 +209,7 @@ export function hasBundle(name: string): boolean;
 - `default` - Basic fallback bundle
 - `audiobookshelf` - Enhanced support for Audiobookshelf
 - `adblock` - Ad blocking for general sites
+- `userscript-sandbox` - Custom userscript support
 
 ### 4.3 Bundle Interface
 
@@ -261,6 +262,66 @@ export function unregisterCards(selector): void;
 export function processCards(): void;
 export function initCards(): void;
 export function shutdownCards(): void;
+```
+
+### 4.6 Card Interaction (`navigation/card-interaction.js`)
+
+**Purpose:** Provide two-level navigation for cards with multiple interactive elements.
+
+**Card Types:**
+- **Single-action cards**: One focusable element → Enter activates immediately
+- **Multi-action cards**: Multiple elements → Enter enters card, Back exits
+
+**Detection:**
+```js
+function isSingleActionCard(card) {
+  // Returns true if card has exactly one focusable child
+  return getFocusableChildren(card).length === 1;
+}
+
+function isMultiActionCard(card) {
+  // Returns true if card has multiple focusable children
+  return getFocusableChildren(card).length > 1;
+}
+```
+
+**Interaction Flow:**
+
+1. User navigates to card (card-level focus)
+2. User presses **Enter**:
+   - Single-action: Activates element immediately
+   - Multi-action: "Enters" card, focuses first element
+3. Inside multi-action card:
+   - Arrow keys navigate between card's elements
+   - Enter activates focused element
+   - Back exits card (returns to card-level focus)
+
+**State Management:**
+```js
+var currentCard = null;  // Currently entered card
+var isInsideCard = false;  // Navigation is inside a card
+```
+
+**Functions:**
+```js
+export function enterCard(card): void;
+export function exitCard(): void;
+export function isInsideCard(): boolean;
+export function handleOK(card): void;  // Enter key handler
+export function handleBack(): void;    // Back key handler
+export function findCardShell(element): HTMLElement | null;
+```
+
+**Usage in Bundles:**
+```js
+// Register cards
+TizenPortal.cards.register({
+  selector: '.media-card',
+  type: 'multi'  // or 'single', or omit for auto-detect
+});
+
+// Process after page load
+TizenPortal.cards.process();
 ```
 
 ---
@@ -446,7 +507,7 @@ const plugins = [
 
 Source files use placeholder:
 ```js
-const VERSION = '__VERSION__';  // Becomes "1000" at build time
+const VERSION = '__VERSION__';  // Becomes "1018" at build time
 ```
 
 ### 7.3 tizenportal.js Structure (IIFE)
@@ -455,7 +516,7 @@ const VERSION = '__VERSION__';  // Becomes "1000" at build time
 (function () {
   'use strict';
   
-  const VERSION = '1000';
+  const VERSION = '1018';
   
   // Polyfills (core-js, fetch, DOMRect, spatial-navigation)
   // Config (localStorage wrapper)

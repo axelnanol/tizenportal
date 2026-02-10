@@ -1,7 +1,7 @@
 # TizenPortal Progress Tracker
 
-> **Last Updated:** February 7, 2026  
-> **Current Version:** 1000  
+> **Last Updated:** February 10, 2026  
+> **Current Version:** 1018  
 > **Architecture:** Universal Runtime
 
 ---
@@ -13,7 +13,8 @@
 | Universal Runtime | ✅ Complete | Single runtime on all pages |
 | Portal Launcher | ✅ Working | Grid with cards |
 | Bundle Injection | ✅ Working | Payload via hash |
-| Bundle Registry | ✅ Working | 3 bundles: default, audiobookshelf, adblock |
+| Bundle Registry | ✅ Working | 4 bundles: default, audiobookshelf, adblock, userscript-sandbox |
+| Userscript System | ✅ Working | Global and per-site custom scripts |
 | Version System | ✅ Working | Centralized in package.json |
 | Spatial Navigation | ✅ Working | W3C polyfill integrated, cross-origin safe |
 | Diagnostics Panel | ✅ Working | BLUE button, 3-state toggle, log scrolling |
@@ -43,9 +44,15 @@ TizenPortal uses a single unified runtime (`tizenportal.js`) on all pages:
 
 ## Version History
 
-### v1000 (Current)
+### v1018 (Current)
+
+- Userscript toggle payload support
+- Enhanced userscript management in preferences and site editor
+
+### v1000
 
 - Re-tag of v0446 with correct build
+- New version numbering scheme (1.0.00)
 
 ### v0446
 

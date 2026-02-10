@@ -1,8 +1,8 @@
 # TizenPortal Engineering Plan
 
 > **Version:** 5.0  
-> **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v1000)
+> **Date:** February 10, 2026  
+> **Status:** Universal Runtime (v1018)
 
 ---
 
@@ -16,7 +16,8 @@ TizenPortal operates as a **TizenBrew Module** (`packageType: "mods"`) that prov
 - Portal grid with card management
 - Full browser chrome (address bar, diagnostics)
 - Spatial navigation with cross-origin safety
-- 3 bundles (default, audiobookshelf, adblock)
+- Userscript system (global and per-site)
+- 4 bundles (default, audiobookshelf, adblock, userscript-sandbox)
 - All color button functions operational
 
 ---
@@ -27,8 +28,8 @@ TizenPortal operates as a **TizenBrew Module** (`packageType: "mods"`) that prov
 
 | Tag | Semantic | Notes |
 |-----|----------|-------|
-| `0100` | 0.1.00 | Starting version |
-| `1000` | 1.0.00 | Current - new tag scheme baseline |
+| `1018` | 1.0.18 | Current - userscript toggle payload |
+| `1000` | 1.0.00 | New tag scheme baseline |
 | `0446` | 0.4.46 | Fix bundle persistence (stale build) |
 | `0445` | 0.4.45 | URL validation, shared escapeHtml, preferences hardening |
 | `0444` | 0.4.44 | CSP, postMessage, adblock hardening |

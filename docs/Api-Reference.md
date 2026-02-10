@@ -1,8 +1,8 @@
 # TizenPortal API Reference
 
 > **Version:** 3.0  
-> **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v1000)  
+> **Date:** February 10, 2026  
+> **Status:** Universal Runtime (v1018)  
 
 ---
 
@@ -13,11 +13,14 @@
 3. [Configuration API](#3-configuration-api)
 4. [Input API](#4-input-api)
 5. [Focus API](#5-focus-api)
+5a. [Cards API](#5a-cards-api)
+5b. [Utilities API](#5b-utilities-api)
 6. [Key Constants](#6-key-constants)
 7. [Payload Interface](#7-payload-interface)
 8. [Card Interface](#8-card-interface)
 9. [Bundle Interface](#9-bundle-interface)
 10. [Events](#10-events)
+11. [Userscript API](#11-userscript-api)
 
 ---
 
@@ -85,6 +88,12 @@ interface TizenPortal {
   hideLoading: () => void;
   toggleSiteAddressBar: () => void;
   toggleSiteDiagnostics: () => void;
+  
+  // Diagnostics
+  isDiagnosticsPanelVisible: () => boolean;
+  clearDiagnosticsLogs: () => void;
+  scrollDiagnosticsLogs: (amount: number) => void;
+  cycleDiagnosticsLogFilter: (direction: 1 | -1) => void;
   
   // Logging
   log: (message: string) => void;
@@ -162,6 +171,64 @@ TizenPortal.warn('Deprecated feature used');
 TizenPortal.error('Failed to load bundle');
 ```
 
+**Log Levels:**
+- `log` - General information (white in diagnostics)
+- `warn` - Warnings (yellow in diagnostics)
+- `error` - Errors (red in diagnostics)
+
+Logs are captured in a circular buffer and displayed in the diagnostics panel.
+
+### TizenPortal.isDiagnosticsPanelVisible
+
+Check if the diagnostics panel is currently visible.
+
+```js
+if (TizenPortal.isDiagnosticsPanelVisible()) {
+  TizenPortal.log('Diagnostics is open');
+}
+```
+
+### TizenPortal.clearDiagnosticsLogs
+
+Clear all logs from the diagnostics panel.
+
+```js
+TizenPortal.clearDiagnosticsLogs();
+TizenPortal.log('Logs cleared');
+```
+
+**Note:** Yellow button in diagnostics also clears logs.
+
+### TizenPortal.scrollDiagnosticsLogs
+
+Scroll the diagnostics log view by the specified amount.
+
+```js
+// Scroll down 5 lines
+TizenPortal.scrollDiagnosticsLogs(5);
+
+// Scroll up 5 lines
+TizenPortal.scrollDiagnosticsLogs(-5);
+```
+
+### TizenPortal.cycleDiagnosticsLogFilter
+
+Cycle through log level filters (All → Log → Warn → Error → All).
+
+```js
+// Cycle forward
+TizenPortal.cycleDiagnosticsLogFilter(1);
+
+// Cycle backward
+TizenPortal.cycleDiagnosticsLogFilter(-1);
+```
+
+**Filter Levels:**
+- **All**: Show all log entries
+- **Log**: Show only `log()` entries
+- **Warn**: Show only `warn()` entries
+- **Error**: Show only `error()` entries
+
 ### TizenPortal.getState
 
 Get current runtime state.
@@ -189,8 +256,10 @@ Configuration management with localStorage persistence.
 interface ConfigAPI {
   read: (key: string) => any;
   write: (key: string, value: any) => void;
-  get: (key: string) => any;
-  set: (key: string, value: any) => void;
+  get: (key: string) => any;          // Alias for read
+  set: (key: string, value: any) => void;  // Alias for write
+  getAll: () => object;                // Get entire config object
+  reset: () => void;                   // Restore default settings
   onChange: (callback: (event: ConfigChangeEvent) => void) => void;
 }
 ```
@@ -217,6 +286,24 @@ TizenPortal.config.onChange(function(event) {
 });
 ```
 
+### config.getAll
+
+Get the entire configuration object.
+
+```js
+const allConfig = TizenPortal.config.getAll();
+console.log('All settings:', allConfig);
+```
+
+### config.reset
+
+Restore all settings to their default values.
+
+```js
+TizenPortal.config.reset();
+TizenPortal.log('Settings reset to defaults');
+```
+
 ### Built-in Config Keys
 
 | Key | Type | Default | Description |
@@ -225,8 +312,42 @@ TizenPortal.config.onChange(function(event) {
 | `focusHighlight` | boolean | true | Focus indicators visible |
 | `safeMode` | boolean | false | Safe mode enabled |
 | `diagnosticsEnabled` | boolean | false | Debug overlay enabled |
+| `lastVisitedUrl` | string | null | Last visited site URL |
 | `tp_portal` | object | — | Portal preferences (theme, HUD, color hints) |
 | `tp_features` | object | — | Global site feature toggles |
+| `tp_userscripts` | object | — | Global userscript configuration |
+| `tp_apps` | array | [] | Site card definitions |
+
+### Portal Preferences (`tp_portal`)
+
+```typescript
+interface PortalPreferences {
+  theme: 'light' | 'dark' | 'auto' | 'backdrop' | 'custom';
+  customColor1?: string;          // Hex color for custom theme
+  customColor2?: string;          // Hex color for custom theme
+  backdropUrl?: string;           // Background image URL
+  hudPosition: 'off' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  hintsPosition: 'off' | 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+}
+```
+
+### Feature Toggles (`tp_features`)
+
+```typescript
+interface FeatureToggles {
+  focusStyling: boolean;          // Global focus styling control
+  focusOutlineMode: 'on' | 'high' | 'off';  // Focus outline appearance
+  tabindexInjection: boolean;     // Auto-add tabindex to elements
+  scrollIntoView: boolean;        // Auto-scroll on focus
+  safeArea: boolean;              // Apply TV safe area inset (5%)
+  gpuHints: boolean;              // Apply GPU acceleration hints
+  cssReset: boolean;              // Apply CSS normalization
+  hideScrollbars: boolean;        // Visually hide scrollbars
+  wrapTextInputs: boolean;        // Protect text inputs from auto-focus
+  viewportMode: 'auto' | 'locked' | 'unlocked';  // Viewport control
+  uaMode: 'tizen' | 'desktop' | 'mobile';        // User agent mode
+}
+```
 
 ---
 
@@ -288,6 +409,59 @@ TizenPortal.input.registerKeyHandler(function(event) {
 **Return Values:**
 - `true` - Event consumed, stop further handling
 - `false` - Pass to next handler / core handling
+
+### input.wrapTextInputs
+
+Protect text input elements from auto-opening the on-screen keyboard. User must press Enter to activate.
+
+```js
+// Wrap all text inputs
+var count = TizenPortal.input.wrapTextInputs('input[type="text"], textarea');
+TizenPortal.log('Protected ' + count + ' text inputs');
+```
+
+**Returns:** Number of inputs wrapped.
+
+### input.unwrapTextInputs
+
+Remove protection from text inputs.
+
+```js
+TizenPortal.input.unwrapTextInputs('input[type="text"]');
+```
+
+### input.activateInput
+
+Manually activate a text input (opens on-screen keyboard).
+
+```js
+var input = document.querySelector('#search');
+TizenPortal.input.activateInput(input);
+```
+
+### input.deactivateInput
+
+Manually deactivate a text input (closes on-screen keyboard).
+
+```js
+TizenPortal.input.deactivateInput(input);
+```
+
+### Pointer Mode Functions
+
+Additional pointer mode utilities (not in main API):
+
+```js
+// Get cursor position
+var pos = TizenPortal.pointer.getPosition();
+// { x: 960, y: 540 }
+
+// Set cursor position
+TizenPortal.pointer.setPosition(100, 200);
+
+// Clear hover highlight
+TizenPortal.pointer.clearHoverHighlight();
+```
 
 ---
 
@@ -370,6 +544,185 @@ TizenPortal.focus.observeDOM(function() {
 
 ---
 
+## 5a. Cards API
+
+### TizenPortal.cards
+
+Card registration system for multi-element card interactions.
+
+```typescript
+interface CardsAPI {
+  register: (config: CardRegistration) => void;
+  unregister: (selector: string) => void;
+  clear: () => void;
+  process: () => number;
+  getRegistrations: () => Array<CardRegistrationInfo>;
+}
+
+interface CardRegistration {
+  selector: string;              // CSS selector for card elements
+  type?: 'single' | 'multi';     // Interaction type (auto-detected if omitted)
+  container?: string;            // CSS selector for focus container
+}
+
+interface CardRegistrationInfo {
+  selector: string;
+  type: 'single' | 'multi';
+  container: string | null;
+}
+```
+
+### cards.register
+
+Register a card pattern for multi-element handling.
+
+```js
+// Register book cards that can be entered
+TizenPortal.cards.register({
+  selector: '.book-card',
+  type: 'multi',
+  container: '.book-card-inner'
+});
+
+// Register with auto-detection
+TizenPortal.cards.register({
+  selector: '.media-item'
+});
+```
+
+**Card Types:**
+- **`single`**: Cards with one interactive element (Enter activates immediately)
+- **`multi`**: Cards with multiple interactive elements (Enter enters card, Back exits)
+
+### cards.unregister
+
+Remove a card registration.
+
+```js
+TizenPortal.cards.unregister('.book-card');
+```
+
+### cards.clear
+
+Remove all card registrations.
+
+```js
+TizenPortal.cards.clear();
+```
+
+### cards.process
+
+Process registered cards and make them focusable. Returns the number of cards processed.
+
+```js
+const count = TizenPortal.cards.process();
+TizenPortal.log('Processed ' + count + ' cards');
+```
+
+### Card Interaction Model
+
+The card system provides a two-level navigation model:
+
+**Single-Action Cards:**
+- Contain one focusable element (button, link, etc.)
+- Pressing Enter activates the element immediately
+- No entering/exiting behavior
+
+**Multi-Action Cards:**
+- Contain multiple focusable elements (play, info, menu, etc.)
+- Pressing Enter "enters" the card and focuses first element
+- Use arrow keys to navigate between elements
+- Pressing Back "exits" the card
+- **Example:** Media cards with play, info, and options buttons
+
+### Example: Media Library
+
+```js
+// Register album cards with multiple actions
+TizenPortal.cards.register({
+  selector: '.album-card',
+  type: 'multi'
+});
+
+// Process cards after page load
+setTimeout(function() {
+  var count = TizenPortal.cards.process();
+  TizenPortal.log('Made ' + count + ' albums focusable');
+}, 500);
+
+// Cleanup on deactivation
+userscript.cleanup = function() {
+  TizenPortal.cards.clear();
+};
+```
+
+---
+
+## 5b. Utilities API
+
+TizenPortal provides utility functions for common tasks.
+
+### TizenPortal.utils
+
+```typescript
+interface UtilsAPI {
+  escapeHtml: (str: string) => string;
+  isValidHttpUrl: (url: string) => boolean;
+  sanitizeUrl: (raw: string) => string;
+  isValidHexColor: (value: string) => boolean;
+  sanitizeCss: (css: string) => string;
+}
+```
+
+### utils.escapeHtml
+
+Escape HTML special characters to prevent XSS.
+
+```js
+var safe = TizenPortal.utils.escapeHtml(userInput);
+element.textContent = safe;  // Safe to use
+```
+
+### utils.isValidHttpUrl
+
+Validate if a string is a valid HTTP/HTTPS URL.
+
+```js
+if (TizenPortal.utils.isValidHttpUrl(input)) {
+  window.location.href = input;
+}
+```
+
+### utils.sanitizeUrl
+
+Sanitize and validate a URL, returning safe version or '#'.
+
+```js
+var safeUrl = TizenPortal.utils.sanitizeUrl(userInput);
+link.href = safeUrl;
+```
+
+### utils.isValidHexColor
+
+Check if a string is a valid hex color code.
+
+```js
+if (TizenPortal.utils.isValidHexColor(input)) {
+  element.style.backgroundColor = input;
+}
+```
+
+### utils.sanitizeCss
+
+Sanitize CSS string for safe injection.
+
+```js
+var safeCss = TizenPortal.utils.sanitizeCss(userCss);
+styleElement.textContent = safeCss;
+```
+
+---
+
 ## 6. Key Constants
 
 ### TizenPortal.keys
@@ -407,6 +760,71 @@ KEYS.FAST_FORWARD // 417
 // IME
 KEYS.IME_DONE     // 65376
 KEYS.IME_CANCEL   // 65385
+```
+
+### Key Helper Functions
+
+```typescript
+interface KeyHelpers {
+  isNavigationKey: (keyCode: number) => boolean;  // Check if Left/Up/Right/Down
+  isColorButton: (keyCode: number) => boolean;    // Check if Red/Green/Yellow/Blue
+  isMediaKey: (keyCode: number) => boolean;       // Check if Play/Pause/Stop/etc
+  getKeyName: (keyCode: number) => string;        // Get human-readable key name
+}
+```
+
+```js
+// Check key types
+if (TizenPortal.keys.isNavigationKey(event.keyCode)) {
+  // Handle directional input
+}
+
+if (TizenPortal.keys.isColorButton(event.keyCode)) {
+  // Handle color button
+}
+
+// Get key name for logging
+var name = TizenPortal.keys.getKeyName(event.keyCode);
+TizenPortal.log('Key pressed: ' + name);
+```
+
+### Long-Press Detection
+
+Color buttons support long-press actions (hold for 500ms).
+
+```js
+// Long-press threshold is 500ms
+const LONG_PRESS_MS = 500;
+
+// Core handler automatically detects long presses
+// Your custom handlers receive the event before long-press fires
+TizenPortal.input.registerKeyHandler(function(event) {
+  if (event.keyCode === TizenPortal.keys.RED) {
+    // This fires on keydown (before long-press)
+    // Return false to allow long-press to fire
+    return false;
+  }
+});
+```
+
+### Back Key Behavior
+
+The BACK key (10009) has special handling:
+
+- **On sites**: Navigate browser history backward
+- **With diagnostics open**: Close diagnostics panel
+- **After IME dismiss**: Suppressed for 2 seconds to prevent accidental navigation
+
+```js
+// Back key is handled by core, but you can intercept
+TizenPortal.input.registerKeyHandler(function(event) {
+  if (event.keyCode === TizenPortal.keys.BACK) {
+    // Custom back behavior
+    customBack Handler();
+    return true;  // Prevent default back action
+  }
+  return false;
+});
 ```
 
 ### Usage
@@ -498,9 +916,23 @@ interface Card {
   wrapTextInputs?: boolean | null;
   bundleOptions?: Record<string, any>;
   bundleOptionData?: Record<string, any>;
+  userscripts?: Array<UserscriptEntry>; // Per-site userscripts
+  userscriptToggles?: Record<string, boolean>; // Global script toggles for this site
+  bundleUserscriptToggles?: Record<string, Record<string, boolean>>; // Bundle script toggles
   order?: number;          // Grid position
   createdAt?: number;
   updatedAt?: number;
+}
+
+interface UserscriptEntry {
+  id: string;              // Unique script identifier
+  name: string;            // Display name
+  enabled: boolean;        // Whether script is enabled
+  source: 'inline' | 'url'; // Script source type
+  inline?: string;         // Inline script code
+  url?: string;            // External script URL
+  cached?: string;         // Cached script from URL
+  lastFetched?: number;    // Timestamp of last fetch
 }
 
 > Note: User-agent spoofing is JavaScript-only (not network-layer). Some sites may still detect the underlying browser.
@@ -538,6 +970,7 @@ interface Bundle {
   displayName: string;     // UI display name
   description: string;     // Bundle description
   style: string;           // CSS content (imported from .css file)
+  userscripts?: Array<UserscriptEntry>; // Bundle-provided userscripts
   
   // Lifecycle hooks
   onBeforeLoad?: (window: Window, card: Card) => void;
@@ -564,6 +997,204 @@ const names = getBundleNames();
 if (hasBundle('my-bundle')) {
   // Bundle available
 }
+```
+
+### Lifecycle Hooks
+
+Bundles can define lifecycle hooks that are called at specific points:
+
+#### onBeforeLoad
+
+Called before the page's DOM is fully loaded.
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onBeforeLoad(window, card) {
+    // Runs before DOMContentLoaded
+    // Use for early script injection
+    TizenPortal.log('Preparing site...');
+  }
+};
+```
+
+**Use cases:** Early script injection, preload resources
+
+#### onAfterLoad
+
+Called after the page's DOM is fully loaded.
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onAfterLoad(window, card) {
+    // Runs after DOMContentLoaded
+    // DOM is ready for manipulation
+    registerCards();
+    setInitialFocus();
+  }
+};
+```
+
+**Use cases:** DOM manipulation, focus setup, card registration
+
+#### onActivate
+
+Called when the bundle becomes active (user navigates to site).
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onActivate(window, card) {
+    // Bundle is now active
+    TizenPortal.log('Bundle activated:', card.name);
+    
+    // Setup event listeners
+    document.addEventListener('myEvent', handleEvent);
+  }
+};
+```
+
+**Use cases:** Event listener setup, initialization, state setup
+
+#### onDeactivate
+
+Called when the bundle is deactivated (user navigates away).
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onDeactivate(window, card) {
+    // Bundle is being deactivated
+    TizenPortal.log('Cleaning up...');
+    
+    // Remove event listeners
+    document.removeEventListener('myEvent', handleEvent);
+    
+    // Clear intervals/timeouts
+    clearInterval(myInterval);
+  }
+};
+```
+
+**Use cases:** Cleanup, remove listeners, clear timers
+
+#### onNavigate
+
+Called when URL changes within the same site (SPA navigation).
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onNavigate(url) {
+    // URL changed (SPA navigation)
+    TizenPortal.log('Navigated to:', url);
+    
+    // Re-process cards for new content
+    setTimeout(function() {
+      TizenPortal.cards.process();
+    }, 500);
+  }
+};
+```
+
+**Use cases:** SPA navigation handling, re-processing cards
+
+**Note:** Not currently triggered by core, may need manual invocation or URL watching.
+
+#### onKeyDown
+
+Intercept key events before core processing.
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onKeyDown(event) {
+    // Intercept Play key for custom behavior
+    if (event.keyCode === TizenPortal.keys.PLAY) {
+      playCurrentItem();
+      return true;  // Consumed - stop propagation
+    }
+    
+    return false;  // Let core handle
+  }
+};
+```
+
+**Return values:**
+- `true` - Event consumed, stop further handling
+- `false` - Pass to core handling
+
+**Use cases:** Custom key bindings, media key handling
+
+### Complete Bundle Example
+
+```js
+import myStyles from './style.css';
+
+export default {
+  name: 'my-bundle',
+  displayName: 'My Bundle',
+  description: 'Enhances My Site for TV',
+  style: myStyles,
+  
+  userscripts: [
+    {
+      id: 'fix-nav',
+      name: 'Fix Navigation',
+      enabled: true,
+      source: 'inline',
+      inline: 'document.querySelector(".nav").style.display = "flex";'
+    }
+  ],
+  
+  onBeforeLoad(window, card) {
+    TizenPortal.log('Preparing:', card.name);
+  },
+  
+  onAfterLoad(window, card) {
+    // Register multi-action cards
+    TizenPortal.cards.register({
+      selector: '.media-card',
+      type: 'multi'
+    });
+    
+    // Process cards
+    setTimeout(function() {
+      var count = TizenPortal.cards.process();
+      TizenPortal.log('Processed', count, 'cards');
+    }, 500);
+    
+    // Set initial focus
+    TizenPortal.focus.setInitialFocus([
+      '.media-card:first-child',
+      'button:first-of-type'
+    ]);
+  },
+  
+  onActivate(window, card) {
+    TizenPortal.log('Bundle active');
+  },
+  
+  onDeactivate(window, card) {
+    TizenPortal.cards.clear();
+    TizenPortal.log('Cleaned up');
+  },
+  
+  onKeyDown(event) {
+    if (event.keyCode === TizenPortal.keys.PLAY) {
+      playCurrentMedia();
+      return true;
+    }
+    return false;
+  }
+};
 ```
 
 ---
@@ -607,6 +1238,90 @@ document.addEventListener('keydown', function(e) {
       break;
   }
 });
+```
+
+---
+
+## 11. Userscript API
+
+Userscripts have access to the full TizenPortal API plus a special cleanup mechanism.
+
+### Userscript Context
+
+```javascript
+// Available in userscript execution context:
+// - window: The page's global window object
+// - document: The page's document object
+// - TizenPortal: Full TizenPortal API
+// - card: Current card object (may be null)
+// - bundle: Current bundle object (may be null)
+// - userscript: Runtime object for script metadata
+
+// Example userscript:
+TizenPortal.log('Userscript executing:', userscript.name);
+
+// Modify page
+document.body.style.backgroundColor = '#000';
+
+// Register cleanup
+userscript.cleanup = function() {
+  document.body.style.backgroundColor = '';
+  TizenPortal.log('Cleanup complete');
+};
+```
+
+### Cleanup Function
+
+Register a cleanup function to remove event listeners, timers, or other side effects when the script is deactivated:
+
+```javascript
+var intervalId = setInterval(function() {
+  checkPageState();
+}, 1000);
+
+// Cleanup will be called when:
+// - User navigates away
+// - Script is disabled
+// - Page is reloaded
+userscript.cleanup = function() {
+  clearInterval(intervalId);
+};
+```
+
+### Best Practices
+
+1. **Always provide cleanup** — Remove listeners, clear timers, restore modified DOM
+2. **Check for elements** — Use try-catch and null checks for DOM access
+3. **Log activity** — Use `TizenPortal.log()` for visibility in diagnostics
+4. **Chrome 47 compatible** — Avoid modern JS features (no async/await, destructuring)
+5. **Test thoroughly** — Errors in userscripts can break page functionality
+
+### Example: Custom Navigation
+
+```javascript
+// Add custom keyboard shortcuts
+function handleCustomKey(e) {
+  if (e.keyCode === TizenPortal.keys.PLAY) {
+    var video = document.querySelector('video');
+    if (video) {
+      if (video.paused) {
+        video.play();
+      } else {
+        video.pause();
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+}
+
+document.addEventListener('keydown', handleCustomKey, true);
+
+// Cleanup
+userscript.cleanup = function() {
+  document.removeEventListener('keydown', handleCustomKey, true);
+  TizenPortal.log('Custom navigation cleaned up');
+};
 ```
 
 ---

@@ -54,6 +54,7 @@ TizenPortal includes built-in support for:
 | [Audiobookshelf](https://www.audiobookshelf.org/) | `audiobookshelf` | ✅ Full Support |
 | Any Website | `default` | ✅ Basic Support |
 | Ad-heavy Sites | `adblock` | ✅ Ad Blocking |
+| Custom Userscripts | `userscript-sandbox` | ✅ Userscript Support |
 
 ### Requirements
 
@@ -67,9 +68,9 @@ TizenPortal includes built-in support for:
 
 | Item | Value |
 |------|-------|
-| Current Version | 1000 |
+| Current Version | 1018 |
 | Architecture | Universal Runtime |
-| Last Updated | February 7, 2026 |
+| Last Updated | February 10, 2026 |
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Version:** 3.0  
 > **Date:** January 31, 2026  
-> **Status:** Universal Runtime (v0420)  
+> **Status:** Universal Runtime (v1018)  
 
 ---
 
@@ -285,6 +285,11 @@ export default {
 };
 ```
 
+**Note:** For complete lifecycle hook documentation with detailed examples and use cases, see [API Reference - Bundle Interface](Api-Reference.md#9-bundle-interface).
+
+**Additional lifecycle hooks:**
+- `onNavigate(url)` - Called on SPA URL changes (requires manual invocation or URL watching)
+
 ---
 
 ## 5. Using Core Utilities
@@ -358,6 +363,38 @@ onActivate(window, card) {
   });
 }
 ```
+
+### Card Registration
+
+For sites with multi-element cards (media items, books, etc.):
+
+```js
+onActivate(window, card) {
+  // Register cards for multi-element interaction
+  window.TizenPortal.cards.register({
+    selector: '.media-card',
+    type: 'multi'  // or 'single', or omit for auto-detect
+  });
+  
+  // Process cards after a short delay for dynamic content
+  setTimeout(function() {
+    var count = window.TizenPortal.cards.process();
+    console.log('Processed', count, 'cards');
+  }, 500);
+}
+
+onDeactivate(window, card) {
+  // Clean up card registrations
+  window.TizenPortal.cards.clear();
+}
+```
+
+**Card Types:**
+- **`single`**: Cards with one focusable element (Enter activates immediately)
+- **`multi`**: Cards with multiple elements (Enter enters card, Back exits)
+- **Auto-detect**: Omit `type` to detect based on focusable children count
+
+See [API Reference - Cards API](Api-Reference.md#5a-cards-api) for complete documentation.
 
 ### Geometry Utilities
 

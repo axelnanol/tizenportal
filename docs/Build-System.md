@@ -2,7 +2,7 @@
 
 > **Version:** 3.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v1000)  
+> **Status:** Universal Runtime (v1018)  
 
 ---
 
@@ -168,7 +168,7 @@ Version is centralized in `package.json` and injected at build time.
 
 1. **package.json** holds the single source of truth:
    ```json
-  { "version": "1000" }
+  { "version": "1018" }
    ```
 
 2. **Rollup reads** the version at build time:
@@ -184,7 +184,7 @@ Version is centralized in `package.json` and injected at build time.
 
 4. **Source files** use the placeholder:
    ```js
-  const VERSION = '__VERSION__';  // Becomes '1000' in output
+  const VERSION = '__VERSION__';  // Becomes '1018' in output
    ```
 
 ### Benefits
@@ -247,7 +247,7 @@ var TizenPortal = (function () {
   // Core initialization
   
   return {
-    version: '1000',
+    version: '1018',
     config: {...},
     input: {...},
     focus: {...},
@@ -276,7 +276,7 @@ The build includes:
 5. **Input Handling** (keys, pointer, text-input)
 6. **Focus Management**
 7. **Diagnostics** (console capture)
-8. **Bundles** (default, audiobookshelf, adblock)
+8. **Bundles** (default, audiobookshelf, adblock, userscript-sandbox)
 
 ---
 
