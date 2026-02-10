@@ -1,7 +1,7 @@
 # TizenPortal API Reference
 
 > **Version:** 3.0  
-> **Date:** February 7, 2026  
+> **Date:** February 10, 2026  
 > **Status:** Universal Runtime (v1018)  
 
 ---
@@ -18,6 +18,7 @@
 8. [Card Interface](#8-card-interface)
 9. [Bundle Interface](#9-bundle-interface)
 10. [Events](#10-events)
+11. [Userscript API](#11-userscript-api)
 
 ---
 
@@ -498,9 +499,23 @@ interface Card {
   wrapTextInputs?: boolean | null;
   bundleOptions?: Record<string, any>;
   bundleOptionData?: Record<string, any>;
+  userscripts?: Array<UserscriptEntry>; // Per-site userscripts
+  userscriptToggles?: Record<string, boolean>; // Global script toggles for this site
+  bundleUserscriptToggles?: Record<string, Record<string, boolean>>; // Bundle script toggles
   order?: number;          // Grid position
   createdAt?: number;
   updatedAt?: number;
+}
+
+interface UserscriptEntry {
+  id: string;              // Unique script identifier
+  name: string;            // Display name
+  enabled: boolean;        // Whether script is enabled
+  source: 'inline' | 'url'; // Script source type
+  inline?: string;         // Inline script code
+  url?: string;            // External script URL
+  cached?: string;         // Cached script from URL
+  lastFetched?: number;    // Timestamp of last fetch
 }
 
 > Note: User-agent spoofing is JavaScript-only (not network-layer). Some sites may still detect the underlying browser.
@@ -538,6 +553,7 @@ interface Bundle {
   displayName: string;     // UI display name
   description: string;     // Bundle description
   style: string;           // CSS content (imported from .css file)
+  userscripts?: Array<UserscriptEntry>; // Bundle-provided userscripts
   
   // Lifecycle hooks
   onBeforeLoad?: (window: Window, card: Card) => void;
@@ -607,6 +623,90 @@ document.addEventListener('keydown', function(e) {
       break;
   }
 });
+```
+
+---
+
+## 11. Userscript API
+
+Userscripts have access to the full TizenPortal API plus a special cleanup mechanism.
+
+### Userscript Context
+
+```javascript
+// Available in userscript execution context:
+// - window: The page's global window object
+// - document: The page's document object
+// - TizenPortal: Full TizenPortal API
+// - card: Current card object (may be null)
+// - bundle: Current bundle object (may be null)
+// - userscript: Runtime object for script metadata
+
+// Example userscript:
+TizenPortal.log('Userscript executing:', userscript.name);
+
+// Modify page
+document.body.style.backgroundColor = '#000';
+
+// Register cleanup
+userscript.cleanup = function() {
+  document.body.style.backgroundColor = '';
+  TizenPortal.log('Cleanup complete');
+};
+```
+
+### Cleanup Function
+
+Register a cleanup function to remove event listeners, timers, or other side effects when the script is deactivated:
+
+```javascript
+var intervalId = setInterval(function() {
+  checkPageState();
+}, 1000);
+
+// Cleanup will be called when:
+// - User navigates away
+// - Script is disabled
+// - Page is reloaded
+userscript.cleanup = function() {
+  clearInterval(intervalId);
+};
+```
+
+### Best Practices
+
+1. **Always provide cleanup** — Remove listeners, clear timers, restore modified DOM
+2. **Check for elements** — Use try-catch and null checks for DOM access
+3. **Log activity** — Use `TizenPortal.log()` for visibility in diagnostics
+4. **Chrome 47 compatible** — Avoid modern JS features (no async/await, destructuring)
+5. **Test thoroughly** — Errors in userscripts can break page functionality
+
+### Example: Custom Navigation
+
+```javascript
+// Add custom keyboard shortcuts
+function handleCustomKey(e) {
+  if (e.keyCode === TizenPortal.keys.PLAY) {
+    var video = document.querySelector('video');
+    if (video) {
+      if (video.paused) {
+        video.play();
+      } else {
+        video.pause();
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+}
+
+document.addEventListener('keydown', handleCustomKey, true);
+
+// Cleanup
+userscript.cleanup = function() {
+  document.removeEventListener('keydown', handleCustomKey, true);
+  TizenPortal.log('Custom navigation cleaned up');
+};
 ```
 
 ---

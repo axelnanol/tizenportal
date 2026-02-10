@@ -239,7 +239,6 @@ Open Preferences with **🟡 Yellow** on the portal.
 - **CSS Normalization**: Applies a reset tuned for TV browsing
 - **Hide Scrollbars**: Visually hides scrollbars
 - **Protect Text Inputs (TV Keyboard)**: prevents the on-screen keyboard from opening until you press Enter
-- **Protect Text Inputs (TV Keyboard)**: prevents the on-screen keyboard from opening until you press Enter
 
 ---
 
