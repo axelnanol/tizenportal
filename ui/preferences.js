@@ -522,10 +522,14 @@ function renderPreferencesUI() {
     if (row.type === 'section') {
       var collapsed = !!prefsState.sectionCollapsed[row.id];
       var indicator = collapsed ? '▶' : '▼';
+      var summary = getPreferencesSectionSummary(row.id);
       html += '' +
         '<div class="tp-prefs-row tp-prefs-section-row" data-index="' + i + '" data-id="' + row.id + '" data-type="section" tabindex="0">' +
           '<div class="tp-prefs-label">' + row.label + '</div>' +
-          '<div class="tp-prefs-value">' + indicator + '</div>' +
+          '<div class="tp-prefs-value">' +
+            '<span class="tp-prefs-section-summary">' + escapeHtml(summary) + '</span>' +
+            '<span class="tp-prefs-section-indicator">' + indicator + '</span>' +
+          '</div>' +
         '</div>';
     } else if (row.type && row.type === 'userscript') {
       html += renderUserscriptRow(row, i);
@@ -572,6 +576,78 @@ function renderPreferencesUI() {
   }
 
   container.scrollTop = scrollTop;
+}
+
+function getPreferencesSectionSummary(sectionId) {
+  ensureUserscriptsConfig();
+  if (sectionId === 'appearance') {
+    var theme = normalizeThemeValue(prefsState.settings.portalConfig.theme || 'dark');
+    var themeLabel = getOptionLabel(THEME_OPTIONS, theme) || theme;
+    if (theme === 'custom') {
+      var c1 = prefsState.settings.portalConfig.customColor1 || '#0d1117';
+      var c2 = prefsState.settings.portalConfig.customColor2 || '#161b22';
+      return themeLabel + ' • ' + c1 + ' → ' + c2;
+    }
+    if (theme === 'backdrop') {
+      var bg = prefsState.settings.portalConfig.backgroundImage || 'none';
+      return themeLabel + ' • ' + shortenUrl(bg);
+    }
+    return themeLabel;
+  }
+
+  if (sectionId === 'portal') {
+    var hud = normalizeHudPosition(prefsState.settings.portalConfig.hudPosition || 'off');
+    var hudLabel = getOptionLabel(HUD_OPTIONS, hud) || hud;
+    var hints = prefsState.settings.portalConfig.showHints ? 'Hints: On' : 'Hints: Off';
+    return hudLabel + ' • ' + hints;
+  }
+
+  if (sectionId === 'features') {
+    var enabled = 0;
+    var total = 0;
+    for (var i = 0; i < PREFERENCE_ROWS.length; i++) {
+      var row = PREFERENCE_ROWS[i];
+      if (row.section !== 'features') continue;
+      total++;
+      var value = getValue(row);
+      if (row.type === 'toggle') {
+        if (value) enabled++;
+      }
+    }
+    return 'Toggles: ' + enabled + '/' + total;
+  }
+
+  if (sectionId === 'userscripts') {
+    var scripts = prefsState.settings.userscriptsConfig.scripts || [];
+    var filled = 0;
+    for (var j = 0; j < scripts.length; j++) {
+      var s = scripts[j] || {};
+      if (s.source === 'url' ? !!s.cached : !!s.inline) {
+        filled++;
+      }
+    }
+    return 'Scripts: ' + scripts.length + ' • Saved: ' + filled;
+  }
+
+  return '';
+}
+
+function getOptionLabel(options, value) {
+  for (var i = 0; i < options.length; i++) {
+    if (options[i].value === value) {
+      return options[i].label;
+    }
+  }
+  return '';
+}
+
+function shortenUrl(url) {
+  if (!url) return '';
+  var cleaned = url.replace(/^https?:\/\//i, '');
+  if (cleaned.length > 40) {
+    cleaned = cleaned.substring(0, 37) + '...';
+  }
+  return cleaned;
 }
 
 function renderUserscriptRow(row, index) {

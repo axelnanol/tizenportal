@@ -112,6 +112,17 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+
+    .tp-card-subtitle {
+      margin-top: 6px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+      text-align: center;
+      max-width: 240px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     
     /* Add card button */
     .tp-card-add {
@@ -184,6 +195,10 @@
     #tp-shell[data-theme="light"] .tp-card-name {
       color: #1a1a1a;
     }
+
+    #tp-shell[data-theme="light"] .tp-card-subtitle {
+      color: rgba(0, 0, 0, 0.5);
+    }
     
     #tp-shell[data-theme="light"] .tp-card-add {
       border-color: rgba(0, 0, 0, 0.2);
@@ -238,6 +253,14 @@
     #tp-shell[data-theme="light"] .tp-preview-url {
       color: #666;
     }
+
+    #tp-shell[data-theme="light"] .tp-preview-meta {
+      border-top-color: #ddd;
+    }
+
+    #tp-shell[data-theme="light"] .tp-preview-meta-row {
+      color: #777;
+    }
     
     #tp-shell[data-theme="light"] .tp-field-row {
       background: #f8f8f8;
@@ -259,6 +282,18 @@
     }
     
     #tp-shell[data-theme="light"] .tp-field-value.empty {
+      color: #999;
+    }
+
+    #tp-shell[data-theme="light"] .tp-field-section-row .tp-field-value {
+      color: #888;
+    }
+
+    #tp-shell[data-theme="light"] .tp-section-summary {
+      color: #777;
+    }
+
+    #tp-shell[data-theme="light"] .tp-section-indicator {
       color: #999;
     }
     
@@ -401,6 +436,18 @@
     
     #tp-shell[data-theme="light"] .tp-prefs-value {
       color: #1a1a1a;
+    }
+
+    #tp-shell[data-theme="light"] .tp-prefs-section-row .tp-prefs-value {
+      color: #888;
+    }
+
+    #tp-shell[data-theme="light"] .tp-prefs-section-summary {
+      color: #777;
+    }
+
+    #tp-shell[data-theme="light"] .tp-prefs-section-indicator {
+      color: #999;
     }
     
     #tp-shell[data-theme="light"] .tp-prefs-footer {
@@ -754,6 +801,22 @@
       color: #666;
       word-break: break-all;
     }
+
+    .tp-preview-meta {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #333;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .tp-preview-meta-row {
+      font-size: 12px;
+      color: #888;
+      line-height: 1.4;
+    }
     
     /* Field Rows */
     .tp-field-row-group {
@@ -819,6 +882,28 @@
       font-size: 18px;
       color: #fff;
       padding: 0 16px;
+    }
+
+    .tp-field-section-row .tp-field-value {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      color: #888;
+      gap: 8px;
+    }
+
+    .tp-section-summary {
+      color: #888;
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 720px;
+    }
+
+    .tp-section-indicator {
+      color: #666;
+      font-size: 14px;
     }
     
     .tp-field-value.empty {
@@ -1169,6 +1254,29 @@
       color: #fff;
       padding: 0 16px;
       text-align: right;
+    }
+
+    .tp-prefs-section-row .tp-prefs-value {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      color: #888;
+    }
+
+    .tp-prefs-section-summary {
+      color: #888;
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 720px;
+      text-align: right;
+    }
+
+    .tp-prefs-section-indicator {
+      color: #666;
+      font-size: 14px;
     }
 
     .tp-prefs-row.tp-prefs-userscript-row .tp-prefs-value {
@@ -1797,7 +1905,7 @@
     <div id="tp-modal-container"></div>
   </div>
   
-  <script src="tizenportal.js?v=1010"></script>
+  <script src="tizenportal.js?v=1011"></script>
   <script>
     // Update version display from TizenPortal runtime
     (function() {

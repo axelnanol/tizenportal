@@ -7,6 +7,7 @@
 import { getCards, addCard, updateCard, deleteCard } from './cards.js';
 import { showAddCardModal, showEditCardModal, setRefreshPortalFn } from './modal.js';
 import { showAddSiteEditor, showEditSiteEditor } from './siteeditor.js';
+import { getBundle } from '../bundles/registry.js';
 import { applyPortalPreferences } from './preferences.js';
 
 /**
@@ -115,6 +116,16 @@ function createCardElement(card, index) {
   nameEl.className = 'tp-card-name';
   nameEl.textContent = card.name || 'Untitled';
   el.appendChild(nameEl);
+
+  // Bundle subtitle (optional)
+  if (card.featureBundle) {
+    var bundle = getBundle(card.featureBundle);
+    var bundleName = (bundle && bundle.displayName) ? bundle.displayName : card.featureBundle;
+    var bundleEl = document.createElement('div');
+    bundleEl.className = 'tp-card-subtitle';
+    bundleEl.textContent = bundleName;
+    el.appendChild(bundleEl);
+  }
 
   // Long press detection for edit
   var pressStartTime = 0;

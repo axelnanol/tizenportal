@@ -76,6 +76,7 @@ var FEATURE_TOGGLE_OPTIONS = [
 
 var SECTION_DEFS = [
   { id: 'details', label: 'Site Details', defaultCollapsed: false },
+  { id: 'bundle', label: 'Bundle', defaultCollapsed: true },
   { id: 'options', label: 'Site Options', defaultCollapsed: true },
   { id: 'bundleOptions', label: 'Bundle Options', defaultCollapsed: true },
   { id: 'userscripts', label: 'User Scripts', defaultCollapsed: true },
@@ -83,6 +84,7 @@ var SECTION_DEFS = [
 
 var sectionCollapsed = {
   details: false,
+  bundle: true,
   options: true,
 };
 
@@ -159,10 +161,10 @@ function getBundleUserscriptId(bundleName, script, index) {
 }
 
 var FIELDS = [
-  { name: 'name', label: 'Site Name', type: 'text', placeholder: 'My Site', required: true, section: 'details' },
-  { name: 'url', label: 'URL', type: 'text', placeholder: 'https://example.com', required: true, section: 'details' },
-  { name: 'icon', label: 'Icon URL', type: 'text', placeholder: 'https://... (optional)', required: false, section: 'details' },
-  { name: 'featureBundle', label: 'Site-specific Bundle', type: 'bundle', required: false },
+  { name: '__section_details', label: 'Site Details', type: 'section', sectionId: 'details' },
+  { name: '__details', label: 'Site Details', type: 'details', section: 'details' },
+  { name: '__section_bundle', label: 'Bundle', type: 'section', sectionId: 'bundle' },
+  { name: 'featureBundle', label: 'Site-specific Bundle', type: 'bundle', required: false, section: 'bundle' },
   { name: '__section_options', label: 'Site Options', type: 'section', sectionId: 'options' },
   { name: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_MODE_OPTIONS, section: 'options' },
   { name: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS, section: 'options' },
@@ -379,6 +381,11 @@ function createEditorHTML() {
             '<div class="tp-preview-icon" id="tp-preview-icon">?</div>' +
             '<div class="tp-preview-name" id="tp-preview-name">Site Name</div>' +
             '<div class="tp-preview-url" id="tp-preview-url">https://...</div>' +
+            '<div class="tp-preview-meta" id="tp-preview-meta">' +
+              '<div class="tp-preview-meta-row" id="tp-preview-bundle">Bundle: None</div>' +
+              '<div class="tp-preview-meta-row" id="tp-preview-options">Options: Global</div>' +
+              '<div class="tp-preview-meta-row" id="tp-preview-userscripts">Scripts: None</div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -1019,6 +1026,8 @@ function renderFields() {
       html += renderSelectField(field, rawValue);
     } else if (field.type === 'userscripts') {
       html += renderUserscriptsField();
+    } else if (field.type === 'details') {
+      html += renderDetailsField();
     } else {
       html += renderTextField(field, value);
     }
@@ -1045,11 +1054,118 @@ function renderSectionRow(field) {
   var sectionId = field.sectionId;
   var collapsed = !!sectionCollapsed[sectionId];
   var indicator = collapsed ? '▶' : '▼';
+  var summary = getSectionSummary(sectionId);
   return '' +
     '<div class="tp-field-row tp-field-section-row" data-type="section" data-section="' + sectionId + '" tabindex="0">' +
       '<div class="tp-field-label">' + field.label + '</div>' +
-      '<div class="tp-field-value">' + indicator + '</div>' +
+      '<div class="tp-field-value">' +
+        '<span class="tp-section-summary">' + escapeHtml(summary) + '</span>' +
+        '<span class="tp-section-indicator">' + indicator + '</span>' +
+      '</div>' +
     '</div>';
+}
+
+function getSectionSummary(sectionId) {
+  if (!state.card) return '';
+
+  if (sectionId === 'details') {
+    var name = state.card.name || '(no name)';
+    var url = shortenUrl(state.card.url || '(no url)');
+    var icon = state.card.icon ? 'Icon: set' : 'Icon: none';
+    return name + ' • ' + url + ' • ' + icon;
+  }
+
+  if (sectionId === 'bundle') {
+    var bundleName = state.card.featureBundle || null;
+    if (!bundleName) return 'Bundle: None';
+    var bundle = getBundle(bundleName);
+    var displayName = bundle && bundle.displayName ? bundle.displayName : bundleName;
+    return 'Bundle: ' + displayName;
+  }
+
+  if (sectionId === 'options') {
+    var overrides = countOptionOverrides();
+    return overrides ? ('Overrides: ' + overrides) : 'All global';
+  }
+
+  if (sectionId === 'bundleOptions') {
+    var bundleOptionSummary = getBundleOptionsSummary();
+    return bundleOptionSummary || 'None';
+  }
+
+  if (sectionId === 'userscripts') {
+    return getUserscriptsSummary();
+  }
+
+  return '';
+}
+
+function shortenUrl(url) {
+  if (!url) return '';
+  var cleaned = url.replace(/^https?:\/\//i, '');
+  if (cleaned.length > 40) {
+    cleaned = cleaned.substring(0, 37) + '...';
+  }
+  return cleaned;
+}
+
+function countOptionOverrides() {
+  var count = 0;
+  for (var i = 0; i < FIELDS.length; i++) {
+    var field = FIELDS[i];
+    if (field.section !== 'options') continue;
+    if (state.card.hasOwnProperty(field.name) && state.card[field.name] !== null && state.card[field.name] !== undefined) {
+      count++;
+    }
+  }
+  return count;
+}
+
+function getBundleOptionsSummary() {
+  var bundleName = state.card.featureBundle || null;
+  if (!bundleName) return '';
+  var bundle = getBundle(bundleName);
+  if (!bundle || !bundle.options || !bundle.options.length) return '';
+
+  var changed = 0;
+  for (var i = 0; i < bundle.options.length; i++) {
+    var opt = bundle.options[i];
+    if (!opt || !opt.key) continue;
+    var current = getBundleOptionValue(opt.key, opt);
+    var def = opt.hasOwnProperty('default') ? opt.default : null;
+    if (current !== def) {
+      changed++;
+    }
+  }
+  return changed ? ('Overrides: ' + changed) : ('Options: ' + bundle.options.length);
+}
+
+function getUserscriptsSummary() {
+  var bundleName = state.card ? state.card.featureBundle : null;
+  var bundleScripts = getBundleUserscripts(bundleName) || [];
+  var bundleToggles = ensureBundleUserscriptToggles(bundleName);
+  var bundleOn = 0;
+  for (var i = 0; i < bundleScripts.length; i++) {
+    var b = bundleScripts[i] || {};
+    var bId = getBundleUserscriptId(bundleName, b, i);
+    var enabled = b.enabled !== false;
+    if (bundleToggles && bundleToggles.hasOwnProperty(bId)) {
+      enabled = bundleToggles[bId] === true;
+    }
+    if (enabled) bundleOn++;
+  }
+
+  var globalScripts = getGlobalUserscripts();
+  var siteToggles = ensureSiteUserscriptToggles();
+  var siteOn = 0;
+  for (var j = 0; j < globalScripts.length; j++) {
+    var s = globalScripts[j] || {};
+    var sId = s.id || ('global-' + j);
+    if (siteToggles[sId] === true) siteOn++;
+  }
+
+  if (!bundleScripts.length && !globalScripts.length) return 'None';
+  return 'Site: ' + siteOn + '/' + globalScripts.length + ' on • Bundle: ' + bundleOn + '/' + bundleScripts.length + ' on';
 }
 
 /**
@@ -1077,6 +1193,24 @@ function renderTextField(field, value) {
     '<div class="tp-field-row" data-field="' + field.name + '" tabindex="0">' +
       '<div class="tp-field-label">' + field.label + (field.required ? ' *' : '') + '</div>' +
       '<div class="tp-field-value' + (isEmpty ? ' empty' : '') + '">' + escapeHtml(displayValue) + '</div>' +
+    '</div>';
+}
+
+function renderDetailsField() {
+  var name = state.card.name || 'Site Name';
+  var url = state.card.url || 'https://...';
+  var icon = state.card.icon ? 'Icon: set' : 'Icon: none';
+  var summary = 'Name: ' + name + ' • URL: ' + shortenUrl(url) + ' • ' + icon;
+
+  return '' +
+    '<div class="tp-userscript-line tp-userscript-row tp-details-row" data-details-row="true" tabindex="0">' +
+      '<div class="tp-userscript-label">' + escapeHtml(summary) + '</div>' +
+      '<div class="tp-userscript-actions">' +
+        '<button type="button" class="tp-userscript-btn tp-detail-btn" data-detail-action="edit-name" tabindex="0">Name</button>' +
+        '<button type="button" class="tp-userscript-btn tp-detail-btn" data-detail-action="edit-url" tabindex="0">URL</button>' +
+        '<button type="button" class="tp-userscript-btn tp-detail-btn" data-detail-action="edit-icon" tabindex="0">Icon</button>' +
+        '<button type="button" class="tp-userscript-btn tp-detail-btn" data-detail-action="fetch-icon" tabindex="0">Fetch</button>' +
+      '</div>' +
     '</div>';
 }
 
@@ -1214,10 +1348,14 @@ function renderBundleOptions(bundleName) {
 function renderBundleOptionsHeader() {
   var collapsed = !!sectionCollapsed.bundleOptions;
   var indicator = collapsed ? '▶' : '▼';
+  var summary = getSectionSummary('bundleOptions');
   return '' +
     '<div class="tp-field-row tp-field-section-row" data-type="section" data-section="bundleOptions" tabindex="0">' +
       '<div class="tp-field-label">Bundle Options</div>' +
-      '<div class="tp-field-value">' + indicator + '</div>' +
+      '<div class="tp-field-value">' +
+        '<span class="tp-section-summary">' + escapeHtml(summary) + '</span>' +
+        '<span class="tp-section-indicator">' + indicator + '</span>' +
+      '</div>' +
     '</div>';
 }
 
@@ -1357,7 +1495,7 @@ function setupFieldListeners(container) {
   }
 
   // Userscript rows (handled separately)
-  var userscriptActions = container.querySelectorAll('.tp-userscript-action, .tp-userscript-btn');
+  var userscriptActions = container.querySelectorAll('.tp-userscript-action, .tp-userscript-btn:not(.tp-detail-btn)');
   for (var ua = 0; ua < userscriptActions.length; ua++) {
     userscriptActions[ua].addEventListener('click', function(e) {
       if (e) {
@@ -1378,13 +1516,50 @@ function setupFieldListeners(container) {
     });
   }
 
-  var userscriptRows = container.querySelectorAll('.tp-userscript-row');
-  for (var ur = 0; ur < userscriptRows.length; ur++) {
-    userscriptRows[ur].addEventListener('keydown', function(e) {
+  var detailButtons = container.querySelectorAll('.tp-detail-btn');
+  for (var db = 0; db < detailButtons.length; db++) {
+    detailButtons[db].addEventListener('click', function(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      handleDetailAction(this);
+    });
+    detailButtons[db].addEventListener('keydown', function(e) {
+      if (handleInlineRowButtonKeyDown(e, this)) {
+        return;
+      }
       if (e.keyCode === 13) {
         e.preventDefault();
         e.stopPropagation();
-        focusUserscriptRowButton(this);
+        handleDetailAction(this);
+      }
+    });
+  }
+
+  var userscriptRows = container.querySelectorAll('.tp-userscript-row');
+  for (var ur = 0; ur < userscriptRows.length; ur++) {
+    userscriptRows[ur].addEventListener('keydown', function(e) {
+      if (e.keyCode === 38 || e.keyCode === 40) {
+        if (moveFocusByRow(this, e.keyCode === 40 ? 'down' : 'up')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (e.keyCode === 39) {
+        e.preventDefault();
+        e.stopPropagation();
+        focusInlineRowButton(this);
+        return;
+      }
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        e.stopPropagation();
+        focusInlineRowButton(this);
       }
     });
   }
@@ -1426,7 +1601,15 @@ function focusUserscriptRowButton(rowEl) {
   }
 }
 
+function focusInlineRowButton(rowEl) {
+  focusUserscriptRowButton(rowEl);
+}
+
 function handleUserscriptButtonKeyDown(e, btn) {
+  return handleInlineRowButtonKeyDown(e, btn);
+}
+
+function handleInlineRowButtonKeyDown(e, btn) {
   if (!btn) return false;
   var key = e.keyCode;
 
@@ -1461,10 +1644,68 @@ function handleUserscriptButtonKeyDown(e, btn) {
   if (key === 38 || key === 40) {
     var parentRow = btn.closest('.tp-userscript-row');
     if (parentRow) {
-      e.preventDefault();
-      e.stopPropagation();
-      parentRow.focus();
+      var moved = moveFocusByRow(parentRow, key === 40 ? 'down' : 'up');
+      if (moved) {
+        e.preventDefault();
+        e.stopPropagation();
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function moveFocusByRow(fromEl, direction) {
+  var container = document.getElementById('tp-editor-fields');
+  if (!container) return false;
+
+  var rows = container.querySelectorAll('.tp-field-row, .tp-userscript-row, .tp-bundle-option');
+  if (!rows.length) return false;
+
+  var currentRow = fromEl.classList && (fromEl.classList.contains('tp-field-row') || fromEl.classList.contains('tp-userscript-row') || fromEl.classList.contains('tp-bundle-option'))
+    ? fromEl
+    : fromEl.closest('.tp-field-row, .tp-userscript-row, .tp-bundle-option');
+
+  if (!currentRow) return false;
+
+  var index = -1;
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i] === currentRow) {
+      index = i;
+      break;
+    }
+  }
+  if (index === -1) return false;
+
+  var step = direction === 'down' ? 1 : -1;
+  for (var j = index + step; j >= 0 && j < rows.length; j += step) {
+    var target = rows[j];
+    if (target && target.offsetParent !== null) {
+      try {
+        target.focus();
+        if (target.scrollIntoView) {
+          target.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+      } catch (err) {
+        // ignore
+      }
       return true;
+    }
+  }
+
+  if (direction === 'down') {
+    var footerTargets = ['#tp-editor-delete', '#tp-editor-purge', '#tp-editor-cancel'];
+    for (var k = 0; k < footerTargets.length; k++) {
+      var footerEl = document.querySelector(footerTargets[k]);
+      if (footerEl && footerEl.offsetParent !== null) {
+        try {
+          footerEl.focus();
+        } catch (err2) {
+          // ignore
+        }
+        return true;
+      }
     }
   }
 
@@ -1760,6 +2001,73 @@ function handleUserscriptAction(row) {
     if (script.source === 'url') {
       fetchUserscriptUrl(scriptId);
     }
+  }
+}
+
+function handleDetailAction(btn) {
+  if (!btn || !state.card) return;
+  var action = btn.dataset.detailAction || '';
+
+  if (action === 'edit-name') {
+    var newName = prompt('Site Name:', state.card.name || '');
+    if (newName !== null) {
+      state.card.name = newName;
+      renderFields();
+      updatePreview();
+      autoSaveCard('text:name');
+      focusDetailButton(action);
+    }
+    return;
+  }
+
+  if (action === 'edit-url') {
+    var newUrl = prompt('URL:', state.card.url || '');
+    if (newUrl !== null) {
+      if (newUrl) {
+        newUrl = sanitizeUrl(newUrl);
+        if (!newUrl || !isValidHttpUrl(newUrl)) {
+          showEditorToast('Invalid URL');
+          return;
+        }
+      }
+      state.card.url = newUrl;
+      renderFields();
+      updatePreview();
+      autoSaveCard('text:url');
+      focusDetailButton(action);
+    }
+    return;
+  }
+
+  if (action === 'edit-icon') {
+    var newIcon = prompt('Icon URL:', state.card.icon || '');
+    if (newIcon !== null) {
+      if (newIcon) {
+        newIcon = sanitizeUrl(newIcon);
+        if (!newIcon || !isValidHttpUrl(newIcon)) {
+          showEditorToast('Invalid URL');
+          return;
+        }
+      }
+      state.card.icon = newIcon || '';
+      renderFields();
+      updatePreview();
+      autoSaveCard('text:icon');
+      focusDetailButton(action);
+    }
+    return;
+  }
+
+  if (action === 'fetch-icon') {
+    handleFetchFavicon();
+  }
+}
+
+function focusDetailButton(action) {
+  if (!action) return;
+  var btn = document.querySelector('.tp-detail-btn[data-detail-action="' + action + '"]');
+  if (btn) {
+    btn.focus();
   }
 }
 
@@ -2063,6 +2371,9 @@ function updatePreview() {
   var nameEl = document.getElementById('tp-preview-name');
   var urlEl = document.getElementById('tp-preview-url');
   var iconEl = document.getElementById('tp-preview-icon');
+  var bundleEl = document.getElementById('tp-preview-bundle');
+  var optionsEl = document.getElementById('tp-preview-options');
+  var scriptsEl = document.getElementById('tp-preview-userscripts');
   
   if (nameEl) {
     nameEl.textContent = state.card.name || 'Site Name';
@@ -2085,6 +2396,18 @@ function updatePreview() {
     } else {
       iconEl.textContent = '?';
     }
+  }
+
+  if (bundleEl) {
+    bundleEl.textContent = getSectionSummary('bundle') || 'Bundle: None';
+  }
+
+  if (optionsEl) {
+    optionsEl.textContent = getSectionSummary('options') || 'Options: Global';
+  }
+
+  if (scriptsEl) {
+    scriptsEl.textContent = getSectionSummary('userscripts') || 'Scripts: None';
   }
 }
 
