@@ -216,7 +216,8 @@ function resolveFocusOutlineMode(card) {
 }
 
 function resolveViewportMode(card, bundle) {
-  if (bundle && (bundle.viewportLock === 'force' || bundle.viewportLock === true)) {
+  var manifest = bundle && bundle.manifest;
+  if (manifest && (manifest.viewportLock === 'force' || manifest.viewportLock === true)) {
     return 'locked';
   }
 

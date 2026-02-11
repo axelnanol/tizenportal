@@ -263,11 +263,6 @@ var matcherRegistered = false;
 // Bundle export
 
 export default {
-  name: 'audiobookshelf',
-  displayName: 'Audiobookshelf',
-  description: 'Media controls, library navigation, and player integration for Audiobookshelf',
-  viewportLock: 'force',
-  
   /**
    * CSS to inject (imported from style.css)
    */

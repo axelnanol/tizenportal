@@ -120,7 +120,8 @@ function createCardElement(card, index) {
   // Bundle subtitle (optional)
   if (card.featureBundle) {
     var bundle = getBundle(card.featureBundle);
-    var bundleName = (bundle && bundle.displayName) ? bundle.displayName : card.featureBundle;
+    var manifest = bundle && bundle.manifest;
+    var bundleName = (manifest && manifest.displayName) ? manifest.displayName : card.featureBundle;
     var bundleEl = document.createElement('div');
     bundleEl.className = 'tp-card-subtitle';
     bundleEl.textContent = bundleName;

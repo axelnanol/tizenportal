@@ -198,7 +198,8 @@ function ensureBundleOptionsInitialized() {
   if (!bundleName) return;
 
   var bundle = getBundle(bundleName);
-  if (!bundle || !bundle.options || !bundle.options.length) return;
+  var manifest = bundle && bundle.manifest;
+  if (!manifest || !manifest.options || !manifest.options.length) return;
 
   if (!state.card.bundleOptions || typeof state.card.bundleOptions !== 'object') {
     state.card.bundleOptions = {};
@@ -207,7 +208,7 @@ function ensureBundleOptionsInitialized() {
     state.card.bundleOptionData = {};
   }
 
-  var options = bundle.options;
+  var options = manifest.options;
   for (var i = 0; i < options.length; i++) {
     var opt = options[i];
     if (!opt || !opt.key) continue;
@@ -228,10 +229,11 @@ function resetBundleOptionsForBundle(bundleName) {
   if (!bundleName) return;
 
   var bundle = getBundle(bundleName);
-  if (!bundle || !bundle.options || !bundle.options.length) return;
+  var manifest = bundle && bundle.manifest;
+  if (!manifest || !manifest.options || !manifest.options.length) return;
 
-  for (var i = 0; i < bundle.options.length; i++) {
-    var opt = bundle.options[i];
+  for (var i = 0; i < manifest.options.length; i++) {
+    var opt = manifest.options[i];
     if (!opt || !opt.key) continue;
     state.card.bundleOptions[opt.key] = opt.hasOwnProperty('default') ? opt.default : null;
   }
@@ -1083,7 +1085,8 @@ function getSectionSummary(sectionId) {
     var bundleName = state.card.featureBundle || null;
     if (!bundleName) return 'Bundle: None';
     var bundle = getBundle(bundleName);
-    var displayName = bundle && bundle.displayName ? bundle.displayName : bundleName;
+    var manifest = bundle && bundle.manifest;
+    var displayName = manifest && manifest.displayName ? manifest.displayName : bundleName;
     return 'Bundle: ' + displayName;
   }
 
@@ -1160,11 +1163,12 @@ function getBundleOptionsSummary() {
   var bundleName = state.card.featureBundle || null;
   if (!bundleName) return '';
   var bundle = getBundle(bundleName);
-  if (!bundle || !bundle.options || !bundle.options.length) return '';
+  var manifest = bundle && bundle.manifest;
+  if (!manifest || !manifest.options || !manifest.options.length) return '';
 
   var parts = [];
-  for (var i = 0; i < bundle.options.length; i++) {
-    var opt = bundle.options[i];
+  for (var i = 0; i < manifest.options.length; i++) {
+    var opt = manifest.options[i];
     if (!opt || !opt.key) continue;
     var current = getBundleOptionValue(opt.key, opt);
     var display = formatBundleOptionSummaryValue(opt, current);
@@ -1357,7 +1361,8 @@ function renderBundleField(field, value) {
 function renderBundleOptionsField() {
   var bundleName = state.card ? state.card.featureBundle : null;
   var bundle = bundleName ? getBundle(bundleName) : null;
-  if (!bundleName || !bundle || !bundle.options || !bundle.options.length) {
+  var manifest = bundle && bundle.manifest;
+  if (!bundleName || !manifest || !manifest.options || !manifest.options.length) {
     return '' +
       '<div class="tp-field-row" tabindex="-1">' +
         '<div class="tp-field-label">Bundle Options</div>' +
@@ -1373,7 +1378,8 @@ function renderBundleOptionsField() {
  */
 function renderBundleOptions(bundleName) {
   var bundle = getBundle(bundleName);
-  if (!bundle || !bundle.options || !bundle.options.length) {
+  var manifest = bundle && bundle.manifest;
+  if (!manifest || !manifest.options || !manifest.options.length) {
     return '';
   }
 
@@ -1386,8 +1392,8 @@ function renderBundleOptions(bundleName) {
 
   var html = '<div class="tp-field-section">';
 
-  for (var i = 0; i < bundle.options.length; i++) {
-    var opt = bundle.options[i];
+  for (var i = 0; i < manifest.options.length; i++) {
+    var opt = manifest.options[i];
     if (!opt || !opt.key) continue;
     var value = state.card.bundleOptions.hasOwnProperty(opt.key) ? state.card.bundleOptions[opt.key] : opt.default;
     var dataValue = state.card.bundleOptionData[opt.key] || '';
@@ -2129,11 +2135,12 @@ function focusUserscriptButton(scriptId, action) {
 function getBundleOptionDef(key) {
   if (!state.card || !state.card.featureBundle) return null;
   var bundle = getBundle(state.card.featureBundle);
-  if (!bundle || !bundle.options || !bundle.options.length) return null;
+  var manifest = bundle && bundle.manifest;
+  if (!manifest || !manifest.options || !manifest.options.length) return null;
 
-  for (var i = 0; i < bundle.options.length; i++) {
-    if (bundle.options[i].key === key) {
-      return bundle.options[i];
+  for (var i = 0; i < manifest.options.length; i++) {
+    if (manifest.options[i].key === key) {
+      return manifest.options[i];
     }
   }
   return null;

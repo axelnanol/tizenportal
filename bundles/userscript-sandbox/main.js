@@ -7,9 +7,6 @@
 import styles from './style.css';
 
 export default {
-  name: 'userscript-sandbox',
-  displayName: 'Userscript Sandbox',
-  description: 'Sample user scripts and a playground for custom script injection.',
   style: styles,
   userscripts: [
     {

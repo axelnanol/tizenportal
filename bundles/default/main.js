@@ -24,10 +24,6 @@ function tpWarn() {
 }
 
 export default {
-  name: 'default',
-  displayName: 'Default',
-  description: 'Basic TV browser support using global features',
-  
   /**
    * CSS to inject
    */

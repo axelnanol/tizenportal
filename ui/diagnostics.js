@@ -254,7 +254,9 @@ function updateInfo() {
         info.push('Card: View=' + cardView + ',Focus=' + cardFocus + ',UA=' + cardUa);
       }
       if (bundle) {
-        info.push('Bundle: ' + (bundle.name || 'unknown') + ' (Viewport=' + (bundle.viewportLock === 'force' || bundle.viewportLock === true ? 'force' : 'inherit') + ')');
+        var manifest = bundle.manifest || {};
+        var viewportLock = manifest.viewportLock === 'force' || manifest.viewportLock === true ? 'force' : 'inherit';
+        info.push('Bundle: ' + (bundle.name || 'unknown') + ' (Viewport=' + viewportLock + ')');
       }
     }
   } catch (err2) {

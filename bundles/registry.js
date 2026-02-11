@@ -29,20 +29,8 @@ if (generatedManifests) {
       // Attach manifest to bundle
       bundles[key].manifest = manifest;
       
-      // Merge manifest properties into bundle for backward compatibility
-      // Priority: main.js export > manifest.json
-      if (manifest.displayName && !bundles[key].displayName) {
-        bundles[key].displayName = manifest.displayName;
-      }
-      if (manifest.description && !bundles[key].description) {
-        bundles[key].description = manifest.description;
-      }
-      if (manifest.viewportLock !== undefined && bundles[key].viewportLock === undefined) {
-        bundles[key].viewportLock = manifest.viewportLock;
-      }
-      if (manifest.options && !bundles[key].options) {
-        bundles[key].options = manifest.options;
-      }
+      // Add name property from manifest for convenience
+      bundles[key].name = manifest.name;
     }
   });
 }
@@ -102,10 +90,11 @@ export function getFeatureBundles() {
   return Object.keys(bundles).map(function(key) {
     var bundle = bundles[key];
     var meta = (generatedBundleMeta && generatedBundleMeta[key]) || {};
+    var manifest = bundle.manifest || {};
     return {
       name: key,
-      displayName: bundle.displayName || key,
-      description: bundle.description || 'No description available',
+      displayName: manifest.displayName || key,
+      description: manifest.description || 'No description available',
       jsBytes: meta.jsBytes || 0,
       cssBytes: meta.cssBytes || 0,
     };

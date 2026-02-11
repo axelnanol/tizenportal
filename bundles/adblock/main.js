@@ -190,41 +190,6 @@ var state = {
 };
 
 export default {
-  name: 'adblock',
-  displayName: 'Ad Blocker',
-  description: 'Blocks advertisements and tracking scripts for cleaner browsing',
-  viewportLock: false,
-  options: [
-    {
-      key: 'strict',
-      label: 'Strict Mode',
-      type: 'toggle',
-      default: false,
-      description: 'Enable stricter ad blocking (may hide more content)'
-    },
-    {
-      key: 'allowlistUrl',
-      label: 'Allowlist URL',
-      type: 'url',
-      placeholder: 'https://example.com/allowlist.txt',
-      description: 'Text file with allowed hosts/paths (one per line)'
-    },
-    {
-      key: 'hideCookieBanners',
-      label: 'Hide Cookie Banners',
-      type: 'toggle',
-      default: false,
-      description: 'Hide cookie/consent banners'
-    },
-    {
-      key: 'inlineHeuristics',
-      label: 'Inline Ad Heuristics',
-      type: 'toggle',
-      default: true,
-      description: 'Block inline ad scripts and banner images'
-    }
-  ],
-  
   /**
    * CSS to inject
    */
