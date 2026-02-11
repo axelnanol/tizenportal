@@ -97,13 +97,13 @@ function buildRegexPatterns() {
   var standardPatterns = []
     .concat(GOOGLE_PATTERNS)
     .concat(AD_NETWORKS.map(function(n) { return n.replace('.', '\\.'); }))
-    .concat(ANALYTICS_PATTERNS.map(function(n) { return n.replace('.', '\\.').replace('/', '\\/'); }))
-    .concat(GENERIC_AD_TERMS.map(function(t) { return t.replace('/', '\\/'); }));
+    .concat(ANALYTICS_PATTERNS.map(function(n) { return n.replace('.', '\\.').replace('/', '\\/'); }));
   
   AD_REGEX = new RegExp(standardPatterns.join('|'), 'i');
   
-  // Build strict pattern (standard + tracking + promo)
+  // Build strict pattern (standard + generic ad terms + tracking + promo)
   var strictPatterns = standardPatterns
+    .concat(GENERIC_AD_TERMS.map(function(t) { return t.replace('/', '\\/'); }))
     .concat(TRACKING_TERMS)
     .concat(PROMO_TERMS);
   
