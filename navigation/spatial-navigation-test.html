@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spatial Navigation Test Suite</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    
+    h1 {
+      color: #333;
+      border-bottom: 3px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    
+    h2 {
+      color: #555;
+      margin-top: 30px;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 5px;
+    }
+    
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .test-case {
+      margin: 15px 0;
+      padding: 10px;
+      border-left: 4px solid #ddd;
+    }
+    
+    .test-case.pass {
+      border-color: #4CAF50;
+      background: #f1f8f4;
+    }
+    
+    .test-case.fail {
+      border-color: #f44336;
+      background: #fef1f1;
+    }
+    
+    .test-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .test-result {
+      font-size: 0.9em;
+      color: #666;
+    }
+    
+    .test-error {
+      color: #f44336;
+      font-family: monospace;
+      background: #fff;
+      padding: 5px;
+      margin-top: 5px;
+      border-radius: 3px;
+    }
+    
+    .summary {
+      background: #e8f5e9;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border: 2px solid #4CAF50;
+    }
+    
+    .summary.has-failures {
+      background: #ffebee;
+      border-color: #f44336;
+    }
+    
+    .summary h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 20px;
+      margin: 20px 0;
+      padding: 20px;
+      background: #fafafa;
+      border: 2px dashed #ddd;
+    }
+    
+    .test-element {
+      width: 100px;
+      height: 100px;
+      background: #2196F3;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .test-element:hover {
+      background: #1976D2;
+      transform: scale(1.05);
+    }
+    
+    .test-element:focus {
+      outline: 3px solid #FF9800;
+      outline-offset: 2px;
+    }
+    
+    .test-element.origin {
+      background: #4CAF50;
+    }
+    
+    .test-element.candidate {
+      background: #9E9E9E;
+    }
+    
+    button {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background: #1976D2;
+    }
+    
+    .config-display {
+      background: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧭 Spatial Navigation Test Suite</h1>
+  
+  <div id="summary" class="summary">
+    <h3>Test Summary</h3>
+    <div id="summary-content">Running tests...</div>
+  </div>
+  
+  <div id="test-output"></div>
+  
+  <script src="spatial-navigation.js"></script>
+  <script>
+    // Test framework
+    const tests = [];
+    let currentSection = '';
+    
+    function section(name) {
+      currentSection = name;
+    }
+    
+    function test(name, fn) {
+      tests.push({ section: currentSection, name, fn });
+    }
+    
+    function assert(condition, message) {
+      if (!condition) {
+        throw new Error(message || 'Assertion failed');
+      }
+    }
+    
+    function assertEquals(actual, expected, message) {
+      if (actual !== expected) {
+        throw new Error(message || `Expected ${expected}, got ${actual}`);
+      }
+    }
+    
+    function assertNotNull(value, message) {
+      if (value === null || value === undefined) {
+        throw new Error(message || 'Expected non-null value');
+      }
+    }
+    
+    function assertNull(value, message) {
+      if (value !== null && value !== undefined) {
+        throw new Error(message || 'Expected null value');
+      }
+    }
+    
+    // ========================================================================
+    // GEOMETRIC MODE TESTS
+    // ========================================================================
+    
+    section('Geometric Mode - Configuration');
+    
+    test('Default mode is geometric', () => {
+      SpatialNavigation.resetConfig();
+      const config = SpatialNavigation.getConfig();
+      assertEquals(config.mode, 'geometric', 'Default mode should be geometric');
+    });
+    
+    test('Can switch to geometric mode', () => {
+      SpatialNavigation.configure({ mode: 'directional' });
+      SpatialNavigation.configure({ mode: 'geometric' });
+      const config = SpatialNavigation.getConfig();
+      assertEquals(config.mode, 'geometric', 'Mode should be geometric');
+    });
+    
+    test('Geometric mode preserves orthogonal weights', () => {
+      SpatialNavigation.resetConfig();
+      SpatialNavigation.configure({ mode: 'geometric', orthogonalWeightLR: 50 });
+      const config = SpatialNavigation.getConfig();
+      assertEquals(config.orthogonalWeightLR, 50, 'Should preserve custom orthogonal weight');
+    });
+    
+    section('Geometric Mode - Directional Filtering');
+    
+    test('Filters candidates strictly by axis', () => {
+      SpatialNavigation.configure({ mode: 'geometric' });
+      
+      // Create test elements
+      const origin = createTestElement(100, 100);
+      const right = createTestElement(300, 100);
+      const left = createTestElement(-100, 100);
+      const up = createTestElement(100, -100);
+      const down = createTestElement(100, 300);
+      
+      const candidates = [right, left, up, down];
+      
+      // Test right direction
+      const rightFiltered = SpatialNavigation.utils.filterByDirectionGeometric(origin, candidates, 'right');
+      assert(rightFiltered.includes(right), 'Should include right element');
+      assert(!rightFiltered.includes(left), 'Should not include left element');
+      
+      // Test left direction
+      const leftFiltered = SpatialNavigation.utils.filterByDirectionGeometric(origin, candidates, 'left');
+      assert(leftFiltered.includes(left), 'Should include left element');
+      assert(!leftFiltered.includes(right), 'Should not include right element');
+      
+      // Test up direction
+      const upFiltered = SpatialNavigation.utils.filterByDirectionGeometric(origin, candidates, 'up');
+      assert(upFiltered.includes(up), 'Should include up element');
+      assert(!upFiltered.includes(down), 'Should not include down element');
+      
+      // Test down direction
+      const downFiltered = SpatialNavigation.utils.filterByDirectionGeometric(origin, candidates, 'down');
+      assert(downFiltered.includes(down), 'Should include down element');
+      assert(!downFiltered.includes(up), 'Should not include up element');
+      
+      cleanupTestElements([origin, right, left, up, down]);
+    });
+    
+    test('Excludes origin from filtered results', () => {
+      SpatialNavigation.configure({ mode: 'geometric' });
+      
+      const origin = createTestElement(100, 100);
+      const right = createTestElement(300, 100);
+      
+      const filtered = SpatialNavigation.utils.filterByDirectionGeometric(origin, [origin, right], 'right');
+      assert(!filtered.includes(origin), 'Should not include origin');
+      
+      cleanupTestElements([origin, right]);
+    });
+    
+    section('Geometric Mode - Distance Scoring');
+    
+    test('Scores closer elements lower', () => {
+      SpatialNavigation.configure({ mode: 'geometric' });
+      
+      const origin = createTestElement(100, 100);
+      const near = createTestElement(200, 100);
+      const far = createTestElement(400, 100);
+      
+      const nearScore = SpatialNavigation.utils.scoreGeometric(origin, near, 'right');
+      const farScore = SpatialNavigation.utils.scoreGeometric(origin, far, 'right');
+      
+      assert(nearScore < farScore, 'Closer element should have lower score');
+      
+      cleanupTestElements([origin, near, far]);
+    });
+    
+    test('Applies alignment bonus for overlapping elements', () => {
+      SpatialNavigation.configure({ mode: 'geometric' });
+      
+      const origin = createTestElement(100, 100, 50, 50);
+      const aligned = createTestElement(200, 100, 50, 50); // Same vertical position
+      const misaligned = createTestElement(200, 200, 50, 50); // Different vertical position
+      
+      const alignedScore = SpatialNavigation.utils.scoreGeometric(origin, aligned, 'right');
+      const misalignedScore = SpatialNavigation.utils.scoreGeometric(origin, misaligned, 'right');
+      
+      assert(alignedScore < misalignedScore, 'Aligned element should have lower score');
+      
+      cleanupTestElements([origin, aligned, misaligned]);
+    });
+    
+    section('Geometric Mode - Navigation');
+    
+    test('Finds next element in direction', () => {
+      SpatialNavigation.configure({ mode: 'geometric' });
+      
+      const origin = createFocusableElement(100, 100);
+      const right = createFocusableElement(300, 100);
+      
+      const next = SpatialNavigation.findNextFocusable(origin, 'right', {
+        candidates: [origin, right]
+      });
+      
+      assertEquals(next, right, 'Should find right element');
+      
+      cleanupTestElements([origin, right]);
+    });
+    
+    test('Returns null when no candidates in direction', () => {
+      SpatialNavigation.configure({ mode: 'geometric' });
+      
+      const origin = createFocusableElement(100, 100);
+      const left = createFocusableElement(-100, 100);
+      
+      const next = SpatialNavigation.findNextFocusable(origin, 'right', {
+        candidates: [origin, left]
+      });
+      
+      assertNull(next, 'Should return null when no candidates in direction');
+      
+      cleanupTestElements([origin, left]);
+    });
+    
+    // ========================================================================
+    // DIRECTIONAL MODE TESTS
+    // ========================================================================
+    
+    section('Directional Mode - Configuration');
+    
+    test('Can switch to directional mode', () => {
+      SpatialNavigation.configure({ mode: 'directional' });
+      const config = SpatialNavigation.getConfig();
+      assertEquals(config.mode, 'directional', 'Mode should be directional');
+    });
+    
+    test('Directional mode preserves cone angle', () => {
+      SpatialNavigation.configure({ mode: 'directional', coneAngle: 45 });
+      const config = SpatialNavigation.getConfig();
+      assertEquals(config.coneAngle, 45, 'Should preserve custom cone angle');
+    });
+    
+    test('Directional mode preserves weights', () => {
+      SpatialNavigation.configure({ 
+        mode: 'directional',
+        primaryWeight: 2,
+        secondaryWeight: 0.3
+      });
+      const config = SpatialNavigation.getConfig();
+      assertEquals(config.primaryWeight, 2, 'Should preserve primary weight');
+      assertEquals(config.secondaryWeight, 0.3, 'Should preserve secondary weight');
+    });
+    
+    section('Directional Mode - Cone Filtering');
+    
+    test('Filters candidates within cone angle', () => {
+      SpatialNavigation.configure({ mode: 'directional', coneAngle: 30 });
+      
+      const origin = createTestElement(100, 100);
+      const inCone = createTestElement(200, 120); // Within 30° cone
+      const outCone = createTestElement(200, 250); // Outside 30° cone
+      
+      const filtered = SpatialNavigation.utils.filterByDirectionCone(origin, [inCone, outCone], 'right');
+      
+      assert(filtered.includes(inCone), 'Should include element within cone');
+      assert(!filtered.includes(outCone), 'Should not include element outside cone');
+      
+      cleanupTestElements([origin, inCone, outCone]);
+    });
+    
+    test('Wider cone angle includes more candidates', () => {
+      const origin = createTestElement(100, 100);
+      const candidate = createTestElement(200, 180); // ~39° from horizontal
+      
+      // Test with 30° cone (should exclude)
+      SpatialNavigation.configure({ mode: 'directional', coneAngle: 30 });
+      const narrow = SpatialNavigation.utils.filterByDirectionCone(origin, [candidate], 'right');
+      
+      // Test with 45° cone (should include)
+      SpatialNavigation.configure({ mode: 'directional', coneAngle: 45 });
+      const wide = SpatialNavigation.utils.filterByDirectionCone(origin, [candidate], 'right');
+      
+      assert(narrow.length === 0, 'Narrow cone should exclude candidate');
+      assert(wide.length === 1, 'Wide cone should include candidate');
+      
+      cleanupTestElements([origin, candidate]);
+    });
+    
+    section('Directional Mode - Distance Scoring');
+    
+    test('Primary axis distance weighted higher', () => {
+      SpatialNavigation.configure({ 
+        mode: 'directional',
+        primaryWeight: 1,
+        secondaryWeight: 0.5
+      });
+      
+      const origin = createTestElement(100, 100);
+      const farPrimary = createTestElement(300, 100); // Far on primary axis
+      const nearSecondary = createTestElement(150, 200); // Close primary, far secondary
+      
+      const farScore = SpatialNavigation.utils.scoreDirectional(origin, farPrimary, 'right');
+      const nearScore = SpatialNavigation.utils.scoreDirectional(origin, nearSecondary, 'right');
+      
+      // farPrimary: primary=200, secondary=0, score=200*1 + 0*0.5 = 200
+      // nearSecondary: primary=50, secondary=100, score=50*1 + 100*0.5 = 100
+      assert(nearScore < farScore, 'Primary axis should dominate scoring');
+      
+      cleanupTestElements([origin, farPrimary, nearSecondary]);
+    });
+    
+    test('Overlap bonus reduces score', () => {
+      SpatialNavigation.configure({ 
+        mode: 'directional',
+        overlapBonus: true,
+        overlapWeight: 5
+      });
+      
+      const origin = createTestElement(100, 100, 50, 50);
+      const overlapping = createTestElement(200, 100, 50, 50); // Same vertical range
+      const nonoverlapping = createTestElement(200, 200, 50, 50); // Different vertical range
+      
+      const overlapScore = SpatialNavigation.utils.scoreDirectional(origin, overlapping, 'right');
+      const nonoverlapScore = SpatialNavigation.utils.scoreDirectional(origin, nonoverlapping, 'right');
+      
+      assert(overlapScore < nonoverlapScore, 'Overlapping element should have lower score');
+      
+      cleanupTestElements([origin, overlapping, nonoverlapping]);
+    });
+    
+    test('Row/column bias favors aligned elements', () => {
+      SpatialNavigation.configure({ 
+        mode: 'directional',
+        rowColumnBias: true,
+        alignmentWeight: 5
+      });
+      
+      const origin = createTestElement(100, 100, 50, 50);
+      const aligned = createTestElement(200, 100, 50, 50); // Same row
+      const misaligned = createTestElement(200, 150, 50, 50); // Different row
+      
+      const alignedScore = SpatialNavigation.utils.scoreDirectional(origin, aligned, 'right');
+      const misalignedScore = SpatialNavigation.utils.scoreDirectional(origin, misaligned, 'right');
+      
+      assert(alignedScore < misalignedScore, 'Aligned element should have lower score');
+      
+      cleanupTestElements([origin, aligned, misaligned]);
+    });
+    
+    section('Directional Mode - Fallback Behavior');
+    
+    test('Fallback "none" returns null', () => {
+      SpatialNavigation.configure({ mode: 'directional', fallback: 'none' });
+      
+      const origin = createTestElement(100, 100);
+      const left = createTestElement(-100, 100);
+      
+      const result = SpatialNavigation.utils.applyFallback(origin, [left], 'right');
+      
+      assertNull(result, 'Should return null with fallback none');
+      
+      cleanupTestElements([origin, left]);
+    });
+    
+    test('Fallback "nearest" finds closest candidate', () => {
+      SpatialNavigation.configure({ mode: 'directional', fallback: 'nearest' });
+      
+      const origin = createTestElement(100, 100);
+      const near = createTestElement(150, 150);
+      const far = createTestElement(500, 500);
+      
+      const result = SpatialNavigation.utils.applyFallback(origin, [near, far], 'right');
+      
+      assertEquals(result, near, 'Should return nearest candidate');
+      
+      cleanupTestElements([origin, near, far]);
+    });
+    
+    test('Fallback "wrap" finds opposite edge', () => {
+      SpatialNavigation.configure({ mode: 'directional', fallback: 'wrap' });
+      
+      const origin = createTestElement(500, 100);
+      const leftEdge = createTestElement(10, 100);
+      const middle = createTestElement(250, 100);
+      
+      const result = SpatialNavigation.utils.applyFallback(origin, [leftEdge, middle], 'right');
+      
+      assertEquals(result, leftEdge, 'Should wrap to leftmost element');
+      
+      cleanupTestElements([origin, leftEdge, middle]);
+    });
+    
+    section('Directional Mode - Navigation with Fallback');
+    
+    test('Uses fallback when no candidates in cone', () => {
+      SpatialNavigation.configure({ 
+        mode: 'directional',
+        coneAngle: 30,
+        fallback: 'nearest'
+      });
+      
+      const origin = createFocusableElement(100, 100);
+      const diagonal = createFocusableElement(200, 300); // Outside 30° cone
+      
+      const next = SpatialNavigation.findNextFocusable(origin, 'right', {
+        candidates: [origin, diagonal]
+      });
+      
+      assertEquals(next, diagonal, 'Should use fallback to find diagonal element');
+      
+      cleanupTestElements([origin, diagonal]);
+    });
+    
+    // ========================================================================
+    // VALIDATION TESTS
+    // ========================================================================
+    
+    section('Validation');
+    
+    test('Rejects invalid mode', () => {
+      let error = null;
+      try {
+        SpatialNavigation.configure({ mode: 'invalid' });
+      } catch (e) {
+        error = e;
+      }
+      assertNotNull(error, 'Should throw error for invalid mode');
+    });
+    
+    test('Rejects invalid direction', () => {
+      const origin = createFocusableElement(100, 100);
+      let error = null;
+      try {
+        SpatialNavigation.findNextFocusable(origin, 'diagonal', {});
+      } catch (e) {
+        error = e;
+      }
+      assertNotNull(error, 'Should throw error for invalid direction');
+      cleanupTestElements([origin]);
+    });
+    
+    test('Rejects non-numeric weights', () => {
+      let error = null;
+      try {
+        SpatialNavigation.configure({ primaryWeight: 'high' });
+      } catch (e) {
+        error = e;
+      }
+      assertNotNull(error, 'Should throw error for non-numeric weight');
+    });
+    
+    // ========================================================================
+    // DETERMINISM TESTS
+    // ========================================================================
+    
+    section('Determinism');
+    
+    test('Same input produces same output (geometric)', () => {
+      SpatialNavigation.configure({ mode: 'geometric' });
+      
+      const origin = createFocusableElement(100, 100);
+      const a = createFocusableElement(200, 100);
+      const b = createFocusableElement(300, 100);
+      
+      const result1 = SpatialNavigation.findNextFocusable(origin, 'right', {
+        candidates: [origin, a, b]
+      });
+      const result2 = SpatialNavigation.findNextFocusable(origin, 'right', {
+        candidates: [origin, a, b]
+      });
+      
+      assertEquals(result1, result2, 'Should produce same result');
+      
+      cleanupTestElements([origin, a, b]);
+    });
+    
+    test('Same input produces same output (directional)', () => {
+      SpatialNavigation.configure({ mode: 'directional' });
+      
+      const origin = createFocusableElement(100, 100);
+      const a = createFocusableElement(200, 120);
+      const b = createFocusableElement(300, 110);
+      
+      const result1 = SpatialNavigation.findNextFocusable(origin, 'right', {
+        candidates: [origin, a, b]
+      });
+      const result2 = SpatialNavigation.findNextFocusable(origin, 'right', {
+        candidates: [origin, a, b]
+      });
+      
+      assertEquals(result1, result2, 'Should produce same result');
+      
+      cleanupTestElements([origin, a, b]);
+    });
+    
+    // ========================================================================
+    // HELPER FUNCTIONS
+    // ========================================================================
+    
+    function createTestElement(x, y, width = 50, height = 50) {
+      const el = document.createElement('div');
+      el.style.position = 'absolute';
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.width = width + 'px';
+      el.style.height = height + 'px';
+      document.body.appendChild(el);
+      return el;
+    }
+    
+    function createFocusableElement(x, y, width = 50, height = 50) {
+      const el = createTestElement(x, y, width, height);
+      el.tabIndex = 0;
+      return el;
+    }
+    
+    function cleanupTestElements(elements) {
+      elements.forEach(el => {
+        if (el && el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      });
+    }
+    
+    // ========================================================================
+    // RUN TESTS
+    // ========================================================================
+    
+    function runTests() {
+      const output = document.getElementById('test-output');
+      const summaryContent = document.getElementById('summary-content');
+      const summaryDiv = document.getElementById('summary');
+      
+      let passed = 0;
+      let failed = 0;
+      let currentSectionDiv = null;
+      let currentSectionName = '';
+      
+      tests.forEach((testCase, index) => {
+        // Create new section if needed
+        if (testCase.section !== currentSectionName) {
+          currentSectionName = testCase.section;
+          currentSectionDiv = document.createElement('div');
+          currentSectionDiv.className = 'test-section';
+          currentSectionDiv.innerHTML = `<h2>${testCase.section}</h2>`;
+          output.appendChild(currentSectionDiv);
+        }
+        
+        // Run test
+        const testDiv = document.createElement('div');
+        testDiv.className = 'test-case';
+        
+        const testName = document.createElement('div');
+        testName.className = 'test-name';
+        testName.textContent = testCase.name;
+        testDiv.appendChild(testName);
+        
+        try {
+          testCase.fn();
+          testDiv.classList.add('pass');
+          const result = document.createElement('div');
+          result.className = 'test-result';
+          result.textContent = '✓ Passed';
+          testDiv.appendChild(result);
+          passed++;
+        } catch (error) {
+          testDiv.classList.add('fail');
+          const result = document.createElement('div');
+          result.className = 'test-result';
+          result.textContent = '✗ Failed';
+          testDiv.appendChild(result);
+          
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'test-error';
+          errorDiv.textContent = error.message || 'Unknown error';
+          testDiv.appendChild(errorDiv);
+          failed++;
+        }
+        
+        currentSectionDiv.appendChild(testDiv);
+      });
+      
+      // Update summary
+      const total = passed + failed;
+      const passRate = ((passed / total) * 100).toFixed(1);
+      
+      if (failed > 0) {
+        summaryDiv.classList.add('has-failures');
+      }
+      
+      summaryContent.innerHTML = `
+        <strong>Total:</strong> ${total} tests<br>
+        <strong>Passed:</strong> ${passed} (${passRate}%)<br>
+        <strong>Failed:</strong> ${failed}
+      `;
+    }
+    
+    // Run tests when page loads
+    window.addEventListener('load', () => {
+      runTests();
+    });
+  </script>
+</body>
+</html>

@@ -68,6 +68,13 @@ var UA_MODE_OPTIONS = [
   { value: 'desktop', label: 'Desktop' },
 ];
 
+var NAVIGATION_MODE_OPTIONS = [
+  { value: null, label: 'Global (default)' },
+  { value: 'directional', label: 'Smart Navigation (Directional) - Preferred' },
+  { value: 'geometric', label: 'Grid Navigation (Geometric)' },
+  { value: 'polyfill', label: 'Legacy Polyfill (Compatibility Only)' },
+];
+
 var FEATURE_TOGGLE_OPTIONS = [
   { value: null, label: 'Global (default)' },
   { value: true, label: 'On' },
@@ -166,6 +173,7 @@ var FIELDS = [
   { name: '__section_bundleOptions', label: 'Bundle Options', type: 'section', sectionId: 'bundleOptions' },
   { name: '__bundleOptions', label: 'Bundle Options', type: 'bundleOptions', section: 'bundleOptions' },
   { name: '__section_options', label: 'Site Options', type: 'section', sectionId: 'options' },
+  { name: 'navigationMode', label: 'Navigation Mode', type: 'select', options: NAVIGATION_MODE_OPTIONS, section: 'options' },
   { name: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_MODE_OPTIONS, section: 'options' },
   { name: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS, section: 'options' },
   { name: 'userAgent', label: 'User Agent Mode', type: 'select', options: UA_MODE_OPTIONS, section: 'options' },

@@ -23,6 +23,14 @@ import {
   observeDOM,
 } from '../../focus/manager.js';
 
+// Navigation helpers: standard focus and navigation utilities
+import {
+  focusElement,
+  focusFirst,
+  getFocusableElements,
+  focusRelative,
+} from '../../navigation/helpers.js';
+
 // NOTE: registerKeyHandler is accessed via window.TizenPortal.input.registerKeyHandler
 // to avoid circular dependency (handler.js -> registry.js -> this file)
 
@@ -446,7 +454,7 @@ export default {
       if (keyCode === KEYS.RIGHT) {
         var firstCard = document.querySelector(SELECTORS.allCards);
         if (firstCard) {
-          firstCard.focus();
+          focusElement(firstCard);  // Use standard helper
           return true; // Consumed
         }
         // Fall through to let spatial nav handle it
@@ -455,28 +463,13 @@ export default {
       // UP/DOWN: Let spatial nav handle vertical movement within siderail
       // But restrict it to only siderail elements
       if (keyCode === KEYS.UP || keyCode === KEYS.DOWN) {
-        var links = document.querySelectorAll(SELECTORS.siderailNav);
-        if (links.length > 0) {
-          var currentIndex = -1;
-          for (var i = 0; i < links.length; i++) {
-            if (links[i] === active) {
-              currentIndex = i;
-              break;
-            }
-          }
+        var siderailContainer = document.querySelector(SELECTORS.siderail);
+        if (siderailContainer) {
+          var links = getFocusableElements(siderailContainer);
+          var offset = keyCode === KEYS.UP ? -1 : 1;
           
-          if (currentIndex !== -1) {
-            var nextIndex;
-            if (keyCode === KEYS.UP) {
-              nextIndex = Math.max(0, currentIndex - 1);
-            } else {
-              nextIndex = Math.min(links.length - 1, currentIndex + 1);
-            }
-            
-            if (nextIndex !== currentIndex) {
-              links[nextIndex].focus();
-            }
-            return true; // Consumed - handled vertical navigation ourselves
+          if (focusRelative(links, active, offset)) {
+            return true; // Consumed - handled vertical navigation
           }
         }
       }
@@ -510,7 +503,7 @@ export default {
         // Focus something above the player (bookshelf or siderail)
         var above = document.querySelector(SELECTORS.allCards + ', ' + SELECTORS.siderailNav);
         if (above) {
-          above.focus();
+          focusElement(above);  // Use standard helper
           return true;
         }
       }
@@ -1098,14 +1091,14 @@ export default {
     // Try to focus the active link first
     var activeLink = document.querySelector(SELECTORS.siderailNav + '.nuxt-link-active');
     if (activeLink) {
-      activeLink.focus();
+      focusElement(activeLink);  // Use standard helper
       return;
     }
     
     // Fall back to first link
-    var first = document.querySelector(SELECTORS.siderailNav);
-    if (first) {
-      first.focus();
+    var siderailContainer = document.querySelector(SELECTORS.siderail);
+    if (siderailContainer) {
+      focusFirst(siderailContainer);  // Use standard helper
     }
   },
   

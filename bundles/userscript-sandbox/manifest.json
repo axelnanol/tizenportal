@@ -3,5 +3,6 @@
   "displayName": "Userscript Sandbox",
   "version": "1.0.0",
   "description": "Sample user scripts and a playground for custom script injection.",
-  "author": "TizenPortal"
+  "author": "TizenPortal",
+  "navigationMode": "geometric"
 }

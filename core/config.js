@@ -34,6 +34,9 @@ var DEFAULT_CONFIG = {
   tp_features: {
     focusStyling: true,
     focusOutlineMode: 'on',
+    focusTransitions: true,
+    focusTransitionMode: 'slide',
+    focusTransitionSpeed: 'medium',
     tabindexInjection: true,
     scrollIntoView: true,
     safeArea: false,
@@ -43,6 +46,12 @@ var DEFAULT_CONFIG = {
     wrapTextInputs: true,
     viewportMode: 'locked',
     uaMode: 'tizen',
+    
+    // Navigation mode: which navigation system to use
+    // 'directional' - Use new library in directional mode (cone-based, forgiving) - PREFERRED
+    // 'geometric' - Use new library in geometric mode (strict axis-aligned, enhanced polyfill)
+    // 'polyfill' - Use legacy spatial-navigation-polyfill.js (backwards compatibility/testing ONLY)
+    navigationMode: 'directional',
   },
 
   // Global user scripts

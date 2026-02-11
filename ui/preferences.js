@@ -66,12 +66,41 @@ var FOCUS_OUTLINE_OPTIONS = [
 ];
 
 /**
+ * Focus transition mode options
+ */
+var FOCUS_TRANSITION_MODE_OPTIONS = [
+  { value: 'slide', label: 'Slide (Directional)' },
+  { value: 'scale', label: 'Scale (Grow)' },
+  { value: 'glow', label: 'Glow (Pulse)' },
+  { value: 'off', label: 'Off' },
+];
+
+/**
+ * Focus transition speed options
+ */
+var FOCUS_TRANSITION_SPEED_OPTIONS = [
+  { value: 'fast', label: 'Fast (150ms)' },
+  { value: 'medium', label: 'Medium (250ms)' },
+  { value: 'slow', label: 'Slow (400ms)' },
+];
+
+/**
  * User Agent mode options
  */
 var UA_MODE_OPTIONS = [
   { value: 'tizen', label: 'Tizen TV' },
   { value: 'desktop', label: 'Desktop' },
   { value: 'mobile', label: 'Mobile' },
+];
+
+/**
+ * Navigation mode options
+ * Note: Directional is preferred for most use cases
+ */
+var NAVIGATION_MODE_OPTIONS = [
+  { value: 'directional', label: 'Smart Navigation (Directional) - Preferred' },
+  { value: 'geometric', label: 'Grid Navigation (Geometric)' },
+  { value: 'polyfill', label: 'Legacy Polyfill (Compatibility Only)' },
 ];
 
 /**
@@ -149,8 +178,11 @@ var PREFERENCE_ROWS = [
   { id: 'backgroundImage', label: 'Backdrop Image URL', type: 'text', key: 'backgroundImage', config: 'portal', showIf: 'backdrop', section: 'appearance' },
   { id: 'hudPosition', label: 'Debug HUD', type: 'select', options: HUD_OPTIONS, key: 'hudPosition', config: 'portal', section: 'portal' },
   { id: 'hintsPosition', label: 'Color Hints', type: 'select', options: HINT_POSITION_OPTIONS, key: 'hintsPosition', config: 'portal', section: 'portal' },
+  { id: 'navigationMode', label: 'Navigation Mode', type: 'select', options: NAVIGATION_MODE_OPTIONS, key: 'navigationMode', config: 'features', section: 'features' },
   { id: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_OPTIONS, key: 'viewportMode', config: 'features', section: 'features' },
   { id: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS, key: 'focusOutlineMode', config: 'features', section: 'features' },
+  { id: 'focusTransitionMode', label: 'Focus Transition Style', type: 'select', options: FOCUS_TRANSITION_MODE_OPTIONS, key: 'focusTransitionMode', config: 'features', section: 'features' },
+  { id: 'focusTransitionSpeed', label: 'Focus Transition Speed', type: 'select', options: FOCUS_TRANSITION_SPEED_OPTIONS, key: 'focusTransitionSpeed', config: 'features', section: 'features' },
   { id: 'uaMode', label: 'User Agent Mode', type: 'select', options: UA_MODE_OPTIONS, key: 'uaMode', config: 'features', section: 'features' },
   { id: 'tabindexInjection', label: 'Auto-focusable Elements', type: 'toggle', key: 'tabindexInjection', config: 'features', section: 'features' },
   { id: 'scrollIntoView', label: 'Scroll-into-view on Focus', type: 'toggle', key: 'scrollIntoView', config: 'features', section: 'features' },

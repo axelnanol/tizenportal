@@ -3,5 +3,6 @@
   "displayName": "Ad Blocker",
   "version": "1.0.0",
   "description": "Blocks advertisements and tracking scripts for cleaner browsing",
-  "author": "TizenPortal"
+  "author": "TizenPortal",
+  "navigationMode": "geometric"
 }

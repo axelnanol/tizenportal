@@ -6,6 +6,7 @@
  */
 
 import focusStyling from './focus-styling.js';
+import focusTransitions from './focus-transitions.js';
 import tabindexInjection from './tabindex-injection.js';
 import scrollIntoView from './scroll-into-view.js';
 import safeArea from './safe-area.js';
@@ -15,6 +16,7 @@ import cssReset from './css-reset.js';
 // Feature registry
 var features = {
   focusStyling: focusStyling,
+  focusTransitions: focusTransitions,
   tabindexInjection: tabindexInjection,
   scrollIntoView: scrollIntoView,
   safeArea: safeArea,
@@ -30,6 +32,9 @@ function getDefaults() {
   return {
     focusStyling: true,
     focusOutlineMode: 'on',
+    focusTransitions: true,
+    focusTransitionMode: 'slide',
+    focusTransitionSpeed: 'medium',
     tabindexInjection: true,
     scrollIntoView: true,
     safeArea: false,
@@ -100,6 +105,16 @@ function applyFeatures(doc, overrides) {
         features.focusStyling.remove(doc);
       } else {
         features.focusStyling.apply(doc, focusMode);
+      }
+    }
+    
+    if (features.focusTransitions) {
+      var transitionMode = effectiveConfig.focusTransitionMode || 'slide';
+      var transitionSpeed = effectiveConfig.focusTransitionSpeed || 'medium';
+      if (effectiveConfig.focusTransitions === false || transitionMode === 'off') {
+        features.focusTransitions.remove(doc);
+      } else {
+        features.focusTransitions.apply(doc, transitionMode, transitionSpeed);
       }
     }
     

@@ -4,5 +4,9 @@
   "version": "1.0.0",
   "description": "Media controls, library navigation, and player integration for Audiobookshelf",
   "author": "TizenPortal",
-  "homepage": "https://www.audiobookshelf.org/"
+  "homepage": "https://www.audiobookshelf.org/",
+  "navigationMode": {
+    "mode": "directional",
+    "required": false
+  }
 }
