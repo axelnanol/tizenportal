@@ -67,36 +67,92 @@ bundles/
     └── manifest.json     # Bundle metadata (required)
 ```
 
+### manifest.json
+
+**Single source of truth for bundle metadata and configuration.**
+
+The manifest defines all bundle metadata, options, and configuration. See [Manifest Schema](Manifest-Schema.md) for complete documentation.
+
+Minimal example:
+
+```json
+{
+  "name": "my-bundle",
+  "displayName": "My Bundle",
+  "version": "1.0.0",
+  "description": "Brief description",
+  "author": "Your Name"
+}
+```
+
+With options and configuration:
+
+```json
+{
+  "name": "my-bundle",
+  "displayName": "My Bundle",
+  "version": "1.0.0",
+  "description": "Bundle description for site selection",
+  "author": "Your Name",
+  "homepage": "https://example.com/",
+  "navigationMode": "directional",
+  "viewportLock": true,
+  "provides": ["focus-styling", "navigation"],
+  "options": [
+    {
+      "key": "strict",
+      "label": "Strict Mode",
+      "type": "toggle",
+      "default": false,
+      "description": "Enable stricter behavior"
+    },
+    {
+      "key": "allowlistUrl",
+      "label": "Allowlist URL",
+      "type": "url",
+      "placeholder": "https://example.com/allowlist.txt",
+      "description": "URL to custom allowlist"
+    }
+  ],
+  "features": {
+    "tabindexInjection": true,
+    "scrollIntoView": true
+  }
+}
+```
+
+**Key Points:**
+- Manifest is loaded at build time and attached to bundle
+- Accessed via `bundle.manifest` or `this.manifest` in lifecycle hooks
+- Properties automatically merged into bundle object for backward compatibility
+- See [Manifest Schema](Manifest-Schema.md) for all available fields
+
 ### main.js
 
-The main entry point that exports the bundle object:
+The main entry point that exports the bundle object with lifecycle hooks:
 
 ```js
 import myStyles from './style.css';
 
 export default {
-  name: 'my-bundle',
-  displayName: 'My Bundle',
-  description: 'Description for bundle selection',
+  // CSS to inject (required if style.css exists)
   style: myStyles,
-  options: [
-    {
-      key: 'strict',
-      label: 'Strict Mode',
-      type: 'toggle',
-      default: false,
-      description: 'Enable stricter behavior'
-    },
-    {
-      key: 'allowlistUrl',
-      label: 'Allowlist URL',
-      type: 'url',
-      placeholder: 'https://example.com/allowlist.txt'
-    }
-  ],
   
+  // Lifecycle hooks
   onActivate(window, card) {
     console.log('Bundle activated');
+    
+    // Access manifest
+    const manifest = this.manifest;
+    console.log('Version:', manifest.version);
+    
+    // Access user options
+    const options = card.bundleOptions || {};
+    const strict = options.strict !== undefined ? options.strict : false;
+    
+    if (strict) {
+      // Apply strict behavior
+    }
   },
   
   onDeactivate(window, card) {
@@ -105,20 +161,12 @@ export default {
 };
 ```
 
-### manifest.json
-
-Metadata for the bundle:
-
-```json
-{
-  "name": "my-bundle",
-  "displayName": "My Bundle",
-  "version": "1.0.0",
-  "description": "Brief description",
-  "author": "Your Name",
-  "homepage": "https://example.com/"
-}
-```
+**Deprecated (DO NOT add these to main.js, use manifest.json instead):**
+- ~~`name`~~ → Use `manifest.json`
+- ~~`displayName`~~ → Use `manifest.json`
+- ~~`description`~~ → Use `manifest.json`
+- ~~`options`~~ → Use `manifest.json`
+- ~~`viewportLock`~~ → Use `manifest.json`
 
 ### style.css
 
@@ -142,11 +190,14 @@ a:focus, button:focus, [tabindex]:focus {
 
 ## 2.1 Bundle Options (Per-Site Settings)
 
-Bundles can declare **options** that appear in the Site Editor. These are saved per card and passed to the bundle at runtime.
+Bundles can declare **options** in `manifest.json` that appear in the Site Editor. These are saved per card and passed to the bundle at runtime.
 
 Supported option types:
 
 - `toggle` — boolean on/off
+- `text` — text input
+- `url` — URL input with validation
+- `number` — numeric input
 - `select` — fixed list of options
 - `text` — free text
 - `url` — URL input; contents are fetched and stored
@@ -166,8 +217,6 @@ export default {
     { key: 'allowlistUrl', label: 'Allowlist URL', type: 'url' },
   ]
 };
-```
-
 At runtime the selected values are available on the card:
 
 - `card.bundleOptions` — key/value map of option values
@@ -189,44 +238,89 @@ bundles/
     └── manifest.json
 ```
 
-### Step 2: Write main.js
+### Step 2: Write manifest.json
+
+Define your bundle metadata and configuration:
+
+```json
+{
+  "name": "my-site",
+  "displayName": "My Site",
+  "version": "1.0.0",
+  "description": "TV support for My Site",
+  "author": "Your Name",
+  "navigationMode": "directional",
+  "viewportLock": true,
+  "provides": ["focus-styling", "navigation"],
+  "options": [
+    {
+      "key": "enableFeatureX",
+      "label": "Enable Feature X",
+      "type": "toggle",
+      "default": true,
+      "description": "Enable experimental feature X"
+    }
+  ]
+}
+```
+
+See [Manifest Schema](Manifest-Schema.md) for all available fields.
+
+### Step 3: Write main.js
+
+Implement lifecycle hooks:
 
 ```js
 import myStyles from './style.css';
 
 export default {
-  name: 'my-site',
-  displayName: 'My Site',
-  description: 'TV support for My Site',
+  // CSS to inject
   style: myStyles,
   
   onActivate(window, card) {
     console.log('[my-site] Bundle activated');
+    
+    // Access manifest
+    console.log('Version:', this.manifest.version);
+    console.log('Display Name:', this.manifest.displayName);
+    
+    // Access options
+    const options = card.bundleOptions || {};
+    const featureX = options.enableFeatureX !== undefined 
+      ? options.enableFeatureX 
+      : true; // Use manifest default
+    
+    if (featureX) {
+      // Initialize feature X
+    }
+    
     // Your initialization code here
   },
-};
-```
-
-### Step 3: Register in registry.js
-
-```js
-// bundles/registry.js
-import adblockBundle from './adblock/main.js';
-import audiobookshelfBundle from './audiobookshelf/main.js';
-import mySiteBundle from './my-site/main.js';  // Add import
-
-var bundles = {
-  'adblock': adblockBundle,
-  'audiobookshelf': audiobookshelfBundle,
-  'my-site': mySiteBundle,  // Add to registry
+  
+  onDeactivate(window, card) {
+    console.log('[my-site] Bundle deactivated');
+    // Cleanup code here
+  },
 };
 ```
 
 ### Step 4: Build and Test
 
+Bundles are **automatically registered** during build. Just run:
+
 ```bash
 npm run build
 ```
+
+The build system:
+1. Scans `bundles/` for folders with `main.js`
+2. Loads each `manifest.json`
+3. Generates `bundles/registry.generated.js`
+4. Validates manifests
+5. Attaches manifests to bundle objects
+6. Bundles everything into `dist/tizenportal.js`
+
+**No manual registration needed!**
 
 ---
 
@@ -236,7 +330,6 @@ Bundles can implement lifecycle hooks that are called at different points:
 
 ```js
 export default {
-  name: 'my-bundle',
   style: myStyles,
   
   /**
@@ -246,6 +339,10 @@ export default {
    */
   onBeforeLoad(window, card) {
     console.log('Before load:', card.url);
+    
+    // Access manifest
+    console.log('Bundle:', this.manifest.displayName);
+  },
   },
   
   /**

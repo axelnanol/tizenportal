@@ -22,6 +22,13 @@ export var bundleMeta = {
   'userscript-sandbox': { jsBytes: 1650, cssBytes: 45 }
 };
 
+export var bundleManifests = {
+  'adblock': {"name":"adblock","displayName":"Ad Blocker","version":"1.0.0","description":"Blocks advertisements and tracking scripts for cleaner browsing","author":"TizenPortal","navigationMode":"geometric","viewportLock":false,"provides":["ad-blocking","tracker-blocking","cookie-banner-hiding"],"options":[{"key":"strict","label":"Strict Mode","type":"toggle","default":false,"description":"Enable stricter ad blocking (may hide more content)"},{"key":"allowlistUrl","label":"Allowlist URL","type":"url","placeholder":"https://example.com/allowlist.txt","description":"Text file with allowed hosts/paths (one per line)"},{"key":"hideCookieBanners","label":"Hide Cookie Banners","type":"toggle","default":false,"description":"Hide cookie/consent banners"},{"key":"inlineHeuristics","label":"Inline Ad Heuristics","type":"toggle","default":true,"description":"Use heuristics to detect inline ad scripts"}]},
+  'audiobookshelf': {"name":"audiobookshelf","displayName":"Audiobookshelf","version":"1.0.0","description":"Media controls, library navigation, and player integration for Audiobookshelf","author":"TizenPortal","homepage":"https://www.audiobookshelf.org/","navigationMode":{"mode":"directional","required":false},"viewportLock":"force","requires":["focus-styling","media-keys"],"provides":["media-controls","library-navigation","player-integration"],"features":{"tabindexInjection":true,"scrollIntoView":true,"wrapTextInputs":true}},
+  'default': {"name":"default","displayName":"Default","version":"1.0.0","author":"TizenPortal","description":"Basic bundle with focus styling and focusable elements. Used as fallback when no site-specific bundle is configured.","requires":[],"provides":["focus-styling","focusable-elements"],"navigationMode":"geometric","features":{"focusStyling":true,"tabindexInjection":true}},
+  'userscript-sandbox': {"name":"userscript-sandbox","displayName":"Userscript Sandbox","version":"1.0.0","description":"Sample user scripts and a playground for custom script injection.","author":"TizenPortal","navigationMode":"geometric","provides":["userscript-examples"]}
+};
+
 export var bundleNames = Object.keys(bundles);
 
 export default bundles;
