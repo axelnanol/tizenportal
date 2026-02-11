@@ -2239,11 +2239,15 @@ var TizenPortalAPI = {
     state: state,
     init: init,
   },
-  
-  // Feature loader (internal use only - for color button handlers)
-  // NOT for bundle use - bundles should use bundle.features
-  _featureLoader: featureLoader,
 };
+
+// Define feature loader as a non-writable, non-configurable internal property
+Object.defineProperty(TizenPortalAPI, '_featureLoader', {
+  value: featureLoader,
+  writable: false,
+  configurable: false,
+  enumerable: false,
+});
 
 // Expose on window
 window.TizenPortal = TizenPortalAPI;

@@ -428,18 +428,27 @@ export function executeColorAction(action) {
         features.focusStyling = !currentHighlight;
         window.TizenPortal.config.set('tp_features', features);
         
-        // Reapply features to current iframe document
+        // Reapply features to current iframe document or fall back to active document
+        var targetDoc = null;
         var iframe = document.getElementById('tp-iframe');
-        if (iframe && window.TizenPortal._featureLoader) {
+        if (iframe) {
           try {
-            var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            var iframeDoc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
             if (iframeDoc) {
-              window.TizenPortal._featureLoader.applyFeatures(iframeDoc);
+              targetDoc = iframeDoc;
             }
           } catch (err) {
-            // Cross-origin iframe, can't access document
+            // Cross-origin iframe, can't access document; fall back to active document
             console.warn('TizenPortal: Cannot reapply focus styling to cross-origin iframe:', err.message);
           }
+        }
+
+        if (!targetDoc) {
+          targetDoc = document;
+        }
+
+        if (targetDoc && window.TizenPortal._featureLoader && typeof window.TizenPortal._featureLoader.applyFeatures === 'function') {
+          window.TizenPortal._featureLoader.applyFeatures(targetDoc);
         }
         
         window.TizenPortal.showToast('Focus highlight: ' + (!currentHighlight ? 'ON' : 'OFF'));
