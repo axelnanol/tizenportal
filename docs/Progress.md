@@ -1,8 +1,9 @@
 # TizenPortal Progress Tracker
 
 > **Last Updated:** February 10, 2026  
-> **Current Version:** 1018  
 > **Architecture:** Universal Runtime
+>
+> **Current Version:** See [package.json](../package.json) or [CHANGELOG](CHANGELOG.md)
 
 ---
 
@@ -44,12 +45,12 @@ TizenPortal uses a single unified runtime (`tizenportal.js`) on all pages:
 
 ## Version History
 
-### v1018 (Current)
+For detailed version history, see [CHANGELOG.md](CHANGELOG.md).
 
-- Userscript toggle payload support
-- Enhanced userscript management in preferences and site editor
+### Recent Releases
 
-### v1000
+- **v1018** - Userscript toggle payload support and enhanced userscript management
+- **v1000** - New tag scheme baseline
 
 - Re-tag of v0446 with correct build
 - New version numbering scheme (1.0.00)

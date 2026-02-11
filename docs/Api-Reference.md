@@ -2,7 +2,7 @@
 
 > **Version:** 3.0  
 > **Date:** February 10, 2026  
-> **Status:** Universal Runtime (v1018)  
+> **Status:** Universal Runtime  
 
 ---
 
@@ -65,7 +65,7 @@ if (parseInt(TizenPortal.version) >= 300) {
 ```typescript
 interface TizenPortal {
   // Metadata
-  version: string;           // "1018"
+  version: string;           // Current version from package.json (e.g., "1018")
   
   // Sub-APIs
   config: ConfigAPI;

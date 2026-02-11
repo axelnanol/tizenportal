@@ -2,7 +2,7 @@
 
 > **Version:** 5.0  
 > **Date:** February 10, 2026  
-> **Status:** Universal Runtime (v1018)
+> **Status:** Universal Runtime
 
 ---
 
@@ -28,7 +28,7 @@ TizenPortal operates as a **TizenBrew Module** (`packageType: "mods"`) that prov
 
 | Tag | Semantic | Notes |
 |-----|----------|-------|
-| `1018` | 1.0.18 | Current - userscript toggle payload |
+| `1018` | 1.0.18 | Userscript toggle payload |
 | `1000` | 1.0.00 | New tag scheme baseline |
 | `0446` | 0.4.46 | Fix bundle persistence (stale build) |
 | `0445` | 0.4.45 | URL validation, shared escapeHtml, preferences hardening |

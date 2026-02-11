@@ -2,7 +2,7 @@
 
 > **Version:** 3.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v1018)  
+> **Status:** Universal Runtime  
 
 ---
 
@@ -168,7 +168,7 @@ Version is centralized in `package.json` and injected at build time.
 
 1. **package.json** holds the single source of truth:
    ```json
-  { "version": "1018" }
+  { "version": "XXYY" }  // e.g., "1018" for v1.0.18
    ```
 
 2. **Rollup reads** the version at build time:
@@ -184,7 +184,7 @@ Version is centralized in `package.json` and injected at build time.
 
 4. **Source files** use the placeholder:
    ```js
-  const VERSION = '__VERSION__';  // Becomes '1018' in output
+  const VERSION = '__VERSION__';  // Replaced with package.json version at build time
    ```
 
 ### Benefits
@@ -247,7 +247,7 @@ var TizenPortal = (function () {
   // Core initialization
   
   return {
-    version: '1018',
+    version: 'XXYY',  // Injected from package.json at build time
     config: {...},
     input: {...},
     focus: {...},

@@ -2,7 +2,7 @@
 
 > **Version:** 3.0  
 > **Date:** February 7, 2026  
-> **Status:** Universal Runtime (v1018)  
+> **Status:** Universal Runtime  
 
 ---
 
@@ -507,7 +507,7 @@ const plugins = [
 
 Source files use placeholder:
 ```js
-const VERSION = '__VERSION__';  // Becomes "1018" at build time
+const VERSION = '__VERSION__';  // Replaced with package.json version at build time
 ```
 
 ### 7.3 tizenportal.js Structure (IIFE)
@@ -516,7 +516,7 @@ const VERSION = '__VERSION__';  // Becomes "1018" at build time
 (function () {
   'use strict';
   
-  const VERSION = '1018';
+  const VERSION = 'XXYY';  // Injected from package.json
   
   // Polyfills (core-js, fetch, DOMRect, spatial-navigation)
   // Config (localStorage wrapper)

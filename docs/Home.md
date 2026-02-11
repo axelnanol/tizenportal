@@ -68,7 +68,7 @@ TizenPortal includes built-in support for:
 
 | Item | Value |
 |------|-------|
-| Current Version | 1018 |
+| Current Version | See [package.json](../package.json) or [CHANGELOG](CHANGELOG.md) |
 | Architecture | Universal Runtime |
 | Last Updated | February 10, 2026 |
 

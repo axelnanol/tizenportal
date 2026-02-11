@@ -34,7 +34,11 @@ Launch TizenBrew on your Samsung TV from the app list.
 2. Select **Add Module**
 3. Enter the module identifier:
    ```
-   alexnolan/tizenportal@1018
+   alexnolan/tizenportal@latest
+   ```
+   Or specify a version from [CHANGELOG](CHANGELOG.md):
+   ```
+   alexnolan/tizenportal@<version-tag>
    ```
 4. Confirm the addition
 

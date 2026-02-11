@@ -248,7 +248,7 @@ All data stays on your device:
 
 TizenPortal undergoes regular security reviews:
 
-- **Latest Review:** February 11, 2026 (v1018)
+- **Latest Review:** February 11, 2026
 - **Status:** ✅ APPROVED FOR USE
 - **Vulnerabilities:** 0 critical, 0 high, 0 medium, 0 low (all issues resolved or accepted)
 - **Dependencies:** 0 vulnerable packages
@@ -317,5 +317,4 @@ Before using TizenPortal:
 
 ---
 
-**Last Updated:** February 11, 2026  
-**Version:** 1018
+**Last Updated:** February 11, 2026

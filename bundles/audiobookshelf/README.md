@@ -141,7 +141,7 @@ The bundle handles all major Audiobookshelf interfaces:
 ## Requirements
 
 - **Audiobookshelf:** Version 2.x or later
-- **TizenPortal:** Version 0.4.6+ (1018+)
+- **TizenPortal:** Latest version (see [CHANGELOG](../../docs/CHANGELOG.md))
 - **TV Browser:** Chrome 47+ (all Samsung Tizen TVs)
 
 ## Core Integration
