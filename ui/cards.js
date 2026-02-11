@@ -4,6 +4,8 @@
  * Card data model and localStorage persistence.
  */
 
+import { escapeHtml, sanitizeUrl, safeLocalStorageSet } from '../core/utils.js';
+
 /**
  * Storage key for cards
  */
@@ -291,12 +293,12 @@ function loadCards() {
 function saveCards() {
   if (cardCache === null) return;
 
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cardCache));
-  } catch (err) {
-    console.error('TizenPortal: Failed to save cards:', err);
-    if (err.name === 'QuotaExceededError') {
-      console.warn('TizenPortal: Storage quota exceeded');
+  var result = safeLocalStorageSet(STORAGE_KEY, JSON.stringify(cardCache));
+  if (!result.success) {
+    if (result.error === 'quota') {
+      console.error('TizenPortal: ' + result.message);
+    } else {
+      console.error('TizenPortal: Failed to save cards: ' + result.message);
     }
   }
 }

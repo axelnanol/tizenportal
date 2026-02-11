@@ -133,10 +133,25 @@ TizenPortal uses a **Universal Runtime** architecture:
 ## 📚 Documentation
 
 - **[User Guide](docs/User-Guide.md)** — Complete feature walkthrough
+- **[Security Guide](docs/Security.md)** — Security features and best practices
 - **[Bundle Authoring](docs/Bundle-Authoring.md)** — How to create site-specific bundles
 - **[Manifest Schema](docs/Manifest-Schema.md)** — Bundle manifest.json reference
 - **[API Reference](docs/Api-Reference.md)** — TizenPortal JavaScript API
 - **[Architecture](docs/Architecture.md)** — System design and structure
+
+---
+
+## 🔒 Security
+
+TizenPortal is designed with security as a priority:
+
+- ✅ **Zero vulnerabilities** in dependencies (npm audit)
+- ✅ **Comprehensive input sanitization** (XSS prevention)
+- ✅ **Secure URL handling** (blocks javascript:, data:, etc.)
+- ✅ **Safe DOM manipulation** (no eval or innerHTML with user data)
+- ✅ **Regular security audits** (see [SECURITY-REVIEW.md](SECURITY-REVIEW.md))
+
+**Important:** Userscripts run with full page access. Only enable scripts you trust and have reviewed. See the [Security Guide](docs/Security.md) for details.
 
 ---
 

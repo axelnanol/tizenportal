@@ -4,6 +4,8 @@
  * Persistent configuration with localStorage and change events.
  */
 
+import { safeLocalStorageSet } from './utils.js';
+
 /**
  * Storage key for configuration
  */
@@ -126,13 +128,12 @@ function loadConfig() {
 function saveConfig() {
   if (configCache === null) return;
 
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(configCache));
-  } catch (err) {
-    console.error('TizenPortal: Failed to save config:', err);
-    // Handle quota exceeded
-    if (err.name === 'QuotaExceededError') {
-      console.warn('TizenPortal: Storage quota exceeded');
+  var result = safeLocalStorageSet(STORAGE_KEY, JSON.stringify(configCache));
+  if (!result.success) {
+    if (result.error === 'quota') {
+      console.error('TizenPortal: ' + result.message);
+    } else {
+      console.error('TizenPortal: Failed to save config: ' + result.message);
     }
   }
 }

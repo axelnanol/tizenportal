@@ -131,3 +131,30 @@ export function sanitizeCss(css) {
   return sanitized;
 }
 
+/**
+ * Safely set a localStorage item with quota handling
+ * 
+ * @param {string} key - localStorage key
+ * @param {string} value - Value to store
+ * @returns {Object} { success: boolean, error: string|null, message: string|null }
+ */
+export function safeLocalStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+    return { success: true, error: null, message: null };
+  } catch (err) {
+    if (err.name === 'QuotaExceededError') {
+      return { 
+        success: false, 
+        error: 'quota',
+        message: 'Storage quota exceeded. Consider removing old cards or userscripts.'
+      };
+    }
+    return { 
+      success: false, 
+      error: 'unknown',
+      message: err.message 
+    };
+  }
+}
+
