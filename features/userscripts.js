@@ -206,12 +206,18 @@ function applyUserscripts(card, bundle) {
     bundleScripts = normalizeScriptsArray(bundle.userscripts);
   }
 
-  var legacySiteScripts = [];
-  if (card && Array.isArray(card.userscripts)) {
-    legacySiteScripts = normalizeScriptsArray(card.userscripts);
+  // Per-bundle site scripts from card.userscriptsByBundle
+  // This ensures scripts are isolated to their designated bundle
+  var perBundleSiteScripts = [];
+  if (card && bundle && card.userscriptsByBundle && card.userscriptsByBundle[bundle.name]) {
+    // Use bundle-scoped userscripts for this specific bundle
+    perBundleSiteScripts = normalizeScriptsArray(card.userscriptsByBundle[bundle.name]);
   } else if (card && card._payload && Array.isArray(card._payload.userscripts)) {
-    legacySiteScripts = normalizeScriptsArray(card._payload.userscripts);
+    // Fallback to payload userscripts for backward compatibility
+    perBundleSiteScripts = normalizeScriptsArray(card._payload.userscripts);
   }
+  // NOTE: card.userscripts is intentionally NOT used here - it's a working copy
+  // for the site editor UI and may contain scripts from a different bundle
 
   for (var i = 0; i < bundleScripts.length; i++) {
     var bScript = bundleScripts[i];
@@ -233,10 +239,10 @@ function applyUserscripts(card, bundle) {
     }
   }
 
-  for (var k = 0; k < legacySiteScripts.length; k++) {
-    var lScript = legacySiteScripts[k];
-    if (!lScript || lScript.enabled !== true) continue;
-    executeUserscript(lScript, card, bundle);
+  for (var k = 0; k < perBundleSiteScripts.length; k++) {
+    var sScript = perBundleSiteScripts[k];
+    if (!sScript || sScript.enabled !== true) continue;
+    executeUserscript(sScript, card, bundle);
   }
 }
 
