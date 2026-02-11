@@ -1,8 +1,8 @@
 {
   "name": "userscript-sandbox",
   "displayName": "Userscript Sandbox",
-  "version": "1.0.0",
-  "description": "Sample user scripts and a playground for custom script injection.",
+  "version": "2.2.0",
+  "description": "Comprehensive collection of 20 userscripts for TV browsing: dark/light reading modes, navigation, video control, ad blocking, cookie dismissal, focus management, and more.",
   "author": "TizenPortal",
   "navigationMode": "geometric",
   "provides": ["userscript-examples"]
