@@ -56,6 +56,8 @@ function generateBundleRegistry() {
 
   var bundleMap = [];
   var bundleMeta = [];
+  var bundleManifests = [];
+  
   for (var j = 0; j < bundleDirs.length; j++) {
     var name = bundleDirs[j];
     var varName = name.replace(/[^a-zA-Z0-9_$]/g, '_');
@@ -64,9 +66,27 @@ function generateBundleRegistry() {
     }
     var mainSize = getFileSize(path.join(bundlesDir, name, 'main.js'));
     var cssSize = getFileSize(path.join(bundlesDir, name, 'style.css'));
+    
+    // Load manifest.json if it exists
+    var manifestPath = path.join(bundlesDir, name, 'manifest.json');
+    var manifest = null;
+    if (existsSync(manifestPath)) {
+      try {
+        var manifestContent = readFileSync(manifestPath, 'utf-8');
+        manifest = JSON.parse(manifestContent);
+      } catch (err) {
+        console.warn('Warning: Failed to parse manifest for bundle "' + name + '":', err.message);
+      }
+    }
+    
     lines.push("import " + varName + " from './" + name + "/main.js';");
     bundleMap.push("  '" + name + "': " + varName);
     bundleMeta.push("  '" + name + "': { jsBytes: " + mainSize + ", cssBytes: " + cssSize + " }");
+    
+    // Store manifest data (will be attached at runtime)
+    if (manifest) {
+      bundleManifests.push("  '" + name + "': " + JSON.stringify(manifest));
+    }
   }
 
   lines.push('');
@@ -78,6 +98,18 @@ function generateBundleRegistry() {
   lines.push(bundleMeta.join(',\n'));
   lines.push('};');
   lines.push('');
+  
+  // Add bundleManifests export
+  if (bundleManifests.length > 0) {
+    lines.push('export var bundleManifests = {');
+    lines.push(bundleManifests.join(',\n'));
+    lines.push('};');
+    lines.push('');
+  } else {
+    lines.push('export var bundleManifests = {};');
+    lines.push('');
+  }
+  
   lines.push('export var bundleNames = Object.keys(bundles);');
   lines.push('');
   lines.push('export default bundles;');

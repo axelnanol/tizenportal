@@ -4,12 +4,48 @@
  * Manages bundle registration and lookup.
  */
 
-import { bundles as generatedBundles, bundleMeta as generatedBundleMeta } from './registry.generated.js';
+import { bundles as generatedBundles, bundleMeta as generatedBundleMeta, bundleManifests as generatedManifests } from './registry.generated.js';
+import { validateManifest, logValidationErrors } from './manifest-validator.js';
 
 /**
  * Registered bundles (feature bundles only, no default)
  */
 var bundles = Object.assign({}, generatedBundles || {});
+
+/**
+ * Attach manifests to bundles and validate
+ */
+if (generatedManifests) {
+  Object.keys(generatedManifests).forEach(function(key) {
+    if (bundles[key]) {
+      var manifest = generatedManifests[key];
+      
+      // Validate manifest
+      var validation = validateManifest(manifest, key);
+      if (!validation.valid) {
+        logValidationErrors(key, validation.errors);
+      }
+      
+      // Attach manifest to bundle
+      bundles[key].manifest = manifest;
+      
+      // Merge manifest properties into bundle for backward compatibility
+      // Priority: main.js export > manifest.json
+      if (manifest.displayName && !bundles[key].displayName) {
+        bundles[key].displayName = manifest.displayName;
+      }
+      if (manifest.description && !bundles[key].description) {
+        bundles[key].description = manifest.description;
+      }
+      if (manifest.viewportLock !== undefined && bundles[key].viewportLock === undefined) {
+        bundles[key].viewportLock = manifest.viewportLock;
+      }
+      if (manifest.options && !bundles[key].options) {
+        bundles[key].options = manifest.options;
+      }
+    }
+  });
+}
 
 /**
  * Register a bundle

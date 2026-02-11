@@ -8,5 +8,13 @@
   "navigationMode": {
     "mode": "directional",
     "required": false
+  },
+  "viewportLock": "force",
+  "requires": ["focus-styling", "media-keys"],
+  "provides": ["media-controls", "library-navigation", "player-integration"],
+  "features": {
+    "tabindexInjection": true,
+    "scrollIntoView": true,
+    "wrapTextInputs": true
   }
 }
