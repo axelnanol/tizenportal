@@ -262,7 +262,7 @@ export function applyNavigationMode(card, bundle) {
  * Initialize navigation with global defaults (for portal page)
  */
 export function initializeGlobalNavigation() {
-  // Default to 'directional' mode (null would work too since getEffectiveMode has a default)
+  // Default to 'directional' mode, overridden by global preferences if set
   var globalMode = 'directional';
   
   if (window.TizenPortal && window.TizenPortal.config) {

@@ -100,8 +100,7 @@ function loadConfig() {
         }
       }
       
-      // Deep merge for nested objects (tp_features, etc.)
-      // This ensures new nested keys appear for existing users
+      // Deep merge for tp_features to ensure new nested keys appear for existing users
       if (configCache.tp_features && DEFAULT_CONFIG.tp_features) {
         for (var featureKey in DEFAULT_CONFIG.tp_features) {
           if (DEFAULT_CONFIG.tp_features.hasOwnProperty(featureKey) && 

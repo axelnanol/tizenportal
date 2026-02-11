@@ -291,6 +291,7 @@ export function addCard(cardData) {
     name: cardData.name || 'Untitled',
     url: cardData.url || '',
     featureBundle: cardData.featureBundle || null,
+    navigationMode: cardData.hasOwnProperty('navigationMode') ? cardData.navigationMode : null,
     viewportMode: cardData.hasOwnProperty('viewportMode') ? cardData.viewportMode : null,
     focusOutlineMode: cardData.hasOwnProperty('focusOutlineMode') ? cardData.focusOutlineMode : null,
     userAgent: cardData.hasOwnProperty('userAgent') ? cardData.userAgent : null,
