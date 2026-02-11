@@ -64,7 +64,7 @@ import { initAddressBar, showAddressBar, hideAddressBar, toggleAddressBar, isAdd
 import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
 import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggleDiagnosticsPanel } from '../ui/diagnostics.js';
 import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, setActiveBundle } from './loader.js';
-import { getBundleNames, getBundle } from '../bundles/registry.js';
+import { getBundleNames, getBundle, logDependencyWarnings } from '../bundles/registry.js';
 import { isValidHttpUrl, sanitizeCss } from './utils.js';
 import featureLoader from '../features/index.js';
 import userscriptEngine from '../features/userscripts.js';
@@ -365,6 +365,20 @@ function applyGlobalFeaturesForCard(card, bundle) {
   var viewportMode = resolveViewportMode(card, bundle);
   var overrides = buildFeatureOverrides(card);
   overrides.focusOutlineMode = focusMode;
+  
+  // Apply bundle manifest feature overrides
+  // Priority: card overrides > bundle defaults > global config
+  if (bundle && bundle.manifest && bundle.manifest.features) {
+    var bundleFeatures = bundle.manifest.features;
+    for (var key in bundleFeatures) {
+      if (bundleFeatures.hasOwnProperty(key)) {
+        // Only apply if card hasn't already overridden it
+        if (!overrides.hasOwnProperty(key)) {
+          overrides[key] = bundleFeatures[key];
+        }
+      }
+    }
+  }
 
   try {
     featureLoader.applyFeatures(document, overrides);
@@ -1322,6 +1336,15 @@ async function applyBundleToPage(card) {
     if (bundle.manifest.options && bundle.manifest.options.length > 0) {
       log('Bundle has ' + bundle.manifest.options.length + ' configurable options');
     }
+    if (bundle.manifest.features) {
+      log('Bundle has feature overrides: ' + Object.keys(bundle.manifest.features).join(', '));
+    }
+    if (bundle.manifest.provides && bundle.manifest.provides.length > 0) {
+      log('Bundle provides: ' + bundle.manifest.provides.join(', '));
+    }
+    
+    // Check and log dependencies
+    logDependencyWarnings(bundle.name);
   } else {
     warn('Bundle has no manifest (legacy bundle)');
   }
