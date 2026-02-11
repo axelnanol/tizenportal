@@ -313,17 +313,22 @@ function scrollPage(amount) {
     } catch (err) {
       // Cross-origin - try postMessage approach
       try {
-        var targetOrigin = '*';
+        var targetOrigin = null;
         if (iframe.src) {
           var originMatch = iframe.src.match(/^(https?:\/\/[^\/]+)/i);
           if (originMatch) {
             targetOrigin = originMatch[1];
           }
         }
-        iframe.contentWindow.postMessage({
-          type: 'tp-scroll',
-          amount: amount
-        }, targetOrigin);
+        
+        if (targetOrigin) {
+          iframe.contentWindow.postMessage({
+            type: 'tp-scroll',
+            amount: amount
+          }, targetOrigin);
+        } else {
+          console.log('TizenPortal: Cannot scroll iframe (unknown origin)');
+        }
       } catch (e) {
         console.log('TizenPortal: Cannot scroll iframe (cross-origin)');
       }
