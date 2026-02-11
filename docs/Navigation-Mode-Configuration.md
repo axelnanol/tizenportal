@@ -21,12 +21,12 @@ This guide explains how the navigation mode system works in TizenPortal and how 
 
 TizenPortal supports three navigation modes:
 
-1. **Polyfill** - The existing spatial-navigation-polyfill.js (default, backward compatible)
-2. **Geometric** - Strict axis-aligned navigation with Euclidean distance scoring
-3. **Directional** - Cone-based navigation with forgiving human-aligned behavior
+1. **Directional** - Cone-based navigation (PREFERRED for most use cases)
+2. **Geometric** - Strict axis-aligned navigation (enhanced polyfill approach)
+3. **Polyfill** - Legacy spatial-navigation-polyfill.js (backwards compatibility/testing ONLY)
 
 The system uses a priority-based approach to determine which mode to use, allowing:
-- **Global defaults** - Set in preferences
+- **Global defaults** - Set in preferences (defaults to Directional)
 - **Per-site overrides** - Configure for specific sites
 - **Bundle preferences** - Bundles can suggest or require modes
 
@@ -34,60 +34,26 @@ The system uses a priority-based approach to determine which mode to use, allowi
 
 ## Navigation Modes
 
-### Polyfill Mode (Default)
+### Directional Mode (PREFERRED - Default)
 
-**Best for:** General browsing, backward compatibility
+**Best for:** Most use cases, irregular layouts, content-heavy sites, modern TV UIs
 
-The existing spatial-navigation-polyfill provides TV-remote-friendly navigation with:
-- Proven compatibility with Chrome 47-69
-- Works with most web layouts
-- No configuration needed
-
-**Use when:**
-- You want maximum compatibility
-- The site doesn't have special navigation needs
-- You're not sure which mode to use
-
-### Geometric Mode
-
-**Best for:** Perfect grids, uniform layouts
-
-Strict axis-aligned navigation:
-- ✅ Half-plane filtering perpendicular to direction
-- ✅ Euclidean distance + orthogonal penalty scoring
-- ✅ No fallbacks (returns null if no candidate)
-- ✅ 100% deterministic
-- ✅ Perfect for grids with uniform spacing
-
-**Use when:**
-- Site has a perfect grid layout
-- Cards/buttons are uniformly sized and spaced
-- You want mathematically correct navigation
-- Example: Settings menus, app launchers
-
-**Not ideal for:**
-- Irregular layouts
-- Mixed card sizes
-- Imperfect alignment
-
-### Directional Mode
-
-**Best for:** Irregular layouts, content-heavy sites, modern TV UIs
-
-Cone-based, forgiving navigation:
+Cone-based, forgiving navigation using the new spatial-navigation.js library:
 - ✅ ±30° cone filtering from navigation axis
 - ✅ Weighted scoring (primary/secondary axes)
 - ✅ Overlap bonus for axis-overlapping elements
 - ✅ Row/column alignment bias
 - ✅ Configurable fallbacks (nearest/wrap)
 - ✅ Handles imperfect alignment gracefully
+- ✅ "Feels right" for human interaction
 
 **Use when:**
 - Site has irregular card layouts
 - Mixed card sizes (e.g., 1:1 books, 2:1 series cards)
 - Content-dense library views
-- Navigation needs to "feel right" rather than be mathematically perfect
+- Navigation needs to feel natural
 - Example: Media libraries, content grids, streaming UIs
+- **This is the recommended default for new sites**
 
 **Configuration options:**
 ```javascript
@@ -98,6 +64,48 @@ Cone-based, forgiving navigation:
   overlapBonus: true,      // Favor overlapping elements
   rowColumnBias: true,     // Prefer staying in row/column
   fallback: 'nearest'      // 'none' | 'nearest' | 'wrap'
+}
+```
+
+### Geometric Mode (Enhanced Polyfill)
+
+**Best for:** Perfect grids, uniform layouts, mathematically precise navigation
+
+Strict axis-aligned navigation using the new spatial-navigation.js library:
+- ✅ Half-plane filtering perpendicular to direction
+- ✅ Euclidean distance + orthogonal penalty scoring
+- ✅ No fallbacks (returns null if no candidate)
+- ✅ 100% deterministic
+- ✅ Perfect for grids with uniform spacing
+- ✅ Enhanced version of the polyfill approach
+
+**Use when:**
+- Site has a perfect grid layout
+- Cards/buttons are uniformly sized and spaced
+- You want mathematically correct navigation
+- Example: Settings menus, app launchers, uniform grids
+
+**Not ideal for:**
+- Irregular layouts
+- Mixed card sizes
+- Imperfect alignment
+
+### Polyfill Mode (Backwards Compatibility ONLY)
+
+**Best for:** Testing, backwards compatibility, fallback only
+
+The legacy spatial-navigation-polyfill.js (third-party script):
+- ✅ Proven compatibility with Chrome 47-69
+- ✅ Works with most web layouts
+- ⚠️ No configuration options
+- ⚠️ Less sophisticated than new library
+- ⚠️ Should only be used when absolutely necessary
+
+**Use when:**
+- You need to test compatibility with legacy behavior
+- New library modes are not working for some reason
+- Debugging navigation issues
+- **Not recommended for general use**
 }
 ```
 
@@ -165,14 +173,17 @@ Bundle: directional (required)
 2. Press **Yellow** button (Preferences)
 3. Navigate to **Site Features** section
 4. Select **Navigation Mode**
-5. Choose: TV Remote (Polyfill), Grid Navigation (Geometric), or Smart Navigation (Directional)
+5. Choose: 
+   - **Smart Navigation (Directional) - Preferred** (default, recommended)
+   - **Grid Navigation (Geometric)** (for perfect grids)
+   - **Legacy Polyfill (Compatibility Only)** (not recommended)
 6. Auto-saves
 
 **Config location:** `localStorage['tp-configuration']`
 ```json
 {
   "tp_features": {
-    "navigationMode": "polyfill"
+    "navigationMode": "directional"
   }
 }
 ```
@@ -183,6 +194,16 @@ Bundle: directional (required)
 - Sites with no override configured
 - Sites using bundles without navigation preferences
 - Fallback when bundle preference is not required
+
+### Recommended Default
+
+**Directional mode** is now the default and is recommended for most users because:
+- Works well with both regular and irregular layouts
+- Provides natural, forgiving navigation
+- Handles imperfect alignment gracefully
+- Best overall user experience
+
+Only switch to geometric if you have sites with perfect grids, or to polyfill if you need backwards compatibility.
 
 ---
 
@@ -280,10 +301,12 @@ Bundles can configure navigation preferences in their `manifest.json`:
 
 | Bundle | Mode | Required | Reason |
 |--------|------|----------|--------|
-| **default** | polyfill | - | Simple, backward compatible |
-| **audiobookshelf** | directional | No | Irregular layouts, content cards, but not critical |
-| **adblock** | polyfill | - | No special navigation needs |
-| **userscript-sandbox** | polyfill | - | General purpose |
+| **default** | geometric | - | General purpose, enhanced polyfill approach |
+| **audiobookshelf** | directional | No | Irregular layouts, content cards, preferred but user can override |
+| **adblock** | geometric | - | General purpose, enhanced polyfill approach |
+| **userscript-sandbox** | geometric | - | General purpose, enhanced polyfill approach |
+
+**Note:** No built-in bundles use polyfill mode. The new library (geometric/directional) is preferred for all cases.
 
 ---
 
@@ -295,7 +318,7 @@ Bundles can configure navigation preferences in their `manifest.json`:
 
 **Configuration:**
 ```
-Global: polyfill
+Global: directional (default)
 Site: (not configured)
 Bundle: directional (preferred, not required)
 ```
@@ -308,23 +331,23 @@ Bundle: directional (preferred, not required)
 **How it works:**
 1. Audiobookshelf bundle suggests directional mode
 2. No site override configured
-3. Global default is polyfill
-4. Bundle preference wins (priority 3)
+3. Global default is directional
+4. Bundle preference and global default align
 5. Directional mode activated
 
-### Example 2: Forcing Geometric for Jellyfin
+### Example 2: Forcing Geometric for Perfect Grid Site
 
-**Scenario:** Jellyfin has a perfect grid, you want geometric navigation.
+**Scenario:** A site has a perfect grid layout, you want strict geometric navigation.
 
 **Configuration:**
-1. Edit Jellyfin site card
+1. Edit site card
 2. Navigate to Site Options → Navigation Mode
 3. Select "Grid Navigation (Geometric)"
 4. Save
 
 **Result:**
 ```
-Global: polyfill
+Global: directional (default)
 Site: geometric
 Bundle: directional (preferred) // if using custom bundle
 → Effective: geometric ✓
@@ -501,22 +524,26 @@ TizenPortal.navigation.applyNavigationMode(card, bundle)
 
 **Key Takeaways:**
 
-1. ✅ **Three modes:** polyfill (default), geometric (grids), directional (irregular)
-2. ✅ **Three levels:** global default, per-site override, bundle preference
-3. ✅ **Priority order:** bundle required > site override > bundle preferred > global
-4. ✅ **Configurability:** Users always have control (unless bundle requires)
-5. ✅ **Flexibility:** Choose the best mode for each site
-6. ✅ **Backward compatible:** Polyfill mode preserves existing behavior
+1. ✅ **Three modes:** directional (preferred), geometric (enhanced polyfill), polyfill (compatibility only)
+2. ✅ **Default is directional** - Best for most use cases
+3. ✅ **Geometric for perfect grids** - Enhanced polyfill approach
+4. ✅ **Polyfill only when necessary** - Backwards compatibility/testing only
+5. ✅ **Three levels:** global default, per-site override, bundle preference
+6. ✅ **Priority order:** bundle required > site override > bundle preferred > global
+7. ✅ **User control:** Users can always override (unless bundle requires)
+8. ✅ **New library preferred:** Geometric and directional use the enhanced library
 
 **Quick Reference:**
 
-| Scenario | Action |
-|----------|--------|
-| Change default for all sites | Preferences → Navigation Mode |
-| Override for one site | Site Editor → Site Options → Navigation Mode |
-| Bundle suggests mode | Automatically applied if no override |
-| Bundle requires mode | Cannot be overridden by user |
-| Not sure which mode | Try each and see what feels best |
+| Scenario | Recommended Mode |
+|----------|------------------|
+| Default for new users | Directional (automatically set) |
+| Most sites | Directional (cone-based, forgiving) |
+| Perfect grids/settings | Geometric (strict axis-aligned) |
+| Backwards compatibility | Polyfill (only if needed) |
+| Irregular layouts | Directional (handles imperfect alignment) |
+| Media libraries | Directional (Audiobookshelf example) |
+| Testing/debugging | Polyfill (to compare with legacy) |
 
 ---
 

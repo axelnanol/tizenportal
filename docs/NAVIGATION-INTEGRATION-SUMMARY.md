@@ -10,6 +10,30 @@ Complete three remaining tasks:
 3. **Initialize appropriate library** - Load geometric/directional library when selected
 4. **Review each current bundle** - Select the appropriate approach for each
 
+## Correct Understanding of Three Modes
+
+**IMPORTANT:** The three navigation modes are:
+
+1. **Directional Mode** (PREFERRED - Default)
+   - Uses new spatial-navigation.js library
+   - Cone-based navigation (±30°)
+   - Forgiving, human-aligned behavior
+   - Best for most use cases
+
+2. **Geometric Mode** (Enhanced Polyfill Approach)
+   - Uses new spatial-navigation.js library
+   - Strict axis-aligned filtering
+   - Enhanced version of polyfill approach
+   - Best for perfect grids
+
+3. **Polyfill Mode** (Backwards Compatibility ONLY)
+   - Uses legacy spatial-navigation-polyfill.js
+   - Third-party script
+   - Should only be used when absolutely necessary
+   - For testing or backwards compatibility
+
+**Default:** Directional mode is now the default and is preferred for most scenarios.
+
 ## Solution Overview
 
 Implemented a complete, production-ready navigation mode system with:
@@ -78,8 +102,8 @@ function getEffectiveMode(options) {
     return options.bundleMode;
   }
   
-  // Priority 4: Global default
-  return options.globalMode || 'polyfill';
+  // Priority 4: Global default (defaults to directional)
+  return options.globalMode || 'directional';
 }
 ```
 
@@ -114,10 +138,12 @@ Allows explicit control over required vs preferred
 
 | Bundle | Mode | Required | Rationale |
 |--------|------|----------|-----------|
-| **default** | polyfill | - | General purpose, maximum compatibility |
-| **audiobookshelf** | directional | No | Irregular layouts, content cards, but user can override |
-| **adblock** | polyfill | - | No special navigation needs |
-| **userscript-sandbox** | polyfill | - | General purpose, user-controlled |
+| **default** | geometric | - | General purpose, enhanced polyfill approach |
+| **audiobookshelf** | directional | No | Irregular layouts, content cards, user can override |
+| **adblock** | geometric | - | General purpose, enhanced polyfill approach |
+| **userscript-sandbox** | geometric | - | General purpose, enhanced polyfill approach |
+
+**Note:** No built-in bundles use polyfill mode. All use the new library (geometric or directional).
 
 **Why Audiobookshelf Uses Directional:**
 
@@ -214,16 +240,16 @@ try {
 
 **Example 1: Audiobookshelf with No Override**
 ```
-Global: polyfill
+Global: directional (default)
 Site: (not configured)
 Bundle: directional (preferred)
 → Result: directional ✓
-Reason: Bundle preference (priority 3) wins
+Reason: Bundle preference and global default align
 ```
 
 **Example 2: User Overrides to Geometric**
 ```
-Global: polyfill
+Global: directional (default)
 Site: geometric
 Bundle: directional (preferred)
 → Result: geometric ✓
@@ -232,8 +258,8 @@ Reason: Site override (priority 2) beats bundle preference
 
 **Example 3: Bundle Requires Directional**
 ```
-Global: polyfill
-Site: geometric
+Global: geometric
+Site: polyfill
 Bundle: directional (required)
 → Result: directional ✓
 Reason: Bundle required (priority 1) cannot be overridden
@@ -350,7 +376,7 @@ window.SpatialNavigation.configure({
 ```json
 {
   "tp_features": {
-    "navigationMode": "polyfill"
+    "navigationMode": "directional"
   }
 }
 ```
@@ -372,9 +398,9 @@ window.SpatialNavigation.configure({
 
 **Options:**
 - Global (default) - Inherits from preferences
-- TV Remote (Polyfill)
+- Smart Navigation (Directional) - Preferred
 - Grid Navigation (Geometric)
-- Smart Navigation (Directional)
+- Legacy Polyfill (Compatibility Only)
 
 **Storage:**
 ```json
