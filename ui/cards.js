@@ -241,24 +241,30 @@ function loadCards() {
         // MIGRATION: Sync card.userscripts with the correct bundle's scripts
         // This fixes cross-bundle contamination where card.userscripts might contain
         // scripts from a different bundle that was edited in the site editor
+        // NOTE: card.featureBundle is the bundle registry key, which equals bundle.name
+        // used at runtime, ensuring consistent userscript isolation
         var bundleKey = card.featureBundle || 'default';
         var correctScripts = card.userscriptsByBundle && card.userscriptsByBundle[bundleKey] 
           ? card.userscriptsByBundle[bundleKey] 
           : [];
         
-        // Compare and update if different
-        try {
-          var currentScripts = JSON.stringify(card.userscripts || []);
-          var expectedScripts = JSON.stringify(correctScripts);
-          if (currentScripts !== expectedScripts) {
-            card.userscripts = correctScripts;
-            needsSave = true;
-            console.log('TizenPortal: Migrated userscripts for card "' + card.name + '" to bundle: ' + bundleKey);
+        // Lightweight comparison: check length first, then deep compare if needed
+        var currentScripts = card.userscripts || [];
+        var scriptsMatch = currentScripts.length === correctScripts.length;
+        
+        if (scriptsMatch && currentScripts.length > 0) {
+          // Only do deep comparison if lengths match and array is non-empty
+          try {
+            scriptsMatch = JSON.stringify(currentScripts) === JSON.stringify(correctScripts);
+          } catch (e) {
+            scriptsMatch = false;
           }
-        } catch (e) {
-          // If comparison fails, force sync
+        }
+        
+        if (!scriptsMatch) {
           card.userscripts = correctScripts;
           needsSave = true;
+          console.log('TizenPortal: Migrated userscripts for card "' + card.name + '" to bundle: ' + bundleKey);
         }
       }
       
