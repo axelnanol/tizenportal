@@ -1778,12 +1778,13 @@
       text-align: center;
     }
     
-    /* Pointer/Mouse Mode */
+    /* Pointer/Mouse Mode - Samsung Tizen-style circular cursor */
     .tp-pointer {
       display: none;
       position: fixed;
       z-index: 9999;
       pointer-events: none;
+      transform: translate(-50%, -50%);
     }
     
     .tp-pointer.visible {
@@ -1791,9 +1792,9 @@
     }
     
     .tp-pointer-cursor {
-      /* Traditional arrow cursor shape using CSS */
-      width: 20px;
-      height: 20px;
+      /* Samsung Tizen-style circular cursor for TV viewing distance */
+      width: 28px;
+      height: 28px;
       position: relative;
     }
     
@@ -1802,34 +1803,38 @@
       position: absolute;
       top: 0;
       left: 0;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 24px 0 0 16px;
-      border-color: transparent transparent transparent #fff;
-      filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8));
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 3px solid #00a8ff;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(0, 168, 255, 0.6),
+                  0 0 16px rgba(0, 168, 255, 0.3),
+                  0 2px 4px rgba(0, 0, 0, 0.5);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
     
-    .tp-pointer-cursor::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 0;
-      height: 0;
-      border-style: solid;
-      border-width: 18px 0 0 12px;
-      border-color: transparent transparent transparent #000;
+    /* Hover state - subtle pulse effect */
+    .tp-pointer.moving .tp-pointer-cursor::before {
+      box-shadow: 0 0 10px rgba(0, 168, 255, 0.8),
+                  0 0 20px rgba(0, 168, 255, 0.4),
+                  0 2px 4px rgba(0, 0, 0, 0.5);
     }
     
+    /* Click animation - scale up briefly */
     .tp-pointer.clicking .tp-pointer-cursor::before {
-      border-color: transparent transparent transparent #00a8ff;
+      transform: scale(1.3);
+      background: rgba(0, 168, 255, 0.9);
+      box-shadow: 0 0 12px rgba(0, 168, 255, 1),
+                  0 0 24px rgba(0, 168, 255, 0.5),
+                  0 2px 4px rgba(0, 0, 0, 0.5);
     }
     
-    /* Hover highlight for elements under pointer */
+    /* Hover highlight for elements under pointer - distinct from focus */
     .tp-pointer-hover {
-      outline: 3px solid #00a8ff !important;
-      outline-offset: 2px;
+      outline: 2px dashed rgba(0, 168, 255, 0.8) !important;
+      outline-offset: 4px;
+      background: rgba(0, 168, 255, 0.05) !important;
     }
   </style>
 </head>

@@ -20,30 +20,23 @@ function getScreenDimensions() {
 }
 
 /**
- * Pointer movement speed (pixels per key press)
+ * Pointer movement speeds (pixels per key press)
+ * Progressive acceleration based on hold duration
  */
-var MOVE_SPEED = 20;
+var MOVE_SPEED_BASE = 15;    // Initial speed (< ACCEL_THRESHOLD_MEDIUM)
+var MOVE_SPEED_MEDIUM = 30;  // After ACCEL_THRESHOLD_MEDIUM
+var MOVE_SPEED_FAST = 60;    // After ACCEL_THRESHOLD_FAST
 
 /**
- * Fast movement speed (when holding key)
+ * Acceleration thresholds (milliseconds)
  */
-var FAST_SPEED = 40;
-
-/**
- * Timestamp for throttling scroll error logs
- */
-var lastScrollErrorLog = 0;
-var SCROLL_ERROR_LOG_THROTTLE = 5000; // Log at most once per 5 seconds
+var ACCEL_THRESHOLD_MEDIUM = 300;
+var ACCEL_THRESHOLD_FAST = 600;
 
 /**
  * Scroll amount when pointer reaches edge
  */
 var SCROLL_AMOUNT = 100;
-
-/**
- * Edge threshold for triggering scroll
- */
-// EDGE_THRESHOLD removed - now scroll triggers when pointer hits actual screen edge
 
 /**
  * Pointer element
@@ -70,7 +63,6 @@ var isActive = false;
  * Key repeat tracking for acceleration
  */
 var keyHoldStart = {};
-var HOLD_THRESHOLD = 300; // ms before fast speed kicks in
 
 /**
  * Initialize the pointer system
@@ -206,9 +198,11 @@ export function handlePointerKeyDown(event) {
     keyHoldStart[keyCode] = Date.now();
   }
   
-  // Calculate speed based on hold duration
+  // Calculate speed based on hold duration (progressive acceleration)
   var holdDuration = Date.now() - (keyHoldStart[keyCode] || Date.now());
-  var speed = holdDuration > HOLD_THRESHOLD ? FAST_SPEED : MOVE_SPEED;
+  var speed = holdDuration > ACCEL_THRESHOLD_FAST ? MOVE_SPEED_FAST :
+              holdDuration > ACCEL_THRESHOLD_MEDIUM ? MOVE_SPEED_MEDIUM :
+              MOVE_SPEED_BASE;
   
   var handled = false;
   var scrollDirection = 0;
@@ -304,55 +298,16 @@ export function handlePointerKeyUp(event) {
 }
 
 /**
- * Scroll the page (iframe content or portal)
+ * Scroll the page (no iframe support - direct document scrolling)
  * @param {number} amount - Positive for down, negative for up
  */
 function scrollPage(amount) {
-  var iframe = document.getElementById('tp-iframe');
-  
-  if (iframe) {
-    // Try to scroll iframe content
-    try {
-      var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      var scrollTarget = iframeDoc.scrollingElement || iframeDoc.documentElement || iframeDoc.body;
-      scrollTarget.scrollTop += amount;
-    } catch (err) {
-      // Cross-origin - try postMessage approach
-      try {
-        var targetOrigin = null;
-        if (iframe.src) {
-          var originMatch = iframe.src.match(/^(https?:\/\/[^\/]+)/i);
-          if (originMatch) {
-            targetOrigin = originMatch[1];
-          }
-        }
-        
-        if (targetOrigin) {
-          iframe.contentWindow.postMessage({
-            type: 'tp-scroll',
-            amount: amount
-          }, targetOrigin);
-        } else {
-          // Throttle this log to avoid spam during pointer scrolling
-          var now = Date.now();
-          if (now - lastScrollErrorLog > SCROLL_ERROR_LOG_THROTTLE) {
-            console.log('TizenPortal: Cannot scroll iframe (unknown origin)');
-            lastScrollErrorLog = now;
-          }
-        }
-      } catch (e) {
-        console.log('TizenPortal: Cannot scroll iframe (cross-origin)');
-      }
-    }
-  } else {
-    // Scroll main document (portal)
-    var scrollTarget = document.scrollingElement || document.documentElement || document.body;
-    scrollTarget.scrollTop += amount;
-  }
+  var scrollTarget = document.scrollingElement || document.documentElement || document.body;
+  scrollTarget.scrollTop += amount;
 }
 
 /**
- * Click at current pointer position
+ * Click at current pointer position (direct document access)
  */
 function clickAtPointer() {
   console.log('TizenPortal: Click at', posX, posY);
@@ -367,38 +322,11 @@ function clickAtPointer() {
     }, 150);
   }
   
-  var targetElement = null;
-  var iframe = document.getElementById('tp-iframe');
+  // Get element at pointer position
+  var targetElement = document.elementFromPoint(posX, posY);
   
-  if (iframe) {
-    // Try to click inside iframe
-    try {
-      var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      var iframeRect = iframe.getBoundingClientRect();
-      
-      // Adjust coordinates for iframe position
-      var iframeX = posX - iframeRect.left;
-      var iframeY = posY - iframeRect.top;
-      
-      targetElement = iframeDoc.elementFromPoint(iframeX, iframeY);
-      
-      if (targetElement) {
-        simulateClick(targetElement, iframeX, iframeY);
-      }
-    } catch (err) {
-      console.log('TizenPortal: Cannot click in iframe (cross-origin)');
-      // For cross-origin, we can't do much
-      if (window.TizenPortal) {
-        window.TizenPortal.showToast('Cannot click (cross-origin)');
-      }
-    }
-  } else {
-    // Click in main document
-    targetElement = document.elementFromPoint(posX, posY);
-    
-    if (targetElement) {
-      simulateClick(targetElement, posX, posY);
-    }
+  if (targetElement) {
+    simulateClick(targetElement, posX, posY);
   }
 }
 
@@ -513,30 +441,13 @@ function updateHoverHighlight(x, y) {
 }
 
 /**
- * Find clickable element at position
+ * Find clickable element at position (direct document access)
  * @param {number} x
  * @param {number} y
  * @returns {Element|null}
  */
 function findClickableElement(x, y) {
-  var targetElement = null;
-  var iframe = document.getElementById('tp-iframe');
-  
-  if (iframe) {
-    // Try inside iframe
-    try {
-      var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-      var iframeRect = iframe.getBoundingClientRect();
-      var iframeX = x - iframeRect.left;
-      var iframeY = y - iframeRect.top;
-      targetElement = iframeDoc.elementFromPoint(iframeX, iframeY);
-    } catch (err) {
-      // Cross-origin
-      return null;
-    }
-  } else {
-    targetElement = document.elementFromPoint(x, y);
-  }
+  var targetElement = document.elementFromPoint(x, y);
   
   if (!targetElement) return null;
   

@@ -16,7 +16,6 @@ var STORAGE_KEY = 'tp-configuration';
  */
 var DEFAULT_CONFIG = {
   pointerMode: false,
-  focusHighlight: true,
   safeMode: false,
   lastVisitedUrl: null,
   diagnosticsEnabled: false,

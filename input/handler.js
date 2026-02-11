@@ -420,10 +420,37 @@ export function executeColorAction(action) {
 
     case 'focusHighlight':
       // Toggle focus highlight visibility
-      var currentHighlight = configRead('focusHighlight');
-      if (currentHighlight === undefined) currentHighlight = true;
-      configWrite('focusHighlight', !currentHighlight);
-      if (window.TizenPortal) {
+      if (window.TizenPortal && window.TizenPortal.config) {
+        var features = window.TizenPortal.config.get('tp_features') || {};
+        var currentHighlight = features.focusStyling;
+        if (currentHighlight === undefined) currentHighlight = true;
+        
+        features.focusStyling = !currentHighlight;
+        window.TizenPortal.config.set('tp_features', features);
+        
+        // Reapply features to current iframe document or fall back to active document
+        var targetDoc = null;
+        var iframe = document.getElementById('tp-iframe');
+        if (iframe) {
+          try {
+            var iframeDoc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+            if (iframeDoc) {
+              targetDoc = iframeDoc;
+            }
+          } catch (err) {
+            // Cross-origin iframe, can't access document; fall back to active document
+            console.warn('TizenPortal: Cannot reapply focus styling to cross-origin iframe:', err.message);
+          }
+        }
+
+        if (!targetDoc) {
+          targetDoc = document;
+        }
+
+        if (window.TizenPortal._featureLoader && typeof window.TizenPortal._featureLoader.applyFeatures === 'function') {
+          window.TizenPortal._featureLoader.applyFeatures(targetDoc);
+        }
+        
         window.TizenPortal.showToast('Focus highlight: ' + (!currentHighlight ? 'ON' : 'OFF'));
       }
       break;
