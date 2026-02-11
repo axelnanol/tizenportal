@@ -575,9 +575,16 @@ export default {
     // MODAL: Trap focus within modal
     // ========================================================================
     var modal = document.querySelector(SELECTORS.modal + ':not([style*="display: none"])');
-    if (modal && modal.offsetParent !== null && modal.contains(active)) {
-      // Focus is inside a visible modal - let core handle navigation within it
-      // but don't let focus escape
+    if (modal && modal.offsetParent !== null) {
+      // If focus is not inside the modal, bring it back
+      if (!modal.contains(active)) {
+        var focusables = getFocusableElements(modal);
+        if (focusables.length > 0) {
+          focusElement(focusables[0]);
+          return true; // Consume key - trapped focus in modal
+        }
+      }
+      // Focus is inside modal - let core handle navigation within it
     }
     
     // Return false to let core handle the key
