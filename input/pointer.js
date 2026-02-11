@@ -23,9 +23,9 @@ function getScreenDimensions() {
  * Pointer movement speeds (pixels per key press)
  * Progressive acceleration based on hold duration
  */
-var MOVE_SPEED_BASE = 15;    // Initial speed
-var MOVE_SPEED_MEDIUM = 30;  // After 300ms hold
-var MOVE_SPEED_FAST = 60;    // After 600ms hold
+var MOVE_SPEED_BASE = 15;    // Initial speed (< ACCEL_THRESHOLD_MEDIUM)
+var MOVE_SPEED_MEDIUM = 30;  // After ACCEL_THRESHOLD_MEDIUM
+var MOVE_SPEED_FAST = 60;    // After ACCEL_THRESHOLD_FAST
 
 /**
  * Acceleration thresholds (milliseconds)
@@ -200,12 +200,9 @@ export function handlePointerKeyDown(event) {
   
   // Calculate speed based on hold duration (progressive acceleration)
   var holdDuration = Date.now() - (keyHoldStart[keyCode] || Date.now());
-  var speed = MOVE_SPEED_BASE;
-  if (holdDuration > ACCEL_THRESHOLD_FAST) {
-    speed = MOVE_SPEED_FAST;
-  } else if (holdDuration > ACCEL_THRESHOLD_MEDIUM) {
-    speed = MOVE_SPEED_MEDIUM;
-  }
+  var speed = holdDuration > ACCEL_THRESHOLD_FAST ? MOVE_SPEED_FAST :
+              holdDuration > ACCEL_THRESHOLD_MEDIUM ? MOVE_SPEED_MEDIUM :
+              MOVE_SPEED_BASE;
   
   var handled = false;
   var scrollDirection = 0;
