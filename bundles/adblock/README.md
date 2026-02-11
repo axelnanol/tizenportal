@@ -56,11 +56,11 @@ The bundle uses 5 complementary approaches:
 
 ### 3. Strict Mode
 
-Enable aggressive blocking with additional patterns:
+Enable aggressive blocking with additional match terms:
 - Tracking terms: pixel, tracker, beacon
 - Promotional content: sponsor, promo, promoted
-- Generic patterns: /ads/, /ad/, adservice
 
+**Note:** Generic patterns like `/ads/`, `/ad/`, and `adservice` are applied in both normal and strict modes.
 **Warning:** Strict mode may block legitimate content. Test on your sites first.
 
 ### 4. Cookie Banner Hiding
