@@ -76,11 +76,12 @@ var UA_MODE_OPTIONS = [
 
 /**
  * Navigation mode options
+ * Note: Directional is preferred for most use cases
  */
 var NAVIGATION_MODE_OPTIONS = [
-  { value: 'polyfill', label: 'TV Remote (Polyfill)' },
+  { value: 'directional', label: 'Smart Navigation (Directional) - Preferred' },
   { value: 'geometric', label: 'Grid Navigation (Geometric)' },
-  { value: 'directional', label: 'Smart Navigation (Directional)' },
+  { value: 'polyfill', label: 'Legacy Polyfill (Compatibility Only)' },
 ];
 
 /**

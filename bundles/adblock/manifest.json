@@ -4,5 +4,5 @@
   "version": "1.0.0",
   "description": "Blocks advertisements and tracking scripts for cleaner browsing",
   "author": "TizenPortal",
-  "navigationMode": "polyfill"
+  "navigationMode": "geometric"
 }

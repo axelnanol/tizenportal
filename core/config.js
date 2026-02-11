@@ -45,10 +45,10 @@ var DEFAULT_CONFIG = {
     uaMode: 'tizen',
     
     // Navigation mode: which navigation system to use
-    // 'polyfill' - Use existing spatial-navigation-polyfill.js (default, backward compatible)
-    // 'geometric' - Use new library in geometric mode (strict axis-aligned)
-    // 'directional' - Use new library in directional mode (cone-based, forgiving)
-    navigationMode: 'polyfill',
+    // 'directional' - Use new library in directional mode (cone-based, forgiving) - PREFERRED
+    // 'geometric' - Use new library in geometric mode (strict axis-aligned, enhanced polyfill)
+    // 'polyfill' - Use legacy spatial-navigation-polyfill.js (backwards compatibility/testing ONLY)
+    navigationMode: 'directional',
   },
 
   // Global user scripts

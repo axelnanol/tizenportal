@@ -4,5 +4,5 @@
   "version": "1.0.0",
   "description": "Sample user scripts and a playground for custom script injection.",
   "author": "TizenPortal",
-  "navigationMode": "polyfill"
+  "navigationMode": "geometric"
 }

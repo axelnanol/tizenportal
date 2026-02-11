@@ -70,9 +70,9 @@ var UA_MODE_OPTIONS = [
 
 var NAVIGATION_MODE_OPTIONS = [
   { value: null, label: 'Global (default)' },
-  { value: 'polyfill', label: 'TV Remote (Polyfill)' },
+  { value: 'directional', label: 'Smart Navigation (Directional) - Preferred' },
   { value: 'geometric', label: 'Grid Navigation (Geometric)' },
-  { value: 'directional', label: 'Smart Navigation (Directional)' },
+  { value: 'polyfill', label: 'Legacy Polyfill (Compatibility Only)' },
 ];
 
 var FEATURE_TOGGLE_OPTIONS = [

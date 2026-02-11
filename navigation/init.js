@@ -4,10 +4,16 @@
  * Manages the initialization and configuration of the spatial navigation system
  * based on global config, site overrides, and bundle preferences.
  * 
+ * THREE NAVIGATION MODES:
+ * - directional: New library with cone-based navigation (PREFERRED for most cases)
+ * - geometric: New library with strict axis-aligned navigation (for perfect grids)
+ * - polyfill: Legacy spatial-navigation-polyfill.js (backwards compatibility/testing ONLY)
+ * 
  * Priority order:
  * 1. Bundle required mode (if set)
  * 2. Site override (if set)
- * 3. Global default from preferences
+ * 3. Bundle preferred mode (if set)
+ * 4. Global default from preferences
  */
 
 /**
@@ -43,8 +49,8 @@ export function getEffectiveMode(options) {
     return options.bundleMode;
   }
   
-  // Priority 4: Global default
-  return options.globalMode || 'polyfill';
+  // Priority 4: Global default (defaults to 'directional' if not set)
+  return options.globalMode || 'directional';
 }
 
 /**
