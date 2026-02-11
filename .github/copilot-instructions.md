@@ -1,8 +1,28 @@
 # Copilot Instructions for TizenPortal
 
-> **Last Updated:** February 6, 2026  
+> **Last Updated:** February 11, 2026  
 > **Current Version:** 0463  
 > **Architecture:** Universal Runtime
+
+---
+
+## 🤖 How to Use These Instructions
+
+This file provides comprehensive guidance for working on the TizenPortal codebase. As an AI coding agent:
+
+1. **Read completely before starting** — Understanding context prevents mistakes
+2. **Follow the constraints** — Chrome 47 compatibility is non-negotiable
+3. **Make minimal changes** — Surgical edits only; don't refactor unnecessarily
+4. **Test incrementally** — Build after every change
+5. **Document as you go** — Update docs when behavior changes
+
+### Critical Context
+
+- **Target Platform:** Samsung Tizen TVs with Chrome 47-69 browser engine
+- **Build System:** Rollup + Babel transpiling to ES5
+- **Input Method:** TV remote only (D-pad + color buttons)
+- **Testing:** Manual only (no automated tests)
+- **Deployment:** Git tags → TizenBrew CDN
 
 ---
 
@@ -22,6 +42,47 @@
 12. [Common Pitfalls](#12-common-pitfalls)
 13. [Agent Instructions](#13-agent-instructions)
 14. [Attribution Requirements](#14-attribution-requirements)
+
+---
+
+## Quick Start for Copilot
+
+### Essential Commands
+
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Watch mode for development
+npm run watch
+
+# Clean build artifacts
+npm run clean
+```
+
+### Testing
+There is no automated test suite. Changes must be manually verified on a Samsung Tizen TV or through careful code review.
+
+### Key Files to Know
+- `core/index.js` — Main runtime entry point
+- `bundles/registry.js` — Bundle registration system
+- `ui/portal.js` — Portal launcher UI
+- `input/handler.js` — Remote control key handling
+- `navigation/spatial-navigation.js` — Spatial navigation library
+
+### Common Issues & Solutions
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Build fails with "rollup: not found" | Dependencies not installed | Run `npm install` |
+| "this is undefined" warning | Normal for UMD modules | Safe to ignore |
+| Code works in modern browser but not on TV | Using ES6+ features | Check Babel transpilation |
+| Changes not appearing on TV | CDN cache | Create new git tag |
+| localStorage errors | Quota exceeded | Implement error handling |
+| Focus lost after navigation | Missing spatial nav setup | Check focus groups |
 
 ---
 
@@ -602,6 +663,10 @@ This forces CDN and browser caches to fetch the new portal HTML + JS.
 | Use `display: none` to hide host | Breaks `offsetParent` | Use `opacity: 0.001` |
 | Forget to bump tag | Stale code from CDN | Always create new tag |
 | Use ES6+ without Babel | Chrome 47 breaks | Run through build system |
+| Use `innerHTML` with user content | XSS vulnerability | Use `textContent` or `createElement` |
+| Add external dependencies without checking | May not work on Chrome 47 | Test thoroughly first |
+| Modify files outside your scope | Breaks other functionality | Make minimal, targeted changes |
+| Create helper scripts in repo root | Pollutes git history | Use `/tmp` for temporary files |
 
 ### ✅ DO
 
@@ -612,6 +677,9 @@ This forces CDN and browser caches to fetch the new portal HTML + JS.
 | Cache processed DOM elements | Prevents duplicate listeners |
 | Test with actual remote | D-pad behaves differently than keyboard |
 | Log all state transitions | Diagnostics panel shows history |
+| Use feature detection | Ensures compatibility across Tizen versions |
+| Read existing code patterns first | Maintains consistency |
+| Check bundle manifest schema | Prevents validation errors |
 
 ---
 
@@ -653,6 +721,30 @@ Before marking any phase complete:
 - [ ] Remote navigation works
 - [ ] Color buttons work as documented
 - [ ] Memory stable after 5 minutes
+
+### Pull Request Standards
+
+When submitting changes:
+
+1. **Keep changes minimal** — Only modify files necessary for the task
+2. **Test the build** — Ensure `npm run build` succeeds without errors
+3. **Verify functionality** — Manually test on target platform when possible
+4. **Document behavior changes** — Update relevant docs if behavior changes
+5. **Follow commit message format** — Include scope and intent, minimum 1000 characters for deployments
+6. **Use `.gitignore` for artifacts** — Don't commit `node_modules`, build artifacts, or temp files
+
+### Issue Acceptance Criteria
+
+For issues to be considered complete:
+
+- [ ] All requirements from issue description are met
+- [ ] Code follows existing patterns and style
+- [ ] No new console errors or warnings
+- [ ] Build succeeds without errors
+- [ ] Changes are minimal and targeted
+- [ ] Relevant documentation is updated
+- [ ] No security vulnerabilities introduced
+- [ ] Chrome 47 compatibility maintained
 
 ---
 
