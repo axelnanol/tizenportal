@@ -237,6 +237,29 @@ function loadCards() {
           card.bundleUserscriptToggles = {};
           needsSave = true;
         }
+
+        // MIGRATION: Sync card.userscripts with the correct bundle's scripts
+        // This fixes cross-bundle contamination where card.userscripts might contain
+        // scripts from a different bundle that was edited in the site editor
+        var bundleKey = card.featureBundle || 'default';
+        var correctScripts = card.userscriptsByBundle && card.userscriptsByBundle[bundleKey] 
+          ? card.userscriptsByBundle[bundleKey] 
+          : [];
+        
+        // Compare and update if different
+        try {
+          var currentScripts = JSON.stringify(card.userscripts || []);
+          var expectedScripts = JSON.stringify(correctScripts);
+          if (currentScripts !== expectedScripts) {
+            card.userscripts = correctScripts;
+            needsSave = true;
+            console.log('TizenPortal: Migrated userscripts for card "' + card.name + '" to bundle: ' + bundleKey);
+          }
+        } catch (e) {
+          // If comparison fails, force sync
+          card.userscripts = correctScripts;
+          needsSave = true;
+        }
       }
       
       if (needsSave) {
