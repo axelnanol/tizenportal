@@ -14,8 +14,8 @@ This document provides a comprehensive review of the Adblock and Audiobookshelf 
 
 | Bundle | Current Size | Issues Found | Potential Savings |
 |--------|-------------|--------------|-------------------|
-| **Adblock** | 36.2KB (28.6KB JS + 7.6KB CSS) | Static filters, duplicates, performance | ~5KB + better coverage |
-| **Audiobookshelf** | 138.9KB (60.6KB JS + 78.3KB CSS) | Manual focus management, CSS bloat | ~15KB (11% reduction) |
+| **Adblock** | 38KB (30.4KB JS + 7.6KB CSS) | Static filters, duplicates, performance | ~5KB + better coverage |
+| **Audiobookshelf** | 139.1KB (60.8KB JS + 78.3KB CSS) | Manual focus management, CSS bloat | ~15KB (11% reduction) |
 
 ---
 
@@ -23,7 +23,7 @@ This document provides a comprehensive review of the Adblock and Audiobookshelf 
 
 ### Current Implementation (v1.0.0)
 
-**Size:** 28.6KB JS + 7.6KB CSS = 36.2KB total (uncompressed)
+**Size:** 30.4KB JS + 7.6KB CSS = 38KB total (uncompressed)
 
 **Approach:** 4-tier defense strategy
 1. **CSS-based hiding** (143+ selectors) - Immediate, lightweight

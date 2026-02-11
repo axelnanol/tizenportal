@@ -44,10 +44,9 @@ The bundle uses 5 complementary approaches:
 ### 2. Smart Pattern Matching
 
 **Consolidated Pattern Categories:**
-- Google Ads (8 patterns): doubleclick, googlesyndication, etc.
+- Google Ads (7 patterns): doubleclick, googlesyndication, etc.
 - Ad Networks (14 networks): Taboola, Outbrain, Criteo, etc.
 - Analytics/Tracking (6 patterns): scorecard, quantserve, etc.
-- Generic Terms: adserver, adsystem, etc.
 
 **Performance Optimizations:**
 - ✅ Compiled regex patterns (~23x faster than indexOf loops)
@@ -56,11 +55,11 @@ The bundle uses 5 complementary approaches:
 
 ### 3. Strict Mode
 
-Enable aggressive blocking with additional match terms:
-- Tracking terms: pixel, tracker, beacon
+Enable aggressive blocking with additional patterns:
+- Generic ad terms: adserver, adsystem, adservice, /ads/, /ad/
+- Tracking terms: pixel, tracker, beacon, tracking, analytics
 - Promotional content: sponsor, promo, promoted
 
-**Note:** Generic patterns like `/ads/`, `/ad/`, and `adservice` are applied in both normal and strict modes.
 **Warning:** Strict mode may block legitimate content. Test on your sites first.
 
 ### 4. Cookie Banner Hiding
