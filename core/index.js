@@ -1321,6 +1321,7 @@ function findMatchingCard(url) {
 async function applyBundleToPage(card) {
   var bundleName = card.featureBundle || 'default';
   tpHud('Bundle: ' + bundleName);
+  log('Applying bundle for card: ' + card.name + ', bundle: ' + bundleName);
   var bundle = getBundle(bundleName);
   
   if (!bundle) {

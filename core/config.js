@@ -163,13 +163,22 @@ export function configWrite(key, value) {
   var config = loadConfig();
   var oldValue = config[key];
 
-  if (oldValue === value) return; // No change
+  // For objects, always save (don't rely on reference equality)
+  // This prevents bugs where object properties are modified in-place
+  var shouldSave = true;
+  if (typeof value !== 'object' || value === null) {
+    // For primitives, can check equality
+    if (oldValue === value) {
+      shouldSave = false;
+    }
+  }
 
-  config[key] = value;
-  saveConfig();
-
-  // Emit change event
-  emitChange(key, value, oldValue);
+  if (shouldSave) {
+    config[key] = value;
+    saveConfig();
+    // Emit change event
+    emitChange(key, value, oldValue);
+  }
 }
 
 /**

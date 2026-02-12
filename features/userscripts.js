@@ -6,6 +6,7 @@
  */
 
 import { configGet, configSet } from '../core/config.js';
+import { isBundleUserscript } from '../core/utils.js';
 
 var activeCleanups = [];
 var activeScripts = [];
@@ -80,6 +81,20 @@ function getUserscriptsConfig() {
     cfg.scripts = [];
     changed = true;
   }
+
+  // Filter out any bundle-scoped userscripts from global config
+  // These should never be in global config, only in bundle definitions
+  var filtered = [];
+  for (var i = 0; i < cfg.scripts.length; i++) {
+    var script = cfg.scripts[i];
+    if (script && script.id && isBundleUserscript(script.id)) {
+      // Skip bundle userscripts that accidentally got into global config
+      changed = true;
+      continue;
+    }
+    filtered.push(script);
+  }
+  cfg.scripts = filtered;
 
   var normalized = normalizeScriptsArray(cfg.scripts);
   if (normalized.length !== cfg.scripts.length) {
@@ -207,6 +222,13 @@ function clearUserscripts() {
 function applyUserscripts(card, bundle) {
   clearUserscripts();
 
+  // Log bundle info for debugging
+  var bundleName = bundle && bundle.name ? bundle.name : 'unknown';
+  var cardName = card && card.name ? card.name : 'unknown';
+  if (window.TizenPortal && window.TizenPortal.log) {
+    window.TizenPortal.log('[Userscripts] Applying for bundle: ' + bundleName + ', card: ' + cardName);
+  }
+
   var globalScripts = getUserscriptsConfig().scripts || [];
   var siteToggleMap = card && card.userscriptToggles && typeof card.userscriptToggles === 'object' ? card.userscriptToggles : null;
   var bundleToggleMap = null;
@@ -218,6 +240,9 @@ function applyUserscripts(card, bundle) {
   var bundleScripts = [];
   if (bundle && Array.isArray(bundle.userscripts)) {
     bundleScripts = normalizeScriptsArray(bundle.userscripts);
+    if (window.TizenPortal && window.TizenPortal.log) {
+      window.TizenPortal.log('[Userscripts] Bundle has ' + bundleScripts.length + ' userscripts');
+    }
   }
 
   // Per-bundle site scripts from card.userscriptsByBundle
@@ -234,21 +259,38 @@ function applyUserscripts(card, bundle) {
       bundleEnabled = bundleToggleMap[bScript.id] === true;
     }
     if (bundleEnabled) {
+      if (window.TizenPortal && window.TizenPortal.log) {
+        window.TizenPortal.log('[Userscripts] Executing bundle script: ' + (bScript.name || bScript.id));
+      }
       executeUserscript(bScript, card, bundle);
     }
+  }
+
+  if (window.TizenPortal && window.TizenPortal.log) {
+    window.TizenPortal.log('[Userscripts] Checking ' + globalScripts.length + ' global scripts');
   }
 
   for (var j = 0; j < globalScripts.length; j++) {
     var gScript = globalScripts[j];
     if (!gScript) continue;
     if (siteToggleMap && siteToggleMap[gScript.id] === true) {
+      if (window.TizenPortal && window.TizenPortal.log) {
+        window.TizenPortal.log('[Userscripts] Executing global script: ' + (gScript.name || gScript.id));
+      }
       executeUserscript(gScript, card, bundle);
     }
+  }
+
+  if (window.TizenPortal && window.TizenPortal.log) {
+    window.TizenPortal.log('[Userscripts] Checking ' + perBundleSiteScripts.length + ' per-bundle site scripts');
   }
 
   for (var k = 0; k < perBundleSiteScripts.length; k++) {
     var sScript = perBundleSiteScripts[k];
     if (!sScript || sScript.enabled !== true) continue;
+    if (window.TizenPortal && window.TizenPortal.log) {
+      window.TizenPortal.log('[Userscripts] Executing site script: ' + (sScript.name || sScript.id));
+    }
     executeUserscript(sScript, card, bundle);
   }
 }

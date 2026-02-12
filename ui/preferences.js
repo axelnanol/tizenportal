@@ -1,11 +1,11 @@
 /**
  * TizenPortal Preferences UI
- * 
+ *
  * Full-screen preferences modal with D-pad navigation.
  * Mirrors the site editor's keyboard interaction model.
  */
 
-import { isValidHexColor, isValidHttpUrl, escapeHtml } from '../core/utils.js';
+import { isValidHexColor, isValidHttpUrl, escapeHtml, isBundleUserscript } from '../core/utils.js';
 
 /**
  * Preferences state
@@ -215,10 +215,10 @@ export function initPreferences() {
   } else {
     document.body.appendChild(prefs);
   }
-  
+
   // Set up event listeners
   setupPreferencesListeners(prefs);
-  
+
   console.log('TizenPortal: Preferences initialized');
 }
 
@@ -279,7 +279,7 @@ function setupPreferencesListeners(prefs) {
  */
 function handlePreferencesKeyDown(event) {
   var keyCode = event.keyCode;
-  
+
   // Escape/Back - close
   if (keyCode === 27 || keyCode === 10009) {
     event.preventDefault();
@@ -322,13 +322,13 @@ export function showPreferences() {
     console.error('TizenPortal not initialized');
     return;
   }
-  
+
   var prefs = document.getElementById('tp-preferences');
   if (!prefs) {
     console.error('TizenPortal: preferences element not found');
     return;
   }
-  
+
   // Load current settings
   prefsState.settings = {
     portalConfig: TizenPortal.config.get('tp_portal') || getDefaultPortalConfig(),
@@ -357,7 +357,7 @@ export function showPreferences() {
       TizenPortal.config.set('tp_portal', prefsState.settings.portalConfig);
     }
   }
-  
+
   prefsState.currentRow = 0;
   prefsState.active = true;
 
@@ -366,13 +366,13 @@ export function showPreferences() {
   if (window.TizenPortal && window.TizenPortal.updatePortalHints) {
     window.TizenPortal.updatePortalHints();
   }
-  
+
   // Render preferences UI
   renderPreferencesUI();
-  
+
   // Show preferences
   prefs.classList.add('visible');
-  
+
   // Focus first row
   setTimeout(function() {
     focusPreferencesRow(0);
@@ -486,7 +486,20 @@ function ensureUserscriptsConfig() {
     prefsState.settings.userscriptsConfig.scripts = [];
   }
 
-  prefsState.settings.userscriptsConfig.scripts = normalizeUserscripts(prefsState.settings.userscriptsConfig.scripts);
+  // Filter out any bundle-scoped userscripts that shouldn't be in global config
+  // Bundle userscripts have IDs like "sandbox-readability", "sandbox-smart-dark", etc.
+  var filtered = [];
+  var originalScripts = prefsState.settings.userscriptsConfig.scripts || [];
+  for (var i = 0; i < originalScripts.length; i++) {
+    var script = originalScripts[i];
+    if (script && script.id && isBundleUserscript(script.id)) {
+      console.warn('TizenPortal: Filtered out bundle userscript from global config: ' + script.id);
+      continue;
+    }
+    filtered.push(script);
+  }
+
+  prefsState.settings.userscriptsConfig.scripts = normalizeUserscripts(filtered);
 }
 
 /**
@@ -496,7 +509,7 @@ function getVisibleRows() {
   var currentTheme = normalizeThemeValue(prefsState.settings.portalConfig.theme || 'dark');
   var visible = [];
   var deferred = [];
-  
+
   for (var i = 0; i < PREFERENCE_ROWS.length; i++) {
     var row = PREFERENCE_ROWS[i];
     if (row.showIf && row.showIf !== currentTheme) {
@@ -520,7 +533,7 @@ function getVisibleRows() {
     }
     visible.splice.apply(visible, [insertAt, 0].concat(deferred));
   }
-  
+
   return visible;
 }
 
@@ -830,11 +843,11 @@ function navigatePreferences(direction) {
   var visibleRows = getVisibleRowsWithSections();
   var totalItems = visibleRows.length + 1; // +1 for Close button
   var newIndex = prefsState.currentRow + direction;
-  
+
   // Clamp to valid range (0 to totalItems-1)
   if (newIndex < 0) newIndex = 0;
   if (newIndex >= totalItems) newIndex = totalItems - 1;
-  
+
   if (newIndex !== prefsState.currentRow) {
     prefsState.currentRow = newIndex;
     focusPreferencesRow(newIndex);
@@ -846,7 +859,7 @@ function navigatePreferences(direction) {
  */
 function focusPreferencesRow(index) {
   var visibleRows = getVisibleRowsWithSections();
-  
+
   // If index is beyond visible rows, focus Close button
   if (index >= visibleRows.length) {
     var closeBtn = document.getElementById('tp-prefs-cancel');
@@ -855,7 +868,7 @@ function focusPreferencesRow(index) {
     }
     return;
   }
-  
+
   var container = document.getElementById('tp-prefs-rows');
   if (!container) return;
 
@@ -942,7 +955,7 @@ function handleUserscriptPreferenceRow(row, index) {
 function cycleSelectOption(row, index) {
   var currentValue = getValue(row);
   var options = row.options;
-  
+
   // Find current index (options are now objects with value/label)
   var currentIndex = -1;
   for (var i = 0; i < options.length; i++) {
@@ -956,7 +969,7 @@ function cycleSelectOption(row, index) {
     nextIndex = (currentIndex + 1) % options.length;
   }
   var nextValue = options[nextIndex].value;
-  
+
   setValue(row, nextValue);
   renderPreferencesUI();
   focusPreferencesRow(index);
@@ -969,7 +982,7 @@ function cycleSelectOption(row, index) {
 function showColorInputPrompt(row, index) {
   var currentValue = getValue(row) || '#1a1a2e';
   var newValue = prompt(row.label + ' (hex color, e.g. #ff0000):', currentValue);
-  
+
   if (newValue !== null) {
     // Validate hex color format
     if (/^#[0-9A-Fa-f]{6}$/.test(newValue) || /^#[0-9A-Fa-f]{3}$/.test(newValue)) {
@@ -989,7 +1002,7 @@ function showColorInputPrompt(row, index) {
 function showTextInputPrompt(row, index) {
   var currentValue = getValue(row) || '';
   var newValue = prompt(row.label + ':', currentValue);
-  
+
   if (newValue !== null) {
     setValue(row, newValue);
     renderPreferencesUI();
@@ -1190,7 +1203,7 @@ export function closePreferences() {
   if (window.TizenPortal && window.TizenPortal.updatePortalHints) {
     window.TizenPortal.updatePortalHints();
   }
-  
+
   // Restore focus to portal
   restoreFocusToPortal();
 }
@@ -1250,7 +1263,7 @@ export function applyPortalPreferences(config) {
   if (!config && window.TizenPortal && window.TizenPortal.config) {
     config = TizenPortal.config.get('tp_portal');
   }
-  
+
   if (!config) {
     config = getDefaultPortalConfig();
   }
@@ -1258,14 +1271,14 @@ export function applyPortalPreferences(config) {
   if (!config.hintsPosition && config.showHints === false) {
     config.hintsPosition = 'off';
   }
-  
+
   var theme = normalizeThemeValue(config.theme || 'dark');
-  
+
   // Handle automatic theme (sunset-based)
   if (theme === 'auto') {
     theme = isNightTime() ? 'dark' : 'light';
   }
-  
+
   applySiteTheme(theme);
 
   var shell = document.getElementById('tp-shell');
