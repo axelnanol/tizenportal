@@ -9,6 +9,9 @@ import { addCard, updateCard, deleteCard, getCards } from './cards.js';
 import { getFeatureBundles, getBundle } from '../bundles/registry.js';
 import { refreshPortal } from './modal.js';
 import { escapeHtml, sanitizeUrl, isValidHttpUrl } from '../core/utils.js';
+import Userscripts from '../features/userscripts.js';
+
+var UserscriptRegistry = Userscripts.UserscriptRegistry;
 
 /**
  * Editor state
