@@ -234,23 +234,11 @@ function handleKeyDown(event) {
 
   // Handle pointer mode - intercepts arrow keys and enter
   // BUT NOT when site editor is open - editor needs Enter to work
-  var isArrowOrEnter = (keyCode === KEYS.LEFT || keyCode === KEYS.RIGHT || 
-                        keyCode === KEYS.UP || keyCode === KEYS.DOWN || keyCode === KEYS.ENTER);
-  if (isArrowOrEnter) {
-    var pointerActive = isPointerActive();
-    var siteEditorOpen = isSiteEditorOpen();
-    console.log('TizenPortal [Handler]: Arrow/Enter key, pointerActive:', pointerActive, 'siteEditorOpen:', siteEditorOpen);
-    
-    if (pointerActive && !siteEditorOpen) {
-      console.log('TizenPortal [Handler]: Calling handlePointerKeyDown');
-      if (handlePointerKeyDown(event)) {
-        console.log('TizenPortal [Handler]: Pointer handled, preventing default');
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      } else {
-        console.log('TizenPortal [Handler]: Pointer did not handle');
-      }
+  if (isPointerActive() && !isSiteEditorOpen()) {
+    if (handlePointerKeyDown(event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
     }
   }
 
