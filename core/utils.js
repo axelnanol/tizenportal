@@ -1,6 +1,6 @@
 /**
  * TizenPortal Security Utilities
- * 
+ *
  * Shared sanitization and validation helpers.
  * All modules should import from here instead of defining local copies.
  */
@@ -133,7 +133,7 @@ export function sanitizeCss(css) {
 
 /**
  * Safely set a localStorage item with quota handling
- * 
+ *
  * @param {string} key - localStorage key
  * @param {string} value - Value to store
  * @returns {Object} { success: boolean, error: string|null, message: string|null }
@@ -144,16 +144,16 @@ export function safeLocalStorageSet(key, value) {
     return { success: true, error: null, message: null };
   } catch (err) {
     if (err.name === 'QuotaExceededError') {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: 'quota',
         message: 'Storage quota exceeded. Consider removing old cards or userscripts.'
       };
     }
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: 'unknown',
-      message: err.message 
+      message: err.message
     };
   }
 }
@@ -166,16 +166,16 @@ export function safeLocalStorageSet(key, value) {
  */
 export function isBundleUserscript(scriptId) {
   if (!scriptId || typeof scriptId !== 'string') return false;
-  
+
   // Bundle userscript prefixes (can be extended for other bundles)
   var bundlePrefixes = ['sandbox-'];
-  
+
   for (var i = 0; i < bundlePrefixes.length; i++) {
     if (scriptId.indexOf(bundlePrefixes[i]) === 0) {
       return true;
     }
   }
-  
+
   return false;
 }
 
