@@ -100,13 +100,8 @@ function createPointerElement() {
  */
 function updatePointerPosition() {
   if (!pointerElement) {
-    console.warn('TizenPortal [Pointer]: updatePointerPosition called but pointerElement is null');
-    // Try to create the element if it doesn't exist
-    createPointerElement();
-    if (!pointerElement) {
-      console.error('TizenPortal [Pointer]: Failed to create pointer element');
-      return;
-    }
+    console.error('TizenPortal [Pointer]: updatePointerPosition called but pointerElement is null');
+    return;
   }
   
   pointerElement.style.left = posX + 'px';
