@@ -12,6 +12,7 @@ import scrollIntoView from './scroll-into-view.js';
 import safeArea from './safe-area.js';
 import gpuHints from './gpu-hints.js';
 import cssReset from './css-reset.js';
+import navigationFix from './navigation-fix.js';
 
 // Feature registry
 var features = {
@@ -22,6 +23,7 @@ var features = {
   safeArea: safeArea,
   gpuHints: gpuHints,
   cssReset: cssReset,
+  navigationFix: navigationFix,
 };
 
 /**
@@ -44,6 +46,7 @@ function getDefaults() {
     wrapTextInputs: true,
     viewportMode: 'locked',
     uaMode: 'tizen',
+    navigationFix: true,
   };
 }
 
@@ -60,6 +63,19 @@ function getConfig() {
   if (!stored) {
     stored = getDefaults();
     TizenPortal.config.set('tp_features', stored);
+  } else {
+    // Merge defaults into stored config to pick up new features
+    var defaults = getDefaults();
+    var needsUpdate = false;
+    for (var key in defaults) {
+      if (!(key in stored)) {
+        stored[key] = defaults[key];
+        needsUpdate = true;
+      }
+    }
+    if (needsUpdate) {
+      TizenPortal.config.set('tp_features', stored);
+    }
   }
   
   return stored;
@@ -128,6 +144,14 @@ function applyFeatures(doc, overrides) {
     
     if (effectiveConfig.tabindexInjection && features.tabindexInjection) {
       features.tabindexInjection.apply(doc);
+    }
+    
+    if (features.navigationFix) {
+      if (effectiveConfig.navigationFix) {
+        features.navigationFix.apply(doc);
+      } else if (effectiveConfig.navigationFix === false) {
+        features.navigationFix.remove(doc);
+      }
     }
     
     if (window.TizenPortal) {
