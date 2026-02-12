@@ -12,6 +12,7 @@ import scrollIntoView from './scroll-into-view.js';
 import safeArea from './safe-area.js';
 import gpuHints from './gpu-hints.js';
 import cssReset from './css-reset.js';
+import navigationFix from './navigation-fix.js';
 
 // Feature registry
 var features = {
@@ -22,6 +23,7 @@ var features = {
   safeArea: safeArea,
   gpuHints: gpuHints,
   cssReset: cssReset,
+  navigationFix: navigationFix,
 };
 
 /**
@@ -44,6 +46,7 @@ function getDefaults() {
     wrapTextInputs: true,
     viewportMode: 'locked',
     uaMode: 'tizen',
+    navigationFix: true,
   };
 }
 
@@ -128,6 +131,10 @@ function applyFeatures(doc, overrides) {
     
     if (effectiveConfig.tabindexInjection && features.tabindexInjection) {
       features.tabindexInjection.apply(doc);
+    }
+    
+    if (effectiveConfig.navigationFix && features.navigationFix) {
+      features.navigationFix.apply(doc);
     }
     
     if (window.TizenPortal) {
