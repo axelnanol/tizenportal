@@ -288,7 +288,6 @@ Bundles are site-specific enhancements that improve TV compatibility.
 | `default` | Any site | Basic fallback bundle |
 | `audiobookshelf` | Audiobookshelf | Full navigation, media keys |
 | `adblock` | Ad-heavy sites | Blocks common ads and trackers |
-| `userscript-sandbox` | Custom scripts | Allows custom JavaScript injection |
 
 ### Selecting a Bundle
 
@@ -310,7 +309,7 @@ Some bundles expose per-site options in the editor. For example, **Adblock** sup
 
 ## Userscripts
 
-TizenPortal includes a powerful userscript system that allows you to inject custom JavaScript into any site. This is useful for customizing site behavior, adding features, or working around compatibility issues.
+TizenPortal includes a powerful userscript system with 20 pre-built scripts organized by category. These scripts can be enabled globally or per-site to enhance your TV browsing experience.
 
 ### What are Userscripts?
 
@@ -322,55 +321,101 @@ Userscripts are custom JavaScript code that runs when a site loads. They can:
 - Automate repetitive tasks
 - Enhance navigation and controls
 
-### Global vs Per-Site Userscripts
+### Pre-Built Userscripts
 
-**Global Userscripts:**
-- Managed in the Preferences menu
-- Can be enabled per-site via toggle switches
-- Useful for scripts you want to use across multiple sites
+TizenPortal comes with 20 carefully crafted userscripts organized into categories:
 
-**Per-Site Userscripts:**
-- Configured in the site editor
-- Only run on that specific site
-- Best for site-specific customizations
+**♿ Accessibility (4 scripts)**
+- TV Readability Booster (enabled by default)
+- Subtitle Size Enhancer
+- Keyboard Shortcuts Overlay
+- And more...
+
+**📖 Reading (6 scripts)**
+- Dark Reading Mode
+- Light Reading Mode
+- Smart Dark Mode
+- Page Simplifier
+- And more...
+
+**🎬 Video (4 scripts)**
+- Video Speed Controller
+- Auto-Play Video Blocker
+- Video Auto-Pause on Blur
+- YouTube TV Enhancements
+
+**🧭 Navigation (4 scripts)**
+- Smart Auto-Scroll
+- Focus Trap Escape
+- Image Focus Zoom
+- Remove Sticky Headers
+
+**🔒 Privacy (2 scripts)**
+- Cookie Consent Auto-Closer
+- Video Ad Skip Helper
 
 ### Managing Global Userscripts
 
 1. Press **🟡 Yellow** on the portal to open Preferences
-2. Navigate to the **Userscripts** section
-3. For each userscript slot:
-   - **Name**: Give your script a descriptive name
-   - **Source**: Choose "Inline" (paste code) or "URL" (load from web)
-   - **Code/URL**: Enter your JavaScript code or URL
-   - **Enabled**: Toggle to enable/disable globally
+2. Navigate to the **User Scripts** section
+3. Scripts are organized by category
+4. Toggle each script on/off:
+   - **✓ Enabled** - Script will run on sites where enabled
+   - **○ Disabled** - Script won't run
 
-### Enabling Global Userscripts on Sites
+### Per-Site Userscript Control
 
-Global userscripts are off by default on each site. To enable them:
+Global userscripts can be overridden per-site:
 
 1. Open the site editor for a card
-2. Navigate to the **Userscripts** section
-3. Toggle on the scripts you want to run on this site
+2. Navigate to the **User Scripts** section
+3. You'll see all userscripts with their current state:
+   - **✓ Enabled (global)** - Enabled globally
+   - **○ Disabled (global)** - Disabled globally
+   - **✓ Enabled (site override)** - Enabled for this site only
+   - **○ Disabled (site override)** - Disabled for this site only
+4. Click the action button to:
+   - **Enable for Site** - Enable only on this site
+   - **Disable for Site** - Disable only on this site
+   - **Reset to Global** - Remove site override
 
-### Per-Site Userscripts
+### Userscript Examples
 
-To add scripts that only run on a specific site:
+**TV Readability Booster** (enabled by default):
+- Increases font sizes (18-32px responsive)
+- Better line height and spacing
+- Makes buttons and links easier to click
+- Cyan outlines on links for visibility
 
-1. Open the site editor for the card
-2. Navigate to the **Userscripts** section
-3. Configure the per-site script slots:
-   - **Name**: Script name
-   - **Source**: Inline or URL
-   - **Code/URL**: Your JavaScript
-   - **Enabled**: Toggle on to activate
+**Dark Reading Mode**:
+- Removes sidebars, ads, and clutter
+- Dark background with warm text
+- Optimized typography for TV viewing
+- 900px max width for comfortable reading
 
-### Bundle Userscripts
+**Smart Auto-Scroll**:
+- Smooth automatic page scrolling
+- Up/Down arrows adjust speed
+- Enter/Pause to toggle
+- Stop/Back to exit
 
-Some bundles (like `userscript-sandbox`) include pre-built userscripts. These can be toggled on/off in the site editor under **Bundle Options**.
+**Cookie Consent Auto-Closer**:
+- Automatically dismisses cookie banners
+- Clicks "Accept" buttons
+- Hides annoying popups
+- Makes browsing faster
+
+### Data Migration
+
+If you're upgrading from an older version:
+- Old userscript configs are automatically migrated
+- Enabled states are preserved
+- External script cache is preserved
+- No action required on your part
 
 ### Userscript API
 
-Your scripts have access to the TizenPortal API:
+Scripts have access to the TizenPortal API:
 
 ```javascript
 // Logging
@@ -378,15 +423,7 @@ TizenPortal.log('message');
 TizenPortal.warn('warning');
 TizenPortal.error('error');
 
-// Configuration
-TizenPortal.config.get('key');
-TizenPortal.config.set('key', value);
-
-// Focus management
-TizenPortal.focus.set(element);
-TizenPortal.focus.get();
-
-// Cleanup function (called when script is deactivated)
+// Cleanup function (called when navigating away)
 userscript.cleanup = function() {
   // Remove event listeners, timers, etc.
 };
@@ -394,28 +431,29 @@ userscript.cleanup = function() {
 
 ### Userscript Example
 
-Here's a simple example that makes all links open in the same page:
+Here's a simple example from one of the built-in scripts:
 
 ```javascript
-// Prevent links from opening in new tabs
-var links = document.querySelectorAll('a[target="_blank"]');
-for (var i = 0; i < links.length; i++) {
-  links[i].removeAttribute('target');
-}
+// Remove sticky headers that block content
+var style = document.createElement('style');
+style.id = 'tp-no-sticky';
+style.textContent = `
+  *[style*="position: fixed"],
+  *[style*="position:fixed"] {
+    position: static !important;
+  }
+  header[style*="position"],
+  nav[style*="position"] {
+    position: static !important;
+  }
+`;
+document.head.appendChild(style);
 
-TizenPortal.log('Removed target="_blank" from ' + links.length + ' links');
+userscript.cleanup = function() {
+  var el = document.getElementById('tp-no-sticky');
+  if (el) el.remove();
+};
 ```
-
-### Loading Scripts from URLs
-
-You can load userscripts from external URLs:
-
-1. Set **Source** to "URL"
-2. Enter the script URL (e.g., `https://example.com/myscript.js`)
-3. TizenPortal will fetch and cache the script
-4. The cache is refreshed periodically
-
-**Note:** External scripts must be served with CORS headers that allow your TV to load them.
 
 ### Userscript Security
 
