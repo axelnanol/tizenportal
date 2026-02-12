@@ -13,7 +13,7 @@ import { showAddSiteEditor, showEditSiteEditor, isSiteEditorOpen, closeSiteEdito
 import { showPreferences, isPreferencesOpen } from '../ui/preferences.js';
 import { getFocusedCard } from '../ui/portal.js';
 import { isPointerActive, handlePointerKeyDown, handlePointerKeyUp, togglePointer } from './pointer.js';
-import { isIMEActive, setIMEActive, getImeDismissedAt } from './text-input.js';
+import { isIMEActive, setIMEActive, getImeDismissedAt, deactivateInput } from './text-input.js';
 import {
   isSingleActionCard,
   isMultiActionCard,
@@ -162,6 +162,24 @@ function handleKeyDown(event) {
   if (keyCode === KEYS.IME_DONE || keyCode === KEYS.IME_CANCEL) {
     event.preventDefault();
     event.stopPropagation();
+    
+    // Blur the active input to dismiss Tizen IME modal
+    // This prevents the system modal with OK/Cancel from remaining open
+    var activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+      // If it's a wrapped input, use deactivateInput to properly clean up
+      if (activeEl.classList.contains('tp-wrapped')) {
+        deactivateInput(activeEl);
+      } else {
+        // For non-wrapped inputs, just blur
+        try {
+          activeEl.blur();
+        } catch (err) {
+          // Ignore
+        }
+      }
+    }
+    
     setIMEActive(false);
     imeCancelAt = Date.now();
     return;

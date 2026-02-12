@@ -196,7 +196,14 @@ function wrapSingleInput(input, opts) {
     if (e.keyCode === 27 || e.keyCode === KEYS.BACK || e.keyCode === KEYS.IME_CANCEL) {
       e.preventDefault();
       deactivateInput(input);
-      wrapper.focus();
+      // Focus wrapper after a small delay to ensure IME is fully dismissed
+      setTimeout(function() {
+        try {
+          wrapper.focus();
+        } catch (err) {
+          // Ignore focus errors
+        }
+      }, 100);
     } else if (e.keyCode === KEYS.ENTER) {
       // Enter - submit and deactivate
       setTimeout(function() {
@@ -271,6 +278,18 @@ export function deactivateInput(input) {
   var opts = data.opts;
   
   if (!wrapper.classList.contains(opts.activeClass)) return;
+  
+  // IMPORTANT: Blur the input first to dismiss Tizen IME modal
+  // Without this, the system modal with OK/Cancel remains open
+  // and pressing Cancel will send EXIT key, exiting the app.
+  // See: https://github.com/SamsungDForum/SampleWebApps-IME
+  try {
+    if (document.activeElement === input) {
+      input.blur();
+    }
+  } catch (err) {
+    console.warn('TizenPortal [TextInput]: Blur error:', err.message);
+  }
   
   wrapper.classList.remove(opts.activeClass);
   var placeholder = input.getAttribute('placeholder') || opts.defaultPlaceholder;
