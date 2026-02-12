@@ -157,25 +157,3 @@ export function safeLocalStorageSet(key, value) {
     };
   }
 }
-
-/**
- * Check if a userscript ID belongs to a bundle (not a global userscript)
- * Bundle userscripts have specific ID prefixes like "sandbox-"
- * @param {string} scriptId - Userscript ID to check
- * @returns {boolean} True if this is a bundle userscript
- */
-export function isBundleUserscript(scriptId) {
-  if (!scriptId || typeof scriptId !== 'string') return false;
-
-  // Bundle userscript prefixes (can be extended for other bundles)
-  var bundlePrefixes = ['sandbox-'];
-
-  for (var i = 0; i < bundlePrefixes.length; i++) {
-    if (scriptId.indexOf(bundlePrefixes[i]) === 0) {
-      return true;
-    }
-  }
-
-  return false;
-}
-

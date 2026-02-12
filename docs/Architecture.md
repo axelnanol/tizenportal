@@ -209,9 +209,61 @@ export function hasBundle(name: string): boolean;
 - `default` - Basic fallback bundle
 - `audiobookshelf` - Enhanced support for Audiobookshelf
 - `adblock` - Ad blocking for general sites
-- `userscript-sandbox` - Custom userscript support
 
-### 4.3 Bundle Interface
+### 4.3 Userscript Registry (`features/userscript-registry.js`)
+
+**Purpose:** Central registry of all built-in userscripts with category organization and conflict detection.
+
+**Exports:**
+```js
+export default {
+  getAllUserscripts: () => Userscript[],
+  getUserscriptById: (id: string) => Userscript | null,
+  getUserscriptsByCategory: (category: string) => Userscript[],
+  getCategories: () => Object,
+  checkConflicts: (enabledIds: string[]) => string[],
+  CATEGORIES: Object
+};
+```
+
+**Categories:**
+- `accessibility` - ♿ Accessibility features (4 scripts)
+- `reading` - 📖 Reading enhancements (6 scripts)
+- `video` - 🎬 Video controls (4 scripts)
+- `navigation` - 🧭 Navigation helpers (4 scripts)
+- `privacy` - 🔒 Privacy tools (2 scripts)
+
+**Userscript Interface:**
+```typescript
+interface Userscript {
+  id: string;                      // Unique identifier
+  name: string;                    // Display name
+  category: string;                // One of CATEGORIES
+  description: string;             // Short description
+  defaultEnabled: boolean;         // Enabled by default
+  source: 'inline' | 'url';        // Script source type
+  provides: string[];              // Features provided (for conflict detection)
+  inline?: string;                 // Inline JavaScript code
+  url?: string;                    // External script URL
+}
+```
+
+**Conflict Detection:**
+Scripts declare what features they provide via the `provides` field. The `checkConflicts()` function detects if multiple enabled scripts provide the same feature, helping users avoid conflicts.
+
+Example:
+```javascript
+{
+  id: 'dark-reading-mode',
+  provides: ['dark-mode', 'reading-mode', 'clutter-removal']
+}
+{
+  id: 'smart-dark-mode',
+  provides: ['dark-mode']  // Conflict detected!
+}
+```
+
+### 4.4 Bundle Interface
 
 ```typescript
 interface Bundle {
@@ -228,7 +280,7 @@ interface Bundle {
 }
 ```
 
-### 4.4 Focus Manager (`focus/manager.js`)
+### 4.5 Focus Manager (`focus/manager.js`)
 
 **Purpose:** Centralized focus utilities for TV navigation.
 
@@ -244,7 +296,7 @@ export function observeDOM(callback): void;
 export function stopObservingDOM(): void;
 ```
 
-### 4.5 Card Registration (`core/cards.js`)
+### 4.6 Card Registration (`core/cards.js`)
 
 **Purpose:** Allow bundles to mark interactive elements for special handling.
 
@@ -264,7 +316,7 @@ export function initCards(): void;
 export function shutdownCards(): void;
 ```
 
-### 4.6 Card Interaction (`navigation/card-interaction.js`)
+### 4.7 Card Interaction (`navigation/card-interaction.js`)
 
 **Purpose:** Provide two-level navigation for cards with multiple interactive elements.
 

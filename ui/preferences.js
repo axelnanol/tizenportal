@@ -5,7 +5,10 @@
  * Mirrors the site editor's keyboard interaction model.
  */
 
-import { isValidHexColor, isValidHttpUrl, escapeHtml, isBundleUserscript } from '../core/utils.js';
+import { isValidHexColor, isValidHttpUrl, escapeHtml } from '../core/utils.js';
+import Userscripts from '../features/userscripts.js';
+
+var UserscriptRegistry = Userscripts.UserscriptRegistry;
 
 /**
  * Preferences state
@@ -333,7 +336,6 @@ export function showPreferences() {
   prefsState.settings = {
     portalConfig: TizenPortal.config.get('tp_portal') || getDefaultPortalConfig(),
     featuresConfig: TizenPortal.config.get('tp_features') || getDefaultFeaturesConfig(),
-    userscriptsConfig: TizenPortal.config.get('tp_userscripts') || getDefaultUserscriptsConfig(),
   };
 
   // Normalize theme value if needed
@@ -362,7 +364,6 @@ export function showPreferences() {
   prefsState.active = true;
 
   prefsState.sectionCollapsed = getSectionDefaults();
-  ensureUserscriptsConfig();
   if (window.TizenPortal && window.TizenPortal.updatePortalHints) {
     window.TizenPortal.updatePortalHints();
   }
@@ -433,75 +434,6 @@ function getDefaultFeaturesConfig() {
   };
 }
 
-function createDefaultUserscript(index) {
-  return {
-    id: 'us-' + Date.now() + '-' + Math.floor(Math.random() * 100000),
-    name: 'Custom Script ' + index,
-    enabled: false,
-    source: 'inline',
-    url: '',
-    inline: '',
-    cached: '',
-    lastFetched: 0,
-  };
-}
-
-function normalizeUserscripts(list) {
-  var scripts = Array.isArray(list) ? list : [];
-  var normalized = [];
-
-  for (var i = 0; i < scripts.length; i++) {
-    var entry = scripts[i] || {};
-    normalized.push({
-      id: entry.id || ('us-' + Date.now() + '-' + Math.floor(Math.random() * 100000)),
-      name: entry.name || 'Custom Script ' + (i + 1),
-      enabled: entry.enabled !== false,
-      source: entry.source === 'url' ? 'url' : 'inline',
-      url: typeof entry.url === 'string' ? entry.url : '',
-      inline: typeof entry.inline === 'string' ? entry.inline : '',
-      cached: typeof entry.cached === 'string' ? entry.cached : '',
-      lastFetched: typeof entry.lastFetched === 'number' ? entry.lastFetched : 0,
-    });
-  }
-
-  if (!normalized.length) {
-    normalized.push(createDefaultUserscript(1));
-  }
-
-  return normalized;
-}
-
-function getDefaultUserscriptsConfig() {
-  return {
-    scripts: [createDefaultUserscript(1)],
-  };
-}
-
-function ensureUserscriptsConfig() {
-  if (!prefsState.settings.userscriptsConfig || typeof prefsState.settings.userscriptsConfig !== 'object') {
-    prefsState.settings.userscriptsConfig = getDefaultUserscriptsConfig();
-  }
-
-  if (!Array.isArray(prefsState.settings.userscriptsConfig.scripts)) {
-    prefsState.settings.userscriptsConfig.scripts = [];
-  }
-
-  // Filter out any bundle-scoped userscripts that shouldn't be in global config
-  // Bundle userscripts have IDs like "sandbox-readability", "sandbox-smart-dark", etc.
-  var filtered = [];
-  var originalScripts = prefsState.settings.userscriptsConfig.scripts || [];
-  for (var i = 0; i < originalScripts.length; i++) {
-    var script = originalScripts[i];
-    if (script && script.id && isBundleUserscript(script.id)) {
-      console.warn('TizenPortal: Filtered out bundle userscript from global config: ' + script.id);
-      continue;
-    }
-    filtered.push(script);
-  }
-
-  prefsState.settings.userscriptsConfig.scripts = normalizeUserscripts(filtered);
-}
-
 /**
  * Get visible preference rows based on current theme setting
  */
@@ -539,7 +471,6 @@ function getVisibleRows() {
 
 function getVisibleRowsWithSections() {
   ensureSectionState();
-  ensureUserscriptsConfig();
   var rows = getVisibleRows();
   var grouped = {};
 
@@ -571,16 +502,52 @@ function getVisibleRowsWithSections() {
 }
 
 function buildUserscriptRows() {
-  ensureUserscriptsConfig();
   var rows = [];
-  var scripts = prefsState.settings.userscriptsConfig.scripts || [];
-
-  for (var i = 0; i < scripts.length; i++) {
-    rows.push({ type: 'userscript', scriptIndex: i, label: 'Script ' + (i + 1) });
+  var categories = UserscriptRegistry.getCategories();
+  var allScripts = UserscriptRegistry.getAllUserscripts();
+  
+  // Group scripts by category
+  for (var cat in categories) {
+    var categoryScripts = UserscriptRegistry.getUserscriptsByCategory(categories[cat]);
+    if (categoryScripts.length > 0) {
+      // Add category label row
+      rows.push({ type: 'userscript-category', category: categories[cat], label: getCategoryLabel(categories[cat]) });
+      
+      // Add script toggle rows
+      for (var i = 0; i < categoryScripts.length; i++) {
+        rows.push({ 
+          type: 'userscript-toggle', 
+          scriptId: categoryScripts[i].id,
+          scriptName: categoryScripts[i].name,
+          scriptDesc: categoryScripts[i].description,
+          label: categoryScripts[i].name
+        });
+      }
+    }
   }
-
-  rows.push({ type: 'userscript-add', label: 'Add Script' });
+  
   return rows;
+}
+
+function getCategoryLabel(category) {
+  var labels = {
+    'accessibility': '♿ Accessibility',
+    'reading': '📖 Reading',
+    'video': '🎬 Video',
+    'navigation': '🧭 Navigation',
+    'privacy': '🔒 Privacy',
+    'experimental': '🧪 Experimental',
+  };
+  return labels[category] || category;
+}
+
+function isUserscriptEnabled(scriptId) {
+  var cfg = Userscripts.getUserscriptsConfig();
+  return cfg.enabled[scriptId] === true;
+}
+
+function setUserscriptEnabled(scriptId, enabled) {
+  Userscripts.setGlobalUserscriptEnabled(scriptId, enabled);
 }
 
 /**
@@ -610,13 +577,19 @@ function renderPreferencesUI() {
             '<span class="tp-prefs-section-indicator">' + indicator + '</span>' +
           '</div>' +
         '</div>';
-    } else if (row.type && row.type === 'userscript') {
-      html += renderUserscriptRow(row, i);
-    } else if (row.type && row.type === 'userscript-add') {
+    } else if (row.type === 'userscript-category') {
       html += '' +
-        '<div class="tp-prefs-row" data-index="' + i + '" data-id="' + row.id + '" tabindex="0">' +
-          '<div class="tp-prefs-label">' + row.label + '</div>' +
-          '<div class="tp-prefs-value">＋</div>' +
+        '<div class="tp-prefs-row tp-prefs-userscript-category" data-index="' + i + '" data-type="userscript-category" tabindex="-1">' +
+          '<div class="tp-prefs-label" style="font-weight: bold; color: #8ab4f8;">' + row.label + '</div>' +
+          '<div class="tp-prefs-value"></div>' +
+        '</div>';
+    } else if (row.type === 'userscript-toggle') {
+      var enabled = isUserscriptEnabled(row.scriptId);
+      var displayValue = enabled ? '✓ Enabled' : '○ Disabled';
+      html += '' +
+        '<div class="tp-prefs-row" data-index="' + i + '" data-type="userscript-toggle" data-script-id="' + escapeHtml(row.scriptId) + '" tabindex="0">' +
+          '<div class="tp-prefs-label">' + escapeHtml(row.label) + '</div>' +
+          '<div class="tp-prefs-value">' + displayValue + '</div>' +
         '</div>';
     } else {
       var value = getValue(row);
@@ -664,7 +637,6 @@ function renderPreferencesUI() {
 }
 
 function getPreferencesSectionSummary(sectionId) {
-  ensureUserscriptsConfig();
   if (sectionId === 'appearance') {
     var theme = normalizeThemeValue(prefsState.settings.portalConfig.theme || 'dark');
     var themeLabel = getOptionLabel(THEME_OPTIONS, theme) || theme;
@@ -703,15 +675,15 @@ function getPreferencesSectionSummary(sectionId) {
   }
 
   if (sectionId === 'userscripts') {
-    var scripts = prefsState.settings.userscriptsConfig.scripts || [];
-    var filled = 0;
-    for (var j = 0; j < scripts.length; j++) {
-      var s = scripts[j] || {};
-      if (s.source === 'url' ? !!s.cached : !!s.inline) {
-        filled++;
+    var cfg = Userscripts.getUserscriptsConfig();
+    var enabledCount = 0;
+    for (var scriptId in cfg.enabled) {
+      if (cfg.enabled[scriptId] === true) {
+        enabledCount++;
       }
     }
-    return 'Scripts: ' + scripts.length + ' • Saved: ' + filled;
+    var totalCount = UserscriptRegistry.getAllUserscripts().length;
+    return 'Enabled: ' + enabledCount + ' of ' + totalCount;
   }
 
   return '';
@@ -733,33 +705,6 @@ function shortenUrl(url) {
     cleaned = cleaned.substring(0, 37) + '...';
   }
   return cleaned;
-}
-
-function renderUserscriptRow(row, index) {
-  ensureUserscriptsConfig();
-  var scripts = prefsState.settings.userscriptsConfig.scripts || [];
-  var script = scripts[row.scriptIndex] || {};
-  var nameValue = script.name || ('Custom Script ' + (row.scriptIndex + 1));
-  var sourceLabel = script.source === 'url' ? 'URL' : 'Inline';
-  var hasData = script.source === 'url' ? !!script.cached : !!script.inline;
-  var status = sourceLabel + (hasData ? ' (saved)' : ' (empty)');
-  var canRemove = scripts.length > 1;
-  var refreshDisabled = script.source !== 'url' ? ' disabled' : '';
-
-  return '' +
-    '<div class="tp-prefs-row tp-prefs-userscript-row" data-index="' + index + '" data-type="userscript" data-script-index="' + row.scriptIndex + '" tabindex="0">' +
-      '<div class="tp-prefs-label">' + row.label + '</div>' +
-      '<div class="tp-prefs-value tp-userscript-inline">' +
-        '<span class="tp-userscript-status">' + escapeHtml(nameValue) + ' • ' + status + '</span>' +
-        '<span class="tp-userscript-actions">' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="rename" data-script-index="' + row.scriptIndex + '" tabindex="0">Rename</button>' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="source" data-script-index="' + row.scriptIndex + '" tabindex="0">Source: ' + sourceLabel + '</button>' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="edit" data-script-index="' + row.scriptIndex + '" tabindex="0">Edit</button>' +
-          '<button type="button" class="tp-userscript-btn" data-userscript-action="refresh" data-script-index="' + row.scriptIndex + '" tabindex="0"' + refreshDisabled + '>Refresh</button>' +
-          (canRemove ? '<button type="button" class="tp-userscript-btn" data-userscript-action="remove" data-script-index="' + row.scriptIndex + '" tabindex="0">Remove</button>' : '') +
-        '</span>' +
-      '</div>' +
-    '</div>';
 }
 
 /**
@@ -895,8 +840,21 @@ function activatePreferenceRow(rowEl) {
     return;
   }
 
-  if (row.type && row.type.indexOf('userscript-') === 0) {
-    handleUserscriptPreferenceRow(row, index);
+  if (row.type === 'userscript-toggle') {
+    // Toggle userscript enabled state
+    var scriptId = rowEl.dataset.scriptId;
+    if (scriptId) {
+      var currentEnabled = isUserscriptEnabled(scriptId);
+      setUserscriptEnabled(scriptId, !currentEnabled);
+      renderPreferencesUI();
+      focusPreferencesRow(index);
+      savePreferencesAuto('userscript-toggle:' + scriptId);
+    }
+    return;
+  }
+
+  if (row.type === 'userscript-category') {
+    // Category headers are not interactive
     return;
   }
 
@@ -922,31 +880,8 @@ function activatePreferenceRow(rowEl) {
 }
 
 function handleUserscriptPreferenceRow(row, index) {
-  ensureUserscriptsConfig();
-  var scripts = prefsState.settings.userscriptsConfig.scripts || [];
-  var scriptIndex = row.scriptIndex || 0;
-  var script = scripts[scriptIndex];
-
-  if (row.type === 'userscript-add') {
-    scripts.push(createDefaultUserscript(scripts.length + 1));
-    renderPreferencesUI();
-    focusPreferencesRow(index);
-    savePreferencesAuto('userscript:add');
-    return;
-  }
-
-  if (!script) return;
-
-  if (row.type === 'userscript') {
-    var rowEl = document.querySelector('.tp-prefs-row[data-index="' + index + '"]');
-    if (rowEl) {
-      var firstBtn = rowEl.querySelector('.tp-userscript-btn');
-      if (firstBtn) {
-        firstBtn.focus();
-        return;
-      }
-    }
-  }
+  // Old function - no longer needed with registry system
+  // Kept as stub for compatibility
 }
 
 /**

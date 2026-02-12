@@ -6,27 +6,23 @@
 import adblock from './adblock/main.js';
 import audiobookshelf from './audiobookshelf/main.js';
 import defaultBundle from './default/main.js';
-import userscript_sandbox from './userscript-sandbox/main.js';
 
 export var bundles = {
   'adblock': adblock,
   'audiobookshelf': audiobookshelf,
-  'default': defaultBundle,
-  'userscript-sandbox': userscript_sandbox
+  'default': defaultBundle
 };
 
 export var bundleMeta = {
-  'adblock': { jsBytes: 31536, cssBytes: 7880 },
-  'audiobookshelf': { jsBytes: 62501, cssBytes: 80789 },
-  'default': { jsBytes: 2033, cssBytes: 119 },
-  'userscript-sandbox': { jsBytes: 22884, cssBytes: 46 }
+  'adblock': { jsBytes: 30446, cssBytes: 7584 },
+  'audiobookshelf': { jsBytes: 60820, cssBytes: 78282 },
+  'default': { jsBytes: 1949, cssBytes: 116 }
 };
 
 export var bundleManifests = {
   'adblock': {"name":"adblock","displayName":"Ad Blocker","version":"1.0.0","description":"Blocks advertisements and tracking scripts for cleaner browsing","author":"TizenPortal","navigationMode":"geometric","viewportLock":false,"provides":["ad-blocking","tracker-blocking","cookie-banner-hiding"],"options":[{"key":"strict","label":"Strict Mode","type":"toggle","default":false,"description":"Enable stricter ad blocking (may hide more content)"},{"key":"allowlistUrl","label":"Allowlist URL","type":"url","placeholder":"https://example.com/allowlist.txt","description":"Text file with allowed hosts/paths (one per line)"},{"key":"hideCookieBanners","label":"Hide Cookie Banners","type":"toggle","default":false,"description":"Hide cookie/consent banners"},{"key":"inlineHeuristics","label":"Inline Ad Heuristics","type":"toggle","default":true,"description":"Use heuristics to detect inline ad scripts"}]},
   'audiobookshelf': {"name":"audiobookshelf","displayName":"Audiobookshelf","version":"1.0.0","description":"Media controls, library navigation, and player integration for Audiobookshelf","author":"TizenPortal","homepage":"https://www.audiobookshelf.org/","navigationMode":{"mode":"directional","required":false},"viewportLock":"force","requires":["focus-styling","media-keys"],"provides":["media-controls","library-navigation","player-integration"],"features":{"tabindexInjection":true,"scrollIntoView":true,"wrapTextInputs":true}},
-  'default': {"name":"default","displayName":"Default","version":"1.0.0","author":"TizenPortal","description":"Basic bundle with focus styling and focusable elements. Used as fallback when no site-specific bundle is configured.","requires":[],"provides":["focus-styling","focusable-elements"],"navigationMode":"geometric","features":{"focusStyling":true,"tabindexInjection":true}},
-  'userscript-sandbox': {"name":"userscript-sandbox","displayName":"Userscript Sandbox","version":"2.2.0","description":"Comprehensive collection of 20 userscripts for TV browsing: dark/light reading modes, navigation, video control, ad blocking, cookie dismissal, focus management, and more.","author":"TizenPortal","navigationMode":"geometric","provides":["userscript-examples"]}
+  'default': {"name":"default","displayName":"Default","version":"1.0.0","author":"TizenPortal","description":"Basic bundle with focus styling and focusable elements. Used as fallback when no site-specific bundle is configured.","requires":[],"provides":["focus-styling","focusable-elements"],"navigationMode":"geometric","features":{"focusStyling":true,"tabindexInjection":true}}
 };
 
 export var bundleNames = Object.keys(bundles);
