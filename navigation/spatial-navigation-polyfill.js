@@ -130,6 +130,12 @@
      * If arrow key pressed, get the next focusing element and send it to focusing controller
      */
     window.addEventListener('keydown', (e) => {
+      // TizenPortal: Skip spatial navigation if pointer mode is active
+      if (window.TizenPortal && window.TizenPortal.input && window.TizenPortal.input.isPointerMode && window.TizenPortal.input.isPointerMode()) {
+        console.log('TizenPortal [Spatial Nav]: Skipping - pointer mode active');
+        return;
+      }
+      
       // TizenPortal: Guard against parent access being denied (cross-origin)
       let parentKeyMode = null;
       try {

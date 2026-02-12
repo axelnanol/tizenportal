@@ -204,9 +204,13 @@ export function getPointerPosition() {
  * @returns {boolean} True if handled
  */
 export function handlePointerKeyDown(event) {
-  if (!isActive) return false;
+  if (!isActive) {
+    console.log('TizenPortal [Pointer]: handlePointerKeyDown called but isActive is false');
+    return false;
+  }
   
   var keyCode = event.keyCode;
+  console.log('TizenPortal [Pointer]: handlePointerKeyDown - keyCode:', keyCode, 'isActive:', isActive);
   
   // Track key hold start time for acceleration
   if (!event.repeat && !keyHoldStart[keyCode]) {
