@@ -99,7 +99,10 @@ function createPointerElement() {
  * Update pointer element position
  */
 function updatePointerPosition() {
-  if (!pointerElement) return;
+  if (!pointerElement) {
+    console.error('TizenPortal [Pointer]: updatePointerPosition called but pointerElement is null');
+    return;
+  }
   
   pointerElement.style.left = posX + 'px';
   pointerElement.style.top = posY + 'px';
@@ -172,7 +175,19 @@ export function togglePointer() {
  * @returns {boolean}
  */
 export function isPointerActive() {
-  return isActive;
+  // Check both the isActive flag and the actual element state
+  // This provides redundancy in case of initialization issues
+  if (isActive) return true;
+  
+  // Fallback: check if pointer element exists and is visible
+  if (pointerElement && pointerElement.classList.contains('visible')) {
+    // Element is visible but isActive is false - resync state
+    console.warn('TizenPortal [Pointer]: State mismatch detected, resyncing isActive');
+    isActive = true;
+    return true;
+  }
+  
+  return false;
 }
 
 /**
