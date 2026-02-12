@@ -5,7 +5,7 @@
  * Includes card interaction model (single/multi-action cards).
  */
 
-import { KEYS, COLOR_ACTIONS, isColorButton, getKeyName } from './keys.js';
+import { KEYS, COLOR_ACTIONS, isColorButton, getKeyName, INPUT_CONSTANTS } from './keys.js';
 import { configRead, configWrite } from '../core/config.js';
 import { toggleDiagnosticsPanel, clearDiagnosticsLogs, isDiagnosticsPanelVisible, scrollDiagnosticsLogs, cycleDiagnosticsLogFilter } from '../ui/diagnostics.js';
 import { toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
@@ -26,11 +26,6 @@ import {
   handleBack,
   findCardShell
 } from '../navigation/card-interaction.js';
-
-/**
- * Constants
- */
-const WRAPPED_INPUT_CLASS = 'tp-wrapped';  // Class added to wrapped input elements
 
 /**
  * Simulate a full click event sequence (mousedown -> mouseup -> click)
@@ -173,7 +168,7 @@ function handleKeyDown(event) {
     var activeEl = document.activeElement;
     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
       // If it's a wrapped input, use deactivateInput to properly clean up
-      if (activeEl.classList.contains(WRAPPED_INPUT_CLASS)) {
+      if (activeEl.classList.contains(INPUT_CONSTANTS.WRAPPED_INPUT_CLASS)) {
         deactivateInput(activeEl);
       } else {
         // For non-wrapped inputs, just blur

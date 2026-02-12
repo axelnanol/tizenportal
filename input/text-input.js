@@ -18,13 +18,7 @@
  *   });
  */
 
-import { KEYS } from './keys.js';
-
-/**
- * Constants
- */
-const IME_DISMISSAL_DELAY_MS = 100;  // Delay before refocusing after IME dismissal
-const WRAPPED_INPUT_CLASS = 'tp-wrapped';  // Class added to wrapped input elements
+import { KEYS, INPUT_CONSTANTS } from './keys.js';
 
 /**
  * Track wrapped inputs to avoid re-wrapping
@@ -65,7 +59,7 @@ export function wrapTextInputs(selector, options) {
     var input = inputs[i];
     
     // Skip if already wrapped
-    if (wrappedInputs.has(input) || input.classList.contains(WRAPPED_INPUT_CLASS)) {
+    if (wrappedInputs.has(input) || input.classList.contains(INPUT_CONSTANTS.WRAPPED_INPUT_CLASS)) {
       continue;
     }
 
@@ -158,7 +152,7 @@ function wrapSingleInput(input, opts) {
   wrapper.appendChild(input);
   
   // Mark input as wrapped
-  input.classList.add(WRAPPED_INPUT_CLASS);
+  input.classList.add(INPUT_CONSTANTS.WRAPPED_INPUT_CLASS);
   input.setAttribute('tabindex', '-1');
   // Remove autofocus and hide input by default to prevent OSK popup
   if (input.hasAttribute('autofocus')) {
@@ -209,12 +203,12 @@ function wrapSingleInput(input, opts) {
         } catch (err) {
           // Ignore focus errors
         }
-      }, IME_DISMISSAL_DELAY_MS);
+      }, INPUT_CONSTANTS.IME_DISMISSAL_DELAY_MS);
     } else if (e.keyCode === KEYS.ENTER) {
       // Enter - submit and deactivate
       setTimeout(function() {
         deactivateInput(input);
-      }, IME_DISMISSAL_DELAY_MS);
+      }, INPUT_CONSTANTS.IME_DISMISSAL_DELAY_MS);
     }
   });
   
@@ -343,7 +337,7 @@ export function unwrapInput(input) {
   wrapper.parentNode.removeChild(wrapper);
   
   // Restore input state
-  input.classList.remove(WRAPPED_INPUT_CLASS);
+  input.classList.remove(INPUT_CONSTANTS.WRAPPED_INPUT_CLASS);
   input.removeAttribute('tabindex');
   input.style.display = '';
   

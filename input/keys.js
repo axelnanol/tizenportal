@@ -106,6 +106,14 @@ export var COLOR_ACTIONS = {
 };
 
 /**
+ * Input handling constants
+ */
+export var INPUT_CONSTANTS = {
+  WRAPPED_INPUT_CLASS: 'tp-wrapped',           // Class added to wrapped input elements
+  IME_DISMISSAL_DELAY_MS: 100,                 // Delay before refocusing after IME dismissal
+};
+
+/**
  * Check if a key code is a navigation key
  * @param {number} keyCode
  * @returns {boolean}
