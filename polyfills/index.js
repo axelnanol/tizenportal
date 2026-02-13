@@ -6,6 +6,8 @@
  * NOT bundled statically based on target version.
  */
 
+import { polyfillCSSCompatibility } from './css-compatibility.js';
+
 /**
  * List of loaded polyfills
  */
@@ -290,6 +292,361 @@ function polyfillStringEndsWith() {
 }
 
 /**
+ * String.prototype.repeat polyfill
+ */
+function polyfillStringRepeat() {
+  if (String.prototype.repeat) {
+    return false; // Already exists
+  }
+
+  String.prototype.repeat = function(count) {
+    if (this == null) {
+      throw new TypeError('can\'t convert ' + this + ' to object');
+    }
+    var str = '' + this;
+    count = +count;
+    if (count != count) {
+      count = 0;
+    }
+    if (count < 0) {
+      throw new RangeError('repeat count must be non-negative');
+    }
+    if (count == Infinity) {
+      throw new RangeError('repeat count must be less than infinity');
+    }
+    count = Math.floor(count);
+    if (str.length == 0 || count == 0) {
+      return '';
+    }
+    if (str.length * count >= 1 << 28) {
+      throw new RangeError('repeat count must not overflow maximum string size');
+    }
+    var result = '';
+    while (count > 0) {
+      if (count & 1) {
+        result += str;
+      }
+      count >>>= 1;
+      str += str;
+    }
+    return result;
+  };
+
+  return true;
+}
+
+/**
+ * String.prototype.padStart polyfill
+ */
+function polyfillStringPadStart() {
+  if (String.prototype.padStart) {
+    return false; // Already exists
+  }
+
+  String.prototype.padStart = function(targetLength, padString) {
+    targetLength = targetLength >> 0;
+    padString = String(typeof padString !== 'undefined' ? padString : ' ');
+    if (this.length >= targetLength) {
+      return String(this);
+    }
+    targetLength = targetLength - this.length;
+    if (targetLength > padString.length) {
+      padString += padString.repeat(Math.ceil(targetLength / padString.length));
+    }
+    return padString.slice(0, targetLength) + String(this);
+  };
+
+  return true;
+}
+
+/**
+ * String.prototype.padEnd polyfill
+ */
+function polyfillStringPadEnd() {
+  if (String.prototype.padEnd) {
+    return false; // Already exists
+  }
+
+  String.prototype.padEnd = function(targetLength, padString) {
+    targetLength = targetLength >> 0;
+    padString = String(typeof padString !== 'undefined' ? padString : ' ');
+    if (this.length >= targetLength) {
+      return String(this);
+    }
+    targetLength = targetLength - this.length;
+    if (targetLength > padString.length) {
+      padString += padString.repeat(Math.ceil(targetLength / padString.length));
+    }
+    return String(this) + padString.slice(0, targetLength);
+  };
+
+  return true;
+}
+
+/**
+ * Array.from polyfill
+ */
+function polyfillArrayFrom() {
+  if (Array.from) {
+    return false; // Already exists
+  }
+
+  Array.from = function(arrayLike, mapFn, thisArg) {
+    var C = this;
+    var items = Object(arrayLike);
+    if (arrayLike == null) {
+      throw new TypeError('Array.from requires an array-like object - not null or undefined');
+    }
+    var len = items.length >>> 0;
+    var A = typeof C === 'function' ? Object(new C(len)) : new Array(len);
+    var k = 0;
+    var kValue;
+    while (k < len) {
+      kValue = items[k];
+      if (mapFn) {
+        A[k] = typeof thisArg === 'undefined' ? mapFn(kValue, k) : mapFn.call(thisArg, kValue, k);
+      } else {
+        A[k] = kValue;
+      }
+      k += 1;
+    }
+    A.length = len;
+    return A;
+  };
+
+  return true;
+}
+
+/**
+ * Array.of polyfill
+ */
+function polyfillArrayOf() {
+  if (Array.of) {
+    return false; // Already exists
+  }
+
+  Array.of = function() {
+    return Array.prototype.slice.call(arguments);
+  };
+
+  return true;
+}
+
+/**
+ * Array.prototype.find polyfill
+ */
+function polyfillArrayFind() {
+  if (Array.prototype.find) {
+    return false; // Already exists
+  }
+
+  Array.prototype.find = function(predicate, thisArg) {
+    if (this == null) {
+      throw new TypeError('Array.prototype.find called on null or undefined');
+    }
+    if (typeof predicate !== 'function') {
+      throw new TypeError('predicate must be a function');
+    }
+    var list = Object(this);
+    var length = list.length >>> 0;
+    var value;
+    for (var i = 0; i < length; i++) {
+      value = list[i];
+      if (predicate.call(thisArg, value, i, list)) {
+        return value;
+      }
+    }
+    return undefined;
+  };
+
+  return true;
+}
+
+/**
+ * Array.prototype.findIndex polyfill
+ */
+function polyfillArrayFindIndex() {
+  if (Array.prototype.findIndex) {
+    return false; // Already exists
+  }
+
+  Array.prototype.findIndex = function(predicate, thisArg) {
+    if (this == null) {
+      throw new TypeError('Array.prototype.findIndex called on null or undefined');
+    }
+    if (typeof predicate !== 'function') {
+      throw new TypeError('predicate must be a function');
+    }
+    var list = Object(this);
+    var length = list.length >>> 0;
+    var value;
+    for (var i = 0; i < length; i++) {
+      value = list[i];
+      if (predicate.call(thisArg, value, i, list)) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
+  return true;
+}
+
+/**
+ * Object.assign polyfill
+ */
+function polyfillObjectAssign() {
+  if (Object.assign) {
+    return false; // Already exists
+  }
+
+  Object.assign = function(target) {
+    if (target == null) {
+      throw new TypeError('Cannot convert undefined or null to object');
+    }
+    var to = Object(target);
+    for (var i = 1; i < arguments.length; i++) {
+      var nextSource = arguments[i];
+      if (nextSource != null) {
+        for (var key in nextSource) {
+          if (Object.prototype.hasOwnProperty.call(nextSource, key)) {
+            to[key] = nextSource[key];
+          }
+        }
+      }
+    }
+    return to;
+  };
+
+  return true;
+}
+
+/**
+ * Number.isInteger polyfill
+ */
+function polyfillNumberIsInteger() {
+  if (Number.isInteger) {
+    return false; // Already exists
+  }
+
+  Number.isInteger = function(value) {
+    return typeof value === 'number' && 
+           isFinite(value) && 
+           Math.floor(value) === value;
+  };
+
+  return true;
+}
+
+/**
+ * Number.isNaN polyfill
+ */
+function polyfillNumberIsNaN() {
+  if (Number.isNaN) {
+    return false; // Already exists
+  }
+
+  Number.isNaN = function(value) {
+    return typeof value === 'number' && value !== value;
+  };
+
+  return true;
+}
+
+/**
+ * Number.isFinite polyfill
+ */
+function polyfillNumberIsFinite() {
+  if (Number.isFinite) {
+    return false; // Already exists
+  }
+
+  Number.isFinite = function(value) {
+    return typeof value === 'number' && isFinite(value);
+  };
+
+  return true;
+}
+
+/**
+ * NodeList.prototype.forEach polyfill
+ */
+function polyfillNodeListForEach() {
+  if (NodeList.prototype.forEach) {
+    return false; // Already exists
+  }
+
+  NodeList.prototype.forEach = Array.prototype.forEach;
+
+  return true;
+}
+
+/**
+ * CustomEvent polyfill for Chrome 47
+ */
+function polyfillCustomEvent() {
+  if (typeof window.CustomEvent === 'function') {
+    return false; // Already exists
+  }
+
+  function CustomEvent(event, params) {
+    params = params || { bubbles: false, cancelable: false, detail: null };
+    var evt = document.createEvent('CustomEvent');
+    evt.initCustomEvent(event, params.bubbles, params.cancelable, params.detail);
+    return evt;
+  }
+
+  CustomEvent.prototype = window.Event.prototype;
+  window.CustomEvent = CustomEvent;
+
+  return true;
+}
+
+/**
+ * Promise.prototype.finally polyfill
+ */
+function polyfillPromiseFinally() {
+  if (Promise.prototype.finally) {
+    return false; // Already exists
+  }
+
+  Promise.prototype.finally = function(callback) {
+    var constructor = this.constructor;
+    return this.then(
+      function(value) {
+        return constructor.resolve(callback()).then(function() {
+          return value;
+        });
+      },
+      function(reason) {
+        return constructor.resolve(callback()).then(function() {
+          throw reason;
+        });
+      }
+    );
+  };
+
+  return true;
+}
+
+/**
+ * Element.prototype.remove polyfill
+ */
+function polyfillElementRemove() {
+  if (Element.prototype.remove) {
+    return false; // Already exists
+  }
+
+  Element.prototype.remove = function() {
+    if (this.parentNode) {
+      this.parentNode.removeChild(this);
+    }
+  };
+
+  return true;
+}
+
+/**
  * ResizeObserver polyfill for Chrome < 64
  * Provides a minimal implementation that ABS and other SPAs need
  */
@@ -498,23 +855,45 @@ function polyfillResizeObserver() {
 export function initPolyfills() {
   loaded = [];
 
+  // CSS Compatibility (Chrome 47 clamp() polyfill + TV readability baseline)
+  if (polyfillCSSCompatibility()) loaded.push('CSS-Compatibility');
+
   // DOM APIs
   if (polyfillDOMRect()) loaded.push('DOMRect');
   if (polyfillDOMRectReadOnly()) loaded.push('DOMRectReadOnly');
   if (polyfillElementMatches()) loaded.push('Element.matches');
   if (polyfillElementClosest()) loaded.push('Element.closest');
+  if (polyfillElementRemove()) loaded.push('Element.remove');
   if (polyfillResizeObserver()) loaded.push('ResizeObserver');
+  if (polyfillCustomEvent()) loaded.push('CustomEvent');
+  if (polyfillNodeListForEach()) loaded.push('NodeList.forEach');
 
   // Array methods
   if (polyfillArrayIncludes()) loaded.push('Array.includes');
+  if (polyfillArrayFrom()) loaded.push('Array.from');
+  if (polyfillArrayOf()) loaded.push('Array.of');
+  if (polyfillArrayFind()) loaded.push('Array.find');
+  if (polyfillArrayFindIndex()) loaded.push('Array.findIndex');
 
   // Object methods
   if (polyfillObjectEntries()) loaded.push('Object.entries');
   if (polyfillObjectValues()) loaded.push('Object.values');
+  if (polyfillObjectAssign()) loaded.push('Object.assign');
 
   // String methods
   if (polyfillStringStartsWith()) loaded.push('String.startsWith');
   if (polyfillStringEndsWith()) loaded.push('String.endsWith');
+  if (polyfillStringRepeat()) loaded.push('String.repeat');
+  if (polyfillStringPadStart()) loaded.push('String.padStart');
+  if (polyfillStringPadEnd()) loaded.push('String.padEnd');
+
+  // Number methods
+  if (polyfillNumberIsInteger()) loaded.push('Number.isInteger');
+  if (polyfillNumberIsNaN()) loaded.push('Number.isNaN');
+  if (polyfillNumberIsFinite()) loaded.push('Number.isFinite');
+
+  // Promise enhancements
+  if (polyfillPromiseFinally()) loaded.push('Promise.finally');
 
   // AbortController
   if (polyfillAbortController()) loaded.push('AbortController');

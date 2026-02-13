@@ -33,16 +33,8 @@ var CATEGORIES = {
  */
 var USERSCRIPTS = [
   // ACCESSIBILITY CATEGORY
-  {
-    id: 'readability-booster',
-    name: 'TV Readability Booster',
-    category: CATEGORIES.ACCESSIBILITY,
-    description: 'Optimizes text and interactive elements for TV viewing distance',
-    defaultEnabled: true,
-    source: 'inline',
-    provides: ['text-enhancement', 'readability'],
-    inline: "(function(){var s=document.createElement('style');s.id='tp-readability';s.textContent='body,p,span,div,li,td,th,a,h1,h2,h3,h4,h5,h6{font-size:clamp(18px,2.5vw,32px)!important;line-height:1.8!important;letter-spacing:0.02em!important}p,li,td,th{max-width:1200px!important}a{text-decoration:underline!important;outline:2px solid cyan!important;padding:4px!important}button,input,select,textarea{min-height:44px!important;font-size:20px!important;padding:8px 12px!important}';document.head.appendChild(s);userscript.cleanup=function(){var el=document.getElementById('tp-readability');if(el)el.remove();}})();",
-  },
+  // NOTE: readability-booster moved to core polyfills (css-compatibility.js)
+  // as it compensates for Chrome 47 lack of clamp() support; registry now contains 18 predefined userscripts
   {
     id: 'subtitle-enhancer',
     name: 'Subtitle Size Enhancer',
@@ -73,7 +65,7 @@ var USERSCRIPTS = [
     defaultEnabled: false,
     source: 'inline',
     provides: ['dark-mode', 'reading-mode', 'clutter-removal'],
-    inline: "(function(){var s=document.createElement('style');s.id='tp-dark-reader';s.textContent='aside,nav:not([role=\"navigation\"]):not(.ytp-chrome-bottom),.sidebar,[class*=\"sidebar\"],[id*=\"sidebar\"],.ad,[class*=\"advertisement\"],[id*=\"advertisement\"],[class*=\"social-share\"],[id*=\"social\"]:not(article):not(main),.comments,[id*=\"comment\"]:not(article):not(main),.related,[class*=\"related\"]:not(main){display:none!important}body{background-color:#1a1a1a!important;color:#e8e6e3!important;padding:40px 20px!important}article,main,[role=\"main\"]{max-width:900px!important;margin:0 auto!important;padding:30px!important;background-color:#242424!important;border-radius:8px!important;box-shadow:0 2px 8px rgba(0,0,0,0.3)!important}article *,main *,[role=\"main\"] *{background-color:transparent!important}p,li,td,th,div{color:#e8e6e3!important;line-height:1.9!important;font-size:clamp(18px,2.2vw,28px)!important}h1,h2,h3,h4,h5,h6{color:#f0f0f0!important;margin-top:1.5em!important;margin-bottom:0.8em!important;line-height:1.4!important}a{color:#8ab4f8!important;text-decoration:underline!important}a:visited{color:#c58af9!important}img,video{opacity:0.95!important;border-radius:4px!important}code,pre{background-color:#2d2d2d!important;color:#a8dadc!important;padding:2px 6px!important;border-radius:3px!important}blockquote{border-left:4px solid #8ab4f8!important;padding-left:20px!important;margin-left:0!important;color:#d0d0d0!important}';document.head.appendChild(s);userscript.cleanup=function(){var el=document.getElementById('tp-dark-reader');if(el)el.remove();}})();",
+    inline: "(function(){var s=document.createElement('style');s.id='tp-dark-reader';s.textContent='aside,nav:not([role=\"navigation\"]):not(.ytp-chrome-bottom),.sidebar,[class*=\"sidebar\"],[id*=\"sidebar\"],.ad,[class*=\"advertisement\"],[id*=\"advertisement\"],[class*=\"social-share\"],[id*=\"social\"]:not(article):not(main),.comments,[id*=\"comment\"]:not(article):not(main),.related,[class*=\"related\"]:not(main){display:none!important}body{background-color:#1a1a1a!important;color:#e8e6e3!important;padding:40px 20px!important}article,main,[role=\"main\"]{max-width:900px!important;margin:0 auto!important;padding:30px!important;background-color:#242424!important;border-radius:8px!important;box-shadow:0 2px 8px rgba(0,0,0,0.3)!important}article *,main *,[role=\"main\"] *{background-color:transparent!important}p,li,td,th,div{color:#e8e6e3!important;line-height:1.9!important;font-size:22px!important}h1,h2,h3,h4,h5,h6{color:#f0f0f0!important;margin-top:1.5em!important;margin-bottom:0.8em!important;line-height:1.4!important}a{color:#8ab4f8!important;text-decoration:underline!important}a:visited{color:#c58af9!important}img,video{opacity:0.95!important;border-radius:4px!important}code,pre{background-color:#2d2d2d!important;color:#a8dadc!important;padding:2px 6px!important;border-radius:3px!important}blockquote{border-left:4px solid #8ab4f8!important;padding-left:20px!important;margin-left:0!important;color:#d0d0d0!important}';document.head.appendChild(s);userscript.cleanup=function(){var el=document.getElementById('tp-dark-reader');if(el)el.remove();}})();",
   },
   {
     id: 'light-reading-mode',
@@ -83,7 +75,7 @@ var USERSCRIPTS = [
     defaultEnabled: false,
     source: 'inline',
     provides: ['light-mode', 'reading-mode', 'clutter-removal'],
-    inline: "(function(){var s=document.createElement('style');s.id='tp-light-reader';s.textContent='aside,nav:not([role=\"navigation\"]):not(.ytp-chrome-bottom),.sidebar,[class*=\"sidebar\"],[id*=\"sidebar\"],.ad,[class*=\"advertisement\"],[id*=\"advertisement\"],[class*=\"social-share\"],[id*=\"social\"]:not(article):not(main),.comments,[id*=\"comment\"]:not(article):not(main),.related,[class*=\"related\"]:not(main){display:none!important}body{background-color:#faf8f5!important;color:#2c2c2c!important;padding:40px 20px!important}article,main,[role=\"main\"]{max-width:900px!important;margin:0 auto!important;padding:30px!important;background-color:#ffffff!important;border-radius:8px!important;box-shadow:0 2px 12px rgba(0,0,0,0.08)!important}article *,main *,[role=\"main\"] *{background-color:transparent!important}p,li,td,th,div{color:#2c2c2c!important;line-height:1.9!important;font-size:clamp(18px,2.2vw,28px)!important}h1,h2,h3,h4,h5,h6{color:#1a1a1a!important;margin-top:1.5em!important;margin-bottom:0.8em!important;line-height:1.4!important}a{color:#0066cc!important;text-decoration:underline!important}a:visited{color:#551a8b!important}img,video{border-radius:4px!important}code,pre{background-color:#f5f5f5!important;color:#d63384!important;padding:2px 6px!important;border-radius:3px!important;border:1px solid #e0e0e0!important}blockquote{border-left:4px solid #0066cc!important;padding-left:20px!important;margin-left:0!important;color:#555!important;font-style:italic!important}';document.head.appendChild(s);userscript.cleanup=function(){var el=document.getElementById('tp-light-reader');if(el)el.remove();}})();",
+    inline: "(function(){var s=document.createElement('style');s.id='tp-light-reader';s.textContent='aside,nav:not([role=\"navigation\"]):not(.ytp-chrome-bottom),.sidebar,[class*=\"sidebar\"],[id*=\"sidebar\"],.ad,[class*=\"advertisement\"],[id*=\"advertisement\"],[class*=\"social-share\"],[id*=\"social\"]:not(article):not(main),.comments,[id*=\"comment\"]:not(article):not(main),.related,[class*=\"related\"]:not(main){display:none!important}body{background-color:#faf8f5!important;color:#2c2c2c!important;padding:40px 20px!important}article,main,[role=\"main\"]{max-width:900px!important;margin:0 auto!important;padding:30px!important;background-color:#ffffff!important;border-radius:8px!important;box-shadow:0 2px 12px rgba(0,0,0,0.08)!important}article *,main *,[role=\"main\"] *{background-color:transparent!important}p,li,td,th,div{color:#2c2c2c!important;line-height:1.9!important;font-size:22px!important}h1,h2,h3,h4,h5,h6{color:#1a1a1a!important;margin-top:1.5em!important;margin-bottom:0.8em!important;line-height:1.4!important}a{color:#0066cc!important;text-decoration:underline!important}a:visited{color:#551a8b!important}img,video{border-radius:4px!important}code,pre{background-color:#f5f5f5!important;color:#d63384!important;padding:2px 6px!important;border-radius:3px!important;border:1px solid #e0e0e0!important}blockquote{border-left:4px solid #0066cc!important;padding-left:20px!important;margin-left:0!important;color:#555!important;font-style:italic!important}';document.head.appendChild(s);userscript.cleanup=function(){var el=document.getElementById('tp-light-reader');if(el)el.remove();}})();",
   },
   {
     id: 'smart-dark-mode',
@@ -111,11 +103,9 @@ var USERSCRIPTS = [
     category: CATEGORIES.READING,
     description: 'Convert page to grayscale for focus or accessibility',
     defaultEnabled: false,
-    source: 'url',
-    url: 'https://cdn.jsdelivr.net/gh/openstyles/stylus@1.5.31/tools/grayscale.user.js',
+    source: 'inline',
     provides: ['grayscale'],
-    inline: '',
-    cached: '',
+    inline: "(function(){var s=document.createElement('style');s.id='tp-grayscale';s.textContent='html{-webkit-filter:grayscale(100%)!important;filter:grayscale(100%)!important}';document.head.appendChild(s);userscript.cleanup=function(){var el=document.getElementById('tp-grayscale');if(el)el.remove();}})();",
   },
 
   // VIDEO CATEGORY
@@ -153,11 +143,11 @@ var USERSCRIPTS = [
     id: 'youtube-tv',
     name: 'YouTube TV Enhancements',
     category: CATEGORIES.VIDEO,
-    description: 'Improves YouTube experience on TV',
+    description: 'Improves YouTube experience on TV (Note: Browser warnings automatically hidden)',
     defaultEnabled: false,
     source: 'inline',
     provides: ['youtube-enhancement'],
-    inline: "(function(){if(!window.location.host.includes('youtube.com'))return;var s=document.createElement('style');s.id='tp-yt-tv';s.textContent='.ytp-chrome-top,.ytp-chrome-bottom,.ytp-gradient-top,.ytp-gradient-bottom{display:block!important;opacity:1!important}.html5-video-player:not(.ytp-fullscreen) .ytp-chrome-bottom{height:auto!important;padding:10px!important}.ytp-play-button,.ytp-time-display,.ytp-volume-panel{font-size:140%!important;min-width:50px!important;min-height:50px!important}video{max-height:90vh!important}';document.head.appendChild(s);var checkInterval=setInterval(function(){var vid=document.querySelector('video');if(vid){vid.playbackRate=1.0;clearInterval(checkInterval);}},1000);userscript.cleanup=function(){var el=document.getElementById('tp-yt-tv');if(el)el.remove();if(checkInterval)clearInterval(checkInterval);}})();",
+    inline: "(function(){if(!window.location.host.includes('youtube.com'))return;var log=function(msg){if(window.TizenPortal&&TizenPortal.log)TizenPortal.log(msg);};var s=document.createElement('style');s.id='tp-yt-tv';s.textContent='.ytp-chrome-top,.ytp-chrome-bottom,.ytp-gradient-top,.ytp-gradient-bottom{display:block!important;opacity:1!important}.html5-video-player:not(.ytp-fullscreen) .ytp-chrome-bottom{height:auto!important;padding:10px!important}.ytp-play-button,.ytp-time-display,.ytp-volume-panel{font-size:140%!important;min-width:50px!important;min-height:50px!important}video{max-height:90vh!important}';document.head.appendChild(s);var hideWarning=function(){var warnings=document.querySelectorAll('[class*=\"unsupported\"],[id*=\"unsupported\"],[class*=\"browser-update\"],[id*=\"browser-update\"]');for(var i=0;i<warnings.length;i++){if(warnings[i].textContent&&warnings[i].textContent.toLowerCase().indexOf('update')!==-1){warnings[i].style.display='none';log('Hid browser warning');}}};var observer=new MutationObserver(hideWarning);observer.observe(document.body,{childList:true,subtree:true});hideWarning();var checkInterval=setInterval(function(){var vid=document.querySelector('video');if(vid){vid.playbackRate=1.0;clearInterval(checkInterval);}},1000);userscript.cleanup=function(){var el=document.getElementById('tp-yt-tv');if(el)el.remove();if(checkInterval)clearInterval(checkInterval);if(observer)observer.disconnect();}})();",
   },
 
   // NAVIGATION CATEGORY
