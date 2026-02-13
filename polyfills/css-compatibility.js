@@ -35,11 +35,12 @@ function applyCSSCompatibility() {
         'letter-spacing:0.02em!important' +
       '}' +
       'p,li,td,th{' +
-        'max-width:1200px!important' +
+        'max-width:1200px!important;' +
       '}' +
       'a{' +
         'text-decoration:underline!important;' +
-        'outline:2px solid cyan!important;' +
+        'outline:2px solid rgba(0,255,255,0.7)!important;' +
+        'outline-offset:2px!important;' +
         'padding:4px!important' +
       '}' +
       'button,input,select,textarea{' +

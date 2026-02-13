@@ -143,7 +143,7 @@ var USERSCRIPTS = [
     id: 'youtube-tv',
     name: 'YouTube TV Enhancements',
     category: CATEGORIES.VIDEO,
-    description: 'Improves YouTube experience on TV (Note: May show browser warning)',
+    description: 'Improves YouTube experience on TV (Note: Browser warnings automatically hidden)',
     defaultEnabled: false,
     source: 'inline',
     provides: ['youtube-enhancement'],

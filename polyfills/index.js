@@ -351,7 +351,7 @@ function polyfillStringPadStart() {
     }
     targetLength = targetLength - this.length;
     if (targetLength > padString.length) {
-      padString += padString.repeat(targetLength / padString.length);
+      padString += padString.repeat(Math.ceil(targetLength / padString.length));
     }
     return padString.slice(0, targetLength) + String(this);
   };
@@ -375,7 +375,7 @@ function polyfillStringPadEnd() {
     }
     targetLength = targetLength - this.length;
     if (targetLength > padString.length) {
-      padString += padString.repeat(targetLength / padString.length);
+      padString += padString.repeat(Math.ceil(targetLength / padString.length));
     }
     return String(this) + padString.slice(0, targetLength);
   };
