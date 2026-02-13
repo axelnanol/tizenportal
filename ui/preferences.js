@@ -88,6 +88,16 @@ var FOCUS_TRANSITION_SPEED_OPTIONS = [
 ];
 
 /**
+ * Text scale options
+ */
+var TEXT_SCALE_OPTIONS = [
+  { value: 'off', label: 'Off (Original Size)' },
+  { value: 'small', label: 'Small (+10%)' },
+  { value: 'medium', label: 'Medium (+25%)' },
+  { value: 'large', label: 'Large (+50%)' },
+];
+
+/**
  * User Agent mode options
  */
 var UA_MODE_OPTIONS = [
@@ -183,6 +193,8 @@ var PREFERENCE_ROWS = [
   { id: 'hintsPosition', label: 'Color Hints', type: 'select', options: HINT_POSITION_OPTIONS, key: 'hintsPosition', config: 'portal', section: 'portal' },
   { id: 'navigationMode', label: 'Navigation Mode', type: 'select', options: NAVIGATION_MODE_OPTIONS, key: 'navigationMode', config: 'features', section: 'features' },
   { id: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_OPTIONS, key: 'viewportMode', config: 'features', section: 'features' },
+  { id: 'textScale', label: 'Text Scale', type: 'select', options: TEXT_SCALE_OPTIONS, key: 'textScale', config: 'features', section: 'features',
+    description: 'Scale all text for improved TV legibility while maintaining relative sizing' },
   { id: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS, key: 'focusOutlineMode', config: 'features', section: 'features' },
   { id: 'focusTransitionMode', label: 'Focus Transition Style', type: 'select', options: FOCUS_TRANSITION_MODE_OPTIONS, key: 'focusTransitionMode', config: 'features', section: 'features' },
   { id: 'focusTransitionSpeed', label: 'Focus Transition Speed', type: 'select', options: FOCUS_TRANSITION_SPEED_OPTIONS, key: 'focusTransitionSpeed', config: 'features', section: 'features' },

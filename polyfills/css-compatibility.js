@@ -3,10 +3,12 @@
  * 
  * Addresses critical CSS incompatibilities in Chrome 47-69:
  * 1. clamp() function not supported (added in Chrome 79)
- * 2. TV readability baseline (text must be readable from 10ft/3m distance)
+ * 2. Browser compatibility warnings (YouTube, etc.)
  * 
  * This is a POLYFILL not a feature because it compensates for browser limitations,
  * not user preferences. It's always enabled to ensure basic usability.
+ * 
+ * NOTE: TV readability enhancements moved to features/text-scale.js (user-configurable)
  */
 
 var styleElement = null;
@@ -24,30 +26,10 @@ function applyCSSCompatibility() {
     style.id = 'tp-css-compat';
     style.setAttribute('data-tizen-portal-polyfill', 'css-compatibility');
     
-    // TV Readability baseline - compensates for lack of clamp() support
-    // Uses fixed 24px font size readable from TV viewing distance
-    // This was previously a userscript but is fundamental to TV usability
+    // Browser compatibility warnings mitigation
+    // Hides "unsupported browser" warnings on sites like YouTube
     style.textContent = 
-      '/* TV Readability Baseline (Chrome 47 clamp() polyfill) */' +
-      'body,p,span,div,li,td,th,a,h1,h2,h3,h4,h5,h6{' +
-        'font-size:24px!important;' +
-        'line-height:1.8!important;' +
-        'letter-spacing:0.02em!important' +
-      '}' +
-      'p,li,td,th{' +
-        'max-width:1200px!important;' +
-      '}' +
-      'a{' +
-        'text-decoration:underline!important;' +
-        'outline:2px solid rgba(0,255,255,0.7)!important;' +
-        'outline-offset:2px!important;' +
-        'padding:4px!important' +
-      '}' +
-      'button,input,select,textarea{' +
-        'min-height:44px!important;' +
-        'font-size:20px!important;' +
-        'padding:8px 12px!important' +
-      '}' +
+      '/* CSS Compatibility Polyfill for Chrome 47 */' +
       '/* YouTube browser warning mitigation */' +
       '[class*="unsupported"],[id*="unsupported"],' +
       '[class*="browser-update"],[id*="browser-update"]{' +

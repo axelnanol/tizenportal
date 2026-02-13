@@ -855,7 +855,7 @@ function polyfillResizeObserver() {
 export function initPolyfills() {
   loaded = [];
 
-  // CSS Compatibility (Chrome 47 clamp() polyfill + TV readability baseline)
+  // CSS Compatibility (Chrome 47 clamp() polyfill + browser warnings mitigation)
   if (polyfillCSSCompatibility()) loaded.push('CSS-Compatibility');
 
   // DOM APIs
