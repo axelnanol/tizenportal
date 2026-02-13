@@ -38,7 +38,7 @@ No, TizenPortal runs through TizenBrew, which handles any necessary permissions.
 ### How do I install TizenPortal?
 
 1. Install [TizenBrew](https://github.com/reisxd/TizenBrew) on your TV
-2. Add the module: `alexnolan/tizenportal@<version-tag>` (e.g., `alexnolan/tizenportal@1026`) - see [CHANGELOG](CHANGELOG.md) for available versions
+2. Add the module: `axelnanol/tizenportal@<version-tag>` (e.g., `axelnanol/tizenportal@1026`) - see [CHANGELOG](CHANGELOG.md) for available versions
 3. Launch TizenPortal from TizenBrew
 
 See the [Getting Started](Getting-Started.md) guide for detailed instructions.
@@ -47,8 +47,8 @@ See the [Getting Started](Getting-Started.md) guide for detailed instructions.
 
 TizenBrew caches modules by version. To update:
 
-1. Remove the old module (`alexnolan/tizenportal@OLDVERSION`)
-2. Add the new module (`alexnolan/tizenportal@NEWVERSION`)
+1. Remove the old module (`axelnanol/tizenportal@OLDVERSION`)
+2. Add the new module (`axelnanol/tizenportal@NEWVERSION`)
 
 Your saved sites are preserved between updates.
 
@@ -112,7 +112,7 @@ Common reasons:
 
 Maybe! You can:
 
-1. [Open an issue](https://github.com/alexnolan/tizenportal/issues) requesting the site
+1. [Open an issue](https://github.com/axelnanol/tizenportal/issues) requesting the site
 2. [Create a bundle](Bundle-Authoring.md) yourself and submit a PR
 3. Use the `default` bundle for basic compatibility
 
@@ -219,7 +219,7 @@ Yes, use `npm run watch` for auto-rebuilding during development. See the [Build 
 
 ### Who created TizenPortal?
 
-TizenPortal was created by Alex Nolan. See the [GitHub repository](https://github.com/alexnolan/tizenportal) for contributors.
+TizenPortal was created by axelnanol. See the [GitHub repository](https://github.com/axelnanol/tizenportal) for contributors.
 
 ### How can I support the project?
 
@@ -232,7 +232,7 @@ TizenPortal was created by Alex Nolan. See the [GitHub repository](https://githu
 ### I have a question not listed here
 
 - Check the [Troubleshooting Guide](Troubleshooting.md)
-- Search [GitHub Issues](https://github.com/alexnolan/tizenportal/issues)
+- Search [GitHub Issues](https://github.com/axelnanol/tizenportal/issues)
 - Open a new issue or discussion
 
 ---

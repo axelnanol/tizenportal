@@ -27,19 +27,19 @@ git log --tags --simplify-by-decoration --pretty="format:%d %s"
 
 To install a specific version:
 ```
-alexnolan/tizenportal@<version-tag>
+axelnanol/tizenportal@<version-tag>
 ```
 
 Example:
 ```
-alexnolan/tizenportal@1026
+axelnanol/tizenportal@1026
 ```
 
 ## Version Notes
 
 ### Versioning Philosophy
 
-TizenPortal uses numeric 4-digit tags instead of semantic versioning tags for ease of use on TV remotes. Typing `alexnolan/tizenportal@1018` on a TV remote is much faster than typing `@v1.0.18`.
+TizenPortal uses numeric 4-digit tags instead of semantic versioning tags for ease of use on TV remotes. Typing `axelnanol/tizenportal@1018` on a TV remote is much faster than typing `@v1.0.18`.
 
 ### Breaking Changes
 

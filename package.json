@@ -1,11 +1,11 @@
 {
-  "name": "@alexnolan/tizenportal",
+  "name": "@axelnanol/tizenportal",
   "appName": "TizenPortal",
   "version": "1048",
   "description": "Universal Tizen Browser Shell",
   "type": "module",
   "packageType": "mods",
-  "websiteURL": "https://alexnolan.github.io/tizenportal/dist/index.html?v=1048",
+  "websiteURL": "https://axelnanol.github.io/tizenportal/dist/index.html?v=1048",
   "main": "dist/tizenportal.js",
   "keys": [
     "MediaPlayPause",
@@ -21,11 +21,11 @@
     "ColorF2Yellow",
     "ColorF3Blue"
   ],
-  "author": "Alex Nolan",
+  "author": "axelnanol",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alexnolan/tizenportal"
+    "url": "https://github.com/axelnanol/tizenportal"
   },
   "scripts": {
     "build": "rollup -c",

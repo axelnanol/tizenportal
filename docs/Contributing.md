@@ -60,7 +60,7 @@ There are many ways to contribute, whether or not you write code:
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/alexnolan/tizenportal.git
+   git remote add upstream https://github.com/axelnanol/tizenportal.git
    ```
 
 ---

@@ -61,7 +61,7 @@ TizenPortal is a **TizenBrew Site Modification Module** (`packageType: "mods"`) 
 ```json
 {
   "packageType": "mods",
-  "websiteURL": "https://alexnolan.github.io/tizenportal/dist/index.html",
+  "websiteURL": "https://axelnanol.github.io/tizenportal/dist/index.html",
   "main": "dist/tizenportal.js",
   "keys": ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", ...]
 }

@@ -34,10 +34,10 @@ Welcome to the TizenPortal documentation! This wiki provides comprehensive guide
 
 ## Quick Links
 
-- 🏠 [Project Repository](https://github.com/alexnolan/tizenportal)
-- 📦 [Latest Release](https://github.com/alexnolan/tizenportal/releases)
-- 🐛 [Report an Issue](https://github.com/alexnolan/tizenportal/issues)
-- 💬 [Discussions](https://github.com/alexnolan/tizenportal/discussions)
+- 🏠 [Project Repository](https://github.com/axelnanol/tizenportal)
+- 📦 [Latest Release](https://github.com/axelnanol/tizenportal/releases)
+- 🐛 [Report an Issue](https://github.com/axelnanol/tizenportal/issues)
+- 💬 [Discussions](https://github.com/axelnanol/tizenportal/discussions)
 
 ---
 
