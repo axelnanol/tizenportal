@@ -1171,7 +1171,7 @@ function getUserscriptsSummary() {
   var globalScripts = getGlobalUserscripts();
   var globalConfig = Userscripts.getUserscriptsConfig();
   var siteToggles = ensureSiteUserscriptToggles();
-  var siteOn = 0;
+  var enabledNames = [];
 
   for (var j = 0; j < globalScripts.length; j++) {
     var s = globalScripts[j] || {};
@@ -1180,11 +1180,13 @@ function getUserscriptsSummary() {
     if (siteToggles && siteToggles.hasOwnProperty(sId)) {
       enabled = siteToggles[sId] === true;
     }
-    if (enabled) siteOn++;
+    if (enabled) {
+      enabledNames.push(s.name || sId);
+    }
   }
 
   if (!globalScripts.length) return 'None';
-  return 'Site: ' + siteOn + '/' + globalScripts.length + ' on';
+  return enabledNames.length > 0 ? enabledNames.join(', ') : 'None enabled';
 }
 
 function getGlobalFeaturesConfig() {

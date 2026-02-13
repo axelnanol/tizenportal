@@ -246,7 +246,11 @@ function applyUserscripts(card, bundle) {
 
   if (window.TizenPortal && window.TizenPortal.log) {
     window.TizenPortal.log('[Userscripts] Checking ' + allScripts.length + ' registered scripts');
+    window.TizenPortal.log('[Userscripts] Site toggles:', siteToggles);
+    window.TizenPortal.log('[Userscripts] Global enabled:', cfg.enabled);
   }
+
+  var executedCount = 0;
 
   // Execute each script if enabled
   for (var i = 0; i < allScripts.length; i++) {
@@ -265,10 +269,15 @@ function applyUserscripts(card, bundle) {
 
     if (shouldExecute) {
       if (window.TizenPortal && window.TizenPortal.log) {
-        window.TizenPortal.log('[Userscripts] Executing: ' + scriptDef.name);
+        window.TizenPortal.log('[Userscripts] Executing: ' + scriptDef.name + ' (ID: ' + scriptDef.id + ')');
       }
       executeUserscript(scriptDef, urlCache, card, bundle);
+      executedCount++;
     }
+  }
+
+  if (window.TizenPortal && window.TizenPortal.log) {
+    window.TizenPortal.log('[Userscripts] Executed ' + executedCount + ' of ' + allScripts.length + ' scripts');
   }
 }
 

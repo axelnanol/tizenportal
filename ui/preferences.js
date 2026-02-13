@@ -725,13 +725,15 @@ function getPreferencesSectionSummary(sectionId) {
   if (sectionId === 'userscripts') {
     var scripts = UserscriptRegistry.getAllUserscripts();
     if (!scripts.length) return 'No scripts registered';
-    var scriptParts = [];
+    var enabledNames = [];
     for (var s = 0; s < scripts.length; s++) {
       var script = scripts[s];
       var enabled = isUserscriptEnabled(script.id);
-      scriptParts.push(script.name + ': ' + (enabled ? 'On' : 'Off'));
+      if (enabled) {
+        enabledNames.push(script.name);
+      }
     }
-    return scriptParts.join(' • ');
+    return enabledNames.length > 0 ? enabledNames.join(', ') : 'None enabled';
   }
 
   var rows = getVisibleRows();
