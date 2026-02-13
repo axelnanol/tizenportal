@@ -259,6 +259,18 @@ function getCardOverrideValue(card, key) {
   if (card.hasOwnProperty(key) && card[key] !== null && card[key] !== undefined) {
     return card[key];
   }
+  
+  // Fall back to global settings if card doesn't have an override
+  // This ensures global preferences (text scale, etc.) apply even without site override
+  try {
+    var globalConfig = configGet('tp_features') || {};
+    if (globalConfig.hasOwnProperty(key)) {
+      return globalConfig[key];
+    }
+  } catch (err) {
+    // Silently ignore if config not available
+  }
+  
   return null;
 }
 
