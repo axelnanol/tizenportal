@@ -263,8 +263,13 @@ Open Preferences with **🟡 Yellow** on the portal.
 - **Color Hints**: Show/hide the on-screen color button labels
 
 ### Site Features
+- **Navigation Mode**: Smart Navigation (Directional) / Grid Navigation (Geometric) / Legacy Polyfill
 - **Viewport Lock Mode**: Auto / Locked (1920) / Unlocked
+- **Text Scale**: Off / Small (+10%) / Medium (+25%) / Large (+50%)
+	- Scales all text for improved TV legibility while maintaining relative sizing
 - **Focus Outline**: On (Blue) / High Contrast (Yellow) / Off
+- **Focus Transition Style**: Slide / Scale / Glow / Off
+- **Focus Transition Speed**: Fast / Medium / Slow
 - **User Agent Mode**: Tizen TV / Desktop / Mobile
 	- Note: UA spoofing is JS-only (not network-layer), so some sites may still detect Tizen
 - **Auto-focusable Elements**: Adds tabindex to make items focusable

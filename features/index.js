@@ -13,6 +13,7 @@ import safeArea from './safe-area.js';
 import gpuHints from './gpu-hints.js';
 import cssReset from './css-reset.js';
 import navigationFix from './navigation-fix.js';
+import textScale from './text-scale.js';
 
 // Feature registry
 var features = {
@@ -24,6 +25,7 @@ var features = {
   gpuHints: gpuHints,
   cssReset: cssReset,
   navigationFix: navigationFix,
+  textScale: textScale,
 };
 
 /**
@@ -47,6 +49,7 @@ function getDefaults() {
     viewportMode: 'locked',
     uaMode: 'tizen',
     navigationFix: true,
+    textScale: 'off',
   };
 }
 
@@ -151,6 +154,15 @@ function applyFeatures(doc, overrides) {
         features.navigationFix.apply(doc);
       } else if (effectiveConfig.navigationFix === false) {
         features.navigationFix.remove(doc);
+      }
+    }
+    
+    if (features.textScale) {
+      var textScaleLevel = effectiveConfig.textScale || 'off';
+      if (textScaleLevel === 'off') {
+        features.textScale.remove(doc);
+      } else {
+        features.textScale.apply(doc, textScaleLevel);
       }
     }
     

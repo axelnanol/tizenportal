@@ -153,12 +153,13 @@ tizenportal/
 │   ├── scroll-into-view.js    # Focus scroll helper
 │   ├── safe-area.js           # TV safe area inset
 │   ├── gpu-hints.js           # GPU hint styles
-│   └── css-reset.js           # CSS normalization
+│   ├── css-reset.js           # CSS normalization
+│   └── text-scale.js          # Text scale for TV legibility
 │
 └── polyfills/                # Platform polyfills
     ├── index.js              # Polyfill loader
     ├── domrect-polyfill.js   # DOMRect (from TizenTube)
-    └── css-compatibility.js  # CSS clamp() and TV readability
+    └── css-compatibility.js  # CSS clamp() polyfill and browser warnings
 ```
 
 ---
