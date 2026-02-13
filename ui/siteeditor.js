@@ -145,13 +145,15 @@ var FEATURE_OVERRIDE_DEFS = [
 var SECTION_DEFS = [
   { id: 'bundle', label: '📦 Bundle', defaultCollapsed: true },
   { id: 'bundleOptions', label: '⚙️ Bundle Options', defaultCollapsed: true },
-  { id: 'siteOverrides', label: '⚙️ Global Overrides', defaultCollapsed: true },
+  { id: 'globalOverrides', label: '⚙️ Global Overrides', defaultCollapsed: true },
+  { id: 'siteOverrides', label: '🖥️ Site Overrides', defaultCollapsed: true },
   { id: 'userscripts', label: '📜 User Scripts', defaultCollapsed: true },
 ];
 
 var sectionCollapsed = {
   bundle: true,
   bundleOptions: true,
+  globalOverrides: true,
   siteOverrides: true,
 };
 
@@ -161,13 +163,14 @@ var FIELDS = [
   { name: 'featureBundle', label: 'Site-specific Bundle', type: 'bundle', required: false, section: 'bundle' },
   { name: '__section_bundleOptions', label: '⚙️ Bundle Options', type: 'section', sectionId: 'bundleOptions' },
   { name: '__bundleOptions', label: 'Bundle Options', type: 'bundleOptions', section: 'bundleOptions' },
-  { name: '__section_siteOverrides', label: '⚙️ Global Overrides', type: 'section', sectionId: 'siteOverrides' },
+  { name: '__section_globalOverrides', label: '⚙️ Global Overrides', type: 'section', sectionId: 'globalOverrides' },
+  { name: 'textScale', label: 'Text Scale', type: 'select', options: TEXT_SCALE_OPTIONS, section: 'globalOverrides' },
+  { name: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS, section: 'globalOverrides' },
+  { name: 'focusTransitionMode', label: 'Focus Transition Style', type: 'select', options: FOCUS_TRANSITION_MODE_OPTIONS, section: 'globalOverrides' },
+  { name: 'focusTransitionSpeed', label: 'Focus Transition Speed', type: 'select', options: FOCUS_TRANSITION_SPEED_OPTIONS, section: 'globalOverrides' },
+  { name: '__section_siteOverrides', label: '🖥️ Site Overrides', type: 'section', sectionId: 'siteOverrides' },
   { name: 'navigationMode', label: 'Navigation Mode', type: 'select', options: NAVIGATION_MODE_OPTIONS, section: 'siteOverrides' },
   { name: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_MODE_OPTIONS, section: 'siteOverrides' },
-  { name: 'textScale', label: 'Text Scale', type: 'select', options: TEXT_SCALE_OPTIONS, section: 'siteOverrides' },
-  { name: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS, section: 'siteOverrides' },
-  { name: 'focusTransitionMode', label: 'Focus Transition Style', type: 'select', options: FOCUS_TRANSITION_MODE_OPTIONS, section: 'siteOverrides' },
-  { name: 'focusTransitionSpeed', label: 'Focus Transition Speed', type: 'select', options: FOCUS_TRANSITION_SPEED_OPTIONS, section: 'siteOverrides' },
   { name: 'userAgent', label: 'User Agent Mode', type: 'select', options: UA_MODE_OPTIONS, section: 'siteOverrides' },
   { name: '__features', label: 'Feature Toggles', type: 'featureOverrides', section: 'siteOverrides' },
   { name: '__section_userscripts', label: '📜 User Scripts', type: 'section', sectionId: 'userscripts' },
@@ -1050,13 +1053,20 @@ function getSectionSummary(sectionId) {
     return bundleOptionSummary || 'None';
   }
 
-  if (sectionId === 'siteOverrides') {
-    var viewport = getOptionLabel(VIEWPORT_MODE_OPTIONS, state.card.viewportMode);
+  if (sectionId === 'globalOverrides') {
+    var textScale = getOptionLabel(TEXT_SCALE_OPTIONS, state.card.textScale);
     var focus = getOptionLabel(FOCUS_OUTLINE_OPTIONS, state.card.focusOutlineMode);
     var transition = getOptionLabel(FOCUS_TRANSITION_MODE_OPTIONS, state.card.focusTransitionMode);
     var transitionSpeed = getOptionLabel(FOCUS_TRANSITION_SPEED_OPTIONS, state.card.focusTransitionSpeed);
+    return 'Text: ' + textScale + ' • Focus: ' + focus + ' • Transition: ' + transition + ' • Speed: ' + transitionSpeed;
+  }
+
+  if (sectionId === 'siteOverrides') {
+    var navMode = getOptionLabel(NAVIGATION_MODE_OPTIONS, state.card.navigationMode);
+    var viewport = getOptionLabel(VIEWPORT_MODE_OPTIONS, state.card.viewportMode);
     var ua = getOptionLabel(UA_MODE_OPTIONS, state.card.userAgent);
-    return 'Viewport: ' + viewport + ' • Focus: ' + focus + ' • Transition: ' + transition + ' • Speed: ' + transitionSpeed + ' • UA: ' + ua;
+    var featureSummary = getFeatureOverridesSummary();
+    return 'Nav: ' + navMode + ' • Viewport: ' + viewport + ' • UA: ' + ua + (featureSummary ? ' • ' + featureSummary : '');
   }
 
   if (sectionId === 'userscripts') {
