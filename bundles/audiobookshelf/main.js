@@ -255,6 +255,23 @@ var stopUrlWatcher = null;
 /** Bundle matcher registration flag */
 var matcherRegistered = false;
 
+/** Audio element being monitored */
+var monitoredAudioElement = null;
+
+/** Audio event handlers for cleanup */
+var audioEventHandlers = {
+  loadstart: null,
+  canplay: null,
+  playing: null,
+  pause: null,
+  error: null,
+  waiting: null,
+  stalled: null,
+};
+
+/** DOMContentLoaded handler reference */
+var domReadyHandler = null;
+
 // Bundle export
 
 export default {
@@ -293,7 +310,8 @@ export default {
     
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', this.onDOMReady.bind(this));
+      domReadyHandler = this.onDOMReady.bind(this);
+      document.addEventListener('DOMContentLoaded', domReadyHandler);
     } else {
       this.onDOMReady();
     }
@@ -393,6 +411,51 @@ export default {
       stopUrlWatcher = null;
     }
     
+    // Clean up DOMContentLoaded listener (if it was added)
+    if (domReadyHandler) {
+      document.removeEventListener('DOMContentLoaded', domReadyHandler);
+      domReadyHandler = null;
+    }
+    
+    // Clean up audio element event listeners
+    if (monitoredAudioElement) {
+      if (audioEventHandlers.loadstart) {
+        monitoredAudioElement.removeEventListener('loadstart', audioEventHandlers.loadstart);
+      }
+      if (audioEventHandlers.canplay) {
+        monitoredAudioElement.removeEventListener('canplay', audioEventHandlers.canplay);
+      }
+      if (audioEventHandlers.playing) {
+        monitoredAudioElement.removeEventListener('playing', audioEventHandlers.playing);
+      }
+      if (audioEventHandlers.pause) {
+        monitoredAudioElement.removeEventListener('pause', audioEventHandlers.pause);
+      }
+      if (audioEventHandlers.error) {
+        monitoredAudioElement.removeEventListener('error', audioEventHandlers.error);
+      }
+      if (audioEventHandlers.waiting) {
+        monitoredAudioElement.removeEventListener('waiting', audioEventHandlers.waiting);
+      }
+      if (audioEventHandlers.stalled) {
+        monitoredAudioElement.removeEventListener('stalled', audioEventHandlers.stalled);
+      }
+      
+      // Clear monitored flag so monitoring can be re-established if bundle is reactivated
+      delete monitoredAudioElement.dataset.tpMonitored;
+      monitoredAudioElement = null;
+    }
+    
+    // Clear audio event handler references
+    audioEventHandlers = {
+      loadstart: null,
+      canplay: null,
+      playing: null,
+      pause: null,
+      error: null,
+      waiting: null,
+      stalled: null,
+    };
     
     // Exit any entered card
     if (isInsideCard()) {
@@ -1467,6 +1530,9 @@ export default {
     
     var self = this;
     
+    // Store reference for cleanup
+    monitoredAudioElement = audioEl;
+    
     console.log('TizenPortal [ABS]: Setting up audio element monitoring');
     
     // Configure audio element for better streaming performance
@@ -1507,38 +1573,46 @@ export default {
     var loadStartTime = 0;
     
     // Add event listeners for debugging - only essential events
-    audioEl.addEventListener('loadstart', function() {
+    // Store handlers for cleanup
+    audioEventHandlers.loadstart = function() {
       loadStartTime = Date.now();
       console.log('TizenPortal [ABS]: Audio loading...');
-    });
+    };
+    audioEl.addEventListener('loadstart', audioEventHandlers.loadstart);
     
-    audioEl.addEventListener('canplay', function() {
+    audioEventHandlers.canplay = function() {
       var loadTime = loadStartTime ? (Date.now() - loadStartTime) : 'unknown';
       console.log('TizenPortal [ABS]: Audio ready to play (loaded in', loadTime, 'ms)');
-    });
+    };
+    audioEl.addEventListener('canplay', audioEventHandlers.canplay);
     
-    audioEl.addEventListener('playing', function() {
+    audioEventHandlers.playing = function() {
       console.log('TizenPortal [ABS]: Audio playing');
-    });
+    };
+    audioEl.addEventListener('playing', audioEventHandlers.playing);
     
-    audioEl.addEventListener('pause', function() {
+    audioEventHandlers.pause = function() {
       console.log('TizenPortal [ABS]: Audio paused');
-    });
+    };
+    audioEl.addEventListener('pause', audioEventHandlers.pause);
     
-    audioEl.addEventListener('error', function(e) {
+    audioEventHandlers.error = function(e) {
       var error = audioEl.error;
       console.error('TizenPortal [ABS]: Audio error:', {
         code: error ? error.code : 'unknown',
         message: error ? error.message : 'unknown'
       });
-    });
+    };
+    audioEl.addEventListener('error', audioEventHandlers.error);
     
-    audioEl.addEventListener('waiting', function() {
+    audioEventHandlers.waiting = function() {
       console.log('TizenPortal [ABS]: Audio buffering...');
-    });
+    };
+    audioEl.addEventListener('waiting', audioEventHandlers.waiting);
     
-    audioEl.addEventListener('stalled', function() {
+    audioEventHandlers.stalled = function() {
       console.log('TizenPortal [ABS]: Audio stalled (network issue)');
-    });
+    };
+    audioEl.addEventListener('stalled', audioEventHandlers.stalled);
   },
 };
