@@ -208,41 +208,27 @@ function normalizeUserscripts(list) {
   return normalized;
 }
 
-function ensureUserscriptsByBundle() {
-  if (!state.card) return;
-  if (!state.card.userscriptsByBundle || typeof state.card.userscriptsByBundle !== 'object') {
-    state.card.userscriptsByBundle = {};
+function ensureSiteUserscriptToggles() {
+  if (!state.card) return {};
+  if (!state.card.userscriptToggles || typeof state.card.userscriptToggles !== 'object') {
+    state.card.userscriptToggles = {};
   }
+  return state.card.userscriptToggles;
 }
 
-function saveUserscriptsForBundle(bundleName) {
+function saveUserscriptsForBundle() {
   if (!state.card) return;
-  ensureUserscriptsByBundle();
-  var key = getUserscriptsScopeKey(bundleName);
-  state.card.userscriptsByBundle[key] = normalizeUserscripts(state.card.userscripts || []);
+  state.card.userscripts = normalizeUserscripts(state.card.userscripts || []);
 }
 
-function loadUserscriptsForBundle(bundleName) {
+function loadUserscriptsForBundle() {
   if (!state.card) return;
-  ensureUserscriptsByBundle();
-  var key = getUserscriptsScopeKey(bundleName);
-  if (!state.card.userscriptsByBundle[key]) {
-    var bundleScripts = getBundleUserscripts(bundleName);
-    if (bundleScripts && bundleScripts.length) {
-      state.card.userscriptsByBundle[key] = normalizeUserscripts(bundleScripts);
-    } else if (Array.isArray(state.card.userscripts) && state.card.userscripts.length) {
-      state.card.userscriptsByBundle[key] = normalizeUserscripts(state.card.userscripts);
-    } else {
-      state.card.userscriptsByBundle[key] = normalizeUserscripts([]);
-    }
-  }
-
-  state.card.userscripts = normalizeUserscripts(state.card.userscriptsByBundle[key]);
+  state.card.userscripts = normalizeUserscripts(state.card.userscripts || []);
 }
 
 function ensureUserscriptsInitialized() {
-  if (!state.card) return;
-  loadUserscriptsForBundle(state.card.featureBundle);
+  ensureSiteUserscriptToggles();
+  loadUserscriptsForBundle();
 }
 
 function hasCustomUserscripts(scripts) {
@@ -1123,32 +1109,42 @@ function formatBundleOptionSummaryValue(option, value) {
   return value === null || value === undefined || value === '' ? '(not set)' : String(value);
 }
 
-function getUserscriptsSummary() {
-  var bundleName = state.card ? state.card.featureBundle : null;
-  var bundleScripts = getBundleUserscripts(bundleName) || [];
-  var bundleToggles = ensureBundleUserscriptToggles(bundleName);
-  var bundleOn = 0;
-  for (var i = 0; i < bundleScripts.length; i++) {
-    var b = bundleScripts[i] || {};
-    var bId = getBundleUserscriptId(bundleName, b, i);
-    var enabled = b.enabled !== false;
-    if (bundleToggles && bundleToggles.hasOwnProperty(bId)) {
-      enabled = bundleToggles[bId] === true;
-    }
-    if (enabled) bundleOn++;
-  }
+function getBundleUserscripts() {
+  // Bundle-scoped userscripts were removed in favor of global registry.
+  return [];
+}
 
+function ensureBundleUserscriptToggles() {
+  return {};
+}
+
+function getBundleUserscriptId(bundleName, script, index) {
+  var id = script && script.id ? script.id : index;
+  return (bundleName || 'bundle') + ':' + id;
+}
+
+function getGlobalUserscripts() {
+  return UserscriptRegistry.getAllUserscripts();
+}
+
+function getUserscriptsSummary() {
   var globalScripts = getGlobalUserscripts();
+  var globalConfig = Userscripts.getUserscriptsConfig();
   var siteToggles = ensureSiteUserscriptToggles();
   var siteOn = 0;
+
   for (var j = 0; j < globalScripts.length; j++) {
     var s = globalScripts[j] || {};
     var sId = s.id || ('global-' + j);
-    if (siteToggles[sId] === true) siteOn++;
+    var enabled = globalConfig.enabled[sId] === true;
+    if (siteToggles && siteToggles.hasOwnProperty(sId)) {
+      enabled = siteToggles[sId] === true;
+    }
+    if (enabled) siteOn++;
   }
 
-  if (!bundleScripts.length && !globalScripts.length) return 'None';
-  return 'Site: ' + siteOn + '/' + globalScripts.length + ' on • Bundle: ' + bundleOn + '/' + bundleScripts.length + ' on';
+  if (!globalScripts.length) return 'None';
+  return 'Site: ' + siteOn + '/' + globalScripts.length + ' on';
 }
 
 /**

@@ -323,6 +323,7 @@ export function lockViewport(options) {
     } else {
       viewport = document.createElement('meta');
       viewport.name = 'viewport';
+      viewport.setAttribute('data-tp-created', 'true');
       document.head.appendChild(viewport);
     }
     
@@ -348,6 +349,9 @@ export function unlockViewport() {
       viewport.setAttribute('content', viewport.getAttribute('data-tp-original'));
       viewport.removeAttribute('data-tp-original');
       console.log('TizenPortal [Focus]: Viewport restored');
+    } else if (viewport && viewport.hasAttribute('data-tp-created')) {
+      viewport.parentNode.removeChild(viewport);
+      console.log('TizenPortal [Focus]: Viewport removed');
     }
   } catch (err) {
     console.warn('TizenPortal [Focus]: Could not restore viewport:', err.message);

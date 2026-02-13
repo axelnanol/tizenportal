@@ -1214,7 +1214,12 @@ export function applyPortalPreferences(config) {
     theme = isNightTime() ? 'dark' : 'light';
   }
 
-  applySiteTheme(theme);
+  var allowSiteTheme = config.siteTheme === true;
+  if (allowSiteTheme) {
+    applySiteTheme(theme);
+  } else {
+    applySiteTheme('off');
+  }
 
   var shell = document.getElementById('tp-shell');
   if (shell) {
