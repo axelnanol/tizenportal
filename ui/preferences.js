@@ -217,10 +217,10 @@ var PREFERENCE_ROWS = [
 ];
 
 var SECTION_DEFS = [
-  { id: 'global', label: 'Global Preferences', defaultCollapsed: true },
-  { id: 'portal', label: 'Portal Preferences', defaultCollapsed: true },
-  { id: 'site', label: 'Site Preferences', defaultCollapsed: true },
-  { id: 'userscripts', label: 'User Scripts', defaultCollapsed: true },
+  { id: 'global', label: '⚙️ Global Preferences', defaultCollapsed: true },
+  { id: 'portal', label: '🖼️ Portal Preferences', defaultCollapsed: true },
+  { id: 'site', label: '🖥️ Site Preferences', defaultCollapsed: true },
+  { id: 'userscripts', label: '📜 User Scripts', defaultCollapsed: true },
 ];
 
 var CATEGORY_LABELS = {

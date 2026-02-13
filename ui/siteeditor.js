@@ -144,14 +144,14 @@ var FEATURE_OVERRIDE_DEFS = [
 
 var SECTION_DEFS = [
   { id: 'bundle', label: '📦 Bundle', defaultCollapsed: true },
-  { id: 'globalOverrides', label: '🌐 Global Overrides', defaultCollapsed: true },
+  { id: 'bundleOptions', label: '⚙️ Bundle Options', defaultCollapsed: true },
   { id: 'siteOverrides', label: '🖥 Site Overrides', defaultCollapsed: true },
   { id: 'userscripts', label: '📜 User Scripts', defaultCollapsed: true },
 ];
 
 var sectionCollapsed = {
   bundle: true,
-  globalOverrides: true,
+  bundleOptions: true,
   siteOverrides: true,
 };
 
@@ -159,8 +159,8 @@ var FIELDS = [
   { name: '__details', label: 'Site Details', type: 'details' },
   { name: '__section_bundle', label: '📦 Bundle', type: 'section', sectionId: 'bundle' },
   { name: 'featureBundle', label: 'Site-specific Bundle', type: 'bundle', required: false, section: 'bundle' },
-  { name: '__section_globalOverrides', label: '🌐 Global Overrides', type: 'section', sectionId: 'globalOverrides' },
-  { name: '__bundleOptions', label: 'Bundle Options', type: 'bundleOptions', section: 'globalOverrides' },
+  { name: '__section_bundleOptions', label: '⚙️ Bundle Options', type: 'section', sectionId: 'bundleOptions' },
+  { name: '__bundleOptions', label: 'Bundle Options', type: 'bundleOptions', section: 'bundleOptions' },
   { name: '__section_siteOverrides', label: '🖥 Site Overrides', type: 'section', sectionId: 'siteOverrides' },
   { name: 'navigationMode', label: 'Navigation Mode', type: 'select', options: NAVIGATION_MODE_OPTIONS, section: 'siteOverrides' },
   { name: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_MODE_OPTIONS, section: 'siteOverrides' },
@@ -965,10 +965,10 @@ function renderFields() {
     var field = FIELDS[i];
     
     // Skip bundleOptions section and its content if bundle has no options
-    if ((field.type === 'section' && field.sectionId === 'globalOverrides' && !bundleHasOptions())) {
+    if ((field.type === 'section' && field.sectionId === 'bundleOptions' && !bundleHasOptions())) {
       continue;
     }
-    if (field.section === 'globalOverrides' && !bundleHasOptions()) {
+    if (field.section === 'bundleOptions' && !bundleHasOptions()) {
       continue;
     }
     
@@ -1045,7 +1045,7 @@ function getSectionSummary(sectionId) {
     return 'Bundle: ' + displayName;
   }
 
-  if (sectionId === 'globalOverrides') {
+  if (sectionId === 'bundleOptions') {
     var bundleOptionSummary = getBundleOptionsSummary();
     return bundleOptionSummary || 'None';
   }

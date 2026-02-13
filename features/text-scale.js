@@ -33,12 +33,20 @@ export default {
       return '';
     }
     
-    // Apply scaling only to html root element - cascades naturally to all descendants
-    // Avoid cascading multiplication by NOT setting font-size on child elements
+    // Apply scaling using rem units (always relative to html font-size, never multiplicative)
+    // Set html to base font size (16px equivalent), then scale that base
+    var baseSize = 16; // px equivalent
+    var htmlFontSize = baseSize * scale;
+    
     var css = [
       '/* TizenPortal Text Scale (' + level + ') */',
       'html {',
-      '  font-size: ' + (scale * 100) + '% !important;',
+      '  font-size: ' + htmlFontSize + 'px !important;',
+      '}',
+      '',
+      '/* Reset all elements to use rem units for clean scaling */',
+      'body, p, span, div, h1, h2, h3, h4, h5, h6, li, td, th, label, button, input, select, textarea, a {',
+      '  font-size: 1rem !important;',
       '}',
       '',
       '/* Improve readability with better spacing */',
