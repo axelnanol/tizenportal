@@ -24,12 +24,7 @@ import {
 } from '../../focus/manager.js';
 
 // Navigation helpers: standard focus and navigation utilities
-import {
-  focusElement,
-  focusFirst,
-  getFocusableElements,
-  focusRelative,
-} from '../../navigation/helpers.js';
+// Navigation helpers intentionally not used (core navigation handles focus moves)
 
 // NOTE: registerKeyHandler is accessed via window.TizenPortal.input.registerKeyHandler
 // to avoid circular dependency (handler.js -> registry.js -> this file)
@@ -431,82 +426,6 @@ export default {
     // Debug: Log all key presses handled by ABS bundle
     console.log('TizenPortal [ABS]: handleKeyDown received keyCode:', keyCode);
     
-    // ========================================================================
-    // SIDERAIL: Vertical-only navigation
-    // ========================================================================
-    // The siderail is a vertical list of navigation links.
-    // Left/Right should exit siderail, not move within it.
-    
-    if (this.isInSiderail(active)) {
-      // LEFT: Exit siderail, focus first card on bookshelf
-      if (keyCode === KEYS.LEFT) {
-        // Jump LEFT from siderail doesn't make sense - siderail is on the left
-        // So we do nothing (don't let spatial nav try to go further left)
-        return true; // Consume - nowhere to go left
-      }
-      
-      // RIGHT: Exit siderail to bookshelf
-      if (keyCode === KEYS.RIGHT) {
-        var firstCard = document.querySelector(SELECTORS.allCards);
-        if (firstCard) {
-          focusElement(firstCard);  // Use standard helper
-          return true; // Consumed
-        }
-        // Fall through to let spatial nav handle it
-      }
-      
-      // UP/DOWN: Let spatial nav handle vertical movement within siderail
-      // But restrict it to only siderail elements
-      if (keyCode === KEYS.UP || keyCode === KEYS.DOWN) {
-        var siderailContainer = document.querySelector(SELECTORS.siderail);
-        if (siderailContainer) {
-          var links = getFocusableElements(siderailContainer);
-          var offset = keyCode === KEYS.UP ? -1 : 1;
-          
-          if (focusRelative(links, active, offset)) {
-            return true; // Consumed - handled vertical navigation
-          }
-        }
-      }
-    }
-    
-    // ========================================================================
-    // BOOKSHELF: LEFT goes to siderail
-    // ========================================================================
-    if (this.isOnBookshelf() && keyCode === KEYS.LEFT) {
-      // Check if we're at the leftmost card in a row
-      var currentCard = active.closest(SELECTORS.allCards);
-      if (currentCard) {
-        var row = currentCard.closest(SELECTORS.bookshelfRow);
-        if (row) {
-          var cards = row.querySelectorAll(SELECTORS.allCards);
-          if (cards.length > 0 && cards[0] === currentCard) {
-            // We're at the leftmost card - jump to siderail
-            this.focusSiderail();
-            return true; // Consumed
-          }
-        }
-      }
-    }
-    
-    // ========================================================================
-    // PLAYER CONTROLS: Horizontal-only navigation
-    // ========================================================================
-    if (this.isInPlayer(active)) {
-      // UP/DOWN should exit player, not move within it
-      if (keyCode === KEYS.UP) {
-        // Focus something above the player (bookshelf or siderail)
-        var above = document.querySelector(SELECTORS.allCards + ', ' + SELECTORS.siderailNav);
-        if (above) {
-          focusElement(above);  // Use standard helper
-          return true;
-        }
-      }
-      if (keyCode === KEYS.DOWN) {
-        // Player is at bottom - nowhere to go
-        return true; // Consume
-      }
-    }
     
     // ========================================================================
     // MEDIA KEYS: Play/Pause/Seek when player is visible
@@ -569,22 +488,6 @@ export default {
         this.playFromFocusedCard(focusedCard);
         return true;
       }
-    }
-    
-    // ========================================================================
-    // MODAL: Trap focus within modal
-    // ========================================================================
-    var modal = document.querySelector(SELECTORS.modal + ':not([style*="display: none"])');
-    if (modal && modal.offsetParent !== null) {
-      // If focus is not inside the modal, bring it back
-      if (!modal.contains(active)) {
-        var focusables = getFocusableElements(modal);
-        if (focusables.length > 0) {
-          focusElement(focusables[0]);
-          return true; // Consume key - trapped focus in modal
-        }
-      }
-      // Focus is inside modal - let core handle navigation within it
     }
     
     // Return false to let core handle the key
@@ -1051,58 +954,7 @@ export default {
     return player && getComputedStyle(player).display !== 'none';
   },
   
-  /**
-   * Check if focus is currently in the siderail
-   * @param {Element} [el] - Element to check (defaults to activeElement)
-   * @returns {boolean}
-   */
-  isInSiderail: function(el) {
-    var active = el || document.activeElement;
-    if (!active) return false;
-    
-    var siderail = document.querySelector(SELECTORS.siderail);
-    return siderail && siderail.contains(active);
-  },
-  
-  /**
-   * Check if focus is currently in the player
-   * @param {Element} [el] - Element to check (defaults to activeElement)
-   * @returns {boolean}
-   */
-  isInPlayer: function(el) {
-    var active = el || document.activeElement;
-    if (!active) return false;
-    
-    var player = document.querySelector(SELECTORS.playerContainer);
-    return player && player.contains(active);
-  },
-  
-  /**
-   * Check if focus is currently on a bookshelf card
-   * @returns {boolean}
-   */
-  isOnBookshelf: function() {
-    var active = document.activeElement;
-    return active && active.closest(SELECTORS.bookshelfRow) !== null;
-  },
-  
-  /**
-   * Focus the first siderail link (or the active one)
-   */
-  focusSiderail: function() {
-    // Try to focus the active link first
-    var activeLink = document.querySelector(SELECTORS.siderailNav + '.nuxt-link-active');
-    if (activeLink) {
-      focusElement(activeLink);  // Use standard helper
-      return;
-    }
-    
-    // Fall back to first link
-    var siderailContainer = document.querySelector(SELECTORS.siderail);
-    if (siderailContainer) {
-      focusFirst(siderailContainer);  // Use standard helper
-    }
-  },
+  // Navigation helpers removed; core navigation handles focus movement.
   
   /**
    * Toggle playback in the media player

@@ -852,47 +852,14 @@ body {
 
 /* ==========================================================================
    FOCUS INDICATORS
-   Strong, visible focus styling for TV remote navigation.
-   Using ABS accent color (#1ad691) for consistency.
-   
-   NOTE: Card focus styles ([data-tp-card]:focus) are now handled by core.
-   This section only contains non-card element focus styles.
+   Removed in favor of core focus styling.
    ========================================================================== */
 
-/* Global focus mode overrides (set by core) */
-body.tp-focus-mode-on *:focus {
-  outline-color: #00a8ff !important;
-}
-
-body.tp-focus-mode-high *:focus {
-  outline-color: #fcd34d !important;
-}
-
-body.tp-focus-mode-off *:focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-/* Siderail navigation links */
-[role="toolbar"][aria-orientation="vertical"] a:focus,
-#siderail-buttons-container a:focus {
-  outline: 4px solid #1ad691 !important;
-  outline-offset: 2px !important;
-  background-color: rgba(26, 214, 145, 0.15) !important;
-}
-
-/* Ensure siderail has padding so outline is visible */
+/* Siderail layout padding (kept for visual spacing, independent of focus) */
 [role="toolbar"][aria-orientation="vertical"],
 #siderail-buttons-container {
   padding: 8px !important;
   overflow: visible !important;
-}
-
-/* Appbar elements */
-#appbar a:focus,
-#appbar button:focus {
-  outline: 3px solid #1ad691 !important;
-  outline-offset: 2px !important;
 }
 
 /* ========================================================================
@@ -934,43 +901,7 @@ body.tp-focus-mode-off *:focus {
   pointer-events: auto !important;
 }
 
-/* Focus style for buttons inside entered card */
-.tp-card-entered button:focus,
-.tp-card-entered [role="button"]:focus,
-[data-tp-entered="true"] button:focus,
-[data-tp-entered="true"] [role="button"]:focus {
-  outline: 3px solid #fff !important;
-  outline-offset: 2px !important;
-  background-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* Dropdown menu items */
-[role="menuitem"]:focus,
-[role="menu"] li:focus {
-  outline: 3px solid #1ad691 !important;
-  outline-offset: -3px !important;
-  background-color: rgba(26, 214, 145, 0.2) !important;
-}
-
-/* Generic buttons (non-card) */
-button:focus:not([aria-hidden="true"]):not([data-tp-card] button) {
-  outline: 3px solid #1ad691 !important;
-  outline-offset: 2px !important;
-}
-
-/* Form inputs */
-input:focus,
-select:focus,
-textarea:focus {
-  outline: 3px solid #1ad691 !important;
-  border-color: #1ad691 !important;
-}
-
-/* Links in content areas (non-card) */
-a[href]:focus:not(#appbar a):not([role="toolbar"] a):not([data-tp-card]) {
-  outline: 2px solid #1ad691 !important;
-  outline-offset: 2px !important;
-}
+/* Focus styles are provided by core; keep entered-card visibility only. */
 
 /* ==========================================================================
    TV-FRIENDLY TEXT INPUT WRAPPER
@@ -1028,11 +959,7 @@ a[href]:focus:not(#appbar a):not([role="toolbar"] a):not([data-tp-card]) {
   display: block !important;
 }
 
-/* Wrapper focus state */
-.tp-input-wrapper:focus {
-  outline: 3px solid #1ad691 !important;
-  outline-offset: 2px !important;
-}
+/* Wrapper focus state handled by core */
 
 /* Hide the hint text on input wrappers - not needed on TV */
 .tp-input-wrapper::after {
