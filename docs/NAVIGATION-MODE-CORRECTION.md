@@ -1,5 +1,7 @@
 # Navigation Mode Correction Summary
 
+> **Note:** This is a development artifact documenting a correction made to the navigation mode system. For user-facing documentation, see [Navigation-Mode-Configuration.md](Navigation-Mode-Configuration.md).
+
 ## The Misunderstanding
 
 There was a critical misunderstanding about the three navigation modes and their intended usage.

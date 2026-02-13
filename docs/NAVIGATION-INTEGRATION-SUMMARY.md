@@ -1,5 +1,7 @@
 # Navigation Mode Integration - Complete Implementation Summary
 
+> **Note:** This is a development artifact documenting the implementation of the navigation mode system. For user-facing documentation, see [Navigation-Mode-Configuration.md](Navigation-Mode-Configuration.md).
+
 This document provides a complete summary of the navigation mode integration work completed for TizenPortal.
 
 ## Problem Statement

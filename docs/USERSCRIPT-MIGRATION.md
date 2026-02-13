@@ -1,5 +1,7 @@
 # Userscript Architecture Migration
 
+> **Note:** This is a development artifact documenting the migration to the registry-based userscript system. For current userscript documentation, see the [User Guide](User-Guide.md#userscripts) and [API Reference](Api-Reference.md).
+
 ## Overview
 
 This document describes the migration from bundle-based userscripts to a registry-based system completed in the PR for issue "Change the approach to userscripts".

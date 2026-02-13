@@ -1,5 +1,7 @@
 # Navigation Backward Compatibility Summary
 
+> **Note:** This is a development artifact documenting backward compatibility work for the navigation system. For current navigation documentation, see [Navigation-Mode-Configuration.md](Navigation-Mode-Configuration.md) and [Bundle-Navigation-Guide.md](Bundle-Navigation-Guide.md).
+
 This document summarizes the work completed to maintain backward compatibility with the existing spatial navigation polyfill while standardizing navigation methods across bundles.
 
 ## Problem Statement

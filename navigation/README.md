@@ -1,5 +1,7 @@
 # Spatial Navigation Library
 
+> **Note:** This document provides detailed documentation for the spatial-navigation.js library used by TizenPortal. For TizenPortal-specific navigation configuration, see [docs/Navigation-Mode-Configuration.md](../docs/Navigation-Mode-Configuration.md).
+
 A deterministic, geometry-based spatial navigation library for TV UIs, set-top boxes, and keyboard/remote interfaces.
 
 ## 📋 Table of Contents

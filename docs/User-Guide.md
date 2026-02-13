@@ -309,7 +309,7 @@ Some bundles expose per-site options in the editor. For example, **Adblock** sup
 
 ## Userscripts
 
-TizenPortal includes a powerful userscript system with 20 pre-built scripts organized by category. These scripts can be enabled globally or per-site to enhance your TV browsing experience.
+TizenPortal includes a powerful userscript system with 18 pre-built scripts organized by category. These scripts can be enabled globally or per-site to enhance your TV browsing experience.
 
 ### What are Userscripts?
 
@@ -323,20 +323,18 @@ Userscripts are custom JavaScript code that runs when a site loads. They can:
 
 ### Pre-Built Userscripts
 
-TizenPortal comes with 20 carefully crafted userscripts organized into categories:
+TizenPortal comes with 18 carefully crafted userscripts organized into categories:
 
-**♿ Accessibility (4 scripts)**
-- TV Readability Booster (enabled by default)
+**♿ Accessibility (2 scripts)**
 - Subtitle Size Enhancer
 - Keyboard Shortcuts Overlay
-- And more...
 
-**📖 Reading (6 scripts)**
+**📖 Reading (5 scripts)**
 - Dark Reading Mode
 - Light Reading Mode
 - Smart Dark Mode
 - Page Simplifier
-- And more...
+- Grayscale Reading Mode
 
 **🎬 Video (4 scripts)**
 - Video Speed Controller
@@ -344,11 +342,12 @@ TizenPortal comes with 20 carefully crafted userscripts organized into categorie
 - Video Auto-Pause on Blur
 - YouTube TV Enhancements
 
-**🧭 Navigation (4 scripts)**
+**🧭 Navigation (5 scripts)**
 - Smart Auto-Scroll
 - Focus Trap Escape
-- Image Focus Zoom
 - Remove Sticky Headers
+- Image Focus Zoom
+- Link Target Control
 
 **🔒 Privacy (2 scripts)**
 - Cookie Consent Auto-Closer

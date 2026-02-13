@@ -1,5 +1,7 @@
 # Migration Guide: Spatial Navigation Library
 
+> **Note:** This guide is for developers migrating from other spatial navigation systems to the library used in TizenPortal. For TizenPortal-specific configuration, see [docs/Navigation-Mode-Configuration.md](../docs/Navigation-Mode-Configuration.md).
+
 This guide helps you migrate to the new dual-mode spatial navigation library.
 
 ## Table of Contents

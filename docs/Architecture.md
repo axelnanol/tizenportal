@@ -227,10 +227,10 @@ export default {
 ```
 
 **Categories:**
-- `accessibility` - ♿ Accessibility features (4 scripts)
-- `reading` - 📖 Reading enhancements (6 scripts)
+- `accessibility` - ♿ Accessibility features (2 scripts)
+- `reading` - 📖 Reading enhancements (5 scripts)
 - `video` - 🎬 Video controls (4 scripts)
-- `navigation` - 🧭 Navigation helpers (4 scripts)
+- `navigation` - 🧭 Navigation helpers (5 scripts)
 - `privacy` - 🔒 Privacy tools (2 scripts)
 
 **Userscript Interface:**

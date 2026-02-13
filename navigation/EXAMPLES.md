@@ -1,5 +1,7 @@
 # Examples: Spatial Navigation Library
 
+> **Note:** This document provides examples for the spatial-navigation.js library. For TizenPortal-specific examples, see [docs/Bundle-Navigation-Guide.md](../docs/Bundle-Navigation-Guide.md).
+
 Practical examples for common use cases.
 
 ## Table of Contents
