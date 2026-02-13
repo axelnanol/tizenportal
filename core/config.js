@@ -94,6 +94,7 @@ function loadConfig() {
     var stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       configCache = JSON.parse(stored);
+      console.log('loadConfig() - loaded from localStorage, tp_features:', configCache.tp_features);
       // Merge with defaults for any missing keys
       for (var key in DEFAULT_CONFIG) {
         if (DEFAULT_CONFIG.hasOwnProperty(key) && !configCache.hasOwnProperty(key)) {
@@ -151,7 +152,11 @@ export function configInit() {
  */
 export function configRead(key) {
   var config = loadConfig();
-  return config.hasOwnProperty(key) ? config[key] : undefined;
+  var value = config.hasOwnProperty(key) ? config[key] : undefined;
+  if (key === 'tp_features') {
+    console.log('configRead(tp_features):', value);
+  }
+  return value;
 }
 
 /**
@@ -162,6 +167,13 @@ export function configRead(key) {
 export function configWrite(key, value) {
   var config = loadConfig();
   var oldValue = config[key];
+
+  if (key === 'tp_features') {
+    console.log('configWrite(tp_features):', {
+      newValue: value,
+      oldValue: oldValue
+    });
+  }
 
   // For objects, always save (don't rely on reference equality)
   // This prevents bugs where object properties are modified in-place

@@ -63,7 +63,10 @@ function getConfig() {
   }
   
   var stored = TizenPortal.config.get('tp_features');
+  console.log('getConfig() - stored from localStorage:', stored);
+  
   if (!stored) {
+    console.log('getConfig() - no stored config, using defaults');
     stored = getDefaults();
     TizenPortal.config.set('tp_features', stored);
   } else {
@@ -72,11 +75,13 @@ function getConfig() {
     var needsUpdate = false;
     for (var key in defaults) {
       if (!(key in stored)) {
+        console.log('getConfig() - adding missing key from defaults:', key, '=', defaults[key]);
         stored[key] = defaults[key];
         needsUpdate = true;
       }
     }
     if (needsUpdate) {
+      console.log('getConfig() - saving updated config with new defaults');
       TizenPortal.config.set('tp_features', stored);
     }
   }
