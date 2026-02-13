@@ -29,6 +29,22 @@ var SPEED_MAP = {
   slow: 400,
 };
 
+/**
+ * Max number of focusable elements before disabling transitions
+ * Large DOMs can cause heavy style recalculation.
+ */
+var MAX_FOCUSABLES = 250;
+
+function countFocusableElements(doc) {
+  if (!doc || !doc.querySelectorAll) return 0;
+  try {
+    var selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    return doc.querySelectorAll(selector).length;
+  } catch (err) {
+    return 0;
+  }
+}
+
 export default {
   name: 'focusTransitions',
   displayName: 'Focus Transitions',
@@ -223,6 +239,18 @@ export default {
     currentSpeed = speed;
     
     this.remove(doc);
+
+    if (mode !== 'off') {
+      var focusableCount = countFocusableElements(doc);
+      if (focusableCount > MAX_FOCUSABLES) {
+        mode = 'off';
+        if (window.TizenPortal && window.TizenPortal.log) {
+          window.TizenPortal.log('Focus transitions disabled (too many focusables: ' + focusableCount + ')');
+        } else {
+          console.log('TizenPortal [FocusTransitions]: Disabled, focusable count=' + focusableCount);
+        }
+      }
+    }
     
     if (mode === 'off') {
       return;

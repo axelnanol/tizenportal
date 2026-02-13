@@ -198,6 +198,7 @@ var LAST_CARD_KEY = 'tp_last_card';
  */
 var textInputObserver = null;
 var textInputInterval = null;
+var userscriptUrlWatcher = null;
 
 /**
  * Selector for text inputs to wrap (exclude TizenPortal UI inputs)
@@ -216,6 +217,8 @@ function resolveFocusOutlineMode(card, bundle) {
   // Card override takes highest priority
   if (card && card.focusOutlineMode) {
     mode = card.focusOutlineMode;
+  } else if (card && card.hasOwnProperty('focusStyling') && card.focusStyling === false) {
+    mode = 'off';
   } else if (features.focusStyling === false) {
     mode = 'off';
   }
@@ -262,6 +265,7 @@ function getCardOverrideValue(card, key) {
 function buildFeatureOverrides(card) {
   var overrides = {};
   var keys = [
+    'focusStyling',
     'tabindexInjection',
     'scrollIntoView',
     'safeArea',
@@ -269,6 +273,10 @@ function buildFeatureOverrides(card) {
     'cssReset',
     'hideScrollbars',
     'wrapTextInputs',
+    'focusTransitions',
+    'focusTransitionMode',
+    'focusTransitionSpeed',
+    'navigationFix',
   ];
 
   for (var i = 0; i < keys.length; i++) {
@@ -423,6 +431,7 @@ function saveLastCard(card) {
       featureBundle: featureBundle || 'default',
       viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
       focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
+      focusStyling: card.hasOwnProperty('focusStyling') ? card.focusStyling : null,
       userAgent: resolvedUserAgent,
       tabindexInjection: card.hasOwnProperty('tabindexInjection') ? card.tabindexInjection : null,
       scrollIntoView: card.hasOwnProperty('scrollIntoView') ? card.scrollIntoView : null,
@@ -431,6 +440,10 @@ function saveLastCard(card) {
       cssReset: card.hasOwnProperty('cssReset') ? card.cssReset : null,
       hideScrollbars: card.hasOwnProperty('hideScrollbars') ? card.hideScrollbars : null,
       wrapTextInputs: card.hasOwnProperty('wrapTextInputs') ? card.wrapTextInputs : null,
+      focusTransitions: card.hasOwnProperty('focusTransitions') ? card.focusTransitions : null,
+      focusTransitionMode: card.hasOwnProperty('focusTransitionMode') ? card.focusTransitionMode : null,
+      focusTransitionSpeed: card.hasOwnProperty('focusTransitionSpeed') ? card.focusTransitionSpeed : null,
+      navigationFix: card.hasOwnProperty('navigationFix') ? card.navigationFix : null,
       icon: card.icon || null,
       bundleOptions: card.bundleOptions || {},
       bundleOptionData: card.bundleOptionData || {},
@@ -971,6 +984,9 @@ async function initTargetSite() {
   tpHud('Applying bundle...');
   await applyBundleToPage(matchedCard);
 
+  // Re-apply userscripts when SPA navigation changes the URL
+  startUserscriptUrlWatcher();
+
   // If we started without a direct payload, poll briefly for a late payload
   scheduleLatePayloadRetry(directPayloadFound, matchedCard);
 
@@ -995,6 +1011,38 @@ async function initTargetSite() {
   // Create color button hints
   createSiteHints();
   log('Color hints created');
+}
+
+/**
+ * Re-apply userscripts when the URL changes on SPA navigations
+ */
+function startUserscriptUrlWatcher() {
+  if (userscriptUrlWatcher) return;
+
+  var lastUrl = window.location.href;
+
+  userscriptUrlWatcher = setInterval(function() {
+    try {
+      var currentUrl = window.location.href;
+      if (currentUrl === lastUrl) return;
+      lastUrl = currentUrl;
+
+      if (state.currentCard) {
+        state.currentCard.url = currentUrl;
+        saveLastCard(state.currentCard);
+      }
+
+      try {
+        var bundle = getBundle(state.currentBundle || 'default');
+        userscriptEngine.applyUserscripts(state.currentCard, bundle);
+        log('Userscripts re-applied after URL change');
+      } catch (err) {
+        warn('Userscripts re-apply failed: ' + err.message);
+      }
+    } catch (err2) {
+      // Ignore
+    }
+  }, 500);
 }
 
 /**
@@ -1038,6 +1086,11 @@ function getCardFromHash() {
       cssReset: payload.hasOwnProperty('cssReset') ? payload.cssReset : null,
       hideScrollbars: payload.hasOwnProperty('hideScrollbars') ? payload.hideScrollbars : null,
       wrapTextInputs: payload.hasOwnProperty('wrapTextInputs') ? payload.wrapTextInputs : null,
+      focusStyling: payload.hasOwnProperty('focusStyling') ? payload.focusStyling : null,
+      focusTransitions: payload.hasOwnProperty('focusTransitions') ? payload.focusTransitions : null,
+      focusTransitionMode: payload.focusTransitionMode || null,
+      focusTransitionSpeed: payload.focusTransitionSpeed || null,
+      navigationFix: payload.hasOwnProperty('navigationFix') ? payload.navigationFix : null,
       bundleOptions: payload.bundleOptions || {},
       bundleOptionData: payload.bundleOptionData || {},
       userscriptToggles: payload.userscriptToggles || {},
@@ -1097,6 +1150,10 @@ function normalizePayload(payload) {
     normalized.focusOutlineMode = payload.focusOutlineMode;
   }
 
+  if (typeof payload.focusStyling === 'boolean') {
+    normalized.focusStyling = payload.focusStyling;
+  }
+
   if (typeof payload.tabindexInjection === 'boolean') normalized.tabindexInjection = payload.tabindexInjection;
   if (typeof payload.scrollIntoView === 'boolean') normalized.scrollIntoView = payload.scrollIntoView;
   if (typeof payload.safeArea === 'boolean') normalized.safeArea = payload.safeArea;
@@ -1104,6 +1161,10 @@ function normalizePayload(payload) {
   if (typeof payload.cssReset === 'boolean') normalized.cssReset = payload.cssReset;
   if (typeof payload.hideScrollbars === 'boolean') normalized.hideScrollbars = payload.hideScrollbars;
   if (typeof payload.wrapTextInputs === 'boolean') normalized.wrapTextInputs = payload.wrapTextInputs;
+  if (typeof payload.focusTransitions === 'boolean') normalized.focusTransitions = payload.focusTransitions;
+  if (typeof payload.focusTransitionMode === 'string') normalized.focusTransitionMode = payload.focusTransitionMode;
+  if (typeof payload.focusTransitionSpeed === 'string') normalized.focusTransitionSpeed = payload.focusTransitionSpeed;
+  if (typeof payload.navigationFix === 'boolean') normalized.navigationFix = payload.navigationFix;
 
   if (payload.bundleOptions && typeof payload.bundleOptions === 'object' && !Array.isArray(payload.bundleOptions)) {
     normalized.bundleOptions = payload.bundleOptions;
@@ -1170,6 +1231,11 @@ function getCardFromQuery() {
       cssReset: payload.hasOwnProperty('cssReset') ? payload.cssReset : null,
       hideScrollbars: payload.hasOwnProperty('hideScrollbars') ? payload.hideScrollbars : null,
       wrapTextInputs: payload.hasOwnProperty('wrapTextInputs') ? payload.wrapTextInputs : null,
+      focusStyling: payload.hasOwnProperty('focusStyling') ? payload.focusStyling : null,
+      focusTransitions: payload.hasOwnProperty('focusTransitions') ? payload.focusTransitions : null,
+      focusTransitionMode: payload.focusTransitionMode || null,
+      focusTransitionSpeed: payload.focusTransitionSpeed || null,
+      navigationFix: payload.hasOwnProperty('navigationFix') ? payload.navigationFix : null,
       bundleOptions: payload.bundleOptions || {},
       bundleOptionData: payload.bundleOptionData || {},
       userscriptToggles: payload.userscriptToggles || {},
@@ -1975,6 +2041,18 @@ function loadSite(card) {
       ua: resolvedUa,
       viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
       focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
+      tabindexInjection: card.hasOwnProperty('tabindexInjection') ? card.tabindexInjection : null,
+      scrollIntoView: card.hasOwnProperty('scrollIntoView') ? card.scrollIntoView : null,
+      safeArea: card.hasOwnProperty('safeArea') ? card.safeArea : null,
+      gpuHints: card.hasOwnProperty('gpuHints') ? card.gpuHints : null,
+      cssReset: card.hasOwnProperty('cssReset') ? card.cssReset : null,
+      hideScrollbars: card.hasOwnProperty('hideScrollbars') ? card.hideScrollbars : null,
+      wrapTextInputs: card.hasOwnProperty('wrapTextInputs') ? card.wrapTextInputs : null,
+      focusStyling: card.hasOwnProperty('focusStyling') ? card.focusStyling : null,
+      focusTransitions: card.hasOwnProperty('focusTransitions') ? card.focusTransitions : null,
+      focusTransitionMode: card.focusTransitionMode || null,
+      focusTransitionSpeed: card.focusTransitionSpeed || null,
+      navigationFix: card.hasOwnProperty('navigationFix') ? card.navigationFix : null,
       bundleOptions: card.bundleOptions || {},
       bundleOptionData: card.bundleOptionData || {},
       userscriptToggles: card.userscriptToggles || {},

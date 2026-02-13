@@ -64,6 +64,21 @@ var FOCUS_OUTLINE_OPTIONS = [
   { value: 'off', label: 'Off' },
 ];
 
+var FOCUS_TRANSITION_MODE_OPTIONS = [
+  { value: null, label: 'Global (default)' },
+  { value: 'slide', label: 'Slide (Directional)' },
+  { value: 'scale', label: 'Scale (Grow)' },
+  { value: 'glow', label: 'Glow (Pulse)' },
+  { value: 'off', label: 'Off' },
+];
+
+var FOCUS_TRANSITION_SPEED_OPTIONS = [
+  { value: null, label: 'Global (default)' },
+  { value: 'fast', label: 'Fast (150ms)' },
+  { value: 'medium', label: 'Medium (250ms)' },
+  { value: 'slow', label: 'Slow (400ms)' },
+];
+
 var UA_MODE_OPTIONS = [
   { value: null, label: 'Global (default)' },
   { value: 'tizen', label: 'Tizen TV' },
@@ -84,10 +99,30 @@ var FEATURE_TOGGLE_OPTIONS = [
   { value: false, label: 'Off' },
 ];
 
+var FEATURE_CATEGORIES = [
+  { id: 'navigation', label: '🧭 Navigation' },
+  { id: 'display', label: '🎨 Display' },
+  { id: 'input', label: '⌨️ Input' },
+  { id: 'performance', label: '⚡ Performance' },
+];
+
+var FEATURE_OVERRIDE_DEFS = [
+  { key: 'tabindexInjection', label: 'Auto-focusable Elements', category: 'navigation' },
+  { key: 'scrollIntoView', label: 'Scroll-into-view on Focus', category: 'navigation' },
+  { key: 'navigationFix', label: 'Navigation Fixes', category: 'navigation' },
+  { key: 'focusTransitions', label: 'Focus Transitions', category: 'display' },
+  { key: 'safeArea', label: 'TV Safe Area (5% inset)', category: 'display' },
+  { key: 'cssReset', label: 'CSS Normalization', category: 'display' },
+  { key: 'hideScrollbars', label: 'Hide Scrollbars', category: 'display' },
+  { key: 'wrapTextInputs', label: 'Protect Text Inputs (TV Keyboard)', category: 'input' },
+  { key: 'gpuHints', label: 'GPU Acceleration Hints', category: 'performance' },
+];
+
 var SECTION_DEFS = [
   { id: 'bundle', label: 'Bundle', defaultCollapsed: true },
   { id: 'bundleOptions', label: 'Bundle Options', defaultCollapsed: true },
   { id: 'options', label: 'Site Options', defaultCollapsed: true },
+  { id: 'features', label: 'Site Features', defaultCollapsed: true },
   { id: 'userscripts', label: 'User Scripts', defaultCollapsed: true },
 ];
 
@@ -95,6 +130,7 @@ var sectionCollapsed = {
   bundle: true,
   bundleOptions: true,
   options: true,
+  features: true,
 };
 
 var FIELDS = [
@@ -107,14 +143,11 @@ var FIELDS = [
   { name: 'navigationMode', label: 'Navigation Mode', type: 'select', options: NAVIGATION_MODE_OPTIONS, section: 'options' },
   { name: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_MODE_OPTIONS, section: 'options' },
   { name: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS, section: 'options' },
+  { name: 'focusTransitionMode', label: 'Focus Transition Style', type: 'select', options: FOCUS_TRANSITION_MODE_OPTIONS, section: 'options' },
+  { name: 'focusTransitionSpeed', label: 'Focus Transition Speed', type: 'select', options: FOCUS_TRANSITION_SPEED_OPTIONS, section: 'options' },
   { name: 'userAgent', label: 'User Agent Mode', type: 'select', options: UA_MODE_OPTIONS, section: 'options' },
-  { name: 'tabindexInjection', label: 'Auto-focusable Elements', type: 'select', options: FEATURE_TOGGLE_OPTIONS, section: 'options' },
-  { name: 'scrollIntoView', label: 'Scroll-into-view on Focus', type: 'select', options: FEATURE_TOGGLE_OPTIONS, section: 'options' },
-  { name: 'safeArea', label: 'TV Safe Area (5% inset)', type: 'select', options: FEATURE_TOGGLE_OPTIONS, section: 'options' },
-  { name: 'gpuHints', label: 'GPU Acceleration Hints', type: 'select', options: FEATURE_TOGGLE_OPTIONS, section: 'options' },
-  { name: 'cssReset', label: 'CSS Normalization', type: 'select', options: FEATURE_TOGGLE_OPTIONS, section: 'options' },
-  { name: 'hideScrollbars', label: 'Hide Scrollbars', type: 'select', options: FEATURE_TOGGLE_OPTIONS, section: 'options' },
-  { name: 'wrapTextInputs', label: 'Protect Text Inputs (TV Keyboard)', type: 'select', options: FEATURE_TOGGLE_OPTIONS, section: 'options' },
+  { name: '__section_features', label: 'Site Features', type: 'section', sectionId: 'features' },
+  { name: '__features', label: 'Site Features', type: 'featureOverrides', section: 'features' },
   { name: '__section_userscripts', label: 'User Scripts', type: 'section', sectionId: 'userscripts' },
   { name: '__userscripts', label: 'User Scripts', type: 'userscripts', section: 'userscripts' },
 ];
@@ -950,6 +983,8 @@ function renderFields() {
       html += renderBundleField(field, value);
     } else if (field.type === 'select') {
       html += renderSelectField(field, rawValue);
+    } else if (field.type === 'featureOverrides') {
+      html += renderFeatureOverridesField();
     } else if (field.type === 'userscripts') {
       html += renderUserscriptsField();
     } else if (field.type === 'bundleOptions') {
@@ -1008,15 +1043,19 @@ function getSectionSummary(sectionId) {
   if (sectionId === 'options') {
     var viewport = getOptionLabel(VIEWPORT_MODE_OPTIONS, state.card.viewportMode);
     var focus = getOptionLabel(FOCUS_OUTLINE_OPTIONS, state.card.focusOutlineMode);
+    var transition = getOptionLabel(FOCUS_TRANSITION_MODE_OPTIONS, state.card.focusTransitionMode);
+    var transitionSpeed = getOptionLabel(FOCUS_TRANSITION_SPEED_OPTIONS, state.card.focusTransitionSpeed);
     var ua = getOptionLabel(UA_MODE_OPTIONS, state.card.userAgent);
-    var safeArea = getOptionLabel(FEATURE_TOGGLE_OPTIONS, state.card.safeArea);
-    var scroll = getOptionLabel(FEATURE_TOGGLE_OPTIONS, state.card.scrollIntoView);
-    return 'Viewport: ' + viewport + ' • Focus: ' + focus + ' • UA: ' + ua + ' • Safe Area: ' + safeArea + ' • Scroll: ' + scroll;
+    return 'Viewport: ' + viewport + ' • Focus: ' + focus + ' • Transition: ' + transition + ' • Speed: ' + transitionSpeed + ' • UA: ' + ua;
   }
 
   if (sectionId === 'bundleOptions') {
     var bundleOptionSummary = getBundleOptionsSummary();
     return bundleOptionSummary || 'None';
+  }
+
+  if (sectionId === 'features') {
+    return getFeatureOverridesSummary();
   }
 
   if (sectionId === 'userscripts') {
@@ -1145,6 +1184,70 @@ function getUserscriptsSummary() {
 
   if (!globalScripts.length) return 'None';
   return 'Site: ' + siteOn + '/' + globalScripts.length + ' on';
+}
+
+function getGlobalFeaturesConfig() {
+  if (window.TizenPortal && window.TizenPortal.config) {
+    return TizenPortal.config.get('tp_features') || {};
+  }
+  return {};
+}
+
+function getFeatureOverridesSummary() {
+  if (!state.card) return 'None';
+  var count = 0;
+  for (var i = 0; i < FEATURE_OVERRIDE_DEFS.length; i++) {
+    var key = FEATURE_OVERRIDE_DEFS[i].key;
+    if (state.card.hasOwnProperty(key) && state.card[key] !== null && state.card[key] !== undefined) {
+      count++;
+    }
+  }
+  return count ? (count + ' override' + (count === 1 ? '' : 's')) : 'None';
+}
+
+function renderFeatureOverridesField() {
+  var html = '<div class="tp-field-section">';
+  var globalFeatures = getGlobalFeaturesConfig();
+
+  for (var c = 0; c < FEATURE_CATEGORIES.length; c++) {
+    var category = FEATURE_CATEGORIES[c];
+    html += '<div class="tp-field-section-label">' + category.label + '</div>';
+
+    for (var i = 0; i < FEATURE_OVERRIDE_DEFS.length; i++) {
+      var def = FEATURE_OVERRIDE_DEFS[i];
+      if (def.category !== category.id) continue;
+
+      var hasOverride = state.card && state.card.hasOwnProperty(def.key);
+      var globalEnabled = globalFeatures[def.key] !== false;
+      var effectiveEnabled = hasOverride ? (state.card[def.key] === true) : globalEnabled;
+
+      var statusText = '';
+      if (hasOverride) {
+        statusText = effectiveEnabled ? '✓ Enabled (site override)' : '○ Disabled (site override)';
+      } else {
+        statusText = globalEnabled ? '✓ Enabled (global)' : '○ Disabled (global)';
+      }
+
+      html += '' +
+        '<div class="tp-userscript-line tp-feature-row" data-feature-key="' + def.key + '" tabindex="0">' +
+          '<div class="tp-userscript-label">' + escapeHtml(def.label) + '</div>' +
+          '<div class="tp-userscript-status">' + statusText + '</div>' +
+          '<div class="tp-userscript-actions">' +
+            '<button type="button" class="tp-userscript-btn tp-feature-btn" data-feature-action="toggle" data-feature-key="' + def.key + '" tabindex="0">' +
+              (hasOverride ? 'Reset to Global' : (globalEnabled ? 'Disable for Site' : 'Enable for Site')) +
+            '</button>' +
+          '</div>' +
+        '</div>';
+    }
+  }
+
+  html += '<div class="tp-field-row" style="margin-top: 12px; color: #8ab4f8; font-size: 14px;" tabindex="-1">' +
+    '<div class="tp-field-label">💡 Tip</div>' +
+    '<div class="tp-field-value">Global defaults live in Preferences. Use site overrides here when a site needs different behavior.</div>' +
+  '</div>';
+
+  html += '</div>';
+  return html;
 }
 
 /**
@@ -1479,7 +1582,11 @@ function setupFieldListeners(container) {
         e.preventDefault();
         e.stopPropagation();
       }
-      handleUserscriptAction(this);
+      if (this.classList.contains('tp-feature-btn')) {
+        handleFeatureOverrideAction(this);
+      } else {
+        handleUserscriptAction(this);
+      }
     });
     userscriptActions[ua].addEventListener('keydown', function(e) {
       if (handleUserscriptButtonKeyDown(e, this)) {
@@ -1488,7 +1595,11 @@ function setupFieldListeners(container) {
       if (e.keyCode === 13) {
         e.preventDefault();
         e.stopPropagation();
-        handleUserscriptAction(this);
+        if (this.classList.contains('tp-feature-btn')) {
+          handleFeatureOverrideAction(this);
+        } else {
+          handleUserscriptAction(this);
+        }
       }
     });
   }
@@ -1865,6 +1976,37 @@ function handleUserscriptAction(btn) {
     // Refocus the button
     setTimeout(function() {
       var updatedBtn = document.querySelector('.tp-userscript-btn[data-userscript-id="' + scriptId + '"]');
+      if (updatedBtn) {
+        updatedBtn.focus();
+      }
+    }, 50);
+  }
+}
+
+function handleFeatureOverrideAction(btn) {
+  if (!btn || !state.card) return;
+  var action = btn.dataset.featureAction || '';
+  var key = btn.dataset.featureKey || '';
+  if (!key) return;
+
+  if (action === 'toggle') {
+    var globalConfig = getGlobalFeaturesConfig();
+    var globalEnabled = globalConfig[key] !== false;
+    var hasOverride = state.card.hasOwnProperty(key);
+
+    if (hasOverride) {
+      delete state.card[key];
+      showEditorToast('Reset to global setting');
+    } else {
+      state.card[key] = !globalEnabled;
+      showEditorToast(globalEnabled ? 'Disabled for this site' : 'Enabled for this site');
+    }
+
+    renderFields();
+    autoSaveCard('feature:toggle');
+
+    setTimeout(function() {
+      var updatedBtn = document.querySelector('.tp-feature-btn[data-feature-key="' + key + '"]');
       if (updatedBtn) {
         updatedBtn.focus();
       }

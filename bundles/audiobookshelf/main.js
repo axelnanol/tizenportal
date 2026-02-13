@@ -108,8 +108,8 @@ var SELECTORS = {
   playerChapters: '#mediaPlayerContainer [class*="chapter"]',
   
   // Appbar (top nav) - no :has() in Chrome 47
-  appbarButtons: '#appbar button, #appbar a[href]',
-  appbarSearch: '#appbar input[type="search"], #appbar input[placeholder*="Search"]',
+  appbarButtons: '#appbar button, #appbar a[href], #appbar [role="button"], #appbar .icon-btn, #appbar .ui-icon-btn',
+  appbarSearch: '#appbar input[type="search"], #appbar input[placeholder*="Search"], #appbar input[type="text"]',
   appbarLibrarySelect: '#appbar [class*="library-select"], #appbar button',
   appbarUserMenu: '#appbar [class*="user-menu"], #appbar a[href*="/account"]',
   
@@ -632,6 +632,17 @@ export default {
             !appEl.closest('[style*="display: none"]') &&
             appEl.getAttribute('aria-hidden') !== 'true') {
           appEl.setAttribute('tabindex', '0');
+          count++;
+        }
+      }
+
+      // Ensure search input is explicitly focusable
+      var appbarSearch = document.querySelectorAll(SELECTORS.appbarSearch);
+      for (var as = 0; as < appbarSearch.length; as++) {
+        var searchEl = appbarSearch[as];
+        if (searchEl.getAttribute('tabindex') !== '0' &&
+            searchEl.getAttribute('aria-hidden') !== 'true') {
+          searchEl.setAttribute('tabindex', '0');
           count++;
         }
       }
