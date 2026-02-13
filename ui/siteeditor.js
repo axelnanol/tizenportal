@@ -1814,6 +1814,62 @@ function setupFieldListeners(container) {
     });
   }
 
+  // Global override rows - similar to userscript rows
+  var globalOverrideRows = container.querySelectorAll('.tp-global-override-row');
+  for (var gor = 0; gor < globalOverrideRows.length; gor++) {
+    globalOverrideRows[gor].addEventListener('keydown', function(e) {
+      if (e.keyCode === 38 || e.keyCode === 40) {
+        if (moveFocusByRow(this, e.keyCode === 40 ? 'down' : 'up')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (e.keyCode === 39) {
+        e.preventDefault();
+        e.stopPropagation();
+        focusInlineRowButton(this);
+        return;
+      }
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        e.stopPropagation();
+        focusInlineRowButton(this);
+      }
+    });
+  }
+
+  // Site override rows - similar to userscript rows
+  var siteOverrideRows = container.querySelectorAll('.tp-site-override-row');
+  for (var sor = 0; sor < siteOverrideRows.length; sor++) {
+    siteOverrideRows[sor].addEventListener('keydown', function(e) {
+      if (e.keyCode === 38 || e.keyCode === 40) {
+        if (moveFocusByRow(this, e.keyCode === 40 ? 'down' : 'up')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      if (e.keyCode === 39) {
+        e.preventDefault();
+        e.stopPropagation();
+        focusInlineRowButton(this);
+        return;
+      }
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        e.stopPropagation();
+        focusInlineRowButton(this);
+      }
+    });
+  }
+
   // Bundle options - click AND keydown for Enter
   var bundleOptions = container.querySelectorAll('.tp-bundle-option');
   for (var j = 0; j < bundleOptions.length; j++) {
