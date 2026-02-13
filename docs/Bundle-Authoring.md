@@ -12,6 +12,7 @@
 2. [Bundle Structure](#2-bundle-structure)
 3. [Creating a Bundle](#3-creating-a-bundle)
 4. [Lifecycle Hooks](#4-lifecycle-hooks)
+   - [Cleanup Best Practices](#41-cleanup-best-practices--critical)
 5. [Using Core Utilities](#5-using-core-utilities)
 6. [CSS Guidelines](#6-css-guidelines)
 7. [JavaScript Guidelines](#7-javascript-guidelines)
@@ -395,6 +396,259 @@ export default {
 
 **Additional lifecycle hooks:**
 - `onNavigate(url)` - Called on SPA URL changes (requires manual invocation or URL watching)
+
+---
+
+## 4.1 Cleanup Best Practices ⚠️ CRITICAL
+
+**ALWAYS clean up global modifications in `onDeactivate` to prevent memory leaks and state pollution.**
+
+When bundles are deactivated (switching to another bundle or returning to portal), **all global modifications must be reversed**. Failure to clean up causes:
+- Memory leaks from accumulated event listeners
+- Nested interceptors interfering with each other
+- Stale state persisting across activations
+- Unpredictable behavior when bundle is reactivated
+
+### What Requires Cleanup
+
+| Modification Type | Storage Pattern | Cleanup Method |
+|-------------------|-----------------|----------------|
+| **Event Listeners** | Store handler references | `removeEventListener` |
+| **Timers** | Store timer IDs | `clearInterval`, `clearTimeout` |
+| **Observers** | Store observer references | `disconnect()` |
+| **DOM Modifications** | Store original prototypes | Restore originals |
+| **Request Interception** | Store original XHR/fetch | Restore originals |
+| **Injected Elements** | Store element references | `remove()` or `removeChild()` |
+| **Global Flags** | Module variables | Reset to defaults |
+
+### Cleanup Pattern
+
+```js
+// Module-level state tracking
+var eventHandlers = {
+  click: null,
+  focus: null,
+};
+var observerInstance = null;
+var pollInterval = null;
+var originalXHROpen = null;
+var targetWindow = null;
+
+export default {
+  onActivate(window, card) {
+    // Store window reference for cleanup
+    targetWindow = window;
+    
+    // Event listener with stored reference
+    eventHandlers.click = function(e) {
+      console.log('Clicked');
+    };
+    document.addEventListener('click', eventHandlers.click);
+    
+    // Observer with stored reference
+    observerInstance = new MutationObserver(function() {
+      console.log('DOM changed');
+    });
+    observerInstance.observe(document.body, { childList: true });
+    
+    // Timer with stored ID
+    pollInterval = setInterval(function() {
+      console.log('Polling');
+    }, 1000);
+    
+    // Request interception with stored original
+    originalXHROpen = window.XMLHttpRequest.prototype.open;
+    window.XMLHttpRequest.prototype.open = function(method, url) {
+      console.log('XHR:', method, url);
+      return originalXHROpen.apply(this, arguments);
+    };
+  },
+  
+  onDeactivate(window, card) {
+    console.log('Cleaning up...');
+    
+    // Remove event listeners
+    if (eventHandlers.click) {
+      document.removeEventListener('click', eventHandlers.click);
+      eventHandlers.click = null;
+    }
+    
+    // Disconnect observers
+    if (observerInstance) {
+      observerInstance.disconnect();
+      observerInstance = null;
+    }
+    
+    // Clear timers
+    if (pollInterval) {
+      clearInterval(pollInterval);
+      pollInterval = null;
+    }
+    
+    // Restore intercepted methods
+    if (originalXHROpen && targetWindow) {
+      targetWindow.XMLHttpRequest.prototype.open = originalXHROpen;
+      originalXHROpen = null;
+    }
+    
+    targetWindow = null;
+  },
+};
+```
+
+### Real-World Example: Audio Element Cleanup
+
+```js
+// Module state
+var monitoredAudioElement = null;
+var audioHandlers = {
+  play: null,
+  pause: null,
+  error: null,
+};
+
+export default {
+  onActivate(window, card) {
+    var audio = document.getElementById('audio-player');
+    if (!audio) return;
+    
+    // Store element reference
+    monitoredAudioElement = audio;
+    
+    // Add listeners with stored references
+    audioHandlers.play = function() { console.log('Playing'); };
+    audioHandlers.pause = function() { console.log('Paused'); };
+    audioHandlers.error = function() { console.error('Error'); };
+    
+    audio.addEventListener('play', audioHandlers.play);
+    audio.addEventListener('pause', audioHandlers.pause);
+    audio.addEventListener('error', audioHandlers.error);
+  },
+  
+  onDeactivate(window, card) {
+    if (monitoredAudioElement) {
+      // Remove all listeners
+      if (audioHandlers.play) {
+        monitoredAudioElement.removeEventListener('play', audioHandlers.play);
+      }
+      if (audioHandlers.pause) {
+        monitoredAudioElement.removeEventListener('pause', audioHandlers.pause);
+      }
+      if (audioHandlers.error) {
+        monitoredAudioElement.removeEventListener('error', audioHandlers.error);
+      }
+      
+      monitoredAudioElement = null;
+    }
+    
+    // Reset handler references
+    audioHandlers = {
+      play: null,
+      pause: null,
+      error: null,
+    };
+  },
+};
+```
+
+### Real-World Example: Request Interception Cleanup
+
+```js
+// Module state
+var requestState = {
+  intercepted: false,
+  originalXHROpen: null,
+  originalXHRSend: null,
+  originalFetch: null,
+  targetWindow: null,
+};
+
+export default {
+  onActivate(window, card) {
+    // Guard against duplicate interception
+    if (requestState.intercepted) return;
+    
+    // Store window and originals
+    requestState.targetWindow = window;
+    requestState.originalXHROpen = window.XMLHttpRequest.prototype.open;
+    requestState.originalXHRSend = window.XMLHttpRequest.prototype.send;
+    
+    // Intercept
+    window.XMLHttpRequest.prototype.open = function(method, url) {
+      if (shouldBlock(url)) return;
+      return requestState.originalXHROpen.apply(this, arguments);
+    };
+    
+    window.XMLHttpRequest.prototype.send = function() {
+      return requestState.originalXHRSend.apply(this, arguments);
+    };
+    
+    // Intercept fetch if available
+    if (window.fetch && typeof window.fetch === 'function') {
+      requestState.originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        if (shouldBlock(url)) {
+          return Promise.reject(new Error('Blocked'));
+        }
+        return requestState.originalFetch.apply(this, arguments);
+      };
+    }
+    
+    requestState.intercepted = true;
+  },
+  
+  onDeactivate(window, card) {
+    if (!requestState.intercepted) return;
+    
+    var win = requestState.targetWindow;
+    if (!win) {
+      console.error('Cannot cleanup: targetWindow not available');
+      return;
+    }
+    
+    // Restore XHR methods
+    if (requestState.originalXHROpen && win.XMLHttpRequest && win.XMLHttpRequest.prototype) {
+      win.XMLHttpRequest.prototype.open = requestState.originalXHROpen;
+    }
+    if (requestState.originalXHRSend && win.XMLHttpRequest && win.XMLHttpRequest.prototype) {
+      win.XMLHttpRequest.prototype.send = requestState.originalXHRSend;
+    }
+    
+    // Restore fetch
+    if (requestState.originalFetch && win.fetch && typeof win.fetch === 'function') {
+      win.fetch = requestState.originalFetch;
+    }
+    
+    // Reset state
+    requestState = {
+      intercepted: false,
+      originalXHROpen: null,
+      originalXHRSend: null,
+      originalFetch: null,
+      targetWindow: null,
+    };
+  },
+};
+```
+
+### Cleanup Checklist
+
+Before marking your bundle complete, verify:
+
+- [ ] All `addEventListener` calls have corresponding `removeEventListener` in `onDeactivate`
+- [ ] All `setInterval`/`setTimeout` IDs are stored and cleared
+- [ ] All `MutationObserver`/`IntersectionObserver` instances are disconnected
+- [ ] All prototype modifications (XHR, fetch, DOM methods) are restored
+- [ ] All injected style elements are removed
+- [ ] All module-level state variables are reset
+- [ ] Window/element references are cleared to prevent memory leaks
+- [ ] Guard flags prevent duplicate setup on reactivation
+
+**Testing:** Activate your bundle, then switch to another bundle and back. Verify:
+1. No console errors
+2. No duplicate listeners/observers
+3. Expected behavior on reactivation
+4. No memory growth over multiple cycles
 
 ---
 
