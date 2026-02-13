@@ -1,7 +1,7 @@
 # TizenPortal Engineering Plan
 
-> **Version:** 5.0  
-> **Date:** February 10, 2026  
+> **Version:** 5.1  
+> **Date:** February 13, 2026  
 > **Status:** Universal Runtime
 
 ---

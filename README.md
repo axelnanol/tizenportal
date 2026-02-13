@@ -139,12 +139,13 @@ TizenPortal uses a **Universal Runtime** architecture:
 - **[API Reference](docs/Api-Reference.md)** — TizenPortal JavaScript API
 - **[Architecture](docs/Architecture.md)** — System design and structure
 
-### Bundle Reviews
+### Additional Resources
 
-- **[Bundle Review Summary](BUNDLE-REVIEW-SUMMARY.md)** — Executive summary of bundle analysis
-- **[Comprehensive Bundle Review](BUNDLE-REVIEW.md)** — Detailed technical analysis
+- **[Getting Started](docs/Getting-Started.md)** — Quick start guide for new users
+- **[FAQ](docs/FAQ.md)** — Frequently asked questions
+- **[Troubleshooting](docs/Troubleshooting.md)** — Common issues and solutions
 - **[Adblock Bundle](bundles/adblock/README.md)** — Usage guide and performance benchmarks
-- **[Audiobookshelf Bundle](bundles/audiobookshelf/REVIEW-FINDINGS.md)** — Architecture review
+- **[Audiobookshelf Bundle](bundles/audiobookshelf/README.md)** — Bundle documentation
 
 ---
 

@@ -1,7 +1,7 @@
 # TizenPortal Architecture Specification
 
-> **Version:** 3.0  
-> **Date:** February 7, 2026  
+> **Version:** 3.1  
+> **Date:** February 13, 2026  
 > **Status:** Universal Runtime  
 
 ---
@@ -157,7 +157,8 @@ tizenportal/
 │
 └── polyfills/                # Platform polyfills
     ├── index.js              # Polyfill loader
-    └── domrect-polyfill.js   # DOMRect (from TizenTube)
+    ├── domrect-polyfill.js   # DOMRect (from TizenTube)
+    └── css-compatibility.js  # CSS clamp() and TV readability
 ```
 
 ---

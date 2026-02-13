@@ -20,7 +20,12 @@ Welcome to the TizenPortal documentation! This wiki provides comprehensive guide
 | [Architecture](Architecture.md) | System design and data flow |
 | [Build System](Build-System.md) | How to build from source |
 | [Bundle Authoring](Bundle-Authoring.md) | Creating site-specific bundles |
+| [Bundle Navigation Guide](Bundle-Navigation-Guide.md) | Navigation patterns for bundle developers |
+| [Navigation Mode Configuration](Navigation-Mode-Configuration.md) | Spatial navigation mode system |
+| [Manifest Schema](Manifest-Schema.md) | Bundle manifest.json reference |
 | [API Reference](Api-Reference.md) | Complete API documentation |
+| [Focus Transitions Guide](Focus-Transitions-Guide.md) | Focus management and transitions |
+| [Security](Security.md) | Security features and best practices |
 | [Engineering Plan](Engineering-Plan.md) | Roadmap and project status |
 | [Progress Tracker](Progress.md) | Version history and changelog |
 | [Contributing](Contributing.md) | How to contribute to the project |
@@ -69,7 +74,7 @@ TizenPortal includes built-in support for:
 |------|-------|
 | Current Version | See [package.json](../package.json) or [CHANGELOG](CHANGELOG.md) |
 | Architecture | Universal Runtime |
-| Last Updated | February 10, 2026 |
+| Last Updated | February 13, 2026 |
 
 ---
 
