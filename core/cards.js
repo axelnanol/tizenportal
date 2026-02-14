@@ -251,7 +251,7 @@ function injectFocusStyles() {
     '/* Base card styles - cursor and transition */',
     '[data-tp-card] {',
     '  cursor: pointer;',
-    '  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, outline 0.15s ease-out;',
+    '  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;',
     '}',
     '',
     '/* Universal focus indicator for ALL registered cards */',
