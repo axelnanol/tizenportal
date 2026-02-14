@@ -280,8 +280,10 @@ export function deactivateInput(input) {
   if (!wrapper.classList.contains(opts.activeClass)) return;
   
   // IMPORTANT: Blur the input first to dismiss Tizen IME modal
-  // Without this, the system modal with OK/Cancel remains open
-  // and pressing Cancel will send EXIT key, exiting the app.
+  // However, the Tizen system modal (with OK/Cancel buttons) may remain visible
+  // even after blur. This is normal Tizen behavior. When user clicks Cancel,
+  // the EXIT key (10182) is sent. The input handler (handler.js) suppresses
+  // EXIT for 5 seconds after IME dismissal to prevent app exit.
   // See: https://github.com/SamsungDForum/SampleWebApps-IME
   try {
     if (document.activeElement === input) {

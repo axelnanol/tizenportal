@@ -70,7 +70,10 @@ var keyDownTimes = {};
 
 // Track recent IME cancel/done events to suppress accidental EXIT
 var imeCancelAt = 0;
-var EXIT_SUPPRESS_MS = 2000;
+// Extended to 5 seconds to cover Tizen modal dismissal delay
+// The Tizen system modal can remain visible after input blur,
+// and clicking Cancel sends EXIT key which should be suppressed
+var EXIT_SUPPRESS_MS = 5000;
 
 function shouldSuppressExit() {
   var now = Date.now();
@@ -185,14 +188,26 @@ function handleKeyDown(event) {
     return;
   }
 
-  // EXIT key (10182) - Tizen IME Cancel button may send this
-  // If we're in an input context, just cancel the input, don't exit the app
+  // EXIT key (10182) - Tizen IME Cancel button sends this
+  // The Tizen system modal with OK/Cancel can remain visible even after
+  // the keyboard is dismissed and input is blurred. When user clicks Cancel,
+  // EXIT is sent. We must suppress this to prevent app exit.
   if (keyCode === KEYS.EXIT) {
     if (shouldSuppressExit()) {
       event.preventDefault();
       event.stopPropagation();
       setIMEActive(false);
-      console.log('TizenPortal: EXIT suppressed (IME cancel/done)');
+      console.log('TizenPortal: EXIT suppressed (IME modal cancel)');
+      
+      // Ensure any active input is properly blurred
+      var activeEl = document.activeElement;
+      if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
+        try {
+          activeEl.blur();
+        } catch (err) {
+          // Ignore
+        }
+      }
       return;
     }
     // Check if we're in a text input or modal context
@@ -339,11 +354,13 @@ function handleKeyUp(event) {
   delete keyDownTimes[keyCode];
 
   // Suppress EXIT on keyup if IME was just dismissed
+  // This catches both keydown and keyup to ensure the Tizen modal Cancel
+  // button doesn't exit the app
   if (keyCode === KEYS.EXIT && shouldSuppressExit()) {
     event.preventDefault();
     event.stopPropagation();
     setIMEActive(false);
-    console.log('TizenPortal: EXIT suppressed on keyup (IME cancel/done)');
+    console.log('TizenPortal: EXIT keyup suppressed (IME modal cancel)');
     return;
   }
 
