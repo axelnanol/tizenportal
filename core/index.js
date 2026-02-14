@@ -73,6 +73,11 @@ import {
   processCards, initCards, shutdownCards 
 } from './cards.js';
 import {
+  registerElements, unregisterElements, clearRegistrations as clearElementRegistrations,
+  getRegistrations as getElementRegistrations, processElements,
+  initElements, shutdownElements
+} from './elements.js';
+import {
   navigate,
   focusElement,
   focusFirst,
@@ -1330,6 +1335,7 @@ async function applyLateCardBundle(card) {
     var style = document.getElementById('tp-bundle-css');
     if (style && style.parentNode) style.parentNode.removeChild(style);
     shutdownCards();
+    shutdownElements();
 
     state.currentCard = card;
     applyUserAgentOverride(resolveUserAgentMode(card));
@@ -1554,6 +1560,10 @@ async function applyBundleToPage(card) {
   // This starts the observer and processes any cards registered by the bundle
   initCards();
   log('Card registration system initialized');
+  
+  // Initialize element registration system
+  initElements();
+  log('Element registration system initialized');
   
   log('Bundle applied successfully');
 }
@@ -2307,6 +2317,15 @@ var TizenPortalAPI = {
     clear: clearRegistrations,
     process: processCards,
     getRegistrations: getRegistrations,
+  },
+
+  // Element registration system - declarative element manipulation
+  elements: {
+    register: registerElements,
+    unregister: unregisterElements,
+    clear: clearElementRegistrations,
+    process: processElements,
+    getRegistrations: getElementRegistrations,
   },
 
   // Polyfill info

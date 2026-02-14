@@ -16,7 +16,10 @@ A TV-friendly launcher with customizable themes to manage your sites in one plac
 
 ### 🔧 Site Enhancement
 Runs as a TizenBrew module to inject fixes into any site.
+- **Declarative bundle system** - Bundles are primarily configuration, which can significantly reduce repetitive DOM manipulation code
 - Bundle CSS/JS applied automatically
+- Element registration API for focusable elements, styling, and DOM manipulation
+- Card registration for multi-element interactive cards
 - Viewport locking and focus tooling for responsive sites
 - Cross-origin safe (iframe access is limited; runtime guards access)
 

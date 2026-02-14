@@ -1,8 +1,8 @@
 # TizenPortal API Reference
 
-> **Version:** 3.0  
-> **Date:** February 10, 2026  
-> **Status:** Universal Runtime  
+> **Version:** 4.0  
+> **Date:** February 14, 2026  
+> **Status:** Declarative-First Architecture  
 
 ---
 
@@ -15,6 +15,7 @@
 5. [Focus API](#5-focus-api)
 5a. [Cards API](#5a-cards-api)
 5b. [Utilities API](#5b-utilities-api)
+5c. [Elements API](#5c-elements-api)
 6. [Key Constants](#6-key-constants)
 7. [Payload Interface](#7-payload-interface)
 8. [Card Interface](#8-card-interface)
@@ -73,6 +74,7 @@ interface TizenPortal {
   focus: FocusAPI;
   keys: KeyConstants;
   cards: CardsAPI;
+  elements: ElementsAPI;     // Element registration API (v1.0+)
   bundles: BundlesAPI;
   polyfills: PolyfillAPI;
   
@@ -720,6 +722,307 @@ Sanitize CSS string for safe injection.
 var safeCss = TizenPortal.utils.sanitizeCss(userCss);
 styleElement.textContent = safeCss;
 ```
+
+---
+
+## 5c. Elements API
+
+**Available in:** v1.0+
+
+Declarative element manipulation API. Register selectors and operations once; the core automatically processes existing and dynamically added elements.
+
+### TizenPortal.elements
+
+```typescript
+interface ElementsAPI {
+  register: (config: ElementRegistration) => string;  // Returns registration ID
+  unregister: (id: string) => void;                   // Remove registration
+  clear: () => void;                                   // Clear all registrations
+  process: () => number;                               // Manual processing (usually not needed)
+}
+
+interface ElementRegistration {
+  selector: string;                // CSS selector
+  operation: string;               // Operation: focusable, class, attribute, style, hide, show, remove
+  
+  // Optional filters
+  container?: string;              // Limit to container selector
+  condition?: (el: Element) => boolean;  // Runtime condition function
+  
+  // Operation-specific options
+  nav?: string;                    // For focusable: 'vertical' | 'horizontal'
+  classes?: string[];              // For class: classes to add
+  remove?: boolean;                // For class: remove instead of add
+  attributes?: Object;             // For attribute: key-value pairs
+  styles?: Object;                 // For style: CSS properties
+  important?: boolean;             // For style: add !important flag
+  
+  // Performance options
+  debounceMs?: number;             // Custom debounce (default: 100ms)
+  immediate?: boolean;             // Skip debounce for critical elements
+}
+```
+
+### Operations
+
+**1. focusable** - Make elements keyboard/remote navigable
+
+```js
+TizenPortal.elements.register({
+  selector: 'nav a',
+  operation: 'focusable',
+  nav: 'vertical'  // Optional: vertical | horizontal
+});
+```
+
+Sets: `tabindex="0"`, `data-tp-nav`, `data-tp-focusable`, `role="button"` (if needed)
+
+**2. class** - Add/remove CSS classes
+
+```js
+// Add classes
+TizenPortal.elements.register({
+  selector: '.card',
+  operation: 'class',
+  classes: ['tp-card', 'tp-focusable']
+});
+
+// Remove classes
+TizenPortal.elements.register({
+  selector: '.old-style',
+  operation: 'class',
+  classes: ['legacy-class'],
+  remove: true
+});
+```
+
+**3. attribute** - Set/remove HTML attributes
+
+```js
+TizenPortal.elements.register({
+  selector: '#toolbar',
+  operation: 'attribute',
+  attributes: {
+    'data-region': 'toolbar',
+    'aria-label': 'Main toolbar',
+    'data-tp-nav': 'horizontal'
+  }
+});
+
+// Dynamic values via functions
+TizenPortal.elements.register({
+  selector: '.item',
+  operation: 'attribute',
+  attributes: {
+    'aria-label': function(el) {
+      return 'Item: ' + el.textContent;
+    }
+  }
+});
+```
+
+**4. style** - Apply inline CSS styles
+
+```js
+TizenPortal.elements.register({
+  selector: '#mobile-menu',
+  operation: 'style',
+  styles: {
+    display: 'none',
+    visibility: 'hidden'
+  },
+  important: true  // Add !important flag
+});
+
+// Supports camelCase (auto-converts to kebab-case)
+TizenPortal.elements.register({
+  selector: '.toolbar',
+  operation: 'style',
+  styles: {
+    backgroundColor: '#333',
+    borderRadius: '8px'
+  }
+});
+```
+
+**5. hide** - Hide elements (stores original display value)
+
+```js
+TizenPortal.elements.register({
+  selector: '.mobile-only',
+  operation: 'hide'
+});
+```
+
+**6. show** - Show previously hidden elements
+
+```js
+TizenPortal.elements.register({
+  selector: '.tv-only',
+  operation: 'show'
+});
+```
+
+**7. remove** - Remove elements from DOM (with safety checks)
+
+```js
+TizenPortal.elements.register({
+  selector: '.ad-container',
+  operation: 'remove',
+  condition: function(el) {
+    // Safety check before removal
+    return !el.closest('.important-content');
+  }
+});
+```
+
+### Advanced Patterns
+
+**Container Scoping** - Limit processing to specific containers for performance:
+
+```js
+TizenPortal.elements.register({
+  selector: 'button',
+  operation: 'focusable',
+  container: '#content-area'  // Only process buttons in #content-area
+});
+```
+
+**Conditional Registration** - Apply operations based on runtime conditions:
+
+```js
+TizenPortal.elements.register({
+  selector: '.dynamic-content',
+  operation: 'focusable',
+  condition: function(el) {
+    // Only if visible
+    return el.offsetParent !== null;
+  }
+});
+
+TizenPortal.elements.register({
+  selector: 'button',
+  operation: 'focusable',
+  condition: function(el) {
+    // Only if not disabled and not hidden
+    return !el.disabled && el.getAttribute('aria-hidden') !== 'true';
+  }
+});
+```
+
+**Page-Specific Registration** - Apply to specific pages:
+
+```js
+TizenPortal.elements.register({
+  selector: '.item-detail-button',
+  operation: 'focusable',
+  condition: function(el) {
+    return window.location.pathname.indexOf('/item/') !== -1;
+  }
+});
+```
+
+### Automatic Observation
+
+Element registrations **automatically observe the DOM** for changes. No manual observation needed:
+
+```js
+onActivate: function(window, card) {
+  // Register once
+  TizenPortal.elements.register({
+    selector: 'nav a',
+    operation: 'focusable'
+  });
+  
+  // Core automatically:
+  // 1. Processes existing elements
+  // 2. Observes DOM for new elements
+  // 3. Applies operations to dynamically added elements
+  // 4. Cleans up on bundle deactivation
+}
+```
+
+### Manual Processing
+
+Usually not needed (automatic observation handles this), but available for edge cases:
+
+```js
+// Manually trigger processing
+var count = TizenPortal.elements.process();
+console.log('Processed', count, 'elements');
+```
+
+### Cleanup
+
+Registrations are **automatically cleared** when the bundle deactivates. Manual cleanup is rarely needed:
+
+```js
+onDeactivate: function(window, card) {
+  // Automatic cleanup - no action needed
+  // All registrations are cleared automatically
+}
+
+// Manual cleanup (if needed)
+var regId = TizenPortal.elements.register({...});
+TizenPortal.elements.unregister(regId);  // Remove specific registration
+TizenPortal.elements.clear();             // Remove all registrations
+```
+
+### Best Practices
+
+1. **Use declarative first** - Prefer element registration over imperative loops
+2. **Use conditions for complex logic** - Keep selector simple, add runtime conditions
+3. **Scope to containers** - Use `container` option for large DOMs
+4. **Avoid over-registering** - One registration handles all matching elements
+5. **Trust automatic observation** - Core handles DOM changes automatically
+
+### Example: Complete Bundle
+
+```js
+export default {
+  name: 'my-bundle',
+  
+  onActivate: function(window, card) {
+    // Navigation
+    TizenPortal.elements.register({
+      selector: 'nav a',
+      operation: 'focusable',
+      nav: 'vertical'
+    });
+    
+    // Hide mobile elements
+    TizenPortal.elements.register({
+      selector: '.mobile-only, .smartphone-menu',
+      operation: 'hide'
+    });
+    
+    // Style toolbar for TV
+    TizenPortal.elements.register({
+      selector: '#toolbar',
+      operation: 'style',
+      styles: {
+        position: 'fixed',
+        top: '0',
+        right: '320px'
+      },
+      important: true
+    });
+    
+    // Make buttons focusable (with conditions)
+    TizenPortal.elements.register({
+      selector: 'button',
+      operation: 'focusable',
+      condition: function(el) {
+        return !el.disabled && el.offsetParent !== null;
+      }
+    });
+    
+    // That's it! Core handles everything automatically
+  }
+};
+```
+
+See [Bundle Authoring Guide - Section 8.5](Bundle-Authoring.md#85-element-registration-declarative-manipulation) for complete documentation and migration examples.
 
 ---
 

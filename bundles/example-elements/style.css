@@ -1,0 +1,44 @@
+/* Example Bundle Styles
+ * 
+ * Note: Most styling for TV layout should be done via element registration
+ * using the 'style' operation. CSS files should only contain:
+ * - Complex selectors (pseudo-classes, media queries)
+ * - Hover/focus states
+ * - Animations
+ * - Global styles that can't be inline
+ */
+
+/* Focus indicators - enhance default card styles */
+.tp-card:focus {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-out;
+}
+
+/* Hover states for mouse users */
+.tp-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Spacing utility class */
+.tp-spacing {
+  margin: 8px;
+}
+
+/* Example: Complex selector that can't be done inline */
+.card:first-child {
+  margin-left: 0;
+}
+
+.card:last-child {
+  margin-right: 0;
+}
+
+/* Animation example */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tp-card {
+  animation: fadeIn 0.3s ease-in;
+}
