@@ -969,39 +969,6 @@ export default {
   },
   
   /**
-   * DEPRECATED: Setup detail page focusables
-   * This function is no longer needed - detail page setup is handled by element registration
-   */
-  setupDetailPageFocusables: function() {
-    // Detail page setup now handled by registerElementManipulations()
-    // This function kept for compatibility but does nothing
-  },
-  
-  /**
-   * DEPRECATED: Setup item detail page
-   * This function is no longer needed - handled by element registration
-   */
-  setupItemDetailPage: function() {
-    // Now handled by registerElementManipulations()
-  },
-  
-  /**
-   * DEPRECATED: Setup collection page
-   * This function is no longer needed - handled by element registration
-   */
-  setupCollectionPage: function() {
-    // Now handled by registerElementManipulations()
-  },
-  
-  /**
-   * DEPRECATED: Setup playlist page
-   * This function is no longer needed - handled by element registration
-   */
-  setupPlaylistPage: function() {
-    // Now handled by registerElementManipulations()
-  },
-  
-  /**
    * Update color hints visibility based on player state
    * 
    * When the media player is visible, the color hints at the bottom

@@ -76,8 +76,8 @@ var PROTECTED_ELEMENTS = ['HTML', 'HEAD', 'BODY'];
  * @param {boolean} [config.important] - For style operation: apply with !important
  * @param {Function} [config.condition] - Optional condition function(element) => boolean
  * @param {boolean} [config.immediate] - Process immediately without debounce
- * @param {number} [config.debounce] - Custom debounce time in ms (default 100)
- * @returns {boolean} True if registration successful
+ * @param {number} [config.debounceMs] - Custom debounce time in ms (default 100)
+ * @returns {string} Registration ID for unregistering
  */
 export function registerElements(config) {
   // Validate required fields
@@ -117,14 +117,14 @@ export function registerElements(config) {
     config: extractOperationConfig(config),
     condition: config.condition || null,
     immediate: config.immediate || false,
-    debounce: config.debounce || 100,
+    debounce: config.debounceMs || 100,
     processed: 0,
     lastProcessed: null
   };
   
   registrations.push(registration);
   
-  console.log('TizenPortal [Elements]: Registered', config.operation, 'for', config.selector);
+  console.log('TizenPortal [Elements]: Registered', config.operation, 'for', config.selector, '(ID:', id, ')');
   
   // Start observer if this is the first registration
   if (registrations.length === 1 && !observer) {
@@ -135,10 +135,10 @@ export function registerElements(config) {
   if (config.immediate) {
     processElements();
   } else {
-    scheduleProcessing(config.debounce || 100);
+    scheduleProcessing(config.debounceMs || 100);
   }
   
-  return true;
+  return id;
 }
 
 /**
@@ -183,24 +183,31 @@ function extractOperationConfig(config) {
 }
 
 /**
- * Unregister element manipulations by selector and optionally operation
- * @param {string} selector - The selector to unregister
- * @param {string} [operation] - Optional operation type to filter
+ * Unregister an element manipulation by registration ID
+ * @param {string} id - The registration ID to unregister
  */
-export function unregisterElements(selector, operation) {
+export function unregisterElements(id) {
+  if (!id) {
+    console.warn('TizenPortal [Elements]: Invalid unregister - id required');
+    return;
+  }
+
   var removedCount = 0;
-  
+
   for (var i = registrations.length - 1; i >= 0; i--) {
     var reg = registrations[i];
-    
-    if (reg.selector === selector && (!operation || reg.operation === operation)) {
+
+    if (reg && reg.id === id) {
       registrations.splice(i, 1);
       removedCount++;
+      break; // IDs are unique, so we can stop after finding one
     }
   }
-  
+
   if (removedCount > 0) {
-    console.log('TizenPortal [Elements]: Unregistered', removedCount, 'registration(s) for', selector);
+    console.log('TizenPortal [Elements]: Unregistered registration', id);
+  } else {
+    console.warn('TizenPortal [Elements]: No registration found for id', id);
   }
 }
 
@@ -590,11 +597,50 @@ export function initElements() {
 }
 
 /**
+ * Remove data-tp-processed-* tracking attributes for all registrations
+ * Called during shutdown to avoid DOM pollution
+ */
+function cleanupProcessedAttributes() {
+  try {
+    // Iterate over current registrations to derive attribute names
+    for (var i = 0; i < registrations.length; i++) {
+      var reg = registrations[i];
+      if (!reg || !reg.id) {
+        continue;
+      }
+      var attrName = 'data-tp-processed-' + reg.id;
+      var selector = '[' + attrName + ']';
+      var elements;
+      try {
+        elements = document.querySelectorAll(selector);
+      } catch (e) {
+        // If selector is somehow invalid, skip this registration
+        continue;
+      }
+      if (!elements || !elements.length) {
+        continue;
+      }
+      for (var j = 0; j < elements.length; j++) {
+        var el = elements[j];
+        if (el && el.removeAttribute) {
+          el.removeAttribute(attrName);
+        }
+      }
+    }
+  } catch (err) {
+    // Failsafe: do not let cleanup errors break shutdown
+    console.warn('TizenPortal [Elements]: Failed to cleanup processed attributes (non-critical):', err && err.message ? err.message : err);
+  }
+}
+
+/**
  * Shutdown the element registration system
  * Called when bundle is unloaded or portal is exited
  */
 export function shutdownElements() {
   stopObserver();
+  cleanupProcessedAttributes();
   clearRegistrations();
+  registrationIdCounter = 0;
   console.log('TizenPortal [Elements]: System shutdown');
 }
