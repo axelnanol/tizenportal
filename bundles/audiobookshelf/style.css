@@ -728,6 +728,79 @@ button[aria-label*="Options"] {
   pointer-events: auto !important;
 }
 
+/* ==========================================================================
+   CARD FOCUS INDICATORS - All registered card types
+   Provides visible focus rings for TV navigation
+   Works together with core card system ([data-tp-card] attribute)
+   ========================================================================== */
+
+/* Book cards - primary card type with square aspect ratio */
+[id^="book-card-"]:focus,
+[id^="book-card-"][data-tp-card]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 20px rgba(26, 214, 145, 0.4) !important;
+  z-index: 100 !important;
+  position: relative !important;
+}
+
+/* Series cards - wider cards showing multiple book covers */
+[id^="series-card-"]:focus,
+[id^="series-card-"][data-tp-card]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 20px rgba(26, 214, 145, 0.4) !important;
+  z-index: 100 !important;
+  position: relative !important;
+}
+
+/* Collection cards - similar to series */
+[id^="collection-card-"]:focus,
+[id^="collection-card-"][data-tp-card]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 20px rgba(26, 214, 145, 0.4) !important;
+  z-index: 100 !important;
+  position: relative !important;
+}
+
+/* Playlist cards */
+[id^="playlist-card-"]:focus,
+[id^="playlist-card-"][data-tp-card]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 20px rgba(26, 214, 145, 0.4) !important;
+  z-index: 100 !important;
+  position: relative !important;
+}
+
+/* Author cards - class-based and ID-based */
+.author-card:focus,
+[id^="author-card-"]:focus,
+.author-card[data-tp-card]:focus,
+[id^="author-card-"][data-tp-card]:focus {
+  outline: 4px solid #1ad691 !important;
+  outline-offset: 4px !important;
+  box-shadow: 0 0 20px rgba(26, 214, 145, 0.4) !important;
+  z-index: 100 !important;
+  position: relative !important;
+}
+
+/* Author links (homepage author cards are just links) */
+a[href*="/author/"]:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: 3px !important;
+  background: rgba(26, 214, 145, 0.15) !important;
+}
+
+/* Siderail navigation links - also registered as cards */
+#siderail-buttons-container a:focus,
+#siderail-buttons-container a[data-tp-card]:focus {
+  outline: 3px solid #1ad691 !important;
+  outline-offset: -3px !important;
+  background: rgba(26, 214, 145, 0.2) !important;
+}
+
 /* Book card container - DO NOT override position or size - ABS calculates dynamically */
 [id^="book-card-"],
 [id^="series-card-"] {
