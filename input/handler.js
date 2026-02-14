@@ -70,6 +70,9 @@ var keyDownTimes = {};
 
 // Track recent IME cancel/done events to suppress accidental EXIT
 var imeCancelAt = 0;
+// 2-second suppression window provides fallback protection if modal
+// dismissal doesn't work perfectly. With proper blur+focus, the modal
+// should dismiss immediately and this timeout shouldn't be needed.
 var EXIT_SUPPRESS_MS = 2000;
 
 function shouldSuppressExit() {
@@ -175,8 +178,13 @@ function handleKeyDown(event) {
         deactivateInput(activeEl);
       } else {
         // For non-wrapped inputs, blur and focus document.body
+        // This follows Samsung's official IME sample pattern
         try {
           activeEl.blur();
+          // Ensure body is focusable, then focus it
+          if (!document.body.hasAttribute('tabindex')) {
+            document.body.setAttribute('tabindex', '-1');
+          }
           document.body.focus();
         } catch (err) {
           // Ignore
