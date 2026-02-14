@@ -335,6 +335,10 @@ export default {
     // This replaces manual setupFocusables() for card elements
     this.registerCardSelectors();
     
+    // CORE: Register element manipulations using declarative API
+    // This replaces many imperative patterns from setupOtherFocusables()
+    this.registerElementManipulations();
+    
     // ABS-SPECIFIC: Set up non-card focusables (siderail, appbar, etc.)
     this.setupOtherFocusables();
     
@@ -638,139 +642,170 @@ export default {
   },
 
   /**
-   * Set up focusable elements that are NOT cards
+   * Register element manipulations using declarative API
    * 
-   * IMPORTANT: Card elements are handled by registerCardSelectors() above.
-   * This function handles everything else:
-   * - UI chrome (appbar, search)
-   * - Transient UI (dropdowns, menus, modals)
-   * - Context-specific elements (player controls, item detail buttons)
-   * - Table rows and list items
-   * - Generic fallback for remaining links/buttons
+   * This replaces many imperative DOM manipulations from setupOtherFocusables()
+   * with declarative registrations that are automatically applied to existing
+   * and dynamically added elements.
+   */
+  registerElementManipulations: function() {
+    if (!window.TizenPortal || !window.TizenPortal.elements) {
+      console.warn('TizenPortal [ABS]: Element registration API not available');
+      return;
+    }
+    
+    var elements = window.TizenPortal.elements;
+    
+    // ========================================================================
+    // SIDERAIL - Mark for vertical navigation
+    // ========================================================================
+    elements.register({
+      selector: SELECTORS.siderail,
+      operation: 'attribute',
+      attributes: {
+        'data-tp-nav': 'vertical'
+      }
+    });
+    
+    // ========================================================================
+    // DROPDOWN CONTAINERS - Add spacing and vertical navigation
+    // ========================================================================
+    elements.register({
+      selector: SELECTORS.dropdownContainer,
+      operation: 'focusable',
+      nav: 'vertical',
+      classes: [SPACING_CLASS]
+    });
+    
+    // ========================================================================
+    // DROPDOWN MENU ITEMS - Make focusable
+    // ========================================================================
+    elements.register({
+      selector: SELECTORS.menuItems,
+      operation: 'focusable'
+    });
+    
+    // ========================================================================
+    // FILTER DROPDOWN ITEMS - Make visible items focusable
+    // ========================================================================
+    elements.register({
+      selector: SELECTORS.filterDropdownItems,
+      operation: 'focusable',
+      condition: function(el) {
+        // Only make focusable if visible
+        return el.offsetParent !== null;
+      }
+    });
+    
+    // ========================================================================
+    // APPBAR - Search and buttons
+    // ========================================================================
+    elements.register({
+      selector: SELECTORS.appbarButtons,
+      operation: 'focusable',
+      condition: function(el) {
+        // Only if visible and not hidden
+        return !el.closest('[style*="display: none"]') && 
+               el.getAttribute('aria-hidden') !== 'true';
+      }
+    });
+    
+    elements.register({
+      selector: SELECTORS.appbarSearch,
+      operation: 'focusable',
+      condition: function(el) {
+        return el.getAttribute('aria-hidden') !== 'true';
+      }
+    });
+    
+    // ========================================================================
+    // PLAYER CONTROLS - Make horizontal and all controls focusable
+    // ========================================================================
+    elements.register({
+      selector: SELECTORS.playerContainer,
+      operation: 'attribute',
+      attributes: {
+        'data-tp-nav': 'horizontal'
+      }
+    });
+    
+    elements.register({
+      selector: SELECTORS.playerContainer + ' button, ' + 
+                SELECTORS.playerContainer + ' a, ' + 
+                SELECTORS.playerContainer + ' [role="button"]',
+      operation: 'focusable',
+      container: SELECTORS.playerContainer,
+      condition: function(el) {
+        return !el.disabled && el.getAttribute('aria-hidden') !== 'true';
+      }
+    });
+    
+    // ========================================================================
+    // GENERIC PAGE CONTENT - Links and buttons (excluding specific areas)
+    // ========================================================================
+    elements.register({
+      selector: SELECTORS.pageWrapper + ' a[href]:not([tabindex])',
+      operation: 'focusable',
+      container: SELECTORS.pageWrapper,
+      condition: function(el) {
+        // Skip if inside siderail or appbar (handled separately)
+        return !el.closest(SELECTORS.siderail) && 
+               !el.closest('#appbar') &&
+               el.offsetParent !== null;
+      }
+    });
+    
+    elements.register({
+      selector: SELECTORS.pageWrapper + ' button:not([tabindex])',
+      operation: 'focusable',
+      container: SELECTORS.pageWrapper,
+      condition: function(el) {
+        return !el.closest(SELECTORS.siderail) && 
+               !el.closest('#appbar') &&
+               !el.disabled &&
+               el.offsetParent !== null;
+      }
+    });
+    
+    // ========================================================================
+    // TABLE ROWS - Clickable rows
+    // ========================================================================
+    elements.register({
+      selector: SELECTORS.pageWrapper + ' tr[class*="cursor-pointer"], ' +
+                SELECTORS.pageWrapper + ' tr.hover\\:bg-',
+      operation: 'focusable',
+      container: SELECTORS.pageWrapper
+    });
+    
+    // Also mark table rows as single-action cards
+    elements.register({
+      selector: SELECTORS.pageWrapper + ' tr[class*="cursor-pointer"], ' +
+                SELECTORS.pageWrapper + ' tr.hover\\:bg-',
+      operation: 'attribute',
+      container: SELECTORS.pageWrapper,
+      attributes: {
+        'data-tp-card': 'single'
+      }
+    });
+    
+    console.log('TizenPortal [ABS]: Element manipulations registered');
+  },
+
+  /**
+   * Set up focusable elements with page-specific conditional logic
    * 
-   * Uses :not([tabindex]) to avoid processing elements already handled by card registration.
+   * NOTE: Most generic patterns are now handled by registerElementManipulations()
+   * This function only handles page-specific elements that require runtime conditions:
+   * - Item detail page buttons and links
+   * - Login page form elements
+   * - Context-dependent elements
+   * 
+   * Everything else is handled declaratively by element registration.
    */
   setupOtherFocusables: function() {
     var count = 0;
     
     try {
-      // ========================================================================
-      // SIDERAIL - Mark for vertical-only navigation
-      // ========================================================================
-      var siderail = document.querySelector(SELECTORS.siderail);
-      if (siderail && !siderail.hasAttribute('data-tp-nav')) {
-        siderail.setAttribute('data-tp-nav', 'vertical');
-      }
-      
-      // ========================================================================
-      // GENERIC FOCUSABLE ELEMENTS (links, buttons in content area)
-      // ========================================================================
-      var pageWrapper = document.querySelector(SELECTORS.pageWrapper);
-      if (pageWrapper) {
-        // Links in content
-        var links = pageWrapper.querySelectorAll('a[href]:not([tabindex])');
-        for (var l = 0; l < links.length; l++) {
-          var link = links[l];
-          // Skip if inside a component we've already handled
-          if (!link.closest(SELECTORS.siderail) && 
-              !link.closest('#appbar') &&
-              link.offsetParent !== null) {
-            link.setAttribute('tabindex', '0');
-            count++;
-          }
-        }
-        
-        // Buttons in content
-        var buttons = pageWrapper.querySelectorAll('button:not([tabindex])');
-        for (var b = 0; b < buttons.length; b++) {
-          var btn = buttons[b];
-          if (!btn.closest(SELECTORS.siderail) && 
-              !btn.closest('#appbar') &&
-              !btn.disabled &&
-              btn.offsetParent !== null) {
-            btn.setAttribute('tabindex', '0');
-            count++;
-          }
-        }
-        
-        // Table rows that might be clickable (narrators table, etc.)
-        var tableRows = pageWrapper.querySelectorAll('tr[class*="cursor-pointer"], tr.hover\\:bg-');
-        for (var tr = 0; tr < tableRows.length; tr++) {
-          var row = tableRows[tr];
-          if (row.getAttribute('tabindex') !== '0') {
-            row.setAttribute('tabindex', '0');
-            row.setAttribute('data-tp-card', 'single');
-            count++;
-          }
-        }
-      }
-      
-      // ========================================================================
-      // APPBAR - Search and buttons
-      // ========================================================================
-      var appbarEls = document.querySelectorAll(SELECTORS.appbarButtons);
-      for (var k = 0; k < appbarEls.length; k++) {
-        var appEl = appbarEls[k];
-        if (appEl.getAttribute('tabindex') !== '0' && 
-            !appEl.closest('[style*="display: none"]') &&
-            appEl.getAttribute('aria-hidden') !== 'true') {
-          appEl.setAttribute('tabindex', '0');
-          count++;
-        }
-      }
-
-      // Ensure search input is explicitly focusable
-      var appbarSearch = document.querySelectorAll(SELECTORS.appbarSearch);
-      for (var as = 0; as < appbarSearch.length; as++) {
-        var searchEl = appbarSearch[as];
-        if (searchEl.getAttribute('tabindex') !== '0' &&
-            searchEl.getAttribute('aria-hidden') !== 'true') {
-          searchEl.setAttribute('tabindex', '0');
-          count++;
-        }
-      }
-      
-      // ========================================================================
-      // DROPDOWN MENU ITEMS
-      // ========================================================================
-      var menuItems = document.querySelectorAll(SELECTORS.menuItems);
-      for (var m = 0; m < menuItems.length; m++) {
-        var menuEl = menuItems[m];
-        if (menuEl.getAttribute('tabindex') !== '0') {
-          menuEl.setAttribute('tabindex', '0');
-          count++;
-        }
-      }
-      
-      // ========================================================================
-      // FILTER DROPDOWN ITEMS (LibraryFilterSelect.vue)
-      // These use li elements without role attributes, including nested sublists
-      // ========================================================================
-      var filterItems = document.querySelectorAll(SELECTORS.filterDropdownItems);
-      for (var fi = 0; fi < filterItems.length; fi++) {
-        var filterItem = filterItems[fi];
-        // Make visible li elements focusable
-        if (filterItem.offsetParent !== null && filterItem.getAttribute('tabindex') !== '0') {
-          filterItem.setAttribute('tabindex', '0');
-          count++;
-        }
-      }
-      
-      // ========================================================================
-      // DROPDOWN CONTAINERS - Add spacing class for navigation
-      // ========================================================================
-      var dropdownContainers = document.querySelectorAll(SELECTORS.dropdownContainer);
-      for (var dc = 0; dc < dropdownContainers.length; dc++) {
-        var container = dropdownContainers[dc];
-        if (!container.classList.contains(SPACING_CLASS)) {
-          container.classList.add(SPACING_CLASS);
-        }
-        // Also ensure vertical navigation
-        if (!container.hasAttribute('data-tp-nav')) {
-          container.setAttribute('data-tp-nav', 'vertical');
-        }
-      }
-      
       // ========================================================================
       // ITEM DETAIL PAGE - Icon buttons (edit, finished, etc.)
       // These are inside ui-tooltip wrappers and use ui-icon-btn components
@@ -802,29 +837,6 @@ export default {
           var link = detailLinks[dl];
           if (link.getAttribute('tabindex') !== '0') {
             link.setAttribute('tabindex', '0');
-            count++;
-          }
-        }
-      }
-      
-      // ========================================================================
-      // PLAYER CONTROLS (when player is visible)
-      // ========================================================================
-      var playerContainer = document.querySelector(SELECTORS.playerContainer);
-      if (playerContainer) {
-        // Mark player for horizontal navigation
-        if (!playerContainer.hasAttribute('data-tp-nav')) {
-          playerContainer.setAttribute('data-tp-nav', 'horizontal');
-        }
-        
-        // Make ALL interactive elements in player focusable
-        var playerInteractive = playerContainer.querySelectorAll('button, a, [role="button"], [class*="playback-speed"], [class*="volume"]');
-        for (var pi = 0; pi < playerInteractive.length; pi++) {
-          var pEl = playerInteractive[pi];
-          if (pEl.getAttribute('tabindex') !== '0' &&
-              !pEl.disabled &&
-              pEl.getAttribute('aria-hidden') !== 'true') {
-            pEl.setAttribute('tabindex', '0');
             count++;
           }
         }
