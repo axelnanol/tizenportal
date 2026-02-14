@@ -161,15 +161,17 @@ function handleKeyDown(event) {
     }
   }
 
-  // Check IME keys - must prevent propagation to avoid system handling
+  // Check IME keys - let system handle naturally to avoid triggering modal
+  // Samsung's official sample doesn't preventDefault() on these keys, which
+  // allows the system to dismiss the keyboard naturally without the OK/Cancel
+  // modal appearing. We still handle the keys for our own cleanup.
   if (keyCode === KEYS.IME_DONE || keyCode === KEYS.IME_CANCEL) {
-    event.preventDefault();
-    event.stopPropagation();
+    // DON'T preventDefault() - let system handle naturally
+    // event.preventDefault();
+    // event.stopPropagation();
     
-    // Blur the active input and explicitly focus another element to dismiss
-    // the Tizen IME modal. Based on Samsung's official IME sample:
-    // https://github.com/SamsungDForum/SampleWebApps-IME
-    // This prevents the system modal with OK/Cancel from remaining open.
+    // Still do our cleanup in parallel with system handling
+    // Blur the active input and explicitly focus another element
     var activeEl = document.activeElement;
     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
       // If it's a wrapped input, use deactivateInput to properly clean up
