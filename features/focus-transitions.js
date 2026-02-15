@@ -5,6 +5,8 @@
  * Implements lightweight transitions that evoke the direction of movement.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 /**
  * Previous focused element for direction calculation
  */
@@ -257,14 +259,7 @@ export default {
     }
     
     // Inject CSS
-    var style = doc.createElement('style');
-    style.id = 'tp-focus-transitions';
-    style.textContent = this.getCSS(mode, speed);
-    
-    var head = doc.head || doc.documentElement;
-    if (head) {
-      head.appendChild(style);
-    }
+    injectCSS(doc, 'tp-focus-transitions', this.getCSS(mode, speed));
     
     // Set up focus listener for direction tracking
     var self = this;
@@ -306,10 +301,7 @@ export default {
     if (!doc) return;
     
     // Remove injected CSS
-    var style = doc.getElementById('tp-focus-transitions');
-    if (style && style.parentNode) {
-      style.parentNode.removeChild(style);
-    }
+    removeCSS(doc, 'tp-focus-transitions');
     
     // Remove focus listener
     if (doc._tpFocusTransitionHandler) {

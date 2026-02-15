@@ -5,6 +5,8 @@
  * Improves scrolling and animation performance.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 export default {
   name: 'gpuHints',
   displayName: 'GPU Acceleration',
@@ -49,16 +51,8 @@ export default {
    */
   apply: function(doc) {
     if (!doc) return;
-    
-    var style = doc.createElement('style');
-    style.id = 'tp-gpu-hints';
-    style.textContent = this.getCSS();
-    
-    var head = doc.head || doc.documentElement;
-    if (head) {
-      head.appendChild(style);
-      TizenPortal.log('GPU hints: Applied hardware acceleration');
-    }
+    injectCSS(doc, 'tp-gpu-hints', this.getCSS());
+    TizenPortal.log('GPU hints: Applied hardware acceleration');
   },
   
   /**
@@ -67,11 +61,6 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    
-    var style = doc.getElementById('tp-gpu-hints');
-    if (style) {
-      style.parentNode.removeChild(style);
-      TizenPortal.log('GPU hints: Removed');
-    }
+    removeCSS(doc, 'tp-gpu-hints');
   },
 };

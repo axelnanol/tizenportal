@@ -5,6 +5,8 @@
  * Extracted from default bundle.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 export default {
   name: 'focusStyling',
   displayName: 'Focus Styling',
@@ -56,15 +58,7 @@ export default {
     var mode = arguments.length > 1 ? arguments[1] : 'on';
     this.remove(doc);
     if (mode === 'off') return;
-
-    var style = doc.createElement('style');
-    style.id = 'tp-focus-styling';
-    style.textContent = this.getCSS(mode);
-    
-    var head = doc.head || doc.documentElement;
-    if (head) {
-      head.appendChild(style);
-    }
+    injectCSS(doc, 'tp-focus-styling', this.getCSS(mode));
   },
   
   /**
@@ -73,10 +67,6 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    
-    var style = doc.getElementById('tp-focus-styling');
-    if (style) {
-      style.parentNode.removeChild(style);
-    }
+    removeCSS(doc, 'tp-focus-styling');
   },
 };

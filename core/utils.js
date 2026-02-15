@@ -157,3 +157,56 @@ export function safeLocalStorageSet(key, value) {
     };
   }
 }
+
+/**
+ * Inject CSS into a document by creating a style element.
+ * This is a shared utility to reduce code duplication across features.
+ *
+ * @param {Document} doc - Target document
+ * @param {string} id - Unique ID for the style element
+ * @param {string} css - CSS content to inject
+ * @returns {boolean} true if successful, false otherwise
+ */
+export function injectCSS(doc, id, css) {
+  if (!doc || !id || typeof css !== 'string') return false;
+  
+  try {
+    var style = doc.createElement('style');
+    style.id = id;
+    style.textContent = css;
+    
+    var head = doc.head || doc.documentElement;
+    if (head) {
+      head.appendChild(style);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn('TizenPortal: Failed to inject CSS:', err.message);
+    return false;
+  }
+}
+
+/**
+ * Remove an injected CSS style element from a document.
+ * This is a shared utility to reduce code duplication across features.
+ *
+ * @param {Document} doc - Target document
+ * @param {string} id - ID of the style element to remove
+ * @returns {boolean} true if element was found and removed, false otherwise
+ */
+export function removeCSS(doc, id) {
+  if (!doc || !id) return false;
+  
+  try {
+    var style = doc.getElementById(id);
+    if (style && style.parentNode) {
+      style.parentNode.removeChild(style);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.warn('TizenPortal: Failed to remove CSS:', err.message);
+    return false;
+  }
+}

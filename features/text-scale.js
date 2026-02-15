@@ -6,6 +6,8 @@
  * Moved from core polyfills to allow user configuration.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 /**
  * Scale presets
  * Uses transform-based scaling to preserve relative sizing
@@ -86,14 +88,7 @@ export default {
     }
     
     try {
-      var style = doc.createElement('style');
-      style.id = 'tp-text-scale';
-      style.textContent = css;
-      
-      var head = doc.head || doc.documentElement;
-      if (head) {
-        head.appendChild(style);
-      }
+      injectCSS(doc, 'tp-text-scale', css);
     } catch (err) {
       if (window.TizenPortal) {
         window.TizenPortal.warn('[TextScale] Failed to apply:', err.message);
@@ -111,10 +106,7 @@ export default {
     if (!doc) return;
     
     try {
-      var style = doc.getElementById('tp-text-scale');
-      if (style && style.parentNode) {
-        style.parentNode.removeChild(style);
-      }
+      removeCSS(doc, 'tp-text-scale');
     } catch (err) {
       if (window.TizenPortal) {
         window.TizenPortal.warn('[TextScale] Failed to remove:', err.message);
