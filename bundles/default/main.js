@@ -6,22 +6,7 @@
  */
 
 import defaultStyles from './style.css';
-
-function tpLog() {
-  if (window.TizenPortal && typeof TizenPortal.log === 'function') {
-    TizenPortal.log.apply(TizenPortal, arguments);
-  } else if (console && typeof console.log === 'function') {
-    console.log.apply(console, arguments);
-  }
-}
-
-function tpWarn() {
-  if (window.TizenPortal && typeof TizenPortal.warn === 'function') {
-    TizenPortal.warn.apply(TizenPortal, arguments);
-  } else if (console && typeof console.warn === 'function') {
-    console.warn.apply(console, arguments);
-  }
-}
+import { log as tpLog, warn as tpWarn } from '../../core/utils.js';
 
 export default {
   /**

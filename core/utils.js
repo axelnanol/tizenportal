@@ -258,3 +258,31 @@ export function ensureProperties(obj, properties, defaultValue) {
 export function getTypedValue(value, expectedType, defaultValue) {
   return typeof value === expectedType ? value : defaultValue;
 }
+
+/**
+ * Log with TizenPortal.log fallback to console.log
+ * Provides consistent logging across bundles and features.
+ *
+ * @param {...*} args - Arguments to log
+ */
+export function log() {
+  if (typeof window !== 'undefined' && window.TizenPortal && typeof window.TizenPortal.log === 'function') {
+    window.TizenPortal.log.apply(window.TizenPortal, arguments);
+  } else if (typeof console !== 'undefined' && typeof console.log === 'function') {
+    console.log.apply(console, arguments);
+  }
+}
+
+/**
+ * Warn with TizenPortal.warn fallback to console.warn
+ * Provides consistent warning logging across bundles and features.
+ *
+ * @param {...*} args - Arguments to log as warning
+ */
+export function warn() {
+  if (typeof window !== 'undefined' && window.TizenPortal && typeof window.TizenPortal.warn === 'function') {
+    window.TizenPortal.warn.apply(window.TizenPortal, arguments);
+  } else if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+    console.warn.apply(console, arguments);
+  }
+}
