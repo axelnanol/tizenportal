@@ -748,6 +748,7 @@ function autoSaveCard(reason) {
   var cardId = getEditorCardId();
   
   console.log('TizenPortal: autoSaveCard mode=' + mode + ' cardId=' + cardId + ' reason=' + reason);
+  console.log('TizenPortal: autoSaveCard state.card.userscriptToggles = ' + JSON.stringify(state.card.userscriptToggles || {}));
   
   if (!state.card) {
     console.log('TizenPortal: Auto-save skipped - no card');
@@ -779,14 +780,20 @@ function autoSaveCard(reason) {
     navigationMode: state.card.hasOwnProperty('navigationMode') ? state.card.navigationMode : null,
     viewportMode: state.card.hasOwnProperty('viewportMode') ? state.card.viewportMode : null,
     focusOutlineMode: state.card.hasOwnProperty('focusOutlineMode') ? state.card.focusOutlineMode : null,
+    focusStyling: state.card.hasOwnProperty('focusStyling') ? state.card.focusStyling : null,
+    focusTransitions: state.card.hasOwnProperty('focusTransitions') ? state.card.focusTransitions : null,
+    focusTransitionMode: state.card.hasOwnProperty('focusTransitionMode') ? state.card.focusTransitionMode : null,
+    focusTransitionSpeed: state.card.hasOwnProperty('focusTransitionSpeed') ? state.card.focusTransitionSpeed : null,
     userAgent: state.card.hasOwnProperty('userAgent') ? state.card.userAgent : null,
     tabindexInjection: state.card.hasOwnProperty('tabindexInjection') ? state.card.tabindexInjection : null,
     scrollIntoView: state.card.hasOwnProperty('scrollIntoView') ? state.card.scrollIntoView : null,
+    navigationFix: state.card.hasOwnProperty('navigationFix') ? state.card.navigationFix : null,
     safeArea: state.card.hasOwnProperty('safeArea') ? state.card.safeArea : null,
     gpuHints: state.card.hasOwnProperty('gpuHints') ? state.card.gpuHints : null,
     cssReset: state.card.hasOwnProperty('cssReset') ? state.card.cssReset : null,
     hideScrollbars: state.card.hasOwnProperty('hideScrollbars') ? state.card.hideScrollbars : null,
     wrapTextInputs: state.card.hasOwnProperty('wrapTextInputs') ? state.card.wrapTextInputs : null,
+    textScale: state.card.hasOwnProperty('textScale') ? state.card.textScale : null,
     icon: state.card.icon || null,
     bundleOptions: state.card.bundleOptions || {},
     bundleOptionData: state.card.bundleOptionData || {},
@@ -1947,12 +1954,12 @@ function moveFocusByRow(fromEl, direction) {
   var container = document.getElementById('tp-editor-fields');
   if (!container) return false;
 
-  var rows = container.querySelectorAll('.tp-field-row, .tp-userscript-row, .tp-bundle-option');
+  var rows = container.querySelectorAll('.tp-field-row, .tp-userscript-row, .tp-bundle-option, .tp-global-override-row, .tp-site-override-row, .tp-feature-row');
   if (!rows.length) return false;
 
-  var currentRow = fromEl.classList && (fromEl.classList.contains('tp-field-row') || fromEl.classList.contains('tp-userscript-row') || fromEl.classList.contains('tp-bundle-option'))
+  var currentRow = fromEl.classList && (fromEl.classList.contains('tp-field-row') || fromEl.classList.contains('tp-userscript-row') || fromEl.classList.contains('tp-bundle-option') || fromEl.classList.contains('tp-global-override-row') || fromEl.classList.contains('tp-site-override-row') || fromEl.classList.contains('tp-feature-row'))
     ? fromEl
-    : fromEl.closest('.tp-field-row, .tp-userscript-row, .tp-bundle-option');
+    : fromEl.closest('.tp-field-row, .tp-userscript-row, .tp-bundle-option, .tp-global-override-row, .tp-site-override-row, .tp-feature-row');
 
   if (!currentRow) return false;
 
@@ -2395,17 +2402,22 @@ function handleUserscriptRowClick(row) {
   var globalEnabled = globalConfig.enabled[scriptId] === true;
   var hasSiteOverride = siteToggles.hasOwnProperty(scriptId);
   
+  console.log('TizenPortal: [Userscript Toggle] scriptId=' + scriptId + ', globalEnabled=' + globalEnabled + ', hasSiteOverride=' + hasSiteOverride + ', currentOverride=' + (siteToggles[scriptId] ? siteToggles[scriptId] : 'none'));
+  
   if (hasSiteOverride) {
     // Has override - reset to global
     delete siteToggles[scriptId];
     showEditorToast('Reset to global setting');
+    console.log('TizenPortal: [Userscript Toggle] Cleared override for ' + scriptId);
   } else {
     // No override - create one with opposite of global
     siteToggles[scriptId] = !globalEnabled;
     showEditorToast(globalEnabled ? 'Disabled for this site' : 'Enabled for this site');
+    console.log('TizenPortal: [Userscript Toggle] Set override for ' + scriptId + ' = ' + siteToggles[scriptId]);
   }
   
   state.card.userscriptToggles = siteToggles;
+  console.log('TizenPortal: [Userscript Toggle] Final state.card.userscriptToggles = ' + JSON.stringify(state.card.userscriptToggles));
   renderFields();
   autoSaveCard('userscript:toggle');
   

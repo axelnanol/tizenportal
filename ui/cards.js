@@ -137,9 +137,10 @@ function loadCards() {
         
         // Ensure all card fields exist using helper function
         var cardFields = [
-          'featureBundle', 'viewportMode', 'focusOutlineMode', 'userAgent',
-          'tabindexInjection', 'scrollIntoView', 'safeArea', 'gpuHints',
-          'cssReset', 'hideScrollbars', 'wrapTextInputs'
+          'featureBundle', 'navigationMode', 'viewportMode', 'focusOutlineMode', 'userAgent',
+          'tabindexInjection', 'scrollIntoView', 'navigationFix', 'safeArea', 'gpuHints',
+          'cssReset', 'hideScrollbars', 'wrapTextInputs', 'focusStyling', 'focusTransitions',
+          'focusTransitionMode', 'focusTransitionSpeed', 'textScale'
         ];
         if (ensureProperties(card, cardFields, null)) {
           needsSave = true;
@@ -282,9 +283,14 @@ export function addCard(cardData) {
     navigationMode: cardData.hasOwnProperty('navigationMode') ? cardData.navigationMode : null,
     viewportMode: cardData.hasOwnProperty('viewportMode') ? cardData.viewportMode : null,
     focusOutlineMode: cardData.hasOwnProperty('focusOutlineMode') ? cardData.focusOutlineMode : null,
+    focusStyling: cardData.hasOwnProperty('focusStyling') ? cardData.focusStyling : null,
+    focusTransitions: cardData.hasOwnProperty('focusTransitions') ? cardData.focusTransitions : null,
+    focusTransitionMode: cardData.hasOwnProperty('focusTransitionMode') ? cardData.focusTransitionMode : null,
+    focusTransitionSpeed: cardData.hasOwnProperty('focusTransitionSpeed') ? cardData.focusTransitionSpeed : null,
     userAgent: cardData.hasOwnProperty('userAgent') ? cardData.userAgent : null,
     tabindexInjection: cardData.hasOwnProperty('tabindexInjection') ? cardData.tabindexInjection : null,
     scrollIntoView: cardData.hasOwnProperty('scrollIntoView') ? cardData.scrollIntoView : null,
+    navigationFix: cardData.hasOwnProperty('navigationFix') ? cardData.navigationFix : null,
     safeArea: cardData.hasOwnProperty('safeArea') ? cardData.safeArea : null,
     gpuHints: cardData.hasOwnProperty('gpuHints') ? cardData.gpuHints : null,
     cssReset: cardData.hasOwnProperty('cssReset') ? cardData.cssReset : null,
