@@ -2375,7 +2375,7 @@ var TizenPortalAPI = {
     clear: userscriptEngine.clearUserscripts,
     getEnabled: userscriptEngine.getEnabledGlobalUserscripts,
     getForPayload: userscriptEngine.getGlobalUserscriptsForPayload,
-    registry: userscriptEngine.UserscriptRegistry,
+    registry: featureLoader.registry,  // Updated to use unified registry
   },
   
   // Unified registry (for advanced use - accesses same registry as features/userscripts)
