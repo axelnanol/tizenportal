@@ -70,6 +70,9 @@ var keyDownTimes = {};
 
 // Track recent IME cancel/done events to suppress accidental EXIT
 var imeCancelAt = 0;
+// 2-second suppression window provides fallback protection if modal
+// dismissal doesn't work perfectly. With proper blur+focus, the modal
+// should dismiss immediately and this timeout shouldn't be needed.
 var EXIT_SUPPRESS_MS = 2000;
 
 function shouldSuppressExit() {
@@ -158,22 +161,33 @@ function handleKeyDown(event) {
     }
   }
 
-  // Check IME keys - must prevent propagation to avoid system handling
+  // Check IME keys - let system handle naturally to avoid triggering modal
+  // Samsung's official sample doesn't preventDefault() on these keys, which
+  // allows the system to dismiss the keyboard naturally without the OK/Cancel
+  // modal appearing. We still handle the keys for our own cleanup.
   if (keyCode === KEYS.IME_DONE || keyCode === KEYS.IME_CANCEL) {
-    event.preventDefault();
-    event.stopPropagation();
+    // DON'T preventDefault() - let system handle naturally
+    // event.preventDefault();
+    // event.stopPropagation();
     
-    // Blur the active input to dismiss Tizen IME modal
-    // This prevents the system modal with OK/Cancel from remaining open
+    // Still do our cleanup in parallel with system handling
+    // Blur the active input and explicitly focus another element
     var activeEl = document.activeElement;
     if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
       // If it's a wrapped input, use deactivateInput to properly clean up
+      // (deactivateInput now explicitly focuses the wrapper after blur)
       if (activeEl.classList.contains(INPUT_CONSTANTS.WRAPPED_INPUT_CLASS)) {
         deactivateInput(activeEl);
       } else {
-        // For non-wrapped inputs, just blur
+        // For non-wrapped inputs, blur and focus document.body
+        // This follows Samsung's official IME sample pattern
         try {
           activeEl.blur();
+          // Ensure body is focusable, then focus it
+          if (!document.body.hasAttribute('tabindex')) {
+            document.body.setAttribute('tabindex', '-1');
+          }
+          document.body.focus();
         } catch (err) {
           // Ignore
         }
