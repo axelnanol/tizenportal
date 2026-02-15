@@ -185,7 +185,7 @@ export function injectCSS(doc, id, css) {
     if (typeof window !== 'undefined' && window.TizenPortal && window.TizenPortal.warn) {
       window.TizenPortal.warn('Failed to inject CSS: ' + err.message);
     } else {
-      console.warn('TizenPortal: Failed to inject CSS:', err.message);
+      console.warn('TizenPortal: Failed to inject CSS: ' + err.message);
     }
     return false;
   }
@@ -213,7 +213,7 @@ export function removeCSS(doc, id) {
     if (typeof window !== 'undefined' && window.TizenPortal && window.TizenPortal.warn) {
       window.TizenPortal.warn('Failed to remove CSS: ' + err.message);
     } else {
-      console.warn('TizenPortal: Failed to remove CSS:', err.message);
+      console.warn('TizenPortal: Failed to remove CSS: ' + err.message);
     }
     return false;
   }

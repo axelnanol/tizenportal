@@ -260,7 +260,10 @@ export default {
     
     // Inject CSS
     injectCSS(doc, 'tp-focus-transitions', this.getCSS(mode, speed));
-    TizenPortal.log('Focus transitions applied: ' + mode + ', ' + speed);
+    
+    if (window.TizenPortal && window.TizenPortal.log) {
+      window.TizenPortal.log('Focus transitions applied: ' + mode + ', ' + speed);
+    }
     
     // Set up focus listener for direction tracking
     var self = this;

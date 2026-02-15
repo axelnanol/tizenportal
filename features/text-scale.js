@@ -79,8 +79,11 @@ export default {
     // Remove existing style first
     this.remove(doc);
     
+    // Default to 'off' if not specified
+    level = level || 'off';
+    
     // Get CSS for this level
-    var css = this.getCSS(level || 'off');
+    var css = this.getCSS(level);
     
     // If no CSS (level is 'off'), don't inject anything
     if (!css) {
