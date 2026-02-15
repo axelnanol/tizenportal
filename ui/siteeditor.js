@@ -607,6 +607,9 @@ export function showEditSiteEditor(card, onComplete) {
     bundleOptionData: card.bundleOptionData || {},
     userscriptToggles: card.userscriptToggles || {},
   };
+  
+  console.log('TizenPortal: [showEditSiteEditor] Loaded card "' + card.name + '" with ' + Object.keys(state.card.userscriptToggles).length + ' userscript toggles: ' + JSON.stringify(state.card.userscriptToggles));
+  
   state.onComplete = onComplete;
   
   openEditor();
@@ -1224,6 +1227,8 @@ function getUserscriptsSummary() {
   var siteToggles = ensureSiteUserscriptToggles();
   var enabledNames = [];
 
+  console.log('TizenPortal: [getUserscriptsSummary] globalScripts=' + globalScripts.length + ', siteToggles=' + JSON.stringify(siteToggles));
+
   for (var j = 0; j < globalScripts.length; j++) {
     var s = globalScripts[j] || {};
     var sId = s.id || ('global-' + j);
@@ -1579,6 +1584,8 @@ function renderUserscriptsField() {
   var globalConfig = Userscripts.getUserscriptsConfig();
   var siteToggles = state.card.userscriptToggles || {};
   
+  console.log('TizenPortal: [renderUserscriptsField] Current siteToggles: ' + JSON.stringify(siteToggles) + ' (keys=' + Object.keys(siteToggles).length + ')');
+  
   // Get all userscripts from unified registry using query API
   var categories = Registry.CATEGORIES;
   
@@ -1590,6 +1597,8 @@ function renderUserscriptsField() {
     });
     
     if (categoryScripts.length === 0) continue;
+    
+    console.log('TizenPortal: [renderUserscriptsField] Category ' + cat + ' has ' + categoryScripts.length + ' scripts');
     
     // Category header
     html += '<div class="tp-field-section-label">' + getCategoryLabel(categories[cat]) + '</div>';
