@@ -2364,6 +2364,7 @@ var TizenPortalAPI = {
     getAll: featureLoader.getFeatures,
     getConfig: featureLoader.getConfig,
     getDefaults: featureLoader.getDefaults,
+    registry: featureLoader.registry,  // Expose unified registry
   },
 
   // Userscript engine
@@ -2374,8 +2375,11 @@ var TizenPortalAPI = {
     clear: userscriptEngine.clearUserscripts,
     getEnabled: userscriptEngine.getEnabledGlobalUserscripts,
     getForPayload: userscriptEngine.getGlobalUserscriptsForPayload,
-    registry: userscriptEngine.UserscriptRegistry,
+    registry: featureLoader.registry,  // Updated to use unified registry
   },
+  
+  // Unified registry (for advanced use - accesses same registry as features/userscripts)
+  registry: featureLoader.registry,
 
   // UI helpers
   showToast: showToast,

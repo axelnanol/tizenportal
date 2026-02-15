@@ -2,12 +2,15 @@
  * Userscript Registry
  * 
  * Central registry of all available userscripts.
- * Replaces bundle-based userscript definitions.
+ * Now uses the unified registry system for consistency with features.
  * Scripts are categorized and can be enabled globally or per-site.
  */
 
+import Registry from './registry.js';
+
 /**
  * Userscript categories for UI organization
+ * Only includes categories relevant to userscripts (not feature categories)
  */
 var CATEGORIES = {
   ACCESSIBILITY: 'accessibility',
@@ -225,36 +228,47 @@ var USERSCRIPTS = [
   },
 ];
 
+// Register all userscripts in the unified registry
+for (var i = 0; i < USERSCRIPTS.length; i++) {
+  var script = USERSCRIPTS[i];
+  Registry.register({
+    id: script.id,
+    type: Registry.ITEM_TYPES.USERSCRIPT,
+    name: script.name,
+    displayName: script.name,
+    category: script.category,
+    description: script.description,
+    defaultEnabled: script.defaultEnabled || false,
+    source: script.source,
+    inline: script.inline,
+    url: script.url,
+    provides: script.provides,
+  });
+}
+
 /**
  * Get all userscripts
+ * Delegates to unified registry query API
  */
 function getAllUserscripts() {
-  return USERSCRIPTS.slice();
+  return Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT });
 }
 
 /**
  * Get userscript by ID
+ * Delegates to unified registry query API
  */
 function getUserscriptById(id) {
-  for (var i = 0; i < USERSCRIPTS.length; i++) {
-    if (USERSCRIPTS[i].id === id) {
-      return USERSCRIPTS[i];
-    }
-  }
-  return null;
+  var results = Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT, id: id });
+  return results.length > 0 ? results[0] : null;
 }
 
 /**
  * Get userscripts by category
+ * Delegates to unified registry query API
  */
 function getUserscriptsByCategory(category) {
-  var result = [];
-  for (var i = 0; i < USERSCRIPTS.length; i++) {
-    if (USERSCRIPTS[i].category === category) {
-      result.push(USERSCRIPTS[i]);
-    }
-  }
-  return result;
+  return Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT, category: category });
 }
 
 /**
@@ -267,32 +281,10 @@ function getCategories() {
 /**
  * Check for feature conflicts
  * Returns array of conflicting userscript IDs
+ * Now delegates to unified registry
  */
 function checkConflicts(enabledIds) {
-  var providedFeatures = {};
-  var conflicts = [];
-  
-  for (var i = 0; i < enabledIds.length; i++) {
-    var script = getUserscriptById(enabledIds[i]);
-    if (!script || !script.provides) continue;
-    
-    for (var j = 0; j < script.provides.length; j++) {
-      var feature = script.provides[j];
-      if (providedFeatures[feature]) {
-        // Conflict detected
-        if (conflicts.indexOf(script.id) === -1) {
-          conflicts.push(script.id);
-        }
-        if (conflicts.indexOf(providedFeatures[feature]) === -1) {
-          conflicts.push(providedFeatures[feature]);
-        }
-      } else {
-        providedFeatures[feature] = script.id;
-      }
-    }
-  }
-  
-  return conflicts;
+  return Registry.checkConflicts(enabledIds);
 }
 
 export default {
@@ -302,4 +294,7 @@ export default {
   getCategories: getCategories,
   checkConflicts: checkConflicts,
   CATEGORIES: CATEGORIES,
+  
+  // Expose registry for advanced use
+  registry: Registry,
 };

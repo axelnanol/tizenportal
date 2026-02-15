@@ -10,8 +10,7 @@ import { getFeatureBundles, getBundle } from '../bundles/registry.js';
 import { refreshPortal } from './modal.js';
 import { escapeHtml, sanitizeUrl, isValidHttpUrl } from '../core/utils.js';
 import Userscripts from '../features/userscripts.js';
-
-var UserscriptRegistry = Userscripts.UserscriptRegistry;
+import Registry from '../features/registry.js';
 
 /**
  * Editor state
@@ -1208,7 +1207,8 @@ function getBundleUserscriptId(bundleName, script, index) {
 }
 
 function getGlobalUserscripts() {
-  return UserscriptRegistry.getAllUserscripts();
+  // Use unified query API
+  return Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT });
 }
 
 function getUserscriptsSummary() {
@@ -1593,13 +1593,16 @@ function renderUserscriptsField() {
   var globalConfig = Userscripts.getUserscriptsConfig();
   var siteToggles = state.card.userscriptToggles || {};
   
-  // Get all userscripts from registry
-  var allScripts = UserscriptRegistry.getAllUserscripts();
-  var categories = UserscriptRegistry.getCategories();
+  // Get all userscripts from unified registry using query API
+  var categories = Registry.CATEGORIES;
   
   // Organize scripts by category
   for (var cat in categories) {
-    var categoryScripts = UserscriptRegistry.getUserscriptsByCategory(categories[cat]);
+    var categoryScripts = Registry.query({
+      type: Registry.ITEM_TYPES.USERSCRIPT,
+      category: categories[cat]
+    });
+    
     if (categoryScripts.length === 0) continue;
     
     // Category header
