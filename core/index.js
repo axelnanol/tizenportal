@@ -1887,7 +1887,7 @@ function toggleSiteDiagnostics() {
 function returnToPortal() {
   log('Returning to portal...');
   // Navigate to portal using absolute URL (works from any site)
-  window.location.href = 'https://alexnolan.github.io/tizenportal/dist/index.html?v=' + encodeURIComponent(VERSION);
+  window.location.href = 'https://axelnanol.github.io/tizenportal/dist/index.html?v=' + encodeURIComponent(VERSION);
 }
 
 /**
