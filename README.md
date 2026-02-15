@@ -17,6 +17,7 @@ A TV-friendly launcher with customizable themes to manage your sites in one plac
 
 ### 🔧 Site Enhancement
 Runs as a TizenBrew module to inject fixes into any site.
+- **Unified Registry System** - Features and userscripts managed through a consistent registry-based API
 - **Declarative bundle system** - Bundles are primarily configuration, which can significantly reduce repetitive DOM manipulation code
 - Bundle CSS/JS applied automatically
 - Element registration API for focusable elements, styling, and DOM manipulation
@@ -126,6 +127,7 @@ TizenPortal uses a **Universal Runtime** architecture:
 
 ## 🆕 Recent Updates
 
+- **Unified Registry System** — Features and userscripts now share a consistent registry-based architecture
 - **Manifest System** — Bundle metadata now defined in manifest.json with validation
 - **Bundle Options** — Bundles can declare per-site options (with URL fetch support)
 - **Preferences Overhaul** — Theme modes, custom colours, backdrop, and HUD position
@@ -139,6 +141,7 @@ TizenPortal uses a **Universal Runtime** architecture:
 - **[User Guide](docs/User-Guide.md)** — Complete feature walkthrough
 - **[Security Guide](docs/Security.md)** — Security features and best practices
 - **[Bundle Authoring](docs/Bundle-Authoring.md)** — How to create site-specific bundles
+- **[Unified Registry](docs/UNIFIED-REGISTRY.md)** — Registry system for features and userscripts
 - **[Manifest Schema](docs/Manifest-Schema.md)** — Bundle manifest.json reference
 - **[API Reference](docs/Api-Reference.md)** — TizenPortal JavaScript API
 - **[Architecture](docs/Architecture.md)** — System design and structure
