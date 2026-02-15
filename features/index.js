@@ -316,8 +316,8 @@ function applyFeatures(doc, overrides) {
   }
 
   try {
-    // Get all registered features from registry
-    var registeredFeatures = Registry.getFeatures();
+    // Get all registered features from registry using unified query API
+    var registeredFeatures = Registry.query({ type: Registry.ITEM_TYPES.FEATURE });
     
     // Apply each registered feature based on config
     for (var i = 0; i < registeredFeatures.length; i++) {
@@ -359,8 +359,8 @@ function removeFeatures(doc) {
   }
   
   try {
-    // Get all registered features and remove them
-    var registeredFeatures = Registry.getFeatures();
+    // Get all registered features and remove them using unified query API
+    var registeredFeatures = Registry.query({ type: Registry.ITEM_TYPES.FEATURE });
     for (var i = 0; i < registeredFeatures.length; i++) {
       var item = registeredFeatures[i];
       if (item.implementation && item.implementation.remove) {
@@ -383,8 +383,8 @@ function removeFeatures(doc) {
  * @returns {Array}
  */
 function getFeatures() {
-  // Return metadata from registry
-  return Registry.getFeatures().map(function(item) {
+  // Return metadata from registry using unified query API
+  return Registry.query({ type: Registry.ITEM_TYPES.FEATURE }).map(function(item) {
     return {
       key: item.id,
       name: item.name,

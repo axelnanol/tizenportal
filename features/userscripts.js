@@ -6,7 +6,7 @@
  */
 
 import { configGet, configSet } from '../core/config.js';
-import UserscriptRegistry from './userscript-registry.js';
+import Registry from './registry.js';
 
 var activeCleanups = [];
 var activeScripts = [];
@@ -17,8 +17,8 @@ var activeScripts = [];
  */
 function getDefaultConfig() {
   var enabled = {};
-  // Enable default-enabled scripts from registry
-  var allScripts = UserscriptRegistry.getAllUserscripts();
+  // Enable default-enabled scripts from registry using unified query API
+  var allScripts = Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT });
   for (var i = 0; i < allScripts.length; i++) {
     if (allScripts[i].defaultEnabled) {
       enabled[allScripts[i].id] = true;
@@ -106,8 +106,8 @@ function getUserscriptsConfig() {
     changed = true;
   }
 
-  // Check for new defaultEnabled scripts not in config
-  var allScripts = UserscriptRegistry.getAllUserscripts();
+  // Check for new defaultEnabled scripts not in config using unified query API
+  var allScripts = Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT });
   for (var i = 0; i < allScripts.length; i++) {
     var script = allScripts[i];
     if (script.defaultEnabled && !cfg.enabled.hasOwnProperty(script.id)) {
@@ -177,7 +177,9 @@ function getGlobalUserscriptsForPayload() {
   var scripts = [];
   
   for (var i = 0; i < enabledIds.length; i++) {
-    var scriptDef = UserscriptRegistry.getUserscriptById(enabledIds[i]);
+    // Use unified query API to get script by ID
+    var results = Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT, id: enabledIds[i] });
+    var scriptDef = results.length > 0 ? results[0] : null;
     if (scriptDef) {
       scripts.push({
         id: scriptDef.id,
@@ -274,8 +276,8 @@ function applyUserscripts(card, bundle) {
     window.TizenPortal.log('[Userscripts] Applying for bundle: ' + bundleName + ', card: ' + cardName);
   }
 
-  // Get all userscripts from registry
-  var allScripts = UserscriptRegistry.getAllUserscripts();
+  // Get all userscripts from unified registry
+  var allScripts = Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT });
   
   // Site-level toggles (per-card overrides)
   var siteToggles = card && card.userscriptToggles && typeof card.userscriptToggles === 'object' 
@@ -327,5 +329,7 @@ export default {
   getGlobalUserscriptsForPayload: getGlobalUserscriptsForPayload,
   applyUserscripts: applyUserscripts,
   clearUserscripts: clearUserscripts,
-  UserscriptRegistry: UserscriptRegistry,
+  
+  // Expose unified registry (no longer separate UserscriptRegistry)
+  Registry: Registry,
 };
