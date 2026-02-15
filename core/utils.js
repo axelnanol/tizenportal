@@ -182,7 +182,11 @@ export function injectCSS(doc, id, css) {
     }
     return false;
   } catch (err) {
-    console.warn('TizenPortal: Failed to inject CSS:', err.message);
+    if (typeof window !== 'undefined' && window.TizenPortal && window.TizenPortal.warn) {
+      window.TizenPortal.warn('Failed to inject CSS: ' + err.message);
+    } else {
+      console.warn('TizenPortal: Failed to inject CSS:', err.message);
+    }
     return false;
   }
 }
@@ -206,7 +210,11 @@ export function removeCSS(doc, id) {
     }
     return false;
   } catch (err) {
-    console.warn('TizenPortal: Failed to remove CSS:', err.message);
+    if (typeof window !== 'undefined' && window.TizenPortal && window.TizenPortal.warn) {
+      window.TizenPortal.warn('Failed to remove CSS: ' + err.message);
+    } else {
+      console.warn('TizenPortal: Failed to remove CSS:', err.message);
+    }
     return false;
   }
 }

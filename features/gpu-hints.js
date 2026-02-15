@@ -62,5 +62,6 @@ export default {
   remove: function(doc) {
     if (!doc) return;
     removeCSS(doc, 'tp-gpu-hints');
+    TizenPortal.log('GPU hints: Removed');
   },
 };

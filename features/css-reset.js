@@ -115,5 +115,6 @@ export default {
   remove: function(doc) {
     if (!doc) return;
     removeCSS(doc, 'tp-css-reset');
+    TizenPortal.log('CSS reset: Removed');
   },
 };

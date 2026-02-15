@@ -65,7 +65,7 @@ import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
 import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggleDiagnosticsPanel } from '../ui/diagnostics.js';
 import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, setActiveBundle } from './loader.js';
 import { getBundleNames, getBundle, logDependencyWarnings } from '../bundles/registry.js';
-import { isValidHttpUrl, sanitizeCss } from './utils.js';
+import { isValidHttpUrl, sanitizeCss, safeLocalStorageSet } from './utils.js';
 import featureLoader from '../features/index.js';
 import userscriptEngine from '../features/userscripts.js';
 import { 
@@ -1390,10 +1390,9 @@ function findMatchingCard(url) {
     // Check if current URL starts with card URL (handles subpages)
     if (normalizedUrl.indexOf(cardUrl) === 0) {
       if (needsSave) {
-        try {
-          localStorage.setItem('tp_apps', JSON.stringify(apps));
-        } catch (err) {
-          // Ignore
+        var result = safeLocalStorageSet('tp_apps', JSON.stringify(apps));
+        if (!result.success) {
+          warn('Failed to save last card: ' + result.message);
         }
       }
       return card;
@@ -1402,10 +1401,9 @@ function findMatchingCard(url) {
     // Also check if card URL starts with current URL (handles base domain matching)
     if (cardUrl.indexOf(normalizedUrl.split('?')[0].split('#')[0]) === 0) {
       if (needsSave) {
-        try {
-          localStorage.setItem('tp_apps', JSON.stringify(apps));
-        } catch (err) {
-          // Ignore
+        var result = safeLocalStorageSet('tp_apps', JSON.stringify(apps));
+        if (!result.success) {
+          warn('Failed to save last card: ' + result.message);
         }
       }
       return card;
@@ -1413,10 +1411,9 @@ function findMatchingCard(url) {
   }
 
   if (needsSave) {
-    try {
-      localStorage.setItem('tp_apps', JSON.stringify(apps));
-    } catch (err) {
-      // Ignore
+    var result = safeLocalStorageSet('tp_apps', JSON.stringify(apps));
+    if (!result.success) {
+      warn('Failed to save last card: ' + result.message);
     }
   }
   
