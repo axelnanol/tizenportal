@@ -4,7 +4,7 @@
  * Card data model and localStorage persistence.
  */
 
-import { escapeHtml, sanitizeUrl, safeLocalStorageSet } from '../core/utils.js';
+import { escapeHtml, sanitizeUrl, safeLocalStorageSet, ensureProperties, getTypedValue } from '../core/utils.js';
 
 /**
  * Storage key for cards
@@ -60,10 +60,10 @@ function normalizeUserscripts(userscripts) {
       name: entry.name || 'Custom Script ' + (i + 1),
       enabled: entry.enabled === true,
       source: entry.source === 'url' ? 'url' : 'inline',
-      url: typeof entry.url === 'string' ? entry.url : '',
-      inline: typeof entry.inline === 'string' ? entry.inline : '',
-      cached: typeof entry.cached === 'string' ? entry.cached : '',
-      lastFetched: typeof entry.lastFetched === 'number' ? entry.lastFetched : 0,
+      url: getTypedValue(entry.url, 'string', ''),
+      inline: getTypedValue(entry.inline, 'string', ''),
+      cached: getTypedValue(entry.cached, 'string', ''),
+      lastFetched: getTypedValue(entry.lastFetched, 'number', 0),
     });
   }
 
@@ -134,59 +134,14 @@ function loadCards() {
           delete card.bundle;
           needsSave = true;
         }
-        // Ensure featureBundle field exists
-        if (!card.hasOwnProperty('featureBundle')) {
-          card.featureBundle = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('viewportMode')) {
-          card.viewportMode = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('focusOutlineMode')) {
-          card.focusOutlineMode = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('userAgent')) {
-          card.userAgent = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('tabindexInjection')) {
-          card.tabindexInjection = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('scrollIntoView')) {
-          card.scrollIntoView = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('safeArea')) {
-          card.safeArea = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('gpuHints')) {
-          card.gpuHints = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('cssReset')) {
-          card.cssReset = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('hideScrollbars')) {
-          card.hideScrollbars = null;
-          needsSave = true;
-        }
-
-        if (!card.hasOwnProperty('wrapTextInputs')) {
-          card.wrapTextInputs = null;
+        
+        // Ensure all card fields exist using helper function
+        var cardFields = [
+          'featureBundle', 'viewportMode', 'focusOutlineMode', 'userAgent',
+          'tabindexInjection', 'scrollIntoView', 'safeArea', 'gpuHints',
+          'cssReset', 'hideScrollbars', 'wrapTextInputs'
+        ];
+        if (ensureProperties(card, cardFields, null)) {
           needsSave = true;
         }
 

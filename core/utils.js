@@ -218,3 +218,43 @@ export function removeCSS(doc, id) {
     return false;
   }
 }
+
+/**
+ * Ensure object has specified properties, setting them to a default value if missing.
+ * Used for card migration to avoid repeated hasOwnProperty checks.
+ *
+ * @param {Object} obj - Object to check
+ * @param {Array<string>} properties - Array of property names to ensure exist
+ * @param {*} defaultValue - Default value to set for missing properties (default: null)
+ * @returns {boolean} true if any properties were added, false otherwise
+ */
+export function ensureProperties(obj, properties, defaultValue) {
+  if (!obj || typeof obj !== 'object' || !Array.isArray(properties)) {
+    return false;
+  }
+  
+  var modified = false;
+  var value = defaultValue !== undefined ? defaultValue : null;
+  
+  for (var i = 0; i < properties.length; i++) {
+    if (!obj.hasOwnProperty(properties[i])) {
+      obj[properties[i]] = value;
+      modified = true;
+    }
+  }
+  
+  return modified;
+}
+
+/**
+ * Get typed value with fallback to default if type doesn't match.
+ * Reduces verbose typeof checks throughout the codebase.
+ *
+ * @param {*} value - Value to check
+ * @param {string} expectedType - Expected type ('string', 'number', 'boolean', 'object')
+ * @param {*} defaultValue - Default value if type doesn't match
+ * @returns {*} The value if type matches, otherwise defaultValue
+ */
+export function getTypedValue(value, expectedType, defaultValue) {
+  return typeof value === expectedType ? value : defaultValue;
+}
