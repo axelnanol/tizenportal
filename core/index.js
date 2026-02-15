@@ -2357,12 +2357,24 @@ var TizenPortalAPI = {
     },
   },
 
+  // Features system
+  features: {
+    apply: featureLoader.applyFeatures,
+    remove: featureLoader.removeFeatures,
+    getAll: featureLoader.getFeatures,
+    getConfig: featureLoader.getConfig,
+    getDefaults: featureLoader.getDefaults,
+  },
+
   // Userscript engine
   userscripts: {
     getConfig: userscriptEngine.getUserscriptsConfig,
     setConfig: userscriptEngine.setUserscriptsConfig,
     apply: userscriptEngine.applyUserscripts,
     clear: userscriptEngine.clearUserscripts,
+    getEnabled: userscriptEngine.getEnabledGlobalUserscripts,
+    getForPayload: userscriptEngine.getGlobalUserscriptsForPayload,
+    registry: userscriptEngine.UserscriptRegistry,
   },
 
   // UI helpers
