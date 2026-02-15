@@ -255,6 +255,66 @@ function applyFeatures(doc, overrides) {
     console.log('[Features] Effective config:', effectiveConfig);
   }
 
+  /**
+   * Helper to apply a feature with its arguments
+   */
+  function applyFeature(impl, doc, args) {
+    impl.apply.apply(impl, [doc].concat(args));
+  }
+
+  /**
+   * Check if a feature should be applied
+   * Returns { shouldApply: boolean, shouldRemove: boolean, args: array }
+   */
+  function shouldApplyFeature(item, effectiveConfig) {
+    var primaryKey = item.configKeys && item.configKeys.length > 0 ? item.configKeys[0] : item.id;
+    var isEnabled = effectiveConfig[primaryKey];
+    
+    // Special handling for features with complex enable/disable logic
+    if (item.id === 'focusStyling') {
+      var focusMode = effectiveConfig.focusOutlineMode || (effectiveConfig.focusStyling ? 'on' : 'off');
+      if (effectiveConfig.focusStyling === false) focusMode = 'off';
+      
+      if (focusMode === 'off') {
+        return { shouldApply: false, shouldRemove: true, args: [] };
+      } else {
+        var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+        return { shouldApply: true, shouldRemove: false, args: args };
+      }
+    } else if (item.id === 'focusTransitions') {
+      var transitionMode = effectiveConfig.focusTransitionMode || 'slide';
+      if (effectiveConfig.focusTransitions === false || transitionMode === 'off') {
+        return { shouldApply: false, shouldRemove: true, args: [] };
+      } else {
+        var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+        return { shouldApply: true, shouldRemove: false, args: args };
+      }
+    } else if (item.id === 'textScale') {
+      var textScaleLevel = effectiveConfig.textScale || 'off';
+      if (textScaleLevel === 'off') {
+        return { shouldApply: false, shouldRemove: true, args: [] };
+      } else {
+        var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+        return { shouldApply: true, shouldRemove: false, args: args };
+      }
+    } else if (item.id === 'navigationFix') {
+      if (effectiveConfig.navigationFix) {
+        var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+        return { shouldApply: true, shouldRemove: false, args: args };
+      } else if (effectiveConfig.navigationFix === false) {
+        return { shouldApply: false, shouldRemove: true, args: [] };
+      }
+      return { shouldApply: false, shouldRemove: false, args: [] };
+    } else {
+      // Standard boolean-enabled features
+      if (isEnabled) {
+        var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+        return { shouldApply: true, shouldRemove: false, args: args };
+      }
+      return { shouldApply: false, shouldRemove: false, args: [] };
+    }
+  }
+
   try {
     // Get all registered features from registry
     var registeredFeatures = Registry.getFeatures();
@@ -266,59 +326,14 @@ function applyFeatures(doc, overrides) {
       
       if (!impl) continue;
       
-      // Check if feature is enabled (simple boolean check on primary key)
-      var primaryKey = item.configKeys && item.configKeys.length > 0 ? item.configKeys[0] : item.id;
-      var isEnabled = effectiveConfig[primaryKey];
+      var decision = shouldApplyFeature(item, effectiveConfig);
       
-      // Special handling for features with complex enable/disable logic
-      if (item.id === 'focusStyling') {
-        var focusMode = effectiveConfig.focusOutlineMode || (effectiveConfig.focusStyling ? 'on' : 'off');
-        if (effectiveConfig.focusStyling === false) focusMode = 'off';
-        
-        if (focusMode === 'off') {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
-          if (impl.remove) impl.remove(doc);
-        } else {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id + ': ' + focusMode);
-          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
-          impl.apply.apply(impl, [doc].concat(args));
-        }
-      } else if (item.id === 'focusTransitions') {
-        var transitionMode = effectiveConfig.focusTransitionMode || 'slide';
-        if (effectiveConfig.focusTransitions === false || transitionMode === 'off') {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
-          if (impl.remove) impl.remove(doc);
-        } else {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id);
-          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
-          impl.apply.apply(impl, [doc].concat(args));
-        }
-      } else if (item.id === 'textScale') {
-        var textScaleLevel = effectiveConfig.textScale || 'off';
-        if (textScaleLevel === 'off') {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
-          if (impl.remove) impl.remove(doc);
-        } else {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id + ': ' + textScaleLevel);
-          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
-          impl.apply.apply(impl, [doc].concat(args));
-        }
-      } else if (item.id === 'navigationFix') {
-        if (effectiveConfig.navigationFix) {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id);
-          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
-          impl.apply.apply(impl, [doc].concat(args));
-        } else if (effectiveConfig.navigationFix === false) {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
-          if (impl.remove) impl.remove(doc);
-        }
-      } else {
-        // Standard boolean-enabled features
-        if (isEnabled) {
-          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id);
-          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
-          impl.apply.apply(impl, [doc].concat(args));
-        }
+      if (decision.shouldRemove) {
+        if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
+        if (impl.remove) impl.remove(doc);
+      } else if (decision.shouldApply) {
+        if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id);
+        applyFeature(impl, doc, decision.args);
       }
     }
     

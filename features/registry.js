@@ -213,7 +213,7 @@ function checkConflicts(enabledIds) {
  * Clear registry (for testing)
  */
 function clear() {
-  REGISTRY = [];
+  REGISTRY.length = 0;
 }
 
 export default {
