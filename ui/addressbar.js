@@ -28,21 +28,6 @@ var cachedElements = {
 };
 
 /**
- * Get or cache an address bar element by ID
- * Safe because address bar DOM is stable after creation
- */
-function getAddressBarElement(id, cacheKey) {
-  if (cachedElements[cacheKey]) {
-    return cachedElements[cacheKey];
-  }
-  var element = document.getElementById(id);
-  if (element) {
-    cachedElements[cacheKey] = element;
-  }
-  return element;
-}
-
-/**
  * Is address bar currently visible
  */
 var isVisible = false;
