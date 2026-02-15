@@ -169,6 +169,31 @@ function setGlobalUserscriptEnabled(scriptId, enabled) {
 }
 
 /**
+ * Get enabled global userscripts for payload serialization
+ * Returns array of script objects with full metadata for cross-origin transfer
+ */
+function getGlobalUserscriptsForPayload() {
+  var enabledIds = getEnabledGlobalUserscripts();
+  var scripts = [];
+  
+  for (var i = 0; i < enabledIds.length; i++) {
+    var scriptDef = UserscriptRegistry.getUserscriptById(enabledIds[i]);
+    if (scriptDef) {
+      scripts.push({
+        id: scriptDef.id,
+        name: scriptDef.name,
+        category: scriptDef.category,
+        source: scriptDef.source,
+        inline: scriptDef.inline || null,
+        url: scriptDef.url || null,
+      });
+    }
+  }
+  
+  return scripts;
+}
+
+/**
  * Resolve script source code
  * For URL scripts, check urlCache first
  */
@@ -299,6 +324,7 @@ export default {
   setUserscriptsConfig: setUserscriptsConfig,
   getEnabledGlobalUserscripts: getEnabledGlobalUserscripts,
   setGlobalUserscriptEnabled: setGlobalUserscriptEnabled,
+  getGlobalUserscriptsForPayload: getGlobalUserscriptsForPayload,
   applyUserscripts: applyUserscripts,
   clearUserscripts: clearUserscripts,
   UserscriptRegistry: UserscriptRegistry,
