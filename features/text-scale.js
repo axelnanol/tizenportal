@@ -90,8 +90,12 @@ export default {
       return;
     }
     
-    injectCSS(doc, 'tp-text-scale', css);
-    TizenPortal.log('Text scale applied: ' + level);
+    var injected = injectCSS(doc, 'tp-text-scale', css);
+    if (injected) {
+      TizenPortal.log('Text scale applied: ' + level);
+    } else {
+      TizenPortal.warn('Failed to apply text scale: ' + level);
+    }
   },
   
   /**
@@ -100,7 +104,9 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    removeCSS(doc, 'tp-text-scale');
-    TizenPortal.log('Text scale removed');
+    var removed = removeCSS(doc, 'tp-text-scale');
+    if (removed) {
+      TizenPortal.log('Text scale removed');
+    }
   },
 };

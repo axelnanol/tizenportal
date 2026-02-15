@@ -6,7 +6,7 @@
  */
 
 import defaultStyles from './style.css';
-import { log as tpLog, warn as tpWarn } from '../../core/utils.js';
+import { log as tpLog } from '../../core/utils.js';
 
 export default {
   /**

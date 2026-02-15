@@ -30,8 +30,12 @@ export default {
    */
   apply: function(doc) {
     if (!doc) return;
-    injectCSS(doc, 'tp-safe-area', this.getCSS());
-    TizenPortal.log('TV safe area: Applied 5% inset');
+    var applied = injectCSS(doc, 'tp-safe-area', this.getCSS());
+    if (applied) {
+      TizenPortal.log('TV safe area: Applied 5% inset');
+    } else {
+      TizenPortal.warn('TV safe area: Failed to apply 5% inset');
+    }
   },
   
   /**
@@ -40,7 +44,9 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    removeCSS(doc, 'tp-safe-area');
-    TizenPortal.log('TV safe area: Removed');
+    var removed = removeCSS(doc, 'tp-safe-area');
+    if (removed) {
+      TizenPortal.log('TV safe area: Removed');
+    }
   },
 };

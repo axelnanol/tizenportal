@@ -316,7 +316,9 @@ export default {
     // Clear previous element reference
     previousElement = null;
     
-    TizenPortal.log('Focus transitions removed');
+    if (window.TizenPortal && window.TizenPortal.log) {
+      window.TizenPortal.log('Focus transitions removed');
+    }
   },
   
   /**

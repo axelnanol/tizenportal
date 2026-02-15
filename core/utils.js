@@ -171,6 +171,12 @@ export function injectCSS(doc, id, css) {
   if (!doc || !id || typeof css !== 'string') return false;
   
   try {
+    // Check if style element already exists and remove it first
+    var existing = doc.getElementById(id);
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+    
     var style = doc.createElement('style');
     style.id = id;
     style.textContent = css;
@@ -182,11 +188,8 @@ export function injectCSS(doc, id, css) {
     }
     return false;
   } catch (err) {
-    if (typeof window !== 'undefined' && window.TizenPortal && window.TizenPortal.warn) {
-      window.TizenPortal.warn('Failed to inject CSS: ' + err.message);
-    } else {
-      console.warn('TizenPortal: Failed to inject CSS: ' + err.message);
-    }
+    // Use warn() helper to ensure console is available
+    warn('Failed to inject CSS: ' + err.message);
     return false;
   }
 }
