@@ -5,6 +5,8 @@
  * Includes scrollbar styling, text selection, and box-sizing.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 export default {
   name: 'cssReset',
   displayName: 'CSS Normalization',
@@ -102,16 +104,8 @@ export default {
    */
   apply: function(doc, options) {
     if (!doc) return;
-    
-    var style = doc.createElement('style');
-    style.id = 'tp-css-reset';
-    style.textContent = this.getCSS(options || {});
-    
-    var head = doc.head || doc.documentElement;
-    if (head) {
-      head.appendChild(style);
-      TizenPortal.log('CSS reset: Applied normalization');
-    }
+    injectCSS(doc, 'tp-css-reset', this.getCSS(options || {}));
+    TizenPortal.log('CSS reset: Applied normalization');
   },
   
   /**
@@ -120,11 +114,7 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    
-    var style = doc.getElementById('tp-css-reset');
-    if (style) {
-      style.parentNode.removeChild(style);
-      TizenPortal.log('CSS reset: Removed');
-    }
+    removeCSS(doc, 'tp-css-reset');
+    TizenPortal.log('CSS reset: Removed');
   },
 };

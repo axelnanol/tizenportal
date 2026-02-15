@@ -18,6 +18,16 @@ var addressBarElement = null;
 var urlInputElement = null;
 
 /**
+ * Cached DOM elements for address bar sub-components
+ * Only populated after initAddressBar() is called
+ */
+var cachedElements = {
+  container: null,
+  display: null,
+  input: null,
+};
+
+/**
  * Is address bar currently visible
  */
 var isVisible = false;
@@ -38,6 +48,11 @@ export function initAddressBar() {
   
   addressBarElement = document.getElementById('tp-addressbar');
   urlInputElement = document.getElementById('tp-addressbar-url');
+  
+  // Pre-cache frequently accessed elements
+  cachedElements.container = document.getElementById('tp-addressbar-url-container');
+  cachedElements.display = document.getElementById('tp-addressbar-url-display');
+  cachedElements.input = urlInputElement;
 }
 
 /**
@@ -201,9 +216,9 @@ var isUrlInputActive = false;
  * Activate URL input for editing
  */
 function handleUrlContainerActivate() {
-  var container = document.getElementById('tp-addressbar-url-container');
-  var display = document.getElementById('tp-addressbar-url-display');
-  var input = document.getElementById('tp-addressbar-url');
+  var container = cachedElements.container;
+  var display = cachedElements.display;
+  var input = cachedElements.input;
   
   if (!container || !input) return;
   
@@ -231,9 +246,9 @@ function handleUrlContainerActivate() {
 function deactivateUrlInput() {
   if (!isUrlInputActive) return;
   
-  var container = document.getElementById('tp-addressbar-url-container');
-  var display = document.getElementById('tp-addressbar-url-display');
-  var input = document.getElementById('tp-addressbar-url');
+  var container = cachedElements.container;
+  var display = cachedElements.display;
+  var input = cachedElements.input;
   
   if (!container) return;
   
@@ -276,7 +291,7 @@ export function showAddressBar() {
     isVisible = true;
     
     // Focus the URL container (not the input itself)
-    var urlContainer = document.getElementById('tp-addressbar-url-container');
+    var urlContainer = cachedElements.container;
     if (urlContainer) {
       try {
         urlContainer.focus();
@@ -375,8 +390,8 @@ export function isAddressBarVisible() {
  * Update URL display and input from current location
  */
 function updateUrlFromCurrentLocation() {
-  var display = document.getElementById('tp-addressbar-url-display');
-  var input = document.getElementById('tp-addressbar-url');
+  var display = cachedElements.display;
+  var input = cachedElements.input;
   
   // Use current window location
   var url = window.location.href;

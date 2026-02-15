@@ -5,6 +5,8 @@
  * Prevents content from being cut off at screen edges.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 export default {
   name: 'safeArea',
   displayName: 'TV Safe Area (5% inset)',
@@ -28,15 +30,11 @@ export default {
    */
   apply: function(doc) {
     if (!doc) return;
-    
-    var style = doc.createElement('style');
-    style.id = 'tp-safe-area';
-    style.textContent = this.getCSS();
-    
-    var head = doc.head || doc.documentElement;
-    if (head) {
-      head.appendChild(style);
+    var applied = injectCSS(doc, 'tp-safe-area', this.getCSS());
+    if (applied) {
       TizenPortal.log('TV safe area: Applied 5% inset');
+    } else {
+      TizenPortal.warn('TV safe area: Failed to apply 5% inset');
     }
   },
   
@@ -46,10 +44,8 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    
-    var style = doc.getElementById('tp-safe-area');
-    if (style) {
-      style.parentNode.removeChild(style);
+    var removed = removeCSS(doc, 'tp-safe-area');
+    if (removed) {
       TizenPortal.log('TV safe area: Removed');
     }
   },

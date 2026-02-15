@@ -6,6 +6,8 @@
  * Moved from core polyfills to allow user configuration.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 /**
  * Scale presets
  * Uses transform-based scaling to preserve relative sizing
@@ -77,29 +79,22 @@ export default {
     // Remove existing style first
     this.remove(doc);
     
+    // Default to 'off' if not specified
+    level = level || 'off';
+    
     // Get CSS for this level
-    var css = this.getCSS(level || 'off');
+    var css = this.getCSS(level);
     
     // If no CSS (level is 'off'), don't inject anything
     if (!css) {
       return;
     }
     
-    try {
-      var style = doc.createElement('style');
-      style.id = 'tp-text-scale';
-      style.textContent = css;
-      
-      var head = doc.head || doc.documentElement;
-      if (head) {
-        head.appendChild(style);
-      }
-    } catch (err) {
-      if (window.TizenPortal) {
-        window.TizenPortal.warn('[TextScale] Failed to apply:', err.message);
-      } else {
-        console.warn('[TextScale] Failed to apply:', err.message);
-      }
+    var injected = injectCSS(doc, 'tp-text-scale', css);
+    if (injected) {
+      TizenPortal.log('Text scale applied: ' + level);
+    } else {
+      TizenPortal.warn('Failed to apply text scale: ' + level);
     }
   },
   
@@ -109,18 +104,9 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    
-    try {
-      var style = doc.getElementById('tp-text-scale');
-      if (style && style.parentNode) {
-        style.parentNode.removeChild(style);
-      }
-    } catch (err) {
-      if (window.TizenPortal) {
-        window.TizenPortal.warn('[TextScale] Failed to remove:', err.message);
-      } else {
-        console.warn('[TextScale] Failed to remove:', err.message);
-      }
+    var removed = removeCSS(doc, 'tp-text-scale');
+    if (removed) {
+      TizenPortal.log('Text scale removed');
     }
   },
 };

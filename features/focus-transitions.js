@@ -5,6 +5,8 @@
  * Implements lightweight transitions that evoke the direction of movement.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 /**
  * Previous focused element for direction calculation
  */
@@ -257,13 +259,10 @@ export default {
     }
     
     // Inject CSS
-    var style = doc.createElement('style');
-    style.id = 'tp-focus-transitions';
-    style.textContent = this.getCSS(mode, speed);
+    injectCSS(doc, 'tp-focus-transitions', this.getCSS(mode, speed));
     
-    var head = doc.head || doc.documentElement;
-    if (head) {
-      head.appendChild(style);
+    if (window.TizenPortal && window.TizenPortal.log) {
+      window.TizenPortal.log('Focus transitions applied: ' + mode + ', ' + speed);
     }
     
     // Set up focus listener for direction tracking
@@ -305,11 +304,8 @@ export default {
   remove: function(doc) {
     if (!doc) return;
     
-    // Remove injected CSS
-    var style = doc.getElementById('tp-focus-transitions');
-    if (style && style.parentNode) {
-      style.parentNode.removeChild(style);
-    }
+    // Remove style
+    removeCSS(doc, 'tp-focus-transitions');
     
     // Remove focus listener
     if (doc._tpFocusTransitionHandler) {
@@ -319,6 +315,10 @@ export default {
     
     // Clear previous element reference
     previousElement = null;
+    
+    if (window.TizenPortal && window.TizenPortal.log) {
+      window.TizenPortal.log('Focus transitions removed');
+    }
   },
   
   /**

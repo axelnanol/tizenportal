@@ -5,6 +5,8 @@
  * don't block hit testing for focusable parent elements.
  */
 
+import { injectCSS, removeCSS } from '../core/utils.js';
+
 export default {
   name: 'navigationFix',
   displayName: 'Navigation Hit Test Fix',
@@ -52,18 +54,9 @@ export default {
    */
   apply: function(doc) {
     if (!doc) return;
-    
     this.remove(doc);
-    
-    var style = doc.createElement('style');
-    style.id = 'tp-navigation-fix';
-    style.textContent = this.getCSS();
-    
-    var head = doc.head || doc.documentElement;
-    if (head) {
-      head.appendChild(style);
-      TizenPortal.log('Navigation fix CSS injected');
-    }
+    injectCSS(doc, 'tp-navigation-fix', this.getCSS());
+    TizenPortal.log('Navigation fix CSS injected');
   },
   
   /**
@@ -72,10 +65,7 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    
-    var style = doc.getElementById('tp-navigation-fix');
-    if (style) {
-      style.parentNode.removeChild(style);
-    }
+    removeCSS(doc, 'tp-navigation-fix');
+    TizenPortal.log('Navigation fix CSS removed');
   },
 };

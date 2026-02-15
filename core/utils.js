@@ -157,3 +157,135 @@ export function safeLocalStorageSet(key, value) {
     };
   }
 }
+
+/**
+ * Inject CSS into a document by creating a style element.
+ * This is a shared utility to reduce code duplication across features.
+ *
+ * @param {Document} doc - Target document
+ * @param {string} id - Unique ID for the style element
+ * @param {string} css - CSS content to inject
+ * @returns {boolean} true if successful, false otherwise
+ */
+export function injectCSS(doc, id, css) {
+  if (!doc || !id || typeof css !== 'string') return false;
+  
+  try {
+    // Check if style element already exists and remove it first
+    var existing = doc.getElementById(id);
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+    
+    var style = doc.createElement('style');
+    style.id = id;
+    style.textContent = css;
+    
+    var head = doc.head || doc.documentElement;
+    if (head) {
+      head.appendChild(style);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    // Use warn() helper to ensure console is available
+    warn('Failed to inject CSS: ' + err.message);
+    return false;
+  }
+}
+
+/**
+ * Remove an injected CSS style element from a document.
+ * This is a shared utility to reduce code duplication across features.
+ *
+ * @param {Document} doc - Target document
+ * @param {string} id - ID of the style element to remove
+ * @returns {boolean} true if element was found and removed, false otherwise
+ */
+export function removeCSS(doc, id) {
+  if (!doc || !id) return false;
+  
+  try {
+    var style = doc.getElementById(id);
+    if (style && style.parentNode) {
+      style.parentNode.removeChild(style);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    if (typeof window !== 'undefined' && window.TizenPortal && window.TizenPortal.warn) {
+      window.TizenPortal.warn('Failed to remove CSS: ' + err.message);
+    } else {
+      console.warn('TizenPortal: Failed to remove CSS: ' + err.message);
+    }
+    return false;
+  }
+}
+
+/**
+ * Ensure object has specified properties, setting them to a default value if missing.
+ * Used for card migration to avoid repeated hasOwnProperty checks.
+ *
+ * @param {Object} obj - Object to check
+ * @param {Array<string>} properties - Array of property names to ensure exist
+ * @param {*} defaultValue - Default value to set for missing properties (default: null)
+ * @returns {boolean} true if any properties were added, false otherwise
+ */
+export function ensureProperties(obj, properties, defaultValue) {
+  if (!obj || typeof obj !== 'object' || !Array.isArray(properties)) {
+    return false;
+  }
+  
+  var modified = false;
+  var value = defaultValue !== undefined ? defaultValue : null;
+  
+  for (var i = 0; i < properties.length; i++) {
+    if (!obj.hasOwnProperty(properties[i])) {
+      obj[properties[i]] = value;
+      modified = true;
+    }
+  }
+  
+  return modified;
+}
+
+/**
+ * Get typed value with fallback to default if type doesn't match.
+ * Reduces verbose typeof checks throughout the codebase.
+ *
+ * @param {*} value - Value to check
+ * @param {string} expectedType - Expected type ('string', 'number', 'boolean', 'object')
+ * @param {*} defaultValue - Default value if type doesn't match
+ * @returns {*} The value if type matches, otherwise defaultValue
+ */
+export function getTypedValue(value, expectedType, defaultValue) {
+  return typeof value === expectedType ? value : defaultValue;
+}
+
+/**
+ * Log with TizenPortal.log fallback to console.log
+ * Provides consistent logging across bundles and features.
+ *
+ * @param {...*} args - Arguments to log
+ */
+export function log() {
+  if (typeof window !== 'undefined' && window.TizenPortal && typeof window.TizenPortal.log === 'function') {
+    window.TizenPortal.log.apply(window.TizenPortal, arguments);
+  } else if (typeof console !== 'undefined' && typeof console.log === 'function') {
+    console.log.apply(console, arguments);
+  }
+}
+
+/**
+ * Warn with TizenPortal.warn fallback to console.warn
+ * Provides consistent warning logging across bundles and features.
+ *
+ * @param {...*} args - Arguments to log as warning
+ */
+export function warn() {
+  if (typeof window !== 'undefined' && window.TizenPortal && typeof window.TizenPortal.warn === 'function') {
+    window.TizenPortal.warn.apply(window.TizenPortal, arguments);
+  } else if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+    console.warn.apply(console, arguments);
+  }
+}
