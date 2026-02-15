@@ -1296,11 +1296,11 @@ function renderGlobalOverridesField() {
           '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
           '<div class="tp-userscript-actions">' +
-            '<button type="button" class="tp-userscript-btn tp-global-override-btn" data-global-action="cycle" data-global-key="' + def.key + '" tabindex="0">' +
+            '<button type="button" class="tp-userscript-btn tp-global-override-btn" data-global-action="cycle" data-global-key="' + def.key + '" tabindex="-1">' +
               'Change' +
             '</button>' +
             (hasOverride ? 
-              '<button type="button" class="tp-userscript-btn tp-global-override-btn" data-global-action="reset" data-global-key="' + def.key + '" tabindex="0">Reset</button>' 
+              '<button type="button" class="tp-userscript-btn tp-global-override-btn" data-global-action="reset" data-global-key="' + def.key + '" tabindex="-1">Reset</button>' 
               : '') +
           '</div>' +
         '</div>';
@@ -1346,11 +1346,11 @@ function renderSiteOverridesField() {
           '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
           '<div class="tp-userscript-actions">' +
-            '<button type="button" class="tp-userscript-btn tp-site-override-btn" data-site-action="cycle" data-site-key="' + def.key + '" tabindex="0">' +
+            '<button type="button" class="tp-userscript-btn tp-site-override-btn" data-site-action="cycle" data-site-key="' + def.key + '" tabindex="-1">' +
               'Change' +
             '</button>' +
             (hasOverride ? 
-              '<button type="button" class="tp-userscript-btn tp-site-override-btn" data-site-action="reset" data-site-key="' + def.key + '" tabindex="0">Reset</button>' 
+              '<button type="button" class="tp-userscript-btn tp-site-override-btn" data-site-action="reset" data-site-key="' + def.key + '" tabindex="-1">Reset</button>' 
               : '') +
           '</div>' +
         '</div>';
@@ -1392,7 +1392,7 @@ function renderFeatureOverridesField() {
           '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
           '<div class="tp-userscript-actions">' +
-            '<button type="button" class="tp-userscript-btn tp-feature-btn" data-feature-action="toggle" data-feature-key="' + def.key + '" tabindex="0">' +
+            '<button type="button" class="tp-userscript-btn tp-feature-btn" data-feature-action="toggle" data-feature-key="' + def.key + '" tabindex="-1">' +
               (hasOverride ? 'Reset' : (globalEnabled ? 'Disable' : 'Enable')) +
             '</button>' +
           '</div>' +
@@ -1633,7 +1633,7 @@ function renderUserscriptsField() {
           '<div class="tp-userscript-label">' + escapeHtml(script.name) + '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
           '<div class="tp-userscript-actions">' +
-            '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle" data-userscript-id="' + escapeHtml(scriptId) + '" tabindex="0">' +
+            '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle" data-userscript-id="' + escapeHtml(scriptId) + '" tabindex="-1">' +
               (hasSiteOverride ? 'Reset to Global' : (globalEnabled ? 'Disable for Site' : 'Enable for Site')) +
             '</button>' +
           '</div>' +

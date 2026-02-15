@@ -68,6 +68,7 @@ import { getBundleNames, getBundle, logDependencyWarnings } from '../bundles/reg
 import { isValidHttpUrl, sanitizeCss, safeLocalStorageSet } from './utils.js';
 import featureLoader from '../features/index.js';
 import userscriptEngine from '../features/userscripts.js';
+import userscriptRegistry from '../features/userscript-registry.js';
 import { 
   registerCards, unregisterCards, clearRegistrations, getRegistrations,
   processCards, initCards, shutdownCards 

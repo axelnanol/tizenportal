@@ -16,9 +16,19 @@ export default {
    */
   getCSS: function() {
     return [
-      '/* TizenPortal TV Safe Area */',
-      'html, body {',
-      '  padding: 54px 96px !important; /* 5% of 1080px / 1920px */',
+      '/* TizenPortal TV Safe Area - 5% inset on all edges */',
+      'html {',
+      '  overflow: hidden !important;',
+      '}',
+      'body {',
+      '  position: fixed !important;',
+      '  top: 54px !important;',
+      '  left: 96px !important;',
+      '  right: 96px !important;',
+      '  bottom: 54px !important;',
+      '  width: calc(100% - 192px) !important;',
+      '  height: calc(100% - 108px) !important;',
+      '  overflow: auto !important;',
       '  box-sizing: border-box !important;',
       '}',
     ].join('\n');
