@@ -151,7 +151,7 @@ Return to the portal launcher.
 
 ```js
 TizenPortal.returnToPortal();
-// Navigates to: https://alexnolan.github.io/tizenportal/dist/index.html
+// Navigates to: https://axelnanol.github.io/tizenportal/dist/index.html
 ```
 
 ### TizenPortal.showToast

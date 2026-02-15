@@ -339,8 +339,8 @@ git push origin master --tags
 The `dist/` folder is deployed to GitHub Pages:
 
 ```
-https://alexnolan.github.io/tizenportal/dist/index.html
-https://alexnolan.github.io/tizenportal/dist/tizenportal.js
+https://axelnanol.github.io/tizenportal/dist/index.html
+https://axelnanol.github.io/tizenportal/dist/tizenportal.js
 ```
 
 ### TizenBrew CDN
