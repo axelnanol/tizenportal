@@ -1295,14 +1295,6 @@ function renderGlobalOverridesField() {
             '<div style="font-size: 12px; color: #666; margin-top: 2px;">' + escapeHtml(def.description || '') + '</div>' +
           '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
-          '<div class="tp-userscript-actions">' +
-            '<button type="button" class="tp-userscript-btn tp-global-override-btn" data-global-action="cycle" data-global-key="' + def.key + '" tabindex="-1">' +
-              'Change' +
-            '</button>' +
-            (hasOverride ? 
-              '<button type="button" class="tp-userscript-btn tp-global-override-btn" data-global-action="reset" data-global-key="' + def.key + '" tabindex="-1">Reset</button>' 
-              : '') +
-          '</div>' +
         '</div>';
     }
   }
@@ -1345,14 +1337,6 @@ function renderSiteOverridesField() {
             '<div style="font-size: 12px; color: #666; margin-top: 2px;">' + escapeHtml(def.description || '') + '</div>' +
           '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
-          '<div class="tp-userscript-actions">' +
-            '<button type="button" class="tp-userscript-btn tp-site-override-btn" data-site-action="cycle" data-site-key="' + def.key + '" tabindex="-1">' +
-              'Change' +
-            '</button>' +
-            (hasOverride ? 
-              '<button type="button" class="tp-userscript-btn tp-site-override-btn" data-site-action="reset" data-site-key="' + def.key + '" tabindex="-1">Reset</button>' 
-              : '') +
-          '</div>' +
         '</div>';
     }
   }
@@ -1391,11 +1375,6 @@ function renderFeatureOverridesField() {
             '<div style="font-size: 12px; color: #666; margin-top: 2px;">' + escapeHtml(def.description || '') + '</div>' +
           '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
-          '<div class="tp-userscript-actions">' +
-            '<button type="button" class="tp-userscript-btn tp-feature-btn" data-feature-action="toggle" data-feature-key="' + def.key + '" tabindex="-1">' +
-              (hasOverride ? 'Reset' : (globalEnabled ? 'Disable' : 'Enable')) +
-            '</button>' +
-          '</div>' +
         '</div>';
     }
   }
@@ -1632,11 +1611,6 @@ function renderUserscriptsField() {
         '<div class="tp-userscript-line tp-userscript-row" data-userscript-id="' + escapeHtml(scriptId) + '" tabindex="0">' +
           '<div class="tp-userscript-label">' + escapeHtml(script.name) + '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
-          '<div class="tp-userscript-actions">' +
-            '<button type="button" class="tp-userscript-btn" data-userscript-action="toggle" data-userscript-id="' + escapeHtml(scriptId) + '" tabindex="-1">' +
-              (hasSiteOverride ? 'Reset to Global' : (globalEnabled ? 'Disable for Site' : 'Enable for Site')) +
-            '</button>' +
-          '</div>' +
         '</div>';
     }
   }
@@ -1732,22 +1706,14 @@ function setupFieldListeners(container) {
   }
 
   // Userscript rows (handled separately)
-  var userscriptActions = container.querySelectorAll('.tp-userscript-action, .tp-userscript-btn:not(.tp-detail-btn)');
+  var userscriptActions = container.querySelectorAll('.tp-detail-btn');
   for (var ua = 0; ua < userscriptActions.length; ua++) {
     userscriptActions[ua].addEventListener('click', function(e) {
       if (e) {
         e.preventDefault();
         e.stopPropagation();
       }
-      if (this.classList.contains('tp-feature-btn')) {
-        handleFeatureOverrideAction(this);
-      } else if (this.classList.contains('tp-global-override-btn')) {
-        handleGlobalOverrideAction(this);
-      } else if (this.classList.contains('tp-site-override-btn')) {
-        handleSiteOverrideAction(this);
-      } else {
-        handleUserscriptAction(this);
-      }
+      handleDetailAction(this);
     });
     userscriptActions[ua].addEventListener('keydown', function(e) {
       if (handleUserscriptButtonKeyDown(e, this)) {
@@ -1756,15 +1722,7 @@ function setupFieldListeners(container) {
       if (e.keyCode === 13) {
         e.preventDefault();
         e.stopPropagation();
-        if (this.classList.contains('tp-feature-btn')) {
-          handleFeatureOverrideAction(this);
-        } else if (this.classList.contains('tp-global-override-btn')) {
-          handleGlobalOverrideAction(this);
-        } else if (this.classList.contains('tp-site-override-btn')) {
-          handleSiteOverrideAction(this);
-        } else {
-          handleUserscriptAction(this);
-        }
+        handleDetailAction(this);
       }
     });
   }
@@ -1792,6 +1750,9 @@ function setupFieldListeners(container) {
 
   var userscriptRows = container.querySelectorAll('.tp-userscript-row');
   for (var ur = 0; ur < userscriptRows.length; ur++) {
+    userscriptRows[ur].addEventListener('click', function() {
+      handleUserscriptRowClick(this);
+    });
     userscriptRows[ur].addEventListener('keydown', function(e) {
       if (e.keyCode === 38 || e.keyCode === 40) {
         if (moveFocusByRow(this, e.keyCode === 40 ? 'down' : 'up')) {
@@ -1803,23 +1764,21 @@ function setupFieldListeners(container) {
         e.stopPropagation();
         return;
       }
-      if (e.keyCode === 39) {
+      if (e.keyCode === 13 || e.keyCode === 39) {
         e.preventDefault();
         e.stopPropagation();
-        focusInlineRowButton(this);
+        handleUserscriptRowClick(this);
         return;
-      }
-      if (e.keyCode === 13) {
-        e.preventDefault();
-        e.stopPropagation();
-        focusInlineRowButton(this);
       }
     });
   }
 
-  // Global override rows - similar to userscript rows
+  // Global override rows - now directly clickable
   var globalOverrideRows = container.querySelectorAll('.tp-global-override-row');
   for (var gor = 0; gor < globalOverrideRows.length; gor++) {
+    globalOverrideRows[gor].addEventListener('click', function() {
+      handleGlobalOverrideRowClick(this);
+    });
     globalOverrideRows[gor].addEventListener('keydown', function(e) {
       if (e.keyCode === 38 || e.keyCode === 40) {
         if (moveFocusByRow(this, e.keyCode === 40 ? 'down' : 'up')) {
@@ -1831,23 +1790,21 @@ function setupFieldListeners(container) {
         e.stopPropagation();
         return;
       }
-      if (e.keyCode === 39) {
+      if (e.keyCode === 13 || e.keyCode === 39) {
         e.preventDefault();
         e.stopPropagation();
-        focusInlineRowButton(this);
+        handleGlobalOverrideRowClick(this);
         return;
-      }
-      if (e.keyCode === 13) {
-        e.preventDefault();
-        e.stopPropagation();
-        focusInlineRowButton(this);
       }
     });
   }
 
-  // Site override rows - similar to userscript rows
+  // Site override rows - now directly clickable
   var siteOverrideRows = container.querySelectorAll('.tp-site-override-row');
   for (var sor = 0; sor < siteOverrideRows.length; sor++) {
+    siteOverrideRows[sor].addEventListener('click', function() {
+      handleSiteOverrideRowClick(this);
+    });
     siteOverrideRows[sor].addEventListener('keydown', function(e) {
       if (e.keyCode === 38 || e.keyCode === 40) {
         if (moveFocusByRow(this, e.keyCode === 40 ? 'down' : 'up')) {
@@ -1859,16 +1816,37 @@ function setupFieldListeners(container) {
         e.stopPropagation();
         return;
       }
-      if (e.keyCode === 39) {
+      if (e.keyCode === 13 || e.keyCode === 39) {
         e.preventDefault();
         e.stopPropagation();
-        focusInlineRowButton(this);
+        handleSiteOverrideRowClick(this);
         return;
       }
-      if (e.keyCode === 13) {
+    });
+  }
+
+  // Feature override rows  - now directly clickable
+  var featureRows = container.querySelectorAll('.tp-feature-row');
+  for (var fr = 0; fr < featureRows.length; fr++) {
+    featureRows[fr].addEventListener('click', function() {
+      handleFeatureRowClick(this);
+    });
+    featureRows[fr].addEventListener('keydown', function(e) {
+      if (e.keyCode === 38 || e.keyCode === 40) {
+        if (moveFocusByRow(this, e.keyCode === 40 ? 'down' : 'up')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
-        focusInlineRowButton(this);
+        return;
+      }
+      if (e.keyCode === 13 || e.keyCode === 39) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleFeatureRowClick(this);
+        return;
       }
     });
   }
@@ -2401,6 +2379,174 @@ function focusUserscriptButton(scriptId, action) {
   if (btn) {
     btn.focus();
   }
+}
+
+/**
+ * Handle row click for userscripts (cycle toggle state)
+ */
+function handleUserscriptRowClick(row) {
+  if (!row) return;
+  var scriptId = row.dataset.userscriptId || '';
+  if (!scriptId) return;
+  
+  // Get current state
+  var globalConfig = Userscripts.getUserscriptsConfig();
+  var siteToggles = state.card.userscriptToggles || {};
+  var globalEnabled = globalConfig.enabled[scriptId] === true;
+  var hasSiteOverride = siteToggles.hasOwnProperty(scriptId);
+  
+  if (hasSiteOverride) {
+    // Has override - reset to global
+    delete siteToggles[scriptId];
+    showEditorToast('Reset to global setting');
+  } else {
+    // No override - create one with opposite of global
+    siteToggles[scriptId] = !globalEnabled;
+    showEditorToast(globalEnabled ? 'Disabled for this site' : 'Enabled for this site');
+  }
+  
+  state.card.userscriptToggles = siteToggles;
+  renderFields();
+  autoSaveCard('userscript:toggle');
+  
+  // Refocus the row
+  setTimeout(function() {
+    var updatedRow = document.querySelector('.tp-userscript-row[data-userscript-id="' + scriptId + '"]');
+    if (updatedRow) {
+      updatedRow.focus();
+    }
+  }, 50);
+}
+
+/**
+ * Handle row click for global overrides (cycle through values)
+ */
+function handleGlobalOverrideRowClick(row) {
+  if (!row || !state.card) return;
+  var key = row.dataset.globalKey || '';
+  if (!key) return;
+
+  // Find definition
+  var def = null;
+  for (var i = 0; i < GLOBAL_OVERRIDE_DEFS.length; i++) {
+    if (GLOBAL_OVERRIDE_DEFS[i].key === key) {
+      def = GLOBAL_OVERRIDE_DEFS[i];
+      break;
+    }
+  }
+  if (!def) return;
+
+  var globalFeatures = getGlobalFeaturesConfig();
+  var hasOverride = state.card.hasOwnProperty(key);
+
+  if (hasOverride) {
+    // Has override - reset to global
+    delete state.card[key];
+    showEditorToast('Reset to global setting');
+  } else {
+    // No override - set to next value or first if not set
+    var globalValue = globalFeatures[key];
+    var nextIdx = 0;
+    for (var j = 0; j < def.options.length; j++) {
+      if (def.options[j].value === globalValue) {
+        nextIdx = (j + 1) % def.options.length;
+        break;
+      }
+    }
+    state.card[key] = def.options[nextIdx].value;
+    showEditorToast('Setting: ' + def.options[nextIdx].label);
+  }
+
+  renderFields();
+  autoSaveCard('global:' + key);
+
+  setTimeout(function() {
+    var updatedRow = document.querySelector('.tp-global-override-row[data-global-key="' + key + '"]');
+    if (updatedRow) {
+      updatedRow.focus();
+    }
+  }, 50);
+}
+
+/**
+ * Handle row click for site overrides (cycle through values)
+ */
+function handleSiteOverrideRowClick(row) {
+  if (!row || !state.card) return;
+  var key = row.dataset.siteKey || '';
+  if (!key) return;
+
+  // Find definition
+  var def = null;
+  for (var i = 0; i < SITE_OVERRIDE_DEFS.length; i++) {
+    if (SITE_OVERRIDE_DEFS[i].key === key) {
+      def = SITE_OVERRIDE_DEFS[i];
+      break;
+    }
+  }
+  if (!def) return;
+
+  var globalFeatures = getGlobalFeaturesConfig();
+  var hasOverride = state.card.hasOwnProperty(key);
+
+  if (hasOverride) {
+    // Has override - reset to global
+    delete state.card[key];
+    showEditorToast('Reset to global setting');
+  } else {
+    // No override - set to next value or first if not set
+    var globalValue = globalFeatures[key];
+    var nextIdx = 0;
+    for (var j = 0; j < def.options.length; j++) {
+      if (def.options[j].value === globalValue) {
+        nextIdx = (j + 1) % def.options.length;
+        break;
+      }
+    }
+    state.card[key] = def.options[nextIdx].value;
+    showEditorToast('Setting: ' + def.options[nextIdx].label);
+  }
+
+  renderFields();
+  autoSaveCard('site:' + key);
+
+  setTimeout(function() {
+    var updatedRow = document.querySelector('.tp-site-override-row[data-site-key="' + key + '"]');
+    if (updatedRow) {
+      updatedRow.focus();
+    }
+  }, 50);
+}
+
+/**
+ * Handle row click for feature toggles (toggle enabled/disabled)
+ */
+function handleFeatureRowClick(row) {
+  if (!row || !state.card) return;
+  var key = row.dataset.featureKey || '';
+  if (!key) return;
+
+  var globalConfig = getGlobalFeaturesConfig();
+  var globalEnabled = globalConfig[key] !== false;
+  var hasOverride = state.card.hasOwnProperty(key);
+
+  if (hasOverride) {
+    delete state.card[key];
+    showEditorToast('Reset to global setting');
+  } else {
+    state.card[key] = !globalEnabled;
+    showEditorToast(globalEnabled ? 'Disabled for this site' : 'Enabled for this site');
+  }
+
+  renderFields();
+  autoSaveCard('feature:' + key);
+
+  setTimeout(function() {
+    var updatedRow = document.querySelector('.tp-feature-row[data-feature-key="' + key + '"]');
+    if (updatedRow) {
+      updatedRow.focus();
+    }
+  }, 50);
 }
 
 /**

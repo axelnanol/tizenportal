@@ -1145,6 +1145,8 @@ function getCardFromHash() {
     mergeUserscriptsFromWindow(card);
     
     log('Card from URL hash: ' + card.name + ' (bundle: ' + (card.featureBundle || 'default') + ')');
+    log('[DEBUG] Card decoded from hash - userscriptToggles: ' + JSON.stringify(card.userscriptToggles || {}));
+    log('[DEBUG] Card decoded from hash - bundleOptions: ' + JSON.stringify(card.bundleOptions || {}));
     return card;
   } catch (e) {
     error('Failed to parse hash card: ' + e.message);
@@ -1291,6 +1293,8 @@ function getCardFromQuery() {
     mergeUserscriptsFromWindow(card);
 
     log('Card from URL query: ' + card.name + ' (bundle: ' + (card.featureBundle || 'default') + ')');
+    log('[DEBUG] Card decoded from query - userscriptToggles: ' + JSON.stringify(card.userscriptToggles || {}));
+    log('[DEBUG] Card decoded from query - bundleOptions: ' + JSON.stringify(card.bundleOptions || {}));
     return card;
   } catch (e) {
     error('Failed to parse query card: ' + e.message);
@@ -2097,6 +2101,10 @@ function loadSite(card) {
   // Build payload with bundle info: { css, js, ua, bundleName }
   var targetUrl = card.url;
   try {
+    // DEBUG: Log card data before payload construction
+    log('[DEBUG] loadSite payload construction - card.userscriptToggles: ' + JSON.stringify(card.userscriptToggles || {}));
+    log('[DEBUG] loadSite payload construction - card.bundleOptions: ' + JSON.stringify(card.bundleOptions || {}));
+    
     var payload = {
       css: '',
       js: '',
@@ -2152,6 +2160,8 @@ function loadSite(card) {
     }
     
     log('Payload size: ' + json.length + ' bytes, encoded: ' + encoded.length);
+    log('[DEBUG] loadSite final payload userscriptToggles: ' + JSON.stringify(payload.userscriptToggles));
+    log('[DEBUG] loadSite final payload bundleOptions: ' + JSON.stringify(payload.bundleOptions));
     tpHud('Payload: ' + json.length + 'b, encoded ' + encoded.length + 'b');
   } catch (e) {
     error('Failed to encode payload: ' + e.message);
