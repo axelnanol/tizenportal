@@ -87,15 +87,8 @@ export default {
       return;
     }
     
-    try {
-      injectCSS(doc, 'tp-text-scale', css);
-    } catch (err) {
-      if (window.TizenPortal) {
-        window.TizenPortal.warn('[TextScale] Failed to apply:', err.message);
-      } else {
-        console.warn('[TextScale] Failed to apply:', err.message);
-      }
-    }
+    injectCSS(doc, 'tp-text-scale', css);
+    TizenPortal.log('Text scale applied: ' + level);
   },
   
   /**
@@ -104,15 +97,7 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    
-    try {
-      removeCSS(doc, 'tp-text-scale');
-    } catch (err) {
-      if (window.TizenPortal) {
-        window.TizenPortal.warn('[TextScale] Failed to remove:', err.message);
-      } else {
-        console.warn('[TextScale] Failed to remove:', err.message);
-      }
-    }
+    removeCSS(doc, 'tp-text-scale');
+    TizenPortal.log('Text scale removed');
   },
 };

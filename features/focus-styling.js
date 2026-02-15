@@ -59,6 +59,7 @@ export default {
     this.remove(doc);
     if (mode === 'off') return;
     injectCSS(doc, 'tp-focus-styling', this.getCSS(mode));
+    TizenPortal.log('Focus styling applied: ' + mode);
   },
   
   /**
@@ -68,5 +69,6 @@ export default {
   remove: function(doc) {
     if (!doc) return;
     removeCSS(doc, 'tp-focus-styling');
+    TizenPortal.log('Focus styling removed');
   },
 };

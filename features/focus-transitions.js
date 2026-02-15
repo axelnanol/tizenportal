@@ -260,6 +260,7 @@ export default {
     
     // Inject CSS
     injectCSS(doc, 'tp-focus-transitions', this.getCSS(mode, speed));
+    TizenPortal.log('Focus transitions applied: ' + mode + ', ' + speed);
     
     // Set up focus listener for direction tracking
     var self = this;
@@ -300,7 +301,7 @@ export default {
   remove: function(doc) {
     if (!doc) return;
     
-    // Remove injected CSS
+    // Remove style
     removeCSS(doc, 'tp-focus-transitions');
     
     // Remove focus listener
@@ -311,6 +312,8 @@ export default {
     
     // Clear previous element reference
     previousElement = null;
+    
+    TizenPortal.log('Focus transitions removed');
   },
   
   /**

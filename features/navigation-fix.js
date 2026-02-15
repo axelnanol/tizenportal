@@ -66,5 +66,6 @@ export default {
   remove: function(doc) {
     if (!doc) return;
     removeCSS(doc, 'tp-navigation-fix');
+    TizenPortal.log('Navigation fix CSS removed');
   },
 };
