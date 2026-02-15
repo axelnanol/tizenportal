@@ -40,7 +40,7 @@ Runs as a TizenBrew module to inject fixes into any site.
 This project is designed to be loaded via **TizenBrew** on your Samsung TV.
 
 1. **Open TizenBrew** on your Samsung TV
-2. **Add Module:** `alexnolan/tizenportal@<version-tag>` (e.g., `alexnolan/tizenportal@1026`) - see [CHANGELOG](docs/CHANGELOG.md) for available versions
+2. **Add Module:** `alexnolan/tizenportal` (e.g., `alexnolan/tizenportal`) - see [CHANGELOG](docs/CHANGELOG.md) for available versions
 3. **Launch** TizenPortal from your TizenBrew dashboard
 
 TizenBrew will open the portal and inject the runtime into all navigated pages.
@@ -187,7 +187,6 @@ This project uses code and inspiration from the following sources:
 
 - **[TizenTube](https://github.com/reisxd/TizenTube)** — Spatial navigation polyfill and DOMRect polyfill
 - **[TizenBrew](https://github.com/reisxd/TizenBrew)** — Module loading platform
-- **[Portal (video game)](https://en.wikipedia.org/wiki/Portal_(video_game))** — Branding and theme inspiration (orange and blue portal colors)
 
 ---
 
