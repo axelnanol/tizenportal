@@ -1207,7 +1207,8 @@ function getBundleUserscriptId(bundleName, script, index) {
 }
 
 function getGlobalUserscripts() {
-  return Registry.getUserscripts();
+  // Use unified query API
+  return Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT });
 }
 
 function getUserscriptsSummary() {
@@ -1592,12 +1593,15 @@ function renderUserscriptsField() {
   var globalConfig = Userscripts.getUserscriptsConfig();
   var siteToggles = state.card.userscriptToggles || {};
   
-  // Get all userscripts from unified registry
+  // Get all userscripts from unified registry using query API
   var categories = Registry.CATEGORIES;
   
   // Organize scripts by category
   for (var cat in categories) {
-    var categoryScripts = Registry.getUserscriptsByCategory(categories[cat]);
+    var categoryScripts = Registry.query({
+      type: Registry.ITEM_TYPES.USERSCRIPT,
+      category: categories[cat]
+    });
     
     if (categoryScripts.length === 0) continue;
     

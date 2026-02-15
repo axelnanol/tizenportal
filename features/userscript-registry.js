@@ -248,26 +248,27 @@ for (var i = 0; i < USERSCRIPTS.length; i++) {
 
 /**
  * Get all userscripts
- * Now delegates to unified registry
+ * Delegates to unified registry query API
  */
 function getAllUserscripts() {
-  return Registry.getUserscripts();
+  return Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT });
 }
 
 /**
  * Get userscript by ID
- * Now delegates to unified registry
+ * Delegates to unified registry query API
  */
 function getUserscriptById(id) {
-  return Registry.getById(id);
+  var results = Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT, id: id });
+  return results.length > 0 ? results[0] : null;
 }
 
 /**
  * Get userscripts by category
- * Now delegates to unified registry with proper userscript filtering
+ * Delegates to unified registry query API
  */
 function getUserscriptsByCategory(category) {
-  return Registry.getUserscriptsByCategory(category);
+  return Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT, category: category });
 }
 
 /**

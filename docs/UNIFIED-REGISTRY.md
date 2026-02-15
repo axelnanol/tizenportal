@@ -59,19 +59,30 @@ The unified registry is exposed via:
 - `TizenPortal.features.registry` - Same instance (for feature context)
 - `TizenPortal.userscripts.registry` - Same instance (for userscript context)
 
-**Methods:**
+**Core Methods:**
 
 ```javascript
 // Registration
 TizenPortal.registry.register(itemDef) // Register a new item
 
-// Retrieval
-TizenPortal.registry.getAll() // Get all registered items
-TizenPortal.registry.getById(id) // Get item by ID
-TizenPortal.registry.getByType(type) // Get items by type
-TizenPortal.registry.getByCategory(category) // Get items by category
-TizenPortal.registry.getFeatures() // Get all features
-TizenPortal.registry.getUserscripts() // Get all userscripts
+// Unified Query API - Single method with optional filters
+TizenPortal.registry.query(filters)    // Query with filters: { type, category, id }
+TizenPortal.registry.query()           // Get all items (no filters)
+TizenPortal.registry.query({ type: 'feature' })                      // Get all features
+TizenPortal.registry.query({ type: 'userscript' })                   // Get all userscripts
+TizenPortal.registry.query({ category: 'styling' })                  // Get items by category
+TizenPortal.registry.query({ type: 'feature', category: 'styling' }) // Features in category
+TizenPortal.registry.query({ id: 'focusStyling' })                  // Get specific item
+
+// Convenience methods (delegate to query)
+TizenPortal.registry.getAll()                        // query()
+TizenPortal.registry.getById(id)                     // query({ id })
+TizenPortal.registry.getByType(type)                 // query({ type })
+TizenPortal.registry.getByCategory(category, type)   // query({ category, type })
+TizenPortal.registry.getFeatures()                   // query({ type: 'feature' })
+TizenPortal.registry.getUserscripts()                // query({ type: 'userscript' })
+TizenPortal.registry.getFeaturesByCategory(cat)      // query({ type: 'feature', category })
+TizenPortal.registry.getUserscriptsByCategory(cat)   // query({ type: 'userscript', category })
 
 // Validation
 TizenPortal.registry.checkConflicts(enabledIds) // Check for conflicts
@@ -80,6 +91,14 @@ TizenPortal.registry.checkConflicts(enabledIds) // Check for conflicts
 TizenPortal.registry.ITEM_TYPES // { FEATURE, USERSCRIPT }
 TizenPortal.registry.CATEGORIES // Category constants
 ```
+
+### Architecture Principles
+
+1. **Single Query API**: All queries go through `query(filters)` with optional filter parameters
+2. **Type-Category Parity**: Features and userscripts are treated identically - both have types and categories
+3. **Consistent Filtering**: Same filter parameters work for both types
+4. **Convenience Methods**: Simpler methods for common queries, all delegate to `query()`
+5. **Zero Duplication**: UI code uses unified query API, no manual filtering needed
 
 ### Backward Compatibility
 
@@ -147,24 +166,60 @@ Registry.register({
 
 ## Benefits
 
-1. **Reduced Complexity** - Single registry system instead of two separate implementations
-2. **Consistent APIs** - Same verbs and patterns for both features and userscripts
-3. **Single Source of Truth** - All enhancements in one place
-4. **Enhanced Developer Experience** - Unified patterns make it easier to add new items
-5. **Conflict Detection** - Unified conflict detection across all items
-6. **Category Organization** - Consistent categorization for UI organization
-7. **Full Backward Compatibility** - Existing code continues to work without changes
+1. **Perfect Architecture** - Single unified query API with filter parameters
+2. **Type-Category Parity** - Features and userscripts treated identically
+3. **Reduced Complexity** - No separate methods for features vs userscripts
+4. **Consistent APIs** - Same `query(filters)` pattern throughout
+5. **Single Source of Truth** - All enhancements in one registry
+6. **Enhanced Developer Experience** - One API to learn, works for everything
+7. **Zero Duplication** - UI code has no manual filtering logic
+8. **Conflict Detection** - Unified across all item types
+9. **Category Organization** - Works identically for features and userscripts
+
+## Query Examples
+
+```javascript
+// Get all items
+const all = TizenPortal.registry.query();
+
+// Get all features
+const features = TizenPortal.registry.query({ type: 'feature' });
+
+// Get all userscripts
+const userscripts = TizenPortal.registry.query({ type: 'userscript' });
+
+// Get items in a category (both types)
+const stylingItems = TizenPortal.registry.query({ category: 'styling' });
+
+// Get features in a category
+const stylingFeatures = TizenPortal.registry.query({ 
+  type: 'feature', 
+  category: 'styling' 
+});
+
+// Get userscripts in a category
+const accessibilityScripts = TizenPortal.registry.query({ 
+  type: 'userscript', 
+  category: 'accessibility' 
+});
+
+// Get a specific item
+const focusStyling = TizenPortal.registry.query({ id: 'focusStyling' })[0];
+
+// Or use convenience method
+const focusStyling = TizenPortal.registry.getById('focusStyling');
+```
 
 ## Migration Notes
 
 No migration is required for existing code. The unified registry system maintains full backward compatibility with the existing `TizenPortal.features` and `TizenPortal.userscripts` APIs.
 
-However, new features and userscripts should be registered using the unified registry system for consistency.
+New code should use the unified `query()` API for consistency and clarity.
 
 ## Implementation Details
 
 **File Structure:**
-- `features/registry.js` - Unified registry implementation
+- `features/registry.js` - Unified registry implementation with query API
 - `features/index.js` - Feature loader (uses registry)
 - `features/userscript-registry.js` - Userscript definitions (uses registry)
 - `core/index.js` - API exposure
@@ -175,10 +230,10 @@ However, new features and userscripts should be registered using the unified reg
 - Total: 27 items in unified registry
 
 **Key Design Decisions:**
-1. Registry uses in-memory array for fast access
-2. Items should be treated as read-only once registered (callers must not mutate returned objects)
-3. Validation happens at registration time
-4. Conflict detection uses `provides` array
-5. Features include implementation reference
-6. Userscripts include source code inline or URL
-7. All items share common metadata structure
+1. Single `query(filters)` method handles all queries
+2. All convenience methods delegate to `query()`
+3. Type and category are treated as equal filter parameters
+4. Items should be treated as read-only once registered
+5. Validation happens at registration time
+6. Conflict detection uses `provides` array
+7. Features and userscripts share common metadata structure

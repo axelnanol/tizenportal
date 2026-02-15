@@ -109,11 +109,52 @@ function register(item) {
 }
 
 /**
- * Get all items
+ * Query registry with optional filters
+ * @param {Object} [filters] - Optional filters
+ * @param {string} [filters.type] - Filter by ITEM_TYPES value ('feature' or 'userscript')
+ * @param {string} [filters.category] - Filter by CATEGORIES value
+ * @param {string} [filters.id] - Filter by specific ID
+ * @returns {Array} - Array of matching items
+ */
+function query(filters) {
+  if (!filters) {
+    return REGISTRY.slice();
+  }
+  
+  var result = [];
+  for (var i = 0; i < REGISTRY.length; i++) {
+    var item = REGISTRY[i];
+    var matches = true;
+    
+    // Apply type filter
+    if (filters.type && item.type !== filters.type) {
+      matches = false;
+    }
+    
+    // Apply category filter
+    if (matches && filters.category && item.category !== filters.category) {
+      matches = false;
+    }
+    
+    // Apply ID filter
+    if (matches && filters.id && item.id !== filters.id) {
+      matches = false;
+    }
+    
+    if (matches) {
+      result.push(item);
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Get all items (no filters)
  * @returns {Array}
  */
 function getAll() {
-  return REGISTRY.slice();
+  return query();
 }
 
 /**
@@ -122,12 +163,8 @@ function getAll() {
  * @returns {Object|null}
  */
 function getById(id) {
-  for (var i = 0; i < REGISTRY.length; i++) {
-    if (REGISTRY[i].id === id) {
-      return REGISTRY[i];
-    }
-  }
-  return null;
+  var results = query({ id: id });
+  return results.length > 0 ? results[0] : null;
 }
 
 /**
@@ -136,28 +173,21 @@ function getById(id) {
  * @returns {Array}
  */
 function getByType(type) {
-  var result = [];
-  for (var i = 0; i < REGISTRY.length; i++) {
-    if (REGISTRY[i].type === type) {
-      result.push(REGISTRY[i]);
-    }
-  }
-  return result;
+  return query({ type: type });
 }
 
 /**
  * Get items by category
  * @param {string} category - CATEGORIES value
+ * @param {string} [type] - Optional type filter
  * @returns {Array}
  */
-function getByCategory(category) {
-  var result = [];
-  for (var i = 0; i < REGISTRY.length; i++) {
-    if (REGISTRY[i].category === category) {
-      result.push(REGISTRY[i]);
-    }
+function getByCategory(category, type) {
+  var filters = { category: category };
+  if (type) {
+    filters.type = type;
   }
-  return result;
+  return query(filters);
 }
 
 /**
@@ -165,7 +195,7 @@ function getByCategory(category) {
  * @returns {Array}
  */
 function getFeatures() {
-  return getByType(ITEM_TYPES.FEATURE);
+  return query({ type: ITEM_TYPES.FEATURE });
 }
 
 /**
@@ -173,7 +203,16 @@ function getFeatures() {
  * @returns {Array}
  */
 function getUserscripts() {
-  return getByType(ITEM_TYPES.USERSCRIPT);
+  return query({ type: ITEM_TYPES.USERSCRIPT });
+}
+
+/**
+ * Get features by category
+ * @param {string} category - CATEGORIES value
+ * @returns {Array}
+ */
+function getFeaturesByCategory(category) {
+  return query({ type: ITEM_TYPES.FEATURE, category: category });
 }
 
 /**
@@ -182,13 +221,7 @@ function getUserscripts() {
  * @returns {Array}
  */
 function getUserscriptsByCategory(category) {
-  var result = [];
-  for (var i = 0; i < REGISTRY.length; i++) {
-    if (REGISTRY[i].category === category && REGISTRY[i].type === ITEM_TYPES.USERSCRIPT) {
-      result.push(REGISTRY[i]);
-    }
-  }
-  return result;
+  return query({ type: ITEM_TYPES.USERSCRIPT, category: category });
 }
 
 /**
@@ -235,14 +268,21 @@ export default {
   ITEM_TYPES: ITEM_TYPES,
   CATEGORIES: CATEGORIES,
   
+  // Core registry operations
   register: register,
+  query: query,
+  clear: clear,
+  
+  // Convenience methods (all delegate to query)
   getAll: getAll,
   getById: getById,
   getByType: getByType,
   getByCategory: getByCategory,
   getFeatures: getFeatures,
   getUserscripts: getUserscripts,
+  getFeaturesByCategory: getFeaturesByCategory,
   getUserscriptsByCategory: getUserscriptsByCategory,
+  
+  // Utility
   checkConflicts: checkConflicts,
-  clear: clear,
 };

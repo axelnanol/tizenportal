@@ -580,9 +580,12 @@ function buildUserscriptRows() {
   var rows = [];
   var categories = Registry.CATEGORIES;
   
-  // Group scripts by category
+  // Group scripts by category - use unified query API
   for (var cat in categories) {
-    var categoryScripts = Registry.getUserscriptsByCategory(categories[cat]);
+    var categoryScripts = Registry.query({
+      type: Registry.ITEM_TYPES.USERSCRIPT,
+      category: categories[cat]
+    });
     
     if (categoryScripts.length > 0) {
       // Add category label row
@@ -723,7 +726,8 @@ function renderPreferencesUI() {
 
 function getPreferencesSectionSummary(sectionId) {
   if (sectionId === 'userscripts') {
-    var scripts = Registry.getUserscripts();
+    // Use unified query API
+    var scripts = Registry.query({ type: Registry.ITEM_TYPES.USERSCRIPT });
     if (!scripts.length) return 'No scripts registered';
     var enabledNames = [];
     for (var s = 0; s < scripts.length; s++) {
