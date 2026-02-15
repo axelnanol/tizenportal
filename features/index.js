@@ -3,8 +3,11 @@
  * 
  * Manages global site features that apply to all sites.
  * Features can be toggled in preferences.
+ * 
+ * Now uses the unified registry system for consistent management.
  */
 
+import Registry from './registry.js';
 import focusStyling from './focus-styling.js';
 import focusTransitions from './focus-transitions.js';
 import tabindexInjection from './tabindex-injection.js';
@@ -15,7 +18,138 @@ import cssReset from './css-reset.js';
 import navigationFix from './navigation-fix.js';
 import textScale from './text-scale.js';
 
-// Feature registry
+// Register all features in the unified registry
+Registry.register({
+  id: 'focusStyling',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'focusStyling',
+  displayName: 'Focus Styling',
+  category: Registry.CATEGORIES.STYLING,
+  description: 'Provides outline focus indicators for TV navigation',
+  defaultEnabled: true,
+  configKeys: ['focusStyling', 'focusOutlineMode'],
+  implementation: focusStyling,
+  applyArgs: function(config) {
+    var mode = config.focusOutlineMode || (config.focusStyling ? 'on' : 'off');
+    if (config.focusStyling === false) mode = 'off';
+    return [mode];
+  },
+});
+
+Registry.register({
+  id: 'focusTransitions',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'focusTransitions',
+  displayName: 'Focus Transitions',
+  category: Registry.CATEGORIES.STYLING,
+  description: 'Smooth animated transitions between focused elements',
+  defaultEnabled: true,
+  configKeys: ['focusTransitions', 'focusTransitionMode', 'focusTransitionSpeed'],
+  implementation: focusTransitions,
+  applyArgs: function(config) {
+    var mode = config.focusTransitionMode || 'slide';
+    var speed = config.focusTransitionSpeed || 'medium';
+    return [mode, speed];
+  },
+});
+
+Registry.register({
+  id: 'tabindexInjection',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'tabindexInjection',
+  displayName: 'Tab Index Injection',
+  category: Registry.CATEGORIES.NAVIGATION,
+  description: 'Automatically makes elements focusable for TV navigation',
+  defaultEnabled: true,
+  configKeys: ['tabindexInjection'],
+  implementation: tabindexInjection,
+  applyArgs: function() { return []; },
+});
+
+Registry.register({
+  id: 'scrollIntoView',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'scrollIntoView',
+  displayName: 'Scroll Into View',
+  category: Registry.CATEGORIES.NAVIGATION,
+  description: 'Automatically scrolls focused elements into viewport',
+  defaultEnabled: true,
+  configKeys: ['scrollIntoView'],
+  implementation: scrollIntoView,
+  applyArgs: function() { return []; },
+});
+
+Registry.register({
+  id: 'safeArea',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'safeArea',
+  displayName: 'TV Safe Area',
+  category: Registry.CATEGORIES.STYLING,
+  description: 'Adds padding for TV overscan areas',
+  defaultEnabled: false,
+  configKeys: ['safeArea'],
+  implementation: safeArea,
+  applyArgs: function() { return []; },
+});
+
+Registry.register({
+  id: 'gpuHints',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'gpuHints',
+  displayName: 'GPU Acceleration',
+  category: Registry.CATEGORIES.PERFORMANCE,
+  description: 'Hardware acceleration hints for better performance',
+  defaultEnabled: true,
+  configKeys: ['gpuHints'],
+  implementation: gpuHints,
+  applyArgs: function() { return []; },
+});
+
+Registry.register({
+  id: 'cssReset',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'cssReset',
+  displayName: 'CSS Normalization',
+  category: Registry.CATEGORIES.CORE,
+  description: 'Base CSS normalization for TV browsers',
+  defaultEnabled: true,
+  configKeys: ['cssReset', 'hideScrollbars'],
+  implementation: cssReset,
+  applyArgs: function(config) {
+    return [{ hideScrollbars: config.hideScrollbars === true }];
+  },
+});
+
+Registry.register({
+  id: 'navigationFix',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'navigationFix',
+  displayName: 'Navigation Fix',
+  category: Registry.CATEGORIES.NAVIGATION,
+  description: 'Fixes for common navigation issues',
+  defaultEnabled: true,
+  configKeys: ['navigationFix'],
+  implementation: navigationFix,
+  applyArgs: function() { return []; },
+});
+
+Registry.register({
+  id: 'textScale',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'textScale',
+  displayName: 'Text Scale',
+  category: Registry.CATEGORIES.STYLING,
+  description: 'Adjustable text size for improved TV legibility',
+  defaultEnabled: true,
+  configKeys: ['textScale'],
+  implementation: textScale,
+  applyArgs: function(config) {
+    var level = config.textScale || 'medium';
+    return [level];
+  },
+});
+
+// Legacy features object for backward compatibility
 var features = {
   focusStyling: focusStyling,
   focusTransitions: focusTransitions,
@@ -121,80 +255,70 @@ function applyFeatures(doc, overrides) {
     console.log('[Features] Effective config:', effectiveConfig);
   }
 
-  var focusMode = effectiveConfig.focusOutlineMode || (effectiveConfig.focusStyling ? 'on' : 'off');
-  if (effectiveConfig.focusStyling === false) {
-    focusMode = 'off';
-  }
-  
   try {
-    // Apply scroll-into-view (doesn't need document)
-    if (effectiveConfig.scrollIntoView && features.scrollIntoView) {
-      if (window.TizenPortal) window.TizenPortal.log('[Features] Applying scrollIntoView');
-      features.scrollIntoView.apply();
-    }
+    // Get all registered features from registry
+    var registeredFeatures = Registry.getFeatures();
     
-    // Apply document-based features
-    if (effectiveConfig.cssReset && features.cssReset) {
-      if (window.TizenPortal) window.TizenPortal.log('[Features] Applying cssReset');
-      features.cssReset.apply(doc, { hideScrollbars: effectiveConfig.hideScrollbars === true });
-    }
-    
-    if (features.focusStyling) {
-      if (focusMode === 'off') {
-        if (window.TizenPortal) window.TizenPortal.log('[Features] Removing focusStyling');
-        features.focusStyling.remove(doc);
+    // Apply each registered feature based on config
+    for (var i = 0; i < registeredFeatures.length; i++) {
+      var item = registeredFeatures[i];
+      var impl = item.implementation;
+      
+      if (!impl) continue;
+      
+      // Check if feature is enabled (simple boolean check on primary key)
+      var primaryKey = item.configKeys && item.configKeys.length > 0 ? item.configKeys[0] : item.id;
+      var isEnabled = effectiveConfig[primaryKey];
+      
+      // Special handling for features with complex enable/disable logic
+      if (item.id === 'focusStyling') {
+        var focusMode = effectiveConfig.focusOutlineMode || (effectiveConfig.focusStyling ? 'on' : 'off');
+        if (effectiveConfig.focusStyling === false) focusMode = 'off';
+        
+        if (focusMode === 'off') {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
+          if (impl.remove) impl.remove(doc);
+        } else {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id + ': ' + focusMode);
+          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+          impl.apply.apply(impl, [doc].concat(args));
+        }
+      } else if (item.id === 'focusTransitions') {
+        var transitionMode = effectiveConfig.focusTransitionMode || 'slide';
+        if (effectiveConfig.focusTransitions === false || transitionMode === 'off') {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
+          if (impl.remove) impl.remove(doc);
+        } else {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id);
+          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+          impl.apply.apply(impl, [doc].concat(args));
+        }
+      } else if (item.id === 'textScale') {
+        var textScaleLevel = effectiveConfig.textScale || 'off';
+        if (textScaleLevel === 'off') {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
+          if (impl.remove) impl.remove(doc);
+        } else {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id + ': ' + textScaleLevel);
+          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+          impl.apply.apply(impl, [doc].concat(args));
+        }
+      } else if (item.id === 'navigationFix') {
+        if (effectiveConfig.navigationFix) {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id);
+          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+          impl.apply.apply(impl, [doc].concat(args));
+        } else if (effectiveConfig.navigationFix === false) {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Removing ' + item.id);
+          if (impl.remove) impl.remove(doc);
+        }
       } else {
-        if (window.TizenPortal) window.TizenPortal.log('[Features] Applying focusStyling: ' + focusMode);
-        features.focusStyling.apply(doc, focusMode);
-      }
-    }
-    
-    if (features.focusTransitions) {
-      var transitionMode = effectiveConfig.focusTransitionMode || 'slide';
-      var transitionSpeed = effectiveConfig.focusTransitionSpeed || 'medium';
-      if (effectiveConfig.focusTransitions === false || transitionMode === 'off') {
-        if (window.TizenPortal) window.TizenPortal.log('[Features] Removing focusTransitions');
-        features.focusTransitions.remove(doc);
-      } else {
-        if (window.TizenPortal) window.TizenPortal.log('[Features] Applying focusTransitions: ' + transitionMode + ' / ' + transitionSpeed);
-        features.focusTransitions.apply(doc, transitionMode, transitionSpeed);
-      }
-    }
-    
-    if (effectiveConfig.gpuHints && features.gpuHints) {
-      if (window.TizenPortal) window.TizenPortal.log('[Features] Applying gpuHints');
-      features.gpuHints.apply(doc);
-    }
-    
-    if (effectiveConfig.safeArea && features.safeArea) {
-      if (window.TizenPortal) window.TizenPortal.log('[Features] Applying safeArea');
-      features.safeArea.apply(doc);
-    }
-    
-    if (effectiveConfig.tabindexInjection && features.tabindexInjection) {
-      if (window.TizenPortal) window.TizenPortal.log('[Features] Applying tabindexInjection');
-      features.tabindexInjection.apply(doc);
-    }
-    
-    if (features.navigationFix) {
-      if (effectiveConfig.navigationFix) {
-        if (window.TizenPortal) window.TizenPortal.log('[Features] Applying navigationFix');
-        features.navigationFix.apply(doc);
-      } else if (effectiveConfig.navigationFix === false) {
-        if (window.TizenPortal) window.TizenPortal.log('[Features] Removing navigationFix');
-        features.navigationFix.remove(doc);
-      }
-    }
-    
-    if (features.textScale) {
-      var textScaleLevel = effectiveConfig.textScale || 'off';
-      if (window.TizenPortal) window.TizenPortal.log('[Features] Applying textScale: ' + textScaleLevel);
-      if (textScaleLevel === 'off') {
-        if (window.TizenPortal) window.TizenPortal.log('[Features] Removing textScale');
-        features.textScale.remove(doc);
-      } else {
-        if (window.TizenPortal) window.TizenPortal.log('[Features] Applying textScale level: ' + textScaleLevel);
-        features.textScale.apply(doc, textScaleLevel);
+        // Standard boolean-enabled features
+        if (isEnabled) {
+          if (window.TizenPortal) window.TizenPortal.log('[Features] Applying ' + item.id);
+          var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
+          impl.apply.apply(impl, [doc].concat(args));
+        }
       }
     }
     
@@ -220,13 +344,14 @@ function removeFeatures(doc) {
   }
   
   try {
-    // Remove all features
-    Object.keys(features).forEach(function(key) {
-      var feature = features[key];
-      if (feature && feature.remove) {
-        feature.remove(doc);
+    // Get all registered features and remove them
+    var registeredFeatures = Registry.getFeatures();
+    for (var i = 0; i < registeredFeatures.length; i++) {
+      var item = registeredFeatures[i];
+      if (item.implementation && item.implementation.remove) {
+        item.implementation.remove(doc);
       }
-    });
+    }
     
     if (window.TizenPortal) {
       TizenPortal.log('Features: Removed');
@@ -243,12 +368,12 @@ function removeFeatures(doc) {
  * @returns {Array}
  */
 function getFeatures() {
-  return Object.keys(features).map(function(key) {
-    var feature = features[key];
+  // Return metadata from registry
+  return Registry.getFeatures().map(function(item) {
     return {
-      key: key,
-      name: feature.name,
-      displayName: feature.displayName,
+      key: item.id,
+      name: item.name,
+      displayName: item.displayName,
     };
   });
 }
@@ -259,4 +384,7 @@ export default {
   getFeatures: getFeatures,
   getDefaults: getDefaults,
   getConfig: getConfig,
+  
+  // Expose registry for advanced use
+  registry: Registry,
 };
