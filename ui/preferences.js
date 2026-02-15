@@ -8,8 +8,7 @@
 import { isValidHexColor, isValidHttpUrl, escapeHtml } from '../core/utils.js';
 import Userscripts from '../features/userscripts.js';
 import featureLoader from '../features/index.js';
-
-var UserscriptRegistry = Userscripts.UserscriptRegistry;
+import Registry from '../features/registry.js';
 
 /**
  * Preferences state
@@ -579,12 +578,17 @@ function buildSectionRows(sectionId, sectionRows) {
 
 function buildUserscriptRows() {
   var rows = [];
-  var categories = UserscriptRegistry.getCategories();
-  var allScripts = UserscriptRegistry.getAllUserscripts();
+  var categories = Registry.CATEGORIES;
+  var allScripts = Registry.getUserscripts();
   
   // Group scripts by category
   for (var cat in categories) {
-    var categoryScripts = UserscriptRegistry.getUserscriptsByCategory(categories[cat]);
+    var categoryScripts = Registry.getByCategory(categories[cat]);
+    // Filter to only userscripts
+    categoryScripts = categoryScripts.filter(function(item) {
+      return item.type === Registry.ITEM_TYPES.USERSCRIPT;
+    });
+    
     if (categoryScripts.length > 0) {
       // Add category label row
       rows.push({ type: 'userscript-category', category: categories[cat], label: getCategoryLabel(categories[cat]) });
@@ -724,7 +728,7 @@ function renderPreferencesUI() {
 
 function getPreferencesSectionSummary(sectionId) {
   if (sectionId === 'userscripts') {
-    var scripts = UserscriptRegistry.getAllUserscripts();
+    var scripts = Registry.getUserscripts();
     if (!scripts.length) return 'No scripts registered';
     var enabledNames = [];
     for (var s = 0; s < scripts.length; s++) {
