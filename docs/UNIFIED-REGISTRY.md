@@ -176,7 +176,7 @@ However, new features and userscripts should be registered using the unified reg
 
 **Key Design Decisions:**
 1. Registry uses in-memory array for fast access
-2. Items are immutable once registered
+2. Items should be treated as read-only once registered (callers must not mutate returned objects)
 3. Validation happens at registration time
 4. Conflict detection uses `provides` array
 5. Features include implementation reference

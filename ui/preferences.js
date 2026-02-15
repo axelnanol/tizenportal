@@ -579,15 +579,10 @@ function buildSectionRows(sectionId, sectionRows) {
 function buildUserscriptRows() {
   var rows = [];
   var categories = Registry.CATEGORIES;
-  var allScripts = Registry.getUserscripts();
   
   // Group scripts by category
   for (var cat in categories) {
-    var categoryScripts = Registry.getByCategory(categories[cat]);
-    // Filter to only userscripts
-    categoryScripts = categoryScripts.filter(function(item) {
-      return item.type === Registry.ITEM_TYPES.USERSCRIPT;
-    });
+    var categoryScripts = Registry.getUserscriptsByCategory(categories[cat]);
     
     if (categoryScripts.length > 0) {
       // Add category label row

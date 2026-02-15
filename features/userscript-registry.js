@@ -10,9 +10,16 @@ import Registry from './registry.js';
 
 /**
  * Userscript categories for UI organization
- * These map to the unified registry CATEGORIES
+ * Only includes categories relevant to userscripts (not feature categories)
  */
-var CATEGORIES = Registry.CATEGORIES;
+var CATEGORIES = {
+  ACCESSIBILITY: 'accessibility',
+  READING: 'reading',
+  VIDEO: 'video',
+  NAVIGATION: 'navigation',
+  PRIVACY: 'privacy',
+  EXPERIMENTAL: 'experimental',
+};
 
 /**
  * All available userscripts
@@ -257,10 +264,10 @@ function getUserscriptById(id) {
 
 /**
  * Get userscripts by category
- * Now delegates to unified registry
+ * Now delegates to unified registry with proper userscript filtering
  */
 function getUserscriptsByCategory(category) {
-  return Registry.getByCategory(category);
+  return Registry.getUserscriptsByCategory(category);
 }
 
 /**

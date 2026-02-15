@@ -177,6 +177,21 @@ function getUserscripts() {
 }
 
 /**
+ * Get userscripts by category
+ * @param {string} category - CATEGORIES value
+ * @returns {Array}
+ */
+function getUserscriptsByCategory(category) {
+  var result = [];
+  for (var i = 0; i < REGISTRY.length; i++) {
+    if (REGISTRY[i].category === category && REGISTRY[i].type === ITEM_TYPES.USERSCRIPT) {
+      result.push(REGISTRY[i]);
+    }
+  }
+  return result;
+}
+
+/**
  * Check for conflicts between enabled items
  * Returns array of conflicting item IDs
  * @param {Array} enabledIds - Array of enabled item IDs
@@ -227,6 +242,7 @@ export default {
   getByCategory: getByCategory,
   getFeatures: getFeatures,
   getUserscripts: getUserscripts,
+  getUserscriptsByCategory: getUserscriptsByCategory,
   checkConflicts: checkConflicts,
   clear: clear,
 };
