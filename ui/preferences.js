@@ -28,6 +28,7 @@ var THEME_OPTIONS = [
   { value: 'dark', label: 'Dark' },
   { value: 'light', label: 'Light' },
   { value: 'auto', label: 'Automatic (Sunset)' },
+  { value: 'portal', label: 'Portal (Blue & Orange)' },
   { value: 'backdrop', label: 'Custom Backdrop' },
   { value: 'custom', label: 'Custom Colours' },
 ];
@@ -1339,6 +1340,11 @@ export function applyPortalPreferences(config) {
       var color1 = isValidHexColor(config.customColor1) ? config.customColor1 : '#0d1117';
       var color2 = isValidHexColor(config.customColor2) ? config.customColor2 : '#161b22';
       shell.style.background = 'linear-gradient(135deg, ' + color1 + ' 0%, ' + color2 + ' 100%)';
+    } else if (theme === 'portal') {
+      // Portal theme - inspired by the Portal video game with blue and orange accent colors
+      shell.style.background = 'radial-gradient(ellipse at top left, rgba(255, 149, 0, 0.15) 0%, transparent 50%), ' +
+                               'radial-gradient(ellipse at bottom right, rgba(74, 144, 226, 0.15) 0%, transparent 50%), ' +
+                               'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
     } else if (theme === 'backdrop') {
       // Custom backdrop image — validate URL before injecting into CSS
       if (config.backgroundImage && isValidHttpUrl(config.backgroundImage)) {

@@ -11,6 +11,7 @@
 ### 🚀 Portal Launcher
 A TV-friendly launcher with customizable themes to manage your sites in one place.
 - Grid-based layout optimized for TV remote navigation
+- TizenPortal branding with Portal-inspired icon and themes
 - Site editor for adding/editing apps with custom names and icons
 - Bundle selector for choosing compatibility fixes per-site
 
@@ -66,7 +67,7 @@ TizenBrew will open the portal and inject the runtime into all navigated pages.
 
 ### Preferences
 - Press **🟡 Yellow** on the portal to open Preferences
-- Theme modes: Light, Dark, Automatic (Sunset), Custom Backdrop, Custom Colours
+- Theme modes: Light, Dark, Automatic (Sunset), Portal (Blue & Orange), Custom Backdrop, Custom Colours
 - Debug HUD position: Off / Top Right / Top Left / Bottom Right / Bottom Left
 - Portal hints (color button labels)
 - Viewport lock mode, focus outline mode, and user agent mode
@@ -179,9 +180,11 @@ TizenPortal is designed with security as a priority:
 
 ## 🙏 Acknowledgments
 
-This project uses code from:
+This project uses code and inspiration from the following sources:
+
 - **[TizenTube](https://github.com/reisxd/TizenTube)** — Spatial navigation polyfill and DOMRect polyfill
 - **[TizenBrew](https://github.com/reisxd/TizenBrew)** — Module loading platform
+- **[Portal (video game)](https://en.wikipedia.org/wiki/Portal_(video_game))** — Branding and theme inspiration (orange and blue portal colors)
 
 ---
 
