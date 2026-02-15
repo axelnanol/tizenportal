@@ -311,7 +311,7 @@ function applyFeatures(doc, overrides) {
         var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];
         return { shouldApply: true, shouldRemove: false, args: args };
       }
-      return { shouldApply: false, shouldRemove: false, args: [] };
+      return { shouldApply: false, shouldRemove: true, args: [] };
     }
   }
 
