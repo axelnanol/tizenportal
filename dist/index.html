@@ -14,7 +14,9 @@
       width: 1920px;
       height: 1080px;
       overflow: hidden;
-      background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+      background: radial-gradient(900px 600px at 12% 18%, rgba(0, 156, 255, 0.35) 0%, transparent 60%),
+                  radial-gradient(900px 600px at 88% 82%, rgba(255, 132, 0, 0.32) 0%, transparent 60%),
+                  linear-gradient(135deg, #061422 0%, #0a1b2e 45%, #0a1522 100%);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #ffffff;
     }
@@ -25,8 +27,9 @@
       height: 100%;
       position: relative;
       overflow: hidden;
-      background: radial-gradient(ellipse at top, #1a2332 0%, transparent 50%),
-                  radial-gradient(ellipse at bottom, #1a1a2e 0%, transparent 50%);
+      background: radial-gradient(800px 520px at 18% 22%, rgba(0, 170, 255, 0.28) 0%, transparent 62%),
+                  radial-gradient(820px 560px at 82% 78%, rgba(255, 140, 0, 0.26) 0%, transparent 62%),
+                  linear-gradient(180deg, #0b1624 0%, #0a141f 100%);
     }
     
     /* Portal launcher grid */
@@ -101,7 +104,7 @@
       width: 280px;
       height: 180px;
       margin: 15px;
-      background: linear-gradient(145deg, #1e2430 0%, #151922 100%);
+      background: linear-gradient(145deg, #1b2838 0%, #0f1622 100%);
       border: 2px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       display: flex;
@@ -115,8 +118,8 @@
     
     .tp-card:focus {
       outline: none;
-      border-color: #00a8ff;
-      box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.4), 0 8px 24px rgba(0, 0, 0, 0.5);
+      border-color: #00b2ff;
+      box-shadow: 0 0 0 3px rgba(0, 178, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5);
     }
     
     .tp-card-icon {
@@ -1960,7 +1963,7 @@
     <div id="tp-modal-container"></div>
   </div>
   
-  <script src="tizenportal.js?v=1073"></script>
+  <script src="tizenportal.js?v=1074"></script>
   <script>
     // Update version display from TizenPortal runtime
     (function() {

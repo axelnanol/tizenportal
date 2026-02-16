@@ -15,28 +15,6 @@ export default {
    * CSS to inject
    */
   getCSS: function() {
-    var scrollbarCSS = [
-      '/* Scrollbar styling for TV */',
-      '::-webkit-scrollbar {',
-      '  width: 8px;',
-      '  height: 8px;',
-      '}',
-      '',
-      '::-webkit-scrollbar-track {',
-      '  background: rgba(0, 0, 0, 0.2);',
-      '}',
-      '',
-      '::-webkit-scrollbar-thumb {',
-      '  background: rgba(255, 255, 255, 0.3);',
-      '  border-radius: 4px;',
-      '}',
-      '',
-      '::-webkit-scrollbar-thumb:hover {',
-      '  background: rgba(255, 255, 255, 0.5);',
-      '}',
-      '',
-    ];
-
     return [
       '/* TizenPortal CSS Reset */',
       '',
@@ -45,7 +23,6 @@ export default {
       '  box-sizing: border-box;',
       '}',
       '',
-      scrollbarCSS.join('\n'),
       '/* Prevent text selection on TV (can interfere with navigation) */',
       '* {',
       '  -webkit-user-select: none;',
