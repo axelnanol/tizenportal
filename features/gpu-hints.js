@@ -42,6 +42,11 @@ export default {
       'img, video, canvas {',
       '  backface-visibility: hidden;',
       '}',
+      '',
+      '/* Do not hide the portal logo on some GPU paths */',
+      '#tp-header-logo img {',
+      '  backface-visibility: visible !important;',
+      '}',
     ].join('\n');
   },
   
