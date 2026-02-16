@@ -1279,6 +1279,11 @@ function getGlobalFeaturesConfig() {
   return {};
 }
 
+function getNormalizedGlobalValue(globalFeatures, key) {
+  if (!globalFeatures || typeof globalFeatures !== 'object') return null;
+  return globalFeatures.hasOwnProperty(key) ? globalFeatures[key] : null;
+}
+
 function getFeatureOverridesSummary() {
   if (!state.card) return 'None';
   
@@ -1313,8 +1318,12 @@ function renderGlobalOverridesField() {
       if (def.category !== category.id) continue;
 
       var hasOverride = state.card && state.card.hasOwnProperty(def.key);
-      var globalValue = globalFeatures[def.key];
-      var effectiveValue = hasOverride ? state.card[def.key] : globalValue;
+      var globalValue = getNormalizedGlobalValue(globalFeatures, def.key);
+      var overrideValue = hasOverride ? state.card[def.key] : null;
+      if (hasOverride && overrideValue === null) {
+        hasOverride = false;
+      }
+      var effectiveValue = hasOverride ? overrideValue : globalValue;
 
       // Find display label
       var displayLabel = 'Not set';
@@ -1356,8 +1365,12 @@ function renderSiteOverridesField() {
       if (def.category !== category.id) continue;
 
       var hasOverride = state.card && state.card.hasOwnProperty(def.key);
-      var globalValue = globalFeatures[def.key];
-      var effectiveValue = hasOverride ? state.card[def.key] : globalValue;
+      var globalValue = getNormalizedGlobalValue(globalFeatures, def.key);
+      var overrideValue = hasOverride ? state.card[def.key] : null;
+      if (hasOverride && overrideValue === null) {
+        hasOverride = false;
+      }
+      var effectiveValue = hasOverride ? overrideValue : globalValue;
 
       // Find display label
       var displayLabel = 'Not set';
@@ -2352,6 +2365,10 @@ function handleGlobalOverrideRowClick(row) {
 
   var globalFeatures = getGlobalFeaturesConfig();
   var hasOverride = state.card.hasOwnProperty(key);
+  if (hasOverride && state.card[key] === null) {
+    delete state.card[key];
+    hasOverride = false;
+  }
 
   if (hasOverride) {
     // Has override - cycle to next option, or delete if back at start
@@ -2365,11 +2382,11 @@ function handleGlobalOverrideRowClick(row) {
     }
     
     var nextIdx = (currentIdx + 1) % def.options.length;
-    var globalValue = globalFeatures[key];
+    var globalValue = getNormalizedGlobalValue(globalFeatures, key);
     var nextValue = def.options[nextIdx].value;
     
     // If cycling back to global value, remove override
-    if (nextValue === globalValue) {
+    if (nextValue === globalValue || (nextValue === null && globalValue === undefined)) {
       delete state.card[key];
       showEditorToast('Reset to global: ' + def.options[nextIdx].label);
     } else {
@@ -2378,7 +2395,7 @@ function handleGlobalOverrideRowClick(row) {
     }
   } else {
     // No override - set to next value from global
-    var globalValue = globalFeatures[key];
+    var globalValue = getNormalizedGlobalValue(globalFeatures, key);
     var currentIdx = 0;
     for (var j = 0; j < def.options.length; j++) {
       if (def.options[j].value === globalValue) {
@@ -2422,6 +2439,10 @@ function handleSiteOverrideRowClick(row) {
 
   var globalFeatures = getGlobalFeaturesConfig();
   var hasOverride = state.card.hasOwnProperty(key);
+  if (hasOverride && state.card[key] === null) {
+    delete state.card[key];
+    hasOverride = false;
+  }
 
   if (hasOverride) {
     // Has override - cycle to next option, or delete if back at global value
@@ -2435,11 +2456,11 @@ function handleSiteOverrideRowClick(row) {
     }
     
     var nextIdx = (currentIdx + 1) % def.options.length;
-    var globalValue = globalFeatures[key];
+    var globalValue = getNormalizedGlobalValue(globalFeatures, key);
     var nextValue = def.options[nextIdx].value;
     
     // If cycling back to global value, remove override
-    if (nextValue === globalValue) {
+    if (nextValue === globalValue || (nextValue === null && globalValue === undefined)) {
       delete state.card[key];
       showEditorToast('Reset to global: ' + def.options[nextIdx].label);
     } else {
@@ -2448,7 +2469,7 @@ function handleSiteOverrideRowClick(row) {
     }
   } else {
     // No override - set to next value from global
-    var globalValue = globalFeatures[key];
+    var globalValue = getNormalizedGlobalValue(globalFeatures, key);
     var currentIdx = 0;
     for (var j = 0; j < def.options.length; j++) {
       if (def.options[j].value === globalValue) {
