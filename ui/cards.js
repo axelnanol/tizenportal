@@ -4,7 +4,7 @@
  * Card data model and localStorage persistence.
  */
 
-import { escapeHtml, sanitizeUrl, safeLocalStorageSet, ensureProperties, getTypedValue } from '../core/utils.js';
+import { escapeHtml, sanitizeUrl, safeLocalStorageSet, getTypedValue } from '../core/utils.js';
 
 /**
  * Storage key for cards
@@ -135,15 +135,22 @@ function loadCards() {
           needsSave = true;
         }
         
-        // Ensure all card fields exist using helper function
-        var cardFields = [
+        // MIGRATION: Remove old ensureProperties behavior that set overrides to null
+        // Properties with null values should not exist - they represent "no override"
+        // This cleans up legacy data from earlier versions
+        var overrideFields = [
           'featureBundle', 'navigationMode', 'viewportMode', 'focusOutlineMode', 'userAgent',
           'tabindexInjection', 'scrollIntoView', 'navigationFix', 'safeArea', 'gpuHints',
           'cssReset', 'hideScrollbars', 'wrapTextInputs', 'focusStyling', 'focusTransitions',
           'focusTransitionMode', 'focusTransitionSpeed', 'textScale'
         ];
-        if (ensureProperties(card, cardFields, null)) {
-          needsSave = true;
+        
+        for (var f = 0; f < overrideFields.length; f++) {
+          var fieldName = overrideFields[f];
+          if (card.hasOwnProperty(fieldName) && card[fieldName] === null) {
+            delete card[fieldName];
+            needsSave = true;
+          }
         }
 
         if (!card.hasOwnProperty('userscripts') || !Array.isArray(card.userscripts)) {
