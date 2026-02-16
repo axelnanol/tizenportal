@@ -189,6 +189,7 @@ function normalizeHintsPosition(value) {
  */
 var PREFERENCE_ROWS = [
   { id: 'theme', label: 'Theme Mode', type: 'select', options: THEME_OPTIONS, key: 'theme', config: 'portal', section: 'portal', category: 'appearance' },
+  { id: 'portalGradient', label: 'Portal Gradient Glow', type: 'toggle', key: 'portalGradient', config: 'portal', section: 'portal', category: 'appearance' },
   { id: 'customColor1', label: 'Gradient Color 1', type: 'color', key: 'customColor1', config: 'portal', showIf: 'custom', section: 'portal', category: 'appearance' },
   { id: 'customColor2', label: 'Gradient Color 2', type: 'color', key: 'customColor2', config: 'portal', showIf: 'custom', section: 'portal', category: 'appearance' },
   { id: 'backgroundImage', label: 'Backdrop Image URL', type: 'text', key: 'backgroundImage', config: 'portal', showIf: 'backdrop', section: 'portal', category: 'appearance' },
@@ -428,6 +429,7 @@ function getDefaultPortalConfig() {
     customColor1: '#0d1117',
     customColor2: '#161b22',
     backgroundImage: '',
+    portalGradient: true,
     hudPosition: 'off',
     hintsPosition: 'bottom-left',
     showHints: true,
@@ -1314,6 +1316,15 @@ export function applyPortalPreferences(config) {
   }
 
   var theme = normalizeThemeValue(config.theme || 'dark');
+  var portalGradient = config.portalGradient !== false;
+  var root = document.documentElement;
+  if (root) {
+    if (portalGradient) {
+      root.classList.remove('tp-portal-gradient-off');
+    } else {
+      root.classList.add('tp-portal-gradient-off');
+    }
+  }
 
   // Handle automatic theme (sunset-based)
   if (theme === 'auto') {
@@ -1345,9 +1356,13 @@ export function applyPortalPreferences(config) {
       shell.style.background = 'linear-gradient(135deg, ' + color1 + ' 0%, ' + color2 + ' 100%)';
     } else if (theme === 'portal') {
       // Portal theme - inspired by the Portal video game with blue and orange accent colors
-      shell.style.background = 'radial-gradient(ellipse at top left, rgba(255, 149, 0, 0.15) 0%, transparent 50%), ' +
-                               'radial-gradient(ellipse at bottom right, rgba(74, 144, 226, 0.15) 0%, transparent 50%), ' +
-                               'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
+      if (portalGradient) {
+        shell.style.background = 'radial-gradient(ellipse at top left, rgba(255, 149, 0, 0.15) 0%, transparent 50%), ' +
+                                 'radial-gradient(ellipse at bottom right, rgba(74, 144, 226, 0.15) 0%, transparent 50%), ' +
+                                 'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
+      } else {
+        shell.style.background = 'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
+      }
     } else if (theme === 'backdrop') {
       // Custom backdrop image — validate URL before injecting into CSS
       if (config.backgroundImage && isValidHttpUrl(config.backgroundImage)) {

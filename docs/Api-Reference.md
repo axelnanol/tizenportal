@@ -324,10 +324,11 @@ TizenPortal.log('Settings reset to defaults');
 
 ```typescript
 interface PortalPreferences {
-  theme: 'light' | 'dark' | 'auto' | 'backdrop' | 'custom';
+  theme: 'light' | 'dark' | 'auto' | 'portal' | 'backdrop' | 'custom';
   customColor1?: string;          // Hex color for custom theme
   customColor2?: string;          // Hex color for custom theme
   backdropUrl?: string;           // Background image URL
+  portalGradient?: boolean;       // Portal theme glow/gradient overlay
   hudPosition: 'off' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
   hintsPosition: 'off' | 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
 }

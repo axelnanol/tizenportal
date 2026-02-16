@@ -446,10 +446,11 @@ interface Config {
   diagnosticsEnabled: boolean;
   lastVisitedUrl: string | null;
   tp_portal: {
-    theme: 'dark' | 'light' | 'auto' | 'backdrop' | 'custom';
+    theme: 'dark' | 'light' | 'auto' | 'portal' | 'backdrop' | 'custom';
     customColor1: string;
     customColor2: string;
     backgroundImage: string;
+    portalGradient: boolean;
     hudPosition: 'off' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
     showHints: boolean;
   };

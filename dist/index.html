@@ -5,6 +5,21 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src * data:; connect-src *; frame-src *; object-src 'none'; base-uri 'self';">
   <meta name="viewport" content="width=1920, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TizenPortal</title>
+  <script>
+    (function() {
+      try {
+        var raw = localStorage.getItem('tp-configuration');
+        if (!raw) return;
+        var cfg = JSON.parse(raw);
+        var portal = cfg && cfg.tp_portal;
+        if (portal && portal.portalGradient === false) {
+          document.documentElement.className += ' tp-portal-gradient-off';
+        }
+      } catch (e) {
+        // Ignore storage parse errors on boot
+      }
+    })();
+  </script>
   <style>
     /* Reset and base styles */
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -20,6 +35,11 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #ffffff;
     }
+
+    html.tp-portal-gradient-off,
+    html.tp-portal-gradient-off body {
+      background: linear-gradient(135deg, #061422 0%, #0a1b2e 45%, #0a1522 100%);
+    }
     
     /* Shell container */
     #tp-shell {
@@ -30,6 +50,10 @@
       background: radial-gradient(800px 520px at 18% 22%, rgba(0, 170, 255, 0.28) 0%, transparent 62%),
                   radial-gradient(820px 560px at 82% 78%, rgba(255, 140, 0, 0.26) 0%, transparent 62%),
                   linear-gradient(180deg, #0b1624 0%, #0a141f 100%);
+    }
+
+    html.tp-portal-gradient-off #tp-shell {
+      background: linear-gradient(180deg, #0b1624 0%, #0a141f 100%);
     }
     
     /* Portal launcher grid */
@@ -1963,7 +1987,7 @@
     <div id="tp-modal-container"></div>
   </div>
   
-  <script src="tizenportal.js?v=1074"></script>
+  <script src="tizenportal.js?v=1075"></script>
   <script>
     // Update version display from TizenPortal runtime
     (function() {

@@ -26,6 +26,7 @@ var DEFAULT_CONFIG = {
     customColor1: '#0d1117',
     customColor2: '#161b22',
     backgroundImage: '',
+    portalGradient: true,
     hudPosition: 'off',
     hintsPosition: 'bottom-left',
     showHints: true,
