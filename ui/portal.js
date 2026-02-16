@@ -8,7 +8,7 @@ import { getCards, addCard, updateCard, deleteCard } from './cards.js';
 import { showAddCardModal, showEditCardModal, setRefreshPortalFn } from './modal.js';
 import { showAddSiteEditor, showEditSiteEditor } from './siteeditor.js';
 import { getBundle } from '../bundles/registry.js';
-import { applyPortalPreferences } from './preferences.js';
+import { applyPortalPreferences, showPreferences } from './preferences.js';
 
 /**
  * Portal container element
@@ -43,8 +43,27 @@ export function initPortal() {
   // Apply portal preferences (theme, background)
   applyPortalPreferences();
 
+  setupHeaderLogoShortcut();
+
   renderCards();
   focusCard(0);
+}
+
+function setupHeaderLogoShortcut() {
+  var logo = document.getElementById('tp-header-logo');
+  if (!logo) return;
+
+  logo.addEventListener('click', function() {
+    showPreferences();
+  });
+
+  logo.addEventListener('keydown', function(e) {
+    if (e.keyCode === 13 || e.keyCode === 32) {
+      e.preventDefault();
+      e.stopPropagation();
+      showPreferences();
+    }
+  });
 }
 
 /**

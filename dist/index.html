@@ -51,7 +51,16 @@
       margin-right: 20px;
       display: block;
       flex-shrink: 0;
+      cursor: pointer;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      box-sizing: border-box;
       filter: drop-shadow(0 2px 10px rgba(0, 168, 255, 0.3));
+    }
+
+    #tp-header-logo:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.6);
     }
     
     #tp-header h1 {
@@ -1875,7 +1884,7 @@
     <!-- Portal launcher -->
     <div id="tp-portal">
       <div id="tp-header">
-        <img id="tp-header-logo" src="assets/logo.svg" alt="TizenPortal Logo">
+        <img id="tp-header-logo" src="assets/logo.svg" alt="TizenPortal Logo" tabindex="0" role="button" aria-label="Open Preferences">
         <h1>TizenPortal</h1>
         <span class="version" id="tp-version">v...</span>
       </div>
@@ -1939,7 +1948,7 @@
     <div id="tp-modal-container"></div>
   </div>
   
-  <script src="tizenportal.js?v=1067"></script>
+  <script src="tizenportal.js?v=1068"></script>
   <script>
     // Update version display from TizenPortal runtime
     (function() {
