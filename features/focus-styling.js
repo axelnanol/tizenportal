@@ -15,17 +15,21 @@ export default {
    * CSS to inject
    */
   getCSS: function(mode) {
-    var color = '#00a8ff';
-    var width = 3;
+    var color = '#00b2ff';
+    var ringAlpha = 0.45;
+    var ringWidth = 3;
     if (mode === 'high') {
       color = '#fcd34d';
-      width = 4;
+      ringAlpha = 0.7;
+      ringWidth = 4;
     }
+    var ringShadow = '0 0 0 ' + ringWidth + 'px ' + hexToRgba(color, ringAlpha) + ', 0 8px 24px rgba(0, 0, 0, 0.5)';
     return [
       '/* TizenPortal Focus Styling */',
       ':focus {',
-      '  outline: ' + width + 'px solid ' + color + ' !important;',
-      '  outline-offset: 2px;',
+      '  outline: none !important;',
+      '  box-shadow: ' + ringShadow + ' !important;',
+      '  border-radius: 10px !important;',
       '}',
       '',
       'a:focus,',
@@ -39,8 +43,9 @@ export default {
       'input:focus,',
       'select:focus,',
       'textarea:focus {',
-      '  outline: ' + width + 'px solid ' + color + ' !important;',
-      '  outline-offset: 2px;',
+      '  outline: none !important;',
+      '  box-shadow: ' + ringShadow + ' !important;',
+      '  border-radius: 10px !important;',
       '}',
       '',
       '*:focus {',
@@ -72,3 +77,18 @@ export default {
     TizenPortal.log('Focus styling removed');
   },
 };
+
+function hexToRgba(hex, alpha) {
+  var raw = (hex || '').replace('#', '');
+  if (raw.length === 3) {
+    raw = raw.charAt(0) + raw.charAt(0) + raw.charAt(1) + raw.charAt(1) + raw.charAt(2) + raw.charAt(2);
+  }
+  var value = parseInt(raw, 16);
+  if (isNaN(value)) {
+    return 'rgba(0, 178, 255, ' + alpha + ')';
+  }
+  var r = (value >> 16) & 255;
+  var g = (value >> 8) & 255;
+  var b = value & 255;
+  return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
+}

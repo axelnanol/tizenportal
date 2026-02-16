@@ -800,7 +800,10 @@ async function initPortalPage() {
   // Apply global feature settings to portal page (textScale, focusTransitions, etc.)
   try {
     log('Applying global features to portal page');
-    featureLoader.applyFeatures(document);
+    featureLoader.applyFeatures(document, {
+      focusStyling: false,
+      focusOutlineMode: 'off',
+    });
   } catch (e) {
     warn('Failed to apply features to portal: ' + e.message);
   }

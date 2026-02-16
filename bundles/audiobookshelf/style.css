@@ -69,7 +69,9 @@
 #toolbar [role="button"]:hover,
 #toolbar [role="button"]:focus {
   background: rgba(255, 255, 255, 0.1) !important;
-  outline: 2px solid #4a9eff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(0, 178, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 10px !important;
 }
 
 /* Remove the old tp-toolbar-container stuff since we're not using it anymore */
@@ -163,9 +165,10 @@ button[aria-label*="Sort" i],
 .libraryFilterMenu li:focus,
 .ui-dropdown-menu li:focus,
 .ui-dropdown-menu ul li:focus {
-  outline: 2px solid #1ad691 !important;
-  outline-offset: -2px !important;
-  background: rgba(26, 214, 145, 0.2) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(0, 178, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 10px !important;
+  background: rgba(0, 178, 255, 0.12) !important;
 }
 
 /* CSS VAR POLYFILL (Chrome 47): explicit Tailwind spacing fallbacks. */
@@ -2432,4 +2435,22 @@ body {
 [class*="bg-white"],
 [class*="hover:bg"] {
   background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Portal-style focus rings */
+body.tp-focus-mode-on :focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(0, 178, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+body.tp-focus-mode-high :focus {
+  outline: none !important;
+  box-shadow: 0 0 0 4px rgba(252, 211, 77, 0.7), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+body.tp-focus-mode-off :focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
