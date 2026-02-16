@@ -2382,19 +2382,28 @@ function handleUserscriptRowClick(row) {
   var siteToggles = state.card.userscriptToggles || {};
   var globalEnabled = globalConfig.enabled[scriptId] === true;
   var hasSiteOverride = siteToggles.hasOwnProperty(scriptId);
+  var currentOverrideValue = hasSiteOverride ? siteToggles[scriptId] : null;
   
-  console.log('TizenPortal: [Userscript Toggle] scriptId=' + scriptId + ', globalEnabled=' + globalEnabled + ', hasSiteOverride=' + hasSiteOverride + ', currentOverride=' + (siteToggles[scriptId] ? siteToggles[scriptId] : 'none'));
+  console.log('TizenPortal: [Userscript Toggle] scriptId=' + scriptId + ', globalEnabled=' + globalEnabled + ', hasSiteOverride=' + hasSiteOverride + ', currentOverride=' + currentOverrideValue);
   
-  if (hasSiteOverride) {
-    // Has override - reset to global
-    delete siteToggles[scriptId];
-    showEditorToast('Reset to global setting');
-    console.log('TizenPortal: [Userscript Toggle] Cleared override for ' + scriptId);
-  } else {
-    // No override - create one with opposite of global
+  // Cycle through states based on global setting:
+  // If global ON:  Global → Override OFF → Override ON → Global
+  // If global OFF: Global → Override ON → Override OFF → Global
+  if (!hasSiteOverride) {
+    // No override - create override with opposite of global
     siteToggles[scriptId] = !globalEnabled;
     showEditorToast(globalEnabled ? 'Disabled for this site' : 'Enabled for this site');
     console.log('TizenPortal: [Userscript Toggle] Set override for ' + scriptId + ' = ' + siteToggles[scriptId]);
+  } else if (currentOverrideValue === !globalEnabled) {
+    // Override is opposite of global - flip to same as global
+    siteToggles[scriptId] = globalEnabled;
+    showEditorToast(globalEnabled ? 'Enabled for this site' : 'Disabled for this site');
+    console.log('TizenPortal: [Userscript Toggle] Toggled override for ' + scriptId + ' = ' + siteToggles[scriptId]);
+  } else {
+    // Override is same as global - remove override (reset to global)
+    delete siteToggles[scriptId];
+    showEditorToast('Reset to global setting');
+    console.log('TizenPortal: [Userscript Toggle] Cleared override for ' + scriptId);
   }
   
   state.card.userscriptToggles = siteToggles;
