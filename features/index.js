@@ -15,6 +15,7 @@ import scrollIntoView from './scroll-into-view.js';
 import safeArea from './safe-area.js';
 import gpuHints from './gpu-hints.js';
 import cssReset from './css-reset.js';
+import hideScrollbars from './hide-scrollbars.js';
 import navigationFix from './navigation-fix.js';
 import textScale from './text-scale.js';
 
@@ -113,11 +114,22 @@ Registry.register({
   category: Registry.CATEGORIES.CORE,
   description: 'Base CSS normalization for TV browsers',
   defaultEnabled: true,
-  configKeys: ['cssReset', 'hideScrollbars'],
+  configKeys: ['cssReset'],
   implementation: cssReset,
-  applyArgs: function(config) {
-    return [{ hideScrollbars: config.hideScrollbars === true }];
-  },
+  applyArgs: function() { return []; },
+});
+
+Registry.register({
+  id: 'hideScrollbars',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'hideScrollbars',
+  displayName: 'Hide Scrollbars',
+  category: Registry.CATEGORIES.LAYOUT,
+  description: 'Hide native scrollbars while keeping scroll behavior',
+  defaultEnabled: false,
+  configKeys: ['hideScrollbars'],
+  implementation: hideScrollbars,
+  applyArgs: function() { return []; },
 });
 
 Registry.register({
@@ -158,6 +170,7 @@ var features = {
   safeArea: safeArea,
   gpuHints: gpuHints,
   cssReset: cssReset,
+  hideScrollbars: hideScrollbars,
   navigationFix: navigationFix,
   textScale: textScale,
 };

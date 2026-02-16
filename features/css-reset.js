@@ -14,50 +14,28 @@ export default {
   /**
    * CSS to inject
    */
-  getCSS: function(options) {
-    var hideScrollbars = options && options.hideScrollbars === true;
-    var scrollbarCSS = [];
-
-    if (hideScrollbars) {
-      scrollbarCSS = [
-        '/* Hide scrollbars globally (keep scroll) */',
-        '::-webkit-scrollbar {',
-        '  width: 0px;',
-        '  height: 0px;',
-        '}',
-        '',
-        '::-webkit-scrollbar-track {',
-        '  background: transparent;',
-        '}',
-        '',
-        '::-webkit-scrollbar-thumb {',
-        '  background: transparent;',
-        '}',
-        '',
-      ];
-    } else {
-      scrollbarCSS = [
-        '/* Scrollbar styling for TV */',
-        '::-webkit-scrollbar {',
-        '  width: 8px;',
-        '  height: 8px;',
-        '}',
-        '',
-        '::-webkit-scrollbar-track {',
-        '  background: rgba(0, 0, 0, 0.2);',
-        '}',
-        '',
-        '::-webkit-scrollbar-thumb {',
-        '  background: rgba(255, 255, 255, 0.3);',
-        '  border-radius: 4px;',
-        '}',
-        '',
-        '::-webkit-scrollbar-thumb:hover {',
-        '  background: rgba(255, 255, 255, 0.5);',
-        '}',
-        '',
-      ];
-    }
+  getCSS: function() {
+    var scrollbarCSS = [
+      '/* Scrollbar styling for TV */',
+      '::-webkit-scrollbar {',
+      '  width: 8px;',
+      '  height: 8px;',
+      '}',
+      '',
+      '::-webkit-scrollbar-track {',
+      '  background: rgba(0, 0, 0, 0.2);',
+      '}',
+      '',
+      '::-webkit-scrollbar-thumb {',
+      '  background: rgba(255, 255, 255, 0.3);',
+      '  border-radius: 4px;',
+      '}',
+      '',
+      '::-webkit-scrollbar-thumb:hover {',
+      '  background: rgba(255, 255, 255, 0.5);',
+      '}',
+      '',
+    ];
 
     return [
       '/* TizenPortal CSS Reset */',
@@ -102,9 +80,9 @@ export default {
    * Apply feature to document
    * @param {Document} doc
    */
-  apply: function(doc, options) {
+  apply: function(doc) {
     if (!doc) return;
-    injectCSS(doc, 'tp-css-reset', this.getCSS(options || {}));
+    injectCSS(doc, 'tp-css-reset', this.getCSS());
     TizenPortal.log('CSS reset: Applied normalization');
   },
   
