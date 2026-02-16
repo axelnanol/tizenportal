@@ -1361,7 +1361,9 @@ export function applyPortalPreferences(config) {
                                  'radial-gradient(ellipse at bottom right, rgba(74, 144, 226, 0.15) 0%, transparent 50%), ' +
                                  'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
       } else {
-        shell.style.background = 'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
+        shell.style.background = 'radial-gradient(180px 180px at 12% 18%, rgba(74, 144, 226, 0.55) 0%, rgba(74, 144, 226, 0.55) 38%, transparent 40%), ' +
+                                 'radial-gradient(180px 180px at 88% 82%, rgba(255, 149, 0, 0.55) 0%, rgba(255, 149, 0, 0.55) 38%, transparent 40%), ' +
+                                 'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
       }
     } else if (theme === 'backdrop') {
       // Custom backdrop image — validate URL before injecting into CSS

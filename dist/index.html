@@ -38,7 +38,9 @@
 
     html.tp-portal-gradient-off,
     html.tp-portal-gradient-off body {
-      background: linear-gradient(135deg, #061422 0%, #0a1b2e 45%, #0a1522 100%);
+      background: radial-gradient(180px 180px at 12% 18%, rgba(0, 156, 255, 0.6) 0%, rgba(0, 156, 255, 0.6) 38%, transparent 40%),
+                  radial-gradient(180px 180px at 88% 82%, rgba(255, 132, 0, 0.55) 0%, rgba(255, 132, 0, 0.55) 38%, transparent 40%),
+                  linear-gradient(135deg, #061422 0%, #0a1b2e 45%, #0a1522 100%);
     }
     
     /* Shell container */
@@ -53,7 +55,9 @@
     }
 
     html.tp-portal-gradient-off #tp-shell {
-      background: linear-gradient(180deg, #0b1624 0%, #0a141f 100%);
+      background: radial-gradient(160px 160px at 18% 22%, rgba(0, 170, 255, 0.5) 0%, rgba(0, 170, 255, 0.5) 36%, transparent 38%),
+                  radial-gradient(160px 160px at 82% 78%, rgba(255, 140, 0, 0.5) 0%, rgba(255, 140, 0, 0.5) 36%, transparent 38%),
+                  linear-gradient(180deg, #0b1624 0%, #0a141f 100%);
     }
     
     /* Portal launcher grid */
@@ -1987,7 +1991,7 @@
     <div id="tp-modal-container"></div>
   </div>
   
-  <script src="tizenportal.js?v=1075"></script>
+  <script src="tizenportal.js?v=1076"></script>
   <script>
     // Update version display from TizenPortal runtime
     (function() {
