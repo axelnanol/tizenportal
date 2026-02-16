@@ -189,12 +189,6 @@ function loadCards() {
         if (!card.hasOwnProperty('userscriptToggles') || typeof card.userscriptToggles !== 'object' || card.userscriptToggles === null) {
           card.userscriptToggles = {};
           needsSave = true;
-        } else {
-          // Log for diagnostics
-          var toggleCount = Object.keys(card.userscriptToggles).length;
-          if (toggleCount > 0) {
-            console.log('TizenPortal: [loadCards] Card "' + card.name + '" has ' + toggleCount + ' userscript toggles: ' + JSON.stringify(card.userscriptToggles));
-          }
         }
 
         if (!card.hasOwnProperty('bundleUserscriptToggles') || typeof card.bundleUserscriptToggles !== 'object' || card.bundleUserscriptToggles === null) {
@@ -254,13 +248,6 @@ function loadCards() {
  */
 function saveCards() {
   if (cardCache === null) return;
-
-  // Log each card's userscriptToggles before saving
-  for (var i = 0; i < cardCache.length; i++) {
-    if (cardCache[i].userscriptToggles && Object.keys(cardCache[i].userscriptToggles).length > 0) {
-      console.log('TizenPortal: [saveCards] Card "' + cardCache[i].name + '" userscriptToggles: ' + JSON.stringify(cardCache[i].userscriptToggles));
-    }
-  }
 
   var result = safeLocalStorageSet(STORAGE_KEY, JSON.stringify(cardCache));
   if (!result.success) {

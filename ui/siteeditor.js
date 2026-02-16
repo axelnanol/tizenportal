@@ -607,9 +607,6 @@ export function showEditSiteEditor(card, onComplete) {
     bundleOptionData: card.bundleOptionData || {},
     userscriptToggles: card.userscriptToggles || {},
   };
-  
-  console.log('TizenPortal: [showEditSiteEditor] Loaded card "' + card.name + '" with ' + Object.keys(state.card.userscriptToggles).length + ' userscript toggles: ' + JSON.stringify(state.card.userscriptToggles));
-  
   state.onComplete = onComplete;
   
   openEditor();
@@ -1227,8 +1224,6 @@ function getUserscriptsSummary() {
   var siteToggles = ensureSiteUserscriptToggles();
   var enabledNames = [];
 
-  console.log('TizenPortal: [getUserscriptsSummary] globalScripts=' + globalScripts.length + ', siteToggles=' + JSON.stringify(siteToggles));
-
   for (var j = 0; j < globalScripts.length; j++) {
     var s = globalScripts[j] || {};
     var sId = s.id || ('global-' + j);
@@ -1298,7 +1293,8 @@ function renderGlobalOverridesField() {
         }
       }
 
-      var statusText = hasOverride ? displayLabel + ' (override)' : displayLabel + ' (global)';
+      var statusIcon = hasOverride ? '🔧' : '🌐';
+      var statusText = statusIcon + ' ' + displayLabel;
 
       html += '' +
         '<div class="tp-userscript-line tp-global-override-row" data-global-key="' + def.key + '" tabindex="0">' +
@@ -1340,7 +1336,8 @@ function renderSiteOverridesField() {
         }
       }
 
-      var statusText = hasOverride ? displayLabel + ' (override)' : displayLabel + ' (global)';
+      var statusIcon = hasOverride ? '🔧' : '🌐';
+      var statusText = statusIcon + ' ' + displayLabel;
 
       html += '' +
         '<div class="tp-userscript-line tp-site-override-row" data-site-key="' + def.key + '" tabindex="0">' +
@@ -1402,16 +1399,21 @@ function renderTextField(field, value) {
   var displayValue = value || field.placeholder || '';
   var isEmpty = !value;
   
-  // Special case for icon field - add fetch favicon button
-  if (field.name === 'icon') {
+  // Show edit button for name, url, icon fields
+  if (field.name === 'name' || field.name === 'url' || field.name === 'icon') {
+    var buttonLabel = 'Edit';
+    if (field.name === 'icon') {
+      buttonLabel = isEmpty ? 'Set' : 'Change';
+    }
+    
     return '' +
       '<div class="tp-field-row-group">' +
         '<div class="tp-field-row" data-field="' + field.name + '" tabindex="0">' +
           '<div class="tp-field-label">' + field.label + (field.required ? ' *' : '') + '</div>' +
           '<div class="tp-field-value' + (isEmpty ? ' empty' : '') + '">' + escapeHtml(displayValue) + '</div>' +
         '</div>' +
-        '<button type="button" class="tp-editor-btn tp-editor-btn-fetch" id="tp-editor-fetch-icon" tabindex="0">' +
-          'Fetch Favicon' +
+        '<button type="button" class="tp-editor-btn tp-editor-btn-edit" data-edit-field="' + field.name + '" tabindex="0">' +
+          buttonLabel +
         '</button>' +
       '</div>';
   }
@@ -1584,8 +1586,6 @@ function renderUserscriptsField() {
   var globalConfig = Userscripts.getUserscriptsConfig();
   var siteToggles = state.card.userscriptToggles || {};
   
-  console.log('TizenPortal: [renderUserscriptsField] Current siteToggles: ' + JSON.stringify(siteToggles) + ' (keys=' + Object.keys(siteToggles).length + ')');
-  
   // Get all userscripts from unified registry using query API
   var categories = Registry.CATEGORIES;
   
@@ -1597,8 +1597,6 @@ function renderUserscriptsField() {
     });
     
     if (categoryScripts.length === 0) continue;
-    
-    console.log('TizenPortal: [renderUserscriptsField] Category ' + cat + ' has ' + categoryScripts.length + ' scripts');
     
     // Category header
     html += '<div class="tp-field-section-label">' + getCategoryLabel(categories[cat]) + '</div>';
@@ -1883,14 +1881,25 @@ function setupFieldListeners(container) {
     });
   }
   
-  // Fetch favicon button
-  var fetchBtn = container.querySelector('#tp-editor-fetch-icon');
-  if (fetchBtn) {
-    fetchBtn.addEventListener('click', handleFetchFavicon);
-    fetchBtn.addEventListener('keydown', function(e) {
+  // Edit field buttons (name, url, icon)
+  var editBtns = container.querySelectorAll('.tp-editor-btn-edit');
+  for (var eb = 0; eb < editBtns.length; eb++) {
+    editBtns[eb].addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var fieldName = this.dataset.editField;
+      if (fieldName) {
+        activateFieldInput(document.querySelector('.tp-field-row[data-field="' + fieldName + '"]'));
+      }
+    });
+    editBtns[eb].addEventListener('keydown', function(e) {
       if (e.keyCode === 13) {
         e.preventDefault();
-        handleFetchFavicon();
+        e.stopPropagation();
+        var fieldName = this.dataset.editField;
+        if (fieldName) {
+          activateFieldInput(document.querySelector('.tp-field-row[data-field="' + fieldName + '"]'));
+        }
       }
     });
   }
@@ -2461,21 +2470,41 @@ function handleGlobalOverrideRowClick(row) {
   var hasOverride = state.card.hasOwnProperty(key);
 
   if (hasOverride) {
-    // Has override - reset to global
-    delete state.card[key];
-    showEditorToast('Reset to global setting');
-  } else {
-    // No override - set to next value or first if not set
-    var globalValue = globalFeatures[key];
-    var nextIdx = 0;
+    // Has override - cycle to next option, or delete if back at start
+    var currentValue = state.card[key];
+    var currentIdx = -1;
     for (var j = 0; j < def.options.length; j++) {
-      if (def.options[j].value === globalValue) {
-        nextIdx = (j + 1) % def.options.length;
+      if (def.options[j].value === currentValue) {
+        currentIdx = j;
         break;
       }
     }
+    
+    var nextIdx = (currentIdx + 1) % def.options.length;
+    var globalValue = globalFeatures[key];
+    var nextValue = def.options[nextIdx].value;
+    
+    // If cycling back to global value, remove override
+    if (nextValue === globalValue) {
+      delete state.card[key];
+      showEditorToast('Reset to global: ' + def.options[nextIdx].label);
+    } else {
+      state.card[key] = nextValue;
+      showEditorToast('Override: ' + def.options[nextIdx].label);
+    }
+  } else {
+    // No override - set to next value from global
+    var globalValue = globalFeatures[key];
+    var currentIdx = 0;
+    for (var j = 0; j < def.options.length; j++) {
+      if (def.options[j].value === globalValue) {
+        currentIdx = j;
+        break;
+      }
+    }
+    var nextIdx = (currentIdx + 1) % def.options.length;
     state.card[key] = def.options[nextIdx].value;
-    showEditorToast('Setting: ' + def.options[nextIdx].label);
+    showEditorToast('Override: ' + def.options[nextIdx].label);
   }
 
   renderFields();
