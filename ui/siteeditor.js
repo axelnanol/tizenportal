@@ -177,6 +177,7 @@ var FEATURE_OVERRIDE_DEFS = [
 ];
 
 var SECTION_DEFS = [
+  { id: 'details', label: '📝 Details', defaultCollapsed: false },
   { id: 'bundle', label: '📦 Bundle', defaultCollapsed: true },
   { id: 'bundleOptions', label: '⚙️ Bundle Options', defaultCollapsed: true },
   { id: 'globalOverrides', label: '⚙️ Global Overrides', defaultCollapsed: true },
@@ -185,6 +186,7 @@ var SECTION_DEFS = [
 ];
 
 var sectionCollapsed = {
+  details: false,
   bundle: true,
   bundleOptions: true,
   globalOverrides: true,
@@ -192,7 +194,11 @@ var sectionCollapsed = {
 };
 
 var FIELDS = [
-  { name: '__details', label: 'Site Details', type: 'details' },
+  { name: '__section_details', label: '📝 Details', type: 'section', sectionId: 'details' },
+  { name: 'name', label: 'Site Name', type: 'text', placeholder: 'My Site', required: true, section: 'details' },
+  { name: 'url', label: 'Site URL', type: 'text', placeholder: 'https://example.com', required: true, section: 'details' },
+  { name: 'icon', label: 'Icon URL', type: 'text', placeholder: 'https://example.com/favicon.ico', required: false, section: 'details' },
+  { name: '__fetchIcon', label: 'Fetch Favicon', type: 'button', action: 'fetch-icon', section: 'details' },
   { name: '__section_bundle', label: '📦 Bundle', type: 'section', sectionId: 'bundle' },
   { name: 'featureBundle', label: 'Site-specific Bundle', type: 'bundle', required: false, section: 'bundle' },
   { name: '__section_bundleOptions', label: '⚙️ Bundle Options', type: 'section', sectionId: 'bundleOptions' },
@@ -1037,8 +1043,8 @@ function renderFields() {
       html += renderUserscriptsField();
     } else if (field.type === 'bundleOptions') {
       html += renderBundleOptionsField();
-    } else if (field.type === 'details') {
-      html += renderDetailsField();
+    } else if (field.type === 'button') {
+      html += renderButtonField(field);
     } else {
       html += renderTextField(field, value);
     }
@@ -1111,6 +1117,13 @@ function getSectionSummary(sectionId) {
 
   if (sectionId === 'userscripts') {
     return getUserscriptsSummary();
+  }
+
+  if (sectionId === 'details') {
+    var name = state.card.name || 'Unnamed';
+    var url = state.card.url || 'No URL';
+    var icon = state.card.icon ? '✓' : '○';
+    return name + ' • ' + shortenUrl(url) + ' • Icon: ' + icon;
   }
 
   return '';
@@ -1346,6 +1359,8 @@ function renderSiteOverridesField() {
             '<div style="font-size: 12px; color: #666; margin-top: 2px;">' + escapeHtml(def.description || '') + '</div>' +
           '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
+        '</div>'; +
+          '<div class="tp-userscript-status">' + statusText + '</div>' +
         '</div>';
     }
   }
@@ -1370,12 +1385,9 @@ function renderFeatureOverridesField() {
       var globalEnabled = globalFeatures[def.key] !== false;
       var effectiveEnabled = hasOverride ? (state.card[def.key] === true) : globalEnabled;
 
-      var statusText = '';
-      if (hasOverride) {
-        statusText = effectiveEnabled ? '✓ Enabled (override)' : '○ Disabled (override)';
-      } else {
-        statusText = globalEnabled ? '✓ Enabled (global)' : '○ Disabled (global)';
-      }
+      var statusIcon = hasOverride ? '🔧' : '🌐';
+      var statusSymbol = effectiveEnabled ? '✓ ' : '○ ';
+      var statusText = statusIcon + ' ' + statusSymbol + (effectiveEnabled ? 'Enabled' : 'Disabled');
 
       html += '' +
         '<div class="tp-userscript-line tp-feature-row" data-feature-key="' + def.key + '" tabindex="0">' +
@@ -1399,25 +1411,6 @@ function renderTextField(field, value) {
   var displayValue = value || field.placeholder || '';
   var isEmpty = !value;
   
-  // Show edit button for name, url, icon fields
-  if (field.name === 'name' || field.name === 'url' || field.name === 'icon') {
-    var buttonLabel = 'Edit';
-    if (field.name === 'icon') {
-      buttonLabel = isEmpty ? 'Set' : 'Change';
-    }
-    
-    return '' +
-      '<div class="tp-field-row-group">' +
-        '<div class="tp-field-row" data-field="' + field.name + '" tabindex="0">' +
-          '<div class="tp-field-label">' + field.label + (field.required ? ' *' : '') + '</div>' +
-          '<div class="tp-field-value' + (isEmpty ? ' empty' : '') + '">' + escapeHtml(displayValue) + '</div>' +
-        '</div>' +
-        '<button type="button" class="tp-editor-btn tp-editor-btn-edit" data-edit-field="' + field.name + '" tabindex="0">' +
-          buttonLabel +
-        '</button>' +
-      '</div>';
-  }
-  
   return '' +
     '<div class="tp-field-row" data-field="' + field.name + '" tabindex="0">' +
       '<div class="tp-field-label">' + field.label + (field.required ? ' *' : '') + '</div>' +
@@ -1425,20 +1418,19 @@ function renderTextField(field, value) {
     '</div>';
 }
 
-function renderDetailsField() {
-  var name = state.card.name || 'Site Name';
-  var url = state.card.url || 'https://...';
-  var icon = state.card.icon ? 'Icon: set' : 'Icon: none';
-  var summary = 'Name: ' + name + ' • URL: ' + shortenUrl(url) + ' • ' + icon;
-
+function renderButtonField(field) {
+  var buttonLabel = 'Fetch Favicon';
+  if (field.action === 'fetch-icon') {
+    buttonLabel = 'Fetch Favicon';
+  }
+  
   return '' +
-    '<div class="tp-userscript-line tp-userscript-row tp-details-row" data-details-row="true" tabindex="0">' +
-      '<div class="tp-userscript-label">' + escapeHtml(summary) + '</div>' +
-      '<div class="tp-userscript-actions">' +
-        '<button type="button" class="tp-userscript-btn tp-detail-btn" data-detail-action="edit-name" tabindex="0">Name</button>' +
-        '<button type="button" class="tp-userscript-btn tp-detail-btn" data-detail-action="edit-url" tabindex="0">URL</button>' +
-        '<button type="button" class="tp-userscript-btn tp-detail-btn" data-detail-action="edit-icon" tabindex="0">Icon</button>' +
-        '<button type="button" class="tp-userscript-btn tp-detail-btn" data-detail-action="fetch-icon" tabindex="0">Fetch</button>' +
+    '<div class="tp-field-row" data-field="' + field.name + '" data-type="button" tabindex="0">' +
+      '<div class="tp-field-label">' + field.label + '</div>' +
+      '<div class="tp-field-value">' +
+        '<button type="button" class="tp-editor-btn tp-editor-btn-action" data-action="' + field.action + '" tabindex="0">' +
+          buttonLabel +
+        '</button>' +
       '</div>' +
     '</div>';
 }
@@ -1611,15 +1603,10 @@ function renderUserscriptsField() {
       var hasSiteOverride = siteToggles.hasOwnProperty(scriptId);
       var siteEnabled = hasSiteOverride ? (siteToggles[scriptId] === true) : globalEnabled;
       
-      // Status display
-      var statusText = '';
-      if (hasSiteOverride) {
-        statusText = siteEnabled ? '✓ Enabled (site override)' : '○ Disabled (site override)';
-      } else if (globalEnabled) {
-        statusText = '✓ Enabled (global)';
-      } else {
-        statusText = '○ Disabled (global)';
-      }
+      // Status display with visual indicators
+      var statusIcon = hasSiteOverride ? '🔧' : '🌐';
+      var statusSymbol = siteEnabled ? '✓ ' : '○ ';
+      var statusText = statusIcon + ' ' + statusSymbol + (siteEnabled ? 'Enabled' : 'Disabled');
       
       html += '' +
         '<div class="tp-userscript-line tp-userscript-row" data-userscript-id="' + escapeHtml(scriptId) + '" tabindex="0">' +
@@ -1715,49 +1702,6 @@ function setupFieldListeners(container) {
         e.preventDefault();
         e.stopPropagation();
         activateBundleOptionInput(this);
-      }
-    });
-  }
-
-  // Userscript rows (handled separately)
-  var userscriptActions = container.querySelectorAll('.tp-detail-btn');
-  for (var ua = 0; ua < userscriptActions.length; ua++) {
-    userscriptActions[ua].addEventListener('click', function(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      handleDetailAction(this);
-    });
-    userscriptActions[ua].addEventListener('keydown', function(e) {
-      if (handleUserscriptButtonKeyDown(e, this)) {
-        return;
-      }
-      if (e.keyCode === 13) {
-        e.preventDefault();
-        e.stopPropagation();
-        handleDetailAction(this);
-      }
-    });
-  }
-
-  var detailButtons = container.querySelectorAll('.tp-detail-btn');
-  for (var db = 0; db < detailButtons.length; db++) {
-    detailButtons[db].addEventListener('click', function(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      handleDetailAction(this);
-    });
-    detailButtons[db].addEventListener('keydown', function(e) {
-      if (handleInlineRowButtonKeyDown(e, this)) {
-        return;
-      }
-      if (e.keyCode === 13) {
-        e.preventDefault();
-        e.stopPropagation();
-        handleDetailAction(this);
       }
     });
   }
@@ -1881,24 +1825,24 @@ function setupFieldListeners(container) {
     });
   }
   
-  // Edit field buttons (name, url, icon)
-  var editBtns = container.querySelectorAll('.tp-editor-btn-edit');
-  for (var eb = 0; eb < editBtns.length; eb++) {
-    editBtns[eb].addEventListener('click', function(e) {
+  // Action buttons (fetch favicon, etc)
+  var actionBtns = container.querySelectorAll('.tp-editor-btn-action');
+  for (var ab = 0; ab < actionBtns.length; ab++) {
+    actionBtns[ab].addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      var fieldName = this.dataset.editField;
-      if (fieldName) {
-        activateFieldInput(document.querySelector('.tp-field-row[data-field="' + fieldName + '"]'));
+      var action = this.dataset.action;
+      if (action === 'fetch-icon') {
+        handleFetchFavicon();
       }
     });
-    editBtns[eb].addEventListener('keydown', function(e) {
+    actionBtns[ab].addEventListener('keydown', function(e) {
       if (e.keyCode === 13) {
         e.preventDefault();
         e.stopPropagation();
-        var fieldName = this.dataset.editField;
-        if (fieldName) {
-          activateFieldInput(document.querySelector('.tp-field-row[data-field="' + fieldName + '"]'));
+        var action = this.dataset.action;
+        if (action === 'fetch-icon') {
+          handleFetchFavicon();
         }
       }
     });
