@@ -1378,8 +1378,6 @@ function renderSiteOverridesField() {
             '<div style="font-size: 12px; color: #666; margin-top: 2px;">' + escapeHtml(def.description || '') + '</div>' +
           '</div>' +
           '<div class="tp-userscript-status">' + statusText + '</div>' +
-        '</div>'; +
-          '<div class="tp-userscript-status">' + statusText + '</div>' +
         '</div>';
     }
   }
@@ -2201,93 +2199,7 @@ function handleFeatureOverrideAction(btn) {
   }
 }
 
-function handleGlobalOverrideAction(btn) {
-  var action = btn.getAttribute('data-global-action');
-  var key = btn.getAttribute('data-global-key');
-  if (!key) return;
-
-  // Find definition
-  var def = null;
-  for (var i = 0; i < GLOBAL_OVERRIDE_DEFS.length; i++) {
-    if (GLOBAL_OVERRIDE_DEFS[i].key === key) {
-      def = GLOBAL_OVERRIDE_DEFS[i];
-      break;
-    }
-  }
-  if (!def) return;
-
-  if (action === 'reset') {
-    // Remove override
-    delete state.card[key];
-    showEditorToast('Reset to global setting');
-  } else if (action === 'cycle') {
-    // Cycle through options
-    var currentValue = state.card[key];
-    var currentIdx = -1;
-    for (var j = 0; j < def.options.length; j++) {
-      if (def.options[j].value === currentValue) {
-        currentIdx = j;
-        break;
-      }
-    }
-    var nextIdx = (currentIdx + 1) % def.options.length;
-    state.card[key] = def.options[nextIdx].value;
-  }
-
-  renderFields();
-  autoSaveCard('global:' + key);
-
-  setTimeout(function() {
-    var updatedBtn = document.querySelector('.tp-global-override-btn[data-global-key="' + key + '"]');
-    if (updatedBtn) {
-      updatedBtn.focus();
-    }
-  }, 50);
-}
-
-function handleSiteOverrideAction(btn) {
-  var action = btn.getAttribute('data-site-action');
-  var key = btn.getAttribute('data-site-key');
-  if (!key) return;
-
-  // Find definition
-  var def = null;
-  for (var i = 0; i < SITE_OVERRIDE_DEFS.length; i++) {
-    if (SITE_OVERRIDE_DEFS[i].key === key) {
-      def = SITE_OVERRIDE_DEFS[i];
-      break;
-    }
-  }
-  if (!def) return;
-
-  if (action === 'reset') {
-    // Remove override
-    delete state.card[key];
-    showEditorToast('Reset to global setting');
-  } else if (action === 'cycle') {
-    // Cycle through options
-    var currentValue = state.card[key];
-    var currentIdx = -1;
-    for (var j = 0; j < def.options.length; j++) {
-      if (def.options[j].value === currentValue) {
-        currentIdx = j;
-        break;
-      }
-    }
-    var nextIdx = (currentIdx + 1) % def.options.length;
-    state.card[key] = def.options[nextIdx].value;
-  }
-
-  renderFields();
-  autoSaveCard('site:' + key);
-
-  setTimeout(function() {
-    var updatedBtn = document.querySelector('.tp-site-override-btn[data-site-key="' + key + '"]');
-    if (updatedBtn) {
-      updatedBtn.focus();
-    }
-  }, 50);
-}
+// Old button-based handlers removed - now using row click handlers
 
 function handleDetailAction(btn) {
   if (!btn || !state.card) return;
