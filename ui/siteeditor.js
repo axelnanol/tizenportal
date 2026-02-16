@@ -177,7 +177,7 @@ var FEATURE_OVERRIDE_DEFS = [
 ];
 
 var SECTION_DEFS = [
-  { id: 'details', label: '📝 Details', defaultCollapsed: false },
+  { id: 'details', label: '📝 Details', defaultCollapsed: true },
   { id: 'bundle', label: '📦 Bundle', defaultCollapsed: true },
   { id: 'bundleOptions', label: '⚙️ Bundle Options', defaultCollapsed: true },
   { id: 'globalOverrides', label: '⚙️ Global Overrides', defaultCollapsed: true },
@@ -186,7 +186,7 @@ var SECTION_DEFS = [
 ];
 
 var sectionCollapsed = {
-  details: false,
+  details: true,
   bundle: true,
   bundleOptions: true,
   globalOverrides: true,
@@ -513,6 +513,18 @@ function handleEditorKeyDown(event) {
       return;
     }
 
+    // If on a button field row, trigger the button action
+    if (active && active.classList && active.classList.contains('tp-field-row') && active.dataset.type === 'button') {
+      console.log('TizenPortal: Enter on button field row');
+      event.preventDefault();
+      event.stopPropagation();
+      var action = active.dataset.field;
+      if (action === '__fetchIcon') {
+        handleFetchFavicon();
+      }
+      return;
+    }
+
     // If on a field row, open input mode
     if (active && active.classList && active.classList.contains('tp-field-row')) {
       console.log('TizenPortal: Enter on field row');
@@ -598,16 +610,23 @@ export function showEditSiteEditor(card, onComplete) {
     name: card.name || '',
     url: stripTrailingSlash(card.url || ''),
     featureBundle: card.featureBundle || null,
+    navigationMode: card.hasOwnProperty('navigationMode') ? card.navigationMode : null,
     viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
     focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
+    focusStyling: card.hasOwnProperty('focusStyling') ? card.focusStyling : null,
+    focusTransitions: card.hasOwnProperty('focusTransitions') ? card.focusTransitions : null,
+    focusTransitionMode: card.hasOwnProperty('focusTransitionMode') ? card.focusTransitionMode : null,
+    focusTransitionSpeed: card.hasOwnProperty('focusTransitionSpeed') ? card.focusTransitionSpeed : null,
     userAgent: card.hasOwnProperty('userAgent') ? card.userAgent : null,
     tabindexInjection: card.hasOwnProperty('tabindexInjection') ? card.tabindexInjection : null,
     scrollIntoView: card.hasOwnProperty('scrollIntoView') ? card.scrollIntoView : null,
+    navigationFix: card.hasOwnProperty('navigationFix') ? card.navigationFix : null,
     safeArea: card.hasOwnProperty('safeArea') ? card.safeArea : null,
     gpuHints: card.hasOwnProperty('gpuHints') ? card.gpuHints : null,
     cssReset: card.hasOwnProperty('cssReset') ? card.cssReset : null,
     hideScrollbars: card.hasOwnProperty('hideScrollbars') ? card.hideScrollbars : null,
     wrapTextInputs: card.hasOwnProperty('wrapTextInputs') ? card.wrapTextInputs : null,
+    textScale: card.hasOwnProperty('textScale') ? card.textScale : null,
     icon: card.icon || '',
     bundleOptions: card.bundleOptions || {},
     bundleOptionData: card.bundleOptionData || {},
