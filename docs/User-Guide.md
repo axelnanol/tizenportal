@@ -273,7 +273,8 @@ Global defaults that can be overridden per-site in the editor.
 
 **Appearance**
 - **Theme Mode**: Light, Dark, Automatic (Sunset), Portal (Blue & Orange), Custom Backdrop, Custom Colours
-- **Portal Gradient Glow**: Toggle the portal theme gradient overlay
+- **Portal Filter**: Glow / Crisp / Flat / Vignette (applies to non-backdrop themes)
+- **Portal Accent Positions**: Corners / Opposite Corners / Top Arc / Bottom Arc / Sides
 - **Custom Colours**: Two gradient colors (Custom Colours theme)
 - **Backdrop**: Custom background image URL (Custom Backdrop theme)
 

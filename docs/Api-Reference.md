@@ -328,7 +328,8 @@ interface PortalPreferences {
   customColor1?: string;          // Hex color for custom theme
   customColor2?: string;          // Hex color for custom theme
   backdropUrl?: string;           // Background image URL
-  portalGradient?: boolean;       // Portal theme glow/gradient overlay
+  portalFilter?: 'glow' | 'crisp' | 'flat' | 'vignette';
+  portalAccentPosition?: 'corners' | 'opposite' | 'top' | 'bottom' | 'sides';
   hudPosition: 'off' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
   hintsPosition: 'off' | 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
 }

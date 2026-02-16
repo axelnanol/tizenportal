@@ -450,7 +450,8 @@ interface Config {
     customColor1: string;
     customColor2: string;
     backgroundImage: string;
-    portalGradient: boolean;
+    portalFilter: 'glow' | 'crisp' | 'flat' | 'vignette';
+    portalAccentPosition: 'corners' | 'opposite' | 'top' | 'bottom' | 'sides';
     hudPosition: 'off' | 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
     showHints: boolean;
   };

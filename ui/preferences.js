@@ -32,6 +32,21 @@ var THEME_OPTIONS = [
   { value: 'custom', label: 'Custom Colours' },
 ];
 
+var PORTAL_FILTER_OPTIONS = [
+  { value: 'glow', label: 'Glow' },
+  { value: 'crisp', label: 'Crisp' },
+  { value: 'flat', label: 'Flat' },
+  { value: 'vignette', label: 'Vignette' },
+];
+
+var PORTAL_ACCENT_OPTIONS = [
+  { value: 'corners', label: 'Corners' },
+  { value: 'opposite', label: 'Opposite Corners' },
+  { value: 'top', label: 'Top Arc' },
+  { value: 'bottom', label: 'Bottom Arc' },
+  { value: 'sides', label: 'Sides' },
+];
+
 /**
  * HUD position options
  */
@@ -143,6 +158,40 @@ function normalizeThemeValue(value) {
   return 'dark';
 }
 
+function normalizePortalFilter(value) {
+  if (typeof value === 'number') {
+    var idx = value % PORTAL_FILTER_OPTIONS.length;
+    return PORTAL_FILTER_OPTIONS[idx].value;
+  }
+
+  if (typeof value === 'string') {
+    for (var i = 0; i < PORTAL_FILTER_OPTIONS.length; i++) {
+      if (PORTAL_FILTER_OPTIONS[i].value === value) {
+        return value;
+      }
+    }
+  }
+
+  return 'glow';
+}
+
+function normalizePortalAccent(value) {
+  if (typeof value === 'number') {
+    var idx = value % PORTAL_ACCENT_OPTIONS.length;
+    return PORTAL_ACCENT_OPTIONS[idx].value;
+  }
+
+  if (typeof value === 'string') {
+    for (var i = 0; i < PORTAL_ACCENT_OPTIONS.length; i++) {
+      if (PORTAL_ACCENT_OPTIONS[i].value === value) {
+        return value;
+      }
+    }
+  }
+
+  return 'corners';
+}
+
 /**
  * Normalize stored HUD position value to valid option
  * @param {*} value
@@ -189,7 +238,8 @@ function normalizeHintsPosition(value) {
  */
 var PREFERENCE_ROWS = [
   { id: 'theme', label: 'Theme Mode', type: 'select', options: THEME_OPTIONS, key: 'theme', config: 'portal', section: 'portal', category: 'appearance' },
-  { id: 'portalGradient', label: 'Portal Gradient Glow', type: 'toggle', key: 'portalGradient', config: 'portal', section: 'portal', category: 'appearance' },
+  { id: 'portalFilter', label: 'Portal Filter', type: 'select', options: PORTAL_FILTER_OPTIONS, key: 'portalFilter', config: 'portal', section: 'portal', category: 'appearance' },
+  { id: 'portalAccentPosition', label: 'Portal Accent Positions', type: 'select', options: PORTAL_ACCENT_OPTIONS, key: 'portalAccentPosition', config: 'portal', section: 'portal', category: 'appearance' },
   { id: 'customColor1', label: 'Gradient Color 1', type: 'color', key: 'customColor1', config: 'portal', showIf: 'custom', section: 'portal', category: 'appearance' },
   { id: 'customColor2', label: 'Gradient Color 2', type: 'color', key: 'customColor2', config: 'portal', showIf: 'custom', section: 'portal', category: 'appearance' },
   { id: 'backgroundImage', label: 'Backdrop Image URL', type: 'text', key: 'backgroundImage', config: 'portal', showIf: 'backdrop', section: 'portal', category: 'appearance' },
@@ -384,6 +434,16 @@ export function showPreferences() {
       prefsState.settings.portalConfig.theme = normalized;
       TizenPortal.config.set('tp_portal', prefsState.settings.portalConfig);
     }
+    var portalFilter = normalizePortalFilter(prefsState.settings.portalConfig.portalFilter);
+    if (prefsState.settings.portalConfig.portalFilter !== portalFilter) {
+      prefsState.settings.portalConfig.portalFilter = portalFilter;
+      TizenPortal.config.set('tp_portal', prefsState.settings.portalConfig);
+    }
+    var portalAccent = normalizePortalAccent(prefsState.settings.portalConfig.portalAccentPosition);
+    if (prefsState.settings.portalConfig.portalAccentPosition !== portalAccent) {
+      prefsState.settings.portalConfig.portalAccentPosition = portalAccent;
+      TizenPortal.config.set('tp_portal', prefsState.settings.portalConfig);
+    }
     var hudNormalized = normalizeHudPosition(prefsState.settings.portalConfig.hudPosition);
     if (prefsState.settings.portalConfig.hudPosition !== hudNormalized) {
       prefsState.settings.portalConfig.hudPosition = hudNormalized;
@@ -429,7 +489,8 @@ function getDefaultPortalConfig() {
     customColor1: '#0d1117',
     customColor2: '#161b22',
     backgroundImage: '',
-    portalGradient: true,
+    portalFilter: 'glow',
+    portalAccentPosition: 'corners',
     hudPosition: 'off',
     hintsPosition: 'bottom-left',
     showHints: true,
@@ -1264,6 +1325,8 @@ function savePreferencesAuto(reason) {
 
   if (prefsState.settings.portalConfig) {
     prefsState.settings.portalConfig.theme = normalizeThemeValue(prefsState.settings.portalConfig.theme || 'dark');
+    prefsState.settings.portalConfig.portalFilter = normalizePortalFilter(prefsState.settings.portalConfig.portalFilter || 'glow');
+    prefsState.settings.portalConfig.portalAccentPosition = normalizePortalAccent(prefsState.settings.portalConfig.portalAccentPosition || 'corners');
     prefsState.settings.portalConfig.hudPosition = normalizeHudPosition(prefsState.settings.portalConfig.hudPosition || 'off');
     var hintPos = normalizeHintsPosition(prefsState.settings.portalConfig.hintsPosition || 'bottom-left');
     prefsState.settings.portalConfig.hintsPosition = hintPos;
@@ -1316,15 +1379,8 @@ export function applyPortalPreferences(config) {
   }
 
   var theme = normalizeThemeValue(config.theme || 'dark');
-  var portalGradient = config.portalGradient !== false;
-  var root = document.documentElement;
-  if (root) {
-    if (portalGradient) {
-      root.classList.remove('tp-portal-gradient-off');
-    } else {
-      root.classList.add('tp-portal-gradient-off');
-    }
-  }
+  var portalFilter = normalizePortalFilter(config.portalFilter || 'glow');
+  var portalAccent = normalizePortalAccent(config.portalAccentPosition || 'corners');
 
   // Handle automatic theme (sunset-based)
   if (theme === 'auto') {
@@ -1349,23 +1405,7 @@ export function applyPortalPreferences(config) {
     shell.style.background = '';
 
     // Apply theme-specific styles
-    if (theme === 'custom') {
-      // Custom gradient colors — validate hex before injecting into CSS
-      var color1 = isValidHexColor(config.customColor1) ? config.customColor1 : '#0d1117';
-      var color2 = isValidHexColor(config.customColor2) ? config.customColor2 : '#161b22';
-      shell.style.background = 'linear-gradient(135deg, ' + color1 + ' 0%, ' + color2 + ' 100%)';
-    } else if (theme === 'portal') {
-      // Portal theme - inspired by the Portal video game with blue and orange accent colors
-      if (portalGradient) {
-        shell.style.background = 'radial-gradient(ellipse at top left, rgba(255, 149, 0, 0.15) 0%, transparent 50%), ' +
-                                 'radial-gradient(ellipse at bottom right, rgba(74, 144, 226, 0.15) 0%, transparent 50%), ' +
-                                 'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
-      } else {
-        shell.style.background = 'radial-gradient(180px 180px at 12% 18%, rgba(74, 144, 226, 0.55) 0%, rgba(74, 144, 226, 0.55) 38%, transparent 40%), ' +
-                                 'radial-gradient(180px 180px at 88% 82%, rgba(255, 149, 0, 0.55) 0%, rgba(255, 149, 0, 0.55) 38%, transparent 40%), ' +
-                                 'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
-      }
-    } else if (theme === 'backdrop') {
+    if (theme === 'backdrop') {
       // Custom backdrop image — validate URL before injecting into CSS
       if (config.backgroundImage && isValidHttpUrl(config.backgroundImage)) {
         shell.style.backgroundImage = 'url(' + encodeURI(config.backgroundImage) + ')';
@@ -1373,12 +1413,20 @@ export function applyPortalPreferences(config) {
         shell.style.backgroundPosition = 'center';
         shell.style.backgroundColor = '#0d1117'; // Fallback
       }
-    } else if (theme === 'light') {
-      // Light theme gradient
-      shell.style.background = 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)';
     } else {
-      // Dark theme gradient (default)
-      shell.style.background = 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%)';
+      var baseGradient = '';
+      if (theme === 'custom') {
+        var color1 = isValidHexColor(config.customColor1) ? config.customColor1 : '#0d1117';
+        var color2 = isValidHexColor(config.customColor2) ? config.customColor2 : '#161b22';
+        baseGradient = 'linear-gradient(135deg, ' + color1 + ' 0%, ' + color2 + ' 100%)';
+      } else if (theme === 'portal') {
+        baseGradient = 'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
+      } else if (theme === 'light') {
+        baseGradient = 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)';
+      } else {
+        baseGradient = 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%)';
+      }
+      shell.style.background = buildPortalBackground(portalFilter, portalAccent, baseGradient, true, theme === 'light');
     }
   }
 
@@ -1392,6 +1440,89 @@ export function applyPortalPreferences(config) {
 
   // Apply HUD position
   applyHudPosition(normalizeHudPosition(config.hudPosition || 'off'));
+}
+
+function buildPortalBackground(filter, accent, baseGradient, forShell, isLight) {
+  var positions = getPortalAccentPositions(accent, forShell, isLight);
+
+  if (filter === 'flat') {
+    return baseGradient;
+  }
+
+  var glow = '';
+  var glow2 = '';
+  var vignette = '';
+
+  if (filter === 'crisp') {
+    glow = 'radial-gradient(' + positions.size + ' at ' + positions.first + ', rgba(' + positions.blue + ', ' + positions.crispAlpha + ') 0%, rgba(' + positions.blue + ', ' + positions.crispAlpha + ') ' + positions.crispStop + '%, transparent ' + positions.crispEnd + '%)';
+    glow2 = 'radial-gradient(' + positions.size + ' at ' + positions.second + ', rgba(' + positions.orange + ', ' + positions.crispAlpha2 + ') 0%, rgba(' + positions.orange + ', ' + positions.crispAlpha2 + ') ' + positions.crispStop + '%, transparent ' + positions.crispEnd + '%)';
+  } else if (filter === 'vignette') {
+    glow = 'radial-gradient(' + positions.large + ' at ' + positions.first + ', rgba(' + positions.blue + ', ' + positions.glowAlpha + ') 0%, transparent ' + positions.glowEnd + '%)';
+    glow2 = 'radial-gradient(' + positions.large + ' at ' + positions.second + ', rgba(' + positions.orange + ', ' + positions.glowAlpha2 + ') 0%, transparent ' + positions.glowEnd + '%)';
+    vignette = 'radial-gradient(140% 140% at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.45) 100%)';
+  } else {
+    glow = 'radial-gradient(' + positions.large + ' at ' + positions.first + ', rgba(' + positions.blue + ', ' + positions.glowAlpha + ') 0%, transparent ' + positions.glowEnd + '%)';
+    glow2 = 'radial-gradient(' + positions.large + ' at ' + positions.second + ', rgba(' + positions.orange + ', ' + positions.glowAlpha2 + ') 0%, transparent ' + positions.glowEnd + '%)';
+  }
+
+  if (vignette) {
+    return glow + ', ' + glow2 + ', ' + vignette + ', ' + baseGradient;
+  }
+  return glow + ', ' + glow2 + ', ' + baseGradient;
+}
+
+function getPortalAccentPositions(accent, forShell, isLight) {
+  var blue = forShell ? '0, 170, 255' : '74, 144, 226';
+  var orange = forShell ? '255, 140, 0' : '255, 149, 0';
+  var large = forShell ? '820px 560px' : '900px 600px';
+  var size = forShell ? '160px 160px' : '180px 180px';
+  var glowAlpha = forShell ? 0.28 : 0.22;
+  var glowAlpha2 = forShell ? 0.26 : 0.22;
+  var glowEnd = forShell ? 62 : 50;
+  var crispAlpha = forShell ? 0.5 : 0.55;
+  var crispAlpha2 = forShell ? 0.5 : 0.55;
+  var crispStop = forShell ? 36 : 38;
+  var crispEnd = forShell ? 38 : 40;
+
+  if (isLight) {
+    glowAlpha *= 0.7;
+    glowAlpha2 *= 0.7;
+    crispAlpha *= 0.65;
+    crispAlpha2 *= 0.65;
+  }
+
+  var first = forShell ? '18% 22%' : '12% 18%';
+  var second = forShell ? '82% 78%' : '88% 82%';
+
+  if (accent === 'opposite') {
+    first = forShell ? '82% 22%' : '88% 18%';
+    second = forShell ? '18% 78%' : '12% 82%';
+  } else if (accent === 'top') {
+    first = forShell ? '25% 18%' : '25% 12%';
+    second = forShell ? '75% 18%' : '75% 12%';
+  } else if (accent === 'bottom') {
+    first = forShell ? '25% 82%' : '25% 88%';
+    second = forShell ? '75% 82%' : '75% 88%';
+  } else if (accent === 'sides') {
+    first = forShell ? '12% 50%' : '12% 50%';
+    second = forShell ? '88% 50%' : '88% 50%';
+  }
+
+  return {
+    blue: blue,
+    orange: orange,
+    large: large,
+    size: size,
+    glowAlpha: glowAlpha.toFixed(2),
+    glowAlpha2: glowAlpha2.toFixed(2),
+    glowEnd: glowEnd,
+    crispAlpha: crispAlpha.toFixed(2),
+    crispAlpha2: crispAlpha2.toFixed(2),
+    crispStop: crispStop,
+    crispEnd: crispEnd,
+    first: first,
+    second: second,
+  };
 }
 
 function applySiteTheme(theme) {

@@ -12,11 +12,125 @@
         if (!raw) return;
         var cfg = JSON.parse(raw);
         var portal = cfg && cfg.tp_portal;
-        if (portal && portal.portalGradient === false) {
-          document.documentElement.className += ' tp-portal-gradient-off';
+        if (!portal) return;
+
+        var theme = portal.theme || 'dark';
+        if (theme === 'auto') {
+          var hour = new Date().getHours();
+          theme = (hour < 6 || hour >= 18) ? 'dark' : 'light';
         }
+
+        if (theme === 'backdrop') {
+          return;
+        }
+
+        var filter = portal.portalFilter || 'glow';
+        var accent = portal.portalAccentPosition || 'corners';
+        var base = '';
+
+        if (theme === 'custom') {
+          var c1 = portal.customColor1 || '#0d1117';
+          var c2 = portal.customColor2 || '#161b22';
+          base = 'linear-gradient(135deg, ' + c1 + ' 0%, ' + c2 + ' 100%)';
+        } else if (theme === 'portal') {
+          base = 'linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%)';
+        } else if (theme === 'light') {
+          base = 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)';
+        } else {
+          base = 'linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%)';
+        }
+
+        var htmlBackground = buildPortalBackground(filter, accent, base, false, theme === 'light');
+        var shellBackground = buildPortalBackground(filter, accent, base, true, theme === 'light');
+
+        var style = document.createElement('style');
+        style.type = 'text/css';
+        style.textContent = 'html, body { background: ' + htmlBackground + '; } #tp-shell { background: ' + shellBackground + '; }';
+        document.head.appendChild(style);
       } catch (e) {
         // Ignore storage parse errors on boot
+      }
+
+      function buildPortalBackground(filter, accent, baseGradient, forShell, isLight) {
+        var positions = getPortalAccentPositions(accent, forShell, isLight);
+        if (filter === 'flat') {
+          return baseGradient;
+        }
+
+        var glow = '';
+        var glow2 = '';
+        var vignette = '';
+
+        if (filter === 'crisp') {
+          glow = 'radial-gradient(' + positions.size + ' at ' + positions.first + ', rgba(' + positions.blue + ', ' + positions.crispAlpha + ') 0%, rgba(' + positions.blue + ', ' + positions.crispAlpha + ') ' + positions.crispStop + '%, transparent ' + positions.crispEnd + '%)';
+          glow2 = 'radial-gradient(' + positions.size + ' at ' + positions.second + ', rgba(' + positions.orange + ', ' + positions.crispAlpha2 + ') 0%, rgba(' + positions.orange + ', ' + positions.crispAlpha2 + ') ' + positions.crispStop + '%, transparent ' + positions.crispEnd + '%)';
+        } else if (filter === 'vignette') {
+          glow = 'radial-gradient(' + positions.large + ' at ' + positions.first + ', rgba(' + positions.blue + ', ' + positions.glowAlpha + ') 0%, transparent ' + positions.glowEnd + '%)';
+          glow2 = 'radial-gradient(' + positions.large + ' at ' + positions.second + ', rgba(' + positions.orange + ', ' + positions.glowAlpha2 + ') 0%, transparent ' + positions.glowEnd + '%)';
+          vignette = 'radial-gradient(140% 140% at 50% 50%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.45) 100%)';
+        } else {
+          glow = 'radial-gradient(' + positions.large + ' at ' + positions.first + ', rgba(' + positions.blue + ', ' + positions.glowAlpha + ') 0%, transparent ' + positions.glowEnd + '%)';
+          glow2 = 'radial-gradient(' + positions.large + ' at ' + positions.second + ', rgba(' + positions.orange + ', ' + positions.glowAlpha2 + ') 0%, transparent ' + positions.glowEnd + '%)';
+        }
+
+        if (vignette) {
+          return glow + ', ' + glow2 + ', ' + vignette + ', ' + baseGradient;
+        }
+        return glow + ', ' + glow2 + ', ' + baseGradient;
+      }
+
+      function getPortalAccentPositions(accent, forShell, isLight) {
+        var blue = forShell ? '0, 170, 255' : '74, 144, 226';
+        var orange = forShell ? '255, 140, 0' : '255, 149, 0';
+        var large = forShell ? '820px 560px' : '900px 600px';
+        var size = forShell ? '160px 160px' : '180px 180px';
+        var glowAlpha = forShell ? 0.28 : 0.22;
+        var glowAlpha2 = forShell ? 0.26 : 0.22;
+        var glowEnd = forShell ? 62 : 50;
+        var crispAlpha = forShell ? 0.5 : 0.55;
+        var crispAlpha2 = forShell ? 0.5 : 0.55;
+        var crispStop = forShell ? 36 : 38;
+        var crispEnd = forShell ? 38 : 40;
+
+        if (isLight) {
+          glowAlpha *= 0.7;
+          glowAlpha2 *= 0.7;
+          crispAlpha *= 0.65;
+          crispAlpha2 *= 0.65;
+        }
+
+        var first = forShell ? '18% 22%' : '12% 18%';
+        var second = forShell ? '82% 78%' : '88% 82%';
+
+        if (accent === 'opposite') {
+          first = forShell ? '82% 22%' : '88% 18%';
+          second = forShell ? '18% 78%' : '12% 82%';
+        } else if (accent === 'top') {
+          first = forShell ? '25% 18%' : '25% 12%';
+          second = forShell ? '75% 18%' : '75% 12%';
+        } else if (accent === 'bottom') {
+          first = forShell ? '25% 82%' : '25% 88%';
+          second = forShell ? '75% 82%' : '75% 88%';
+        } else if (accent === 'sides') {
+          first = forShell ? '12% 50%' : '12% 50%';
+          second = forShell ? '88% 50%' : '88% 50%';
+        }
+
+        return {
+          blue: blue,
+          orange: orange,
+          large: large,
+          size: size,
+          glowAlpha: glowAlpha.toFixed(2),
+          glowAlpha2: glowAlpha2.toFixed(2),
+          glowEnd: glowEnd,
+          crispAlpha: crispAlpha.toFixed(2),
+          crispAlpha2: crispAlpha2.toFixed(2),
+          crispStop: crispStop,
+          crispEnd: crispEnd,
+          first: first,
+          second: second,
+        };
       }
     })();
   </script>
@@ -36,12 +150,6 @@
       color: #ffffff;
     }
 
-    html.tp-portal-gradient-off,
-    html.tp-portal-gradient-off body {
-      background: radial-gradient(180px 180px at 12% 18%, rgba(0, 156, 255, 0.6) 0%, rgba(0, 156, 255, 0.6) 38%, transparent 40%),
-                  radial-gradient(180px 180px at 88% 82%, rgba(255, 132, 0, 0.55) 0%, rgba(255, 132, 0, 0.55) 38%, transparent 40%),
-                  linear-gradient(135deg, #061422 0%, #0a1b2e 45%, #0a1522 100%);
-    }
     
     /* Shell container */
     #tp-shell {
@@ -54,11 +162,6 @@
                   linear-gradient(180deg, #0b1624 0%, #0a141f 100%);
     }
 
-    html.tp-portal-gradient-off #tp-shell {
-      background: radial-gradient(160px 160px at 18% 22%, rgba(0, 170, 255, 0.5) 0%, rgba(0, 170, 255, 0.5) 36%, transparent 38%),
-                  radial-gradient(160px 160px at 82% 78%, rgba(255, 140, 0, 0.5) 0%, rgba(255, 140, 0, 0.5) 36%, transparent 38%),
-                  linear-gradient(180deg, #0b1624 0%, #0a141f 100%);
-    }
     
     /* Portal launcher grid */
     #tp-portal {
@@ -1991,7 +2094,7 @@
     <div id="tp-modal-container"></div>
   </div>
   
-  <script src="tizenportal.js?v=1077"></script>
+  <script src="tizenportal.js?v=1078"></script>
   <script>
     // Update version display from TizenPortal runtime
     (function() {
