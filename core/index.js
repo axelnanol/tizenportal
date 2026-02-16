@@ -2167,20 +2167,24 @@ function loadSite(card) {
   saveLastCard(card);
   
   // Merge global feature settings into card if not explicitly set
-  // This ensures that portal preferences (textScale, etc.) carry through to the site
+  // This ensures that portal preferences carry through to the site
   var globalFeatures = configGet('tp_features') || {};
-  var featuresToMerge = [
-    'textScale', 'navigationFix', 'focusStyling', 'focusTransitions',
-    'focusTransitionMode', 'focusTransitionSpeed', 'focusOutlineMode'
-  ];
-  for (var fi = 0; fi < featuresToMerge.length; fi++) {
-    var featureKey = featuresToMerge[fi];
+  for (var featureKey in globalFeatures) {
+    if (!globalFeatures.hasOwnProperty(featureKey)) continue;
+
+    // Map UA mode to card.userAgent so it survives cross-origin navigation
+    if (featureKey === 'uaMode') {
+      if (card.userAgent === null || card.userAgent === undefined) {
+        card.userAgent = globalFeatures.uaMode;
+        log('loadSite() - applying global uaMode: ' + card.userAgent);
+      }
+      continue;
+    }
+
     // Only use global setting if card doesn't explicitly override it (null means use global)
     if (card[featureKey] === null || card[featureKey] === undefined) {
-      if (globalFeatures.hasOwnProperty(featureKey)) {
-        card[featureKey] = globalFeatures[featureKey];
-        log('loadSite() - applying global ' + featureKey + ': ' + card[featureKey]);
-      }
+      card[featureKey] = globalFeatures[featureKey];
+      log('loadSite() - applying global ' + featureKey + ': ' + card[featureKey]);
     }
   }
   
