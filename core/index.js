@@ -1097,6 +1097,7 @@ function startUserscriptUrlWatcher() {
 
       try {
         var bundle = getBundle(state.currentBundle || 'default');
+        registerPayloadUserscripts(state.currentCard);
         userscriptEngine.applyUserscripts(state.currentCard, bundle);
         log('Userscripts re-applied after URL change');
       } catch (err) {
@@ -1452,6 +1453,62 @@ function findMatchingCard(url) {
 }
 
 /**
+ * Register globalUserscripts from payload with the Registry
+ * This ensures payload userscripts are available when applyUserscripts() queries the Registry
+ * @param {Object} card - Card with _payload.globalUserscripts
+ */
+function registerPayloadUserscripts(card) {
+  if (!card || !card._payload || !Array.isArray(card._payload.globalUserscripts)) {
+    return;
+  }
+
+  var globalUserscripts = card._payload.globalUserscripts;
+  log('Registering ' + globalUserscripts.length + ' payload global userscripts');
+
+  for (var i = 0; i < globalUserscripts.length; i++) {
+    var script = globalUserscripts[i];
+    if (!script || !script.id) {
+      warn('Skipping invalid payload userscript (no ID)');
+      continue;
+    }
+
+    // Check if already registered
+    var existing = userscriptRegistry.getUserscriptById(script.id);
+    if (existing) {
+      log('Userscript already registered: ' + script.id);
+      
+      // Ensure the script is marked as enabled since it came from payload
+      userscriptEngine.setGlobalUserscriptEnabled(script.id, true);
+      continue;
+    }
+
+    // Register with the unified Registry
+    var registered = userscriptRegistry.registry.register({
+      id: script.id,
+      type: userscriptRegistry.registry.ITEM_TYPES.USERSCRIPT,
+      name: script.name || script.id,
+      displayName: script.name || script.id,
+      category: script.category || 'experimental',
+      description: script.description || 'Global userscript from payload',
+      defaultEnabled: false, // Payload scripts are already filtered to enabled ones
+      source: script.source || 'inline',
+      inline: script.inline || null,
+      url: script.url || null,
+      provides: script.provides || [],
+    });
+
+    if (registered) {
+      log('Registered payload userscript: ' + script.id);
+      
+      // Mark as enabled since it came from the payload (which only includes enabled scripts)
+      userscriptEngine.setGlobalUserscriptEnabled(script.id, true);
+    } else {
+      warn('Failed to register payload userscript: ' + script.id);
+    }
+  }
+}
+
+/**
  * Apply bundle directly to the current page
  * @param {Object} card - Card with bundle info
  */
@@ -1576,6 +1633,13 @@ async function applyBundleToPage(card) {
     applyNavigationMode(card, bundle);
   } catch (e) {
     error('Navigation mode initialization error: ' + e.message);
+  }
+
+  // Register any global userscripts from payload before applying
+  try {
+    registerPayloadUserscripts(card);
+  } catch (e3) {
+    error('Payload userscript registration error: ' + e3.message);
   }
 
   try {
