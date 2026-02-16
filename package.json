@@ -5,7 +5,7 @@
   "description": "Universal Tizen Browser Shell",
   "type": "module",
   "packageType": "mods",
-  "websiteURL": "https://axelnanol.github.io/tizenportal/dist/index.html?v=1056",
+  "websiteURL": "https://axelnanol.github.io/tizenportal/dist/index.html?v=1067",
   "main": "dist/tizenportal.js",
   "keys": [
     "MediaPlayPause",
