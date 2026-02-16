@@ -1021,6 +1021,8 @@ async function initTargetSite() {
   
   state.currentCard = matchedCard;
 
+  installCardPersistenceHooks();
+
   applyUserAgentOverride(resolveUserAgentMode(matchedCard));
 
   // Apply bundle to the current page
@@ -1054,6 +1056,24 @@ async function initTargetSite() {
   // Create color button hints
   createSiteHints();
   log('Color hints created');
+}
+
+function installCardPersistenceHooks() {
+  if (state.isPortalPage) return;
+  if (installCardPersistenceHooks._installed) return;
+  installCardPersistenceHooks._installed = true;
+
+  function persistCard() {
+    if (!state.currentCard) return;
+    try {
+      saveLastCard(state.currentCard);
+    } catch (e) {
+      // Ignore persistence failures during unload
+    }
+  }
+
+  window.addEventListener('beforeunload', persistCard);
+  window.addEventListener('pagehide', persistCard);
 }
 
 /**
