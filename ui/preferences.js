@@ -250,6 +250,14 @@ var PREFERENCE_ROWS = [
   { id: 'focusOutlineMode', label: 'Focus Outline', type: 'select', options: FOCUS_OUTLINE_OPTIONS, key: 'focusOutlineMode', config: 'features', section: 'global', category: 'navigation' },
   { id: 'focusTransitionMode', label: 'Focus Transition Style', type: 'select', options: FOCUS_TRANSITION_MODE_OPTIONS, key: 'focusTransitionMode', config: 'features', section: 'global', category: 'navigation' },
   { id: 'focusTransitionSpeed', label: 'Focus Transition Speed', type: 'select', options: FOCUS_TRANSITION_SPEED_OPTIONS, key: 'focusTransitionSpeed', config: 'features', section: 'global', category: 'navigation' },
+  { id: 'safeArea', label: 'TV Safe Area (5% inset)', type: 'toggle', key: 'safeArea', config: 'features', section: 'global', category: 'layout',
+    description: 'Inset content 5% from edges to account for TV screen overscan (applies globally including portal)' },
+  { id: 'cssReset', label: 'CSS Normalization', type: 'toggle', key: 'cssReset', config: 'features', section: 'global', category: 'layout',
+    description: 'Apply baseline CSS resets for consistent display across Tizen browsers (applies globally)' },
+  { id: 'hideScrollbars', label: 'Hide Scrollbars', type: 'toggle', key: 'hideScrollbars', config: 'features', section: 'global', category: 'layout',
+    description: 'Hide native scrollbars for a cleaner TV interface (applies globally including portal)' },
+  { id: 'gpuHints', label: 'GPU Acceleration', type: 'toggle', key: 'gpuHints', config: 'features', section: 'global', category: 'performance',
+    description: 'Apply GPU hints to improve animation performance on constrained hardware (applies globally)' },
   { id: 'navigationMode', label: 'Navigation Mode', type: 'select', options: NAVIGATION_MODE_OPTIONS, key: 'navigationMode', config: 'features', section: 'site', category: 'navigation' },
   { id: 'viewportMode', label: 'Viewport Lock Mode', type: 'select', options: VIEWPORT_OPTIONS, key: 'viewportMode', config: 'features', section: 'site', category: 'navigation' },
   { id: 'uaMode', label: 'User Agent Mode', type: 'select', options: UA_MODE_OPTIONS, key: 'uaMode', config: 'features', section: 'site', category: 'compatibility' },
@@ -259,14 +267,6 @@ var PREFERENCE_ROWS = [
     description: 'Scroll container when focused element comes into viewport' },
   { id: 'wrapTextInputs', label: 'Protect Text Inputs', type: 'toggle', key: 'wrapTextInputs', config: 'features', section: 'site', category: 'input',
     description: 'Protect text input fields from accidental remote button presses during editing' },
-  { id: 'safeArea', label: 'TV Safe Area (5% inset)', type: 'toggle', key: 'safeArea', config: 'features', section: 'site', category: 'layout',
-    description: 'Inset content 5% from edges to account for TV screen overscan' },
-  { id: 'cssReset', label: 'CSS Normalization', type: 'toggle', key: 'cssReset', config: 'features', section: 'site', category: 'layout',
-    description: 'Apply baseline CSS resets for consistent display across Tizen browsers' },
-  { id: 'hideScrollbars', label: 'Hide Scrollbars', type: 'toggle', key: 'hideScrollbars', config: 'features', section: 'site', category: 'layout',
-    description: 'Hide native scrollbars for a cleaner TV interface' },
-  { id: 'gpuHints', label: 'GPU Acceleration', type: 'toggle', key: 'gpuHints', config: 'features', section: 'site', category: 'performance',
-    description: 'Apply GPU hints to improve animation performance on constrained hardware' },
 ];
 
 var SECTION_DEFS = [
@@ -287,9 +287,9 @@ var CATEGORY_LABELS = {
 };
 
 var SECTION_CATEGORY_ORDER = {
-  global: ['appearance', 'navigation'],
+  global: ['appearance', 'navigation', 'layout', 'performance'],
   portal: ['appearance', 'hints'],
-  site: ['navigation', 'compatibility', 'input', 'layout', 'performance'],
+  site: ['navigation', 'compatibility', 'input'],
 };
 
 /**

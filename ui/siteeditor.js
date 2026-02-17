@@ -159,29 +159,29 @@ var FEATURE_OVERRIDE_DEFS = [
   { key: 'focusTransitions', label: 'Focus Transition Animations', category: 'focus',
     description: 'Enable smooth animations when focus moves between elements (slide, scale, glow)' },
   
-  // Display & Layout category
+  // Display & Layout category (global features with per-site overrides)
   { key: 'safeArea', label: 'TV Safe Area (5% inset)', category: 'display',
-    description: 'Inset content 5% from edges to account for TV screen overscan' },
+    description: 'Override global safe area: Inset content 5% from edges to account for TV screen overscan' },
   { key: 'cssReset', label: 'CSS Normalization', category: 'display',
-    description: 'Apply baseline CSS resets for consistent display across Tizen browsers' },
+    description: 'Override global CSS reset: Apply baseline CSS resets for consistent Tizen display' },
   { key: 'hideScrollbars', label: 'Hide Scrollbars', category: 'display',
-    description: 'Hide native scrollbars for a cleaner TV interface' },
+    description: 'Override global scrollbar hiding: Hide native scrollbars for cleaner TV interface' },
   
   // Input Protection category
   { key: 'wrapTextInputs', label: 'Protect Text Inputs', category: 'input',
     description: 'Protect text input fields from accidental remote button presses during editing' },
   
-  // Performance category
+  // Performance category (global features with per-site overrides)
   { key: 'gpuHints', label: 'GPU Acceleration', category: 'performance',
-    description: 'Apply GPU hints to improve animation performance on constrained hardware' },
+    description: 'Override global GPU hints: Apply GPU acceleration for animations on constrained hardware' },
 ];
 
 var SECTION_DEFS = [
   { id: 'details', label: '📝 Details', defaultCollapsed: true },
   { id: 'bundle', label: '📦 Bundle', defaultCollapsed: true },
   { id: 'bundleOptions', label: '⚙️ Bundle Options', defaultCollapsed: true },
-  { id: 'globalOverrides', label: '⚙️ Global Overrides', defaultCollapsed: true },
-  { id: 'siteOverrides', label: '🖥️ Site Overrides', defaultCollapsed: true },
+  { id: 'globalOverrides', label: '⚙️ Global Feature Overrides (Session Only)', defaultCollapsed: true },
+  { id: 'siteOverrides', label: '🖥️ Per-Site Feature Overrides (Persistent)', defaultCollapsed: true },
   { id: 'userscripts', label: '📜 User Scripts', defaultCollapsed: true },
 ];
 
@@ -203,9 +203,9 @@ var FIELDS = [
   { name: 'featureBundle', label: 'Site-specific Bundle', type: 'bundle', required: false, section: 'bundle' },
   { name: '__section_bundleOptions', label: '⚙️ Bundle Options', type: 'section', sectionId: 'bundleOptions' },
   { name: '__bundleOptions', label: 'Bundle Options', type: 'bundleOptions', section: 'bundleOptions' },
-  { name: '__section_globalOverrides', label: '⚙️ Global Overrides', type: 'section', sectionId: 'globalOverrides' },
+  { name: '__section_globalOverrides', label: '⚙️ Global Feature Overrides (Session Only)', type: 'section', sectionId: 'globalOverrides' },
   { name: '__globalOverrides', label: 'Global Overrides', type: 'globalOverrides', section: 'globalOverrides' },
-  { name: '__section_siteOverrides', label: '🖥️ Site Overrides', type: 'section', sectionId: 'siteOverrides' },
+  { name: '__section_siteOverrides', label: '🖥️ Per-Site Feature Overrides (Persistent)', type: 'section', sectionId: 'siteOverrides' },
   { name: '__siteOverrides', label: 'Site Overrides', type: 'siteOverrides', section: 'siteOverrides' },
   { name: '__features', label: 'Feature Toggles', type: 'featureOverrides', section: 'siteOverrides' },
   { name: '__section_userscripts', label: '📜 User Scripts', type: 'section', sectionId: 'userscripts' },

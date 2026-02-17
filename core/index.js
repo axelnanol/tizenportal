@@ -261,9 +261,12 @@ function resolveUserAgentMode(card) {
 }
 
 function getCardOverrideValue(card, key) {
-  if (!card) return null;
+  if (!card) {
+    log('[Config] ' + key + ': null (no card)');
+    return null;
+  }
   if (card.hasOwnProperty(key) && card[key] !== null && card[key] !== undefined) {
-    log('[Feature] Card override for ' + key + ': ' + card[key]);
+    log('[Config] ' + key + ': ' + JSON.stringify(card[key]) + ' (per-site override)');
     return card[key];
   }
   
@@ -272,14 +275,14 @@ function getCardOverrideValue(card, key) {
   try {
     var globalConfig = configGet('tp_features') || {};
     if (globalConfig.hasOwnProperty(key)) {
-      log('[Feature] Global override for ' + key + ': ' + globalConfig[key]);
+      log('[Config] ' + key + ': ' + JSON.stringify(globalConfig[key]) + ' (global default)');
       return globalConfig[key];
     }
   } catch (err) {
-    warn('[Feature] Error reading global config for ' + key + ': ' + err.message);
+    warn('[Config] Error reading global config for ' + key + ': ' + err.message);
   }
   
-  log('[Feature] No override for ' + key);
+  log('[Config] ' + key + ': undefined (no global or site setting)');
   return null;
 }
 
@@ -300,8 +303,6 @@ function buildFeatureOverrides(card) {
     'navigationFix',
     'textScale',
   ];
-
-  log('[Feature] Building overrides for card: ' + (card ? (card.title || card.url) : 'null'));
   
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
@@ -311,7 +312,6 @@ function buildFeatureOverrides(card) {
     }
   }
 
-  log('[Feature] Built overrides: ' + JSON.stringify(overrides));
   return overrides;
 }
 
@@ -408,7 +408,7 @@ function applyViewportMode(mode) {
 }
 
 function applyGlobalFeaturesForCard(card, bundle) {
-  log('[Feature] Applying global features for: ' + (card ? (card.title || card.url) : 'unknown'));
+  log('[Config] ==== Merged Configuration for ' + (card ? (card.name || card.url) : 'unknown') + ' ====');
   
   var focusMode = resolveFocusOutlineMode(card, bundle);
   var viewportMode = resolveViewportMode(card, bundle);
@@ -418,13 +418,13 @@ function applyGlobalFeaturesForCard(card, bundle) {
   // Apply bundle manifest feature overrides
   // Priority: card overrides > bundle defaults > global config
   if (bundle && bundle.manifest && bundle.manifest.features) {
-    log('[Feature] Bundle ' + (bundle.name || 'unknown') + ' defines features: ' + JSON.stringify(bundle.manifest.features));
+    log('[Config] Bundle ' + (bundle.name || 'unknown') + ' defines features: ' + JSON.stringify(bundle.manifest.features));
     var bundleFeatures = bundle.manifest.features;
     for (var key in bundleFeatures) {
       if (bundleFeatures.hasOwnProperty(key)) {
         // Only apply if card hasn't already overridden it
         if (!overrides.hasOwnProperty(key)) {
-          log('[Feature] Applying bundle feature ' + key + ': ' + bundleFeatures[key]);
+          log('[Config] Applying bundle feature ' + key + ': ' + bundleFeatures[key]);
           overrides[key] = bundleFeatures[key];
         }
       }
@@ -434,7 +434,8 @@ function applyGlobalFeaturesForCard(card, bundle) {
   // Set focusOutlineMode after bundle features (already resolved with priority)
   overrides.focusOutlineMode = focusMode;
 
-  log('[Feature] Final overrides to apply: ' + JSON.stringify(overrides));
+  log('[Config] Final merged config to apply: ' + JSON.stringify(overrides));
+  log('[Config] ================================================');
   
   try {
     featureLoader.applyFeatures(document, overrides);
@@ -2168,6 +2169,7 @@ function loadSite(card) {
   
   // Merge global feature settings into card if not explicitly set
   // This ensures that portal preferences carry through to the site
+  log('[Config] Merging global tp_features into card for cross-origin navigation...');
   var globalFeatures = configGet('tp_features') || {};
   for (var featureKey in globalFeatures) {
     if (!globalFeatures.hasOwnProperty(featureKey)) continue;
@@ -2176,7 +2178,7 @@ function loadSite(card) {
     if (featureKey === 'uaMode') {
       if (card.userAgent === null || card.userAgent === undefined) {
         card.userAgent = globalFeatures.uaMode;
-        log('loadSite() - applying global uaMode: ' + card.userAgent);
+        log('[Config] Merged global uaMode -> card.userAgent: ' + card.userAgent);
       }
       continue;
     }
@@ -2184,9 +2186,11 @@ function loadSite(card) {
     // Only use global setting if card doesn't explicitly override it (null means use global)
     if (card[featureKey] === null || card[featureKey] === undefined) {
       card[featureKey] = globalFeatures[featureKey];
-      log('loadSite() - applying global ' + featureKey + ': ' + card[featureKey]);
+      log('[Config] Merged global ' + featureKey + ': ' + JSON.stringify(card[featureKey]));
     }
   }
+  log('[Config] Global merge complete');
+
   
   // Get the bundle for this card
   var bundle = getBundle(bundleName);
