@@ -201,7 +201,7 @@ TizenPortal uses a **Universal Runtime** architecture with a single `tizenportal
 ```json
 {
   "packageType": "mods",
-  "websiteURL": "https://alexnolan.github.io/tizenportal/dist/index.html",
+  "websiteURL": "https://axelnanol.github.io/tizenportal/dist/index.html",
   "main": "dist/tizenportal.js",
   "keys": ["ColorF0Red", "ColorF1Green", "ColorF2Yellow", "ColorF3Blue", ...]
 }
@@ -369,8 +369,8 @@ TizenBrew automatically calls `tizen.inputdevice.registerKey()` for each key in 
 
 TizenBrew CDN caches by git tag. After pushing:
 
-1. Delete old module: `alexnolan/tizenportal@0300`
-2. Add new module: `alexnolan/tizenportal@0301`
+1. Delete old module: `axelnanol/tizenportal@0300`
+2. Add new module: `axelnanol/tizenportal@0301`
 
 Without a new tag, stale code is served.
 
@@ -593,7 +593,7 @@ TizenPortal.input.isIMEActive();
 | `0463` | 0.4.63 | Current version |
 | `1000` | 1.0.00 | 1.0 release |
 
-**Why:** Typing `alexnolan/tizenportal@0301` on a TV remote is much faster than `@v0.3.1`.
+**Why:** Typing `axelnanol/tizenportal@0301` on a TV remote is much faster than `@v0.3.1`.
 
 ### Version Bumping
 
@@ -628,8 +628,8 @@ TizenPortal.input.isIMEActive();
 ### TizenBrew CDN Update
 
 1. Go to TizenBrew settings on your TV
-2. Delete old module: `alexnolan/tizenportal@vOLD`
-3. Add new module: `alexnolan/tizenportal@vNEW`
+2. Delete old module: `axelnanol/tizenportal@vOLD`
+3. Add new module: `axelnanol/tizenportal@vNEW`
 
 **Critical:** CDN caches by tag. Without a new tag, old code is served.
 
@@ -640,7 +640,7 @@ cache-bust the **portal entrypoint**:
 
 1. Update `package.json` `websiteURL` to include a version query:
   ```json
-  "websiteURL": "https://alexnolan.github.io/tizenportal/dist/index.html?v=0453"
+  "websiteURL": "https://axelnanol.github.io/tizenportal/dist/index.html?v=0453"
   ```
 2. Update `dist/index.html` to load the runtime with a version query:
   ```html
