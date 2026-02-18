@@ -40,7 +40,7 @@ Runs as a TizenBrew module to inject fixes into any site.
 This project is designed to be loaded via **TizenBrew** on your Samsung TV.
 
 1. **Open TizenBrew** on your Samsung TV
-2. **Add Module:** `alexnolan/tizenportal` (e.g., `alexnolan/tizenportal`) - see [CHANGELOG](docs/CHANGELOG.md) for available versions
+2. **Add Module:** `axelnanol/tizenportal` (e.g., `axelnanol/tizenportal`) - see [CHANGELOG](docs/CHANGELOG.md) for available versions
 3. **Launch** TizenPortal from your TizenBrew dashboard
 
 TizenBrew will open the portal and inject the runtime into all navigated pages.
