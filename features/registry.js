@@ -24,6 +24,7 @@ var CATEGORIES = {
   STYLING: 'styling',
   NAVIGATION: 'navigation',
   PERFORMANCE: 'performance',
+  INPUT: 'input',
   
   // Userscript categories (from userscript-registry.js)
   ACCESSIBILITY: 'accessibility',
