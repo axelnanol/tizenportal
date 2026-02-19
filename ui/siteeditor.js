@@ -11,6 +11,7 @@ import { refreshPortal } from './modal.js';
 import { escapeHtml, sanitizeUrl, isValidHttpUrl } from '../core/utils.js';
 import Userscripts from '../features/userscripts.js';
 import Registry from '../features/registry.js';
+import { KEYS } from '../input/keys.js';
 
 /**
  * Editor state
@@ -2006,11 +2007,6 @@ function activateFieldInput(row) {
   var fieldType = row.dataset.type || 'text';
   var field = getFieldDef(fieldName);
 
-  if (row.dataset.userscriptField) {
-    activateUserscriptInput(row);
-    return;
-  }
-
   if (row.dataset.userscriptAction) {
     handleUserscriptAction(row);
     return;
@@ -2023,11 +2019,16 @@ function activateFieldInput(row) {
   
   if (!field) return;
 
+  if (fieldType === 'button') {
+    if (field.action === 'fetch-icon') {
+      handleFetchFavicon();
+    }
+    return;
+  }
+
   if (fieldType === 'select') {
-    // Cycle through options
     cycleSelectOption(fieldName, field);
   } else {
-    // Show text input prompt
     showTextInputPrompt(fieldName, field);
   }
 }
@@ -2080,70 +2081,6 @@ function getUserscriptById(scriptId) {
     }
   }
   return null;
-}
-
-function activateUserscriptInput(row) {
-  var scriptId = row.dataset.userscriptId;
-  var field = row.dataset.userscriptField || '';
-  var script = getUserscriptById(scriptId);
-  if (!script) return;
-
-  if (!field) return;
-
-  if (field === 'enabled') {
-    script.enabled = !script.enabled;
-    saveUserscriptsForBundle(state.card.featureBundle);
-    renderFields();
-    autoSaveCard('userscript:enabled');
-    return;
-  }
-
-  if (field === 'name') {
-    var newName = prompt('Script Name:', script.name || '');
-    if (newName !== null) {
-      script.name = newName;
-      saveUserscriptsForBundle(state.card.featureBundle);
-      renderFields();
-      autoSaveCard('userscript:name');
-    }
-    return;
-  }
-
-  if (field === 'url') {
-    var newUrl = prompt('Script URL:', script.url || '');
-    if (newUrl !== null) {
-      if (newUrl) {
-        newUrl = sanitizeUrl(newUrl);
-        if (!newUrl || !isValidHttpUrl(newUrl)) {
-          showEditorToast('Invalid URL');
-          return;
-        }
-        script.url = newUrl;
-        saveUserscriptsForBundle(state.card.featureBundle);
-        renderFields();
-        autoSaveCard('userscript:url');
-        fetchUserscriptUrl(scriptId);
-      } else {
-        script.url = '';
-        script.cached = '';
-        script.lastFetched = 0;
-        saveUserscriptsForBundle(state.card.featureBundle);
-        renderFields();
-        autoSaveCard('userscript:url');
-      }
-    }
-    return;
-  }
-
-  if (field === 'inline') {
-    var newInline = prompt('Inline Script:', script.inline || '');
-    if (newInline !== null) {
-      script.inline = newInline;
-      saveUserscriptsForBundle(state.card.featureBundle);
-      renderFields();
-      autoSaveCard('userscript:inline');
-    }
-  }
 }
 
 function handleUserscriptAction(btn) {
@@ -2213,74 +2150,6 @@ function handleFeatureOverrideAction(btn) {
 }
 
 // Old button-based handlers removed - now using row click handlers
-
-function handleDetailAction(btn) {
-  if (!btn || !state.card) return;
-  var action = btn.dataset.detailAction || '';
-
-  if (action === 'edit-name') {
-    var newName = prompt('Site Name:', state.card.name || '');
-    if (newName !== null) {
-      state.card.name = newName;
-      renderFields();
-      updatePreview();
-      autoSaveCard('text:name');
-      focusDetailButton(action);
-    }
-    return;
-  }
-
-  if (action === 'edit-url') {
-    var newUrl = prompt('URL:', state.card.url || '');
-    if (newUrl !== null) {
-      if (newUrl) {
-        newUrl = sanitizeUrl(newUrl);
-        if (!newUrl || !isValidHttpUrl(newUrl)) {
-          showEditorToast('Invalid URL');
-          return;
-        }
-        newUrl = stripTrailingSlash(newUrl);
-      }
-      state.card.url = newUrl;
-      renderFields();
-      updatePreview();
-      autoSaveCard('text:url');
-      focusDetailButton(action);
-    }
-    return;
-  }
-
-  if (action === 'edit-icon') {
-    var newIcon = prompt('Icon URL:', state.card.icon || '');
-    if (newIcon !== null) {
-      if (newIcon) {
-        newIcon = sanitizeUrl(newIcon);
-        if (!newIcon || !isValidHttpUrl(newIcon)) {
-          showEditorToast('Invalid URL');
-          return;
-        }
-      }
-      state.card.icon = newIcon || '';
-      renderFields();
-      updatePreview();
-      autoSaveCard('text:icon');
-      focusDetailButton(action);
-    }
-    return;
-  }
-
-  if (action === 'fetch-icon') {
-    handleFetchFavicon();
-  }
-}
-
-function focusDetailButton(action) {
-  if (!action) return;
-  var btn = document.querySelector('.tp-detail-btn[data-detail-action="' + action + '"]');
-  if (btn) {
-    btn.focus();
-  }
-}
 
 function focusUserscriptButton(scriptId, action) {
   if (!scriptId) return;
@@ -2603,43 +2472,46 @@ function cycleBundleOptionSelect(optionKey, optionDef) {
  * Prompt for bundle option text input
  */
 function showBundleOptionTextPrompt(optionKey, optionDef) {
-  var currentValue = getBundleOptionValue(optionKey, optionDef) || '';
-  var newValue = prompt(optionDef.label + ':', currentValue);
-
-  if (newValue !== null) {
-    setBundleOptionValue(optionKey, newValue);
-    renderFields();
-    autoSaveCard('option:' + optionKey);
-  }
-
-  setTimeout(function() {
-    focusBundleOption(optionKey);
-  }, 100);
+  var row = document.querySelector('.tp-bundle-option-row[data-option-key="' + optionKey + '"]');
+  showInlineTextInput(row, getBundleOptionValue(optionKey, optionDef) || '', {
+    placeholder: optionDef.placeholder || '',
+    onConfirm: function(value) {
+      setBundleOptionValue(optionKey, value);
+      renderFields();
+      autoSaveCard('option:' + optionKey);
+      setTimeout(function() { focusBundleOption(optionKey); }, 50);
+    },
+    onCancel: function() {
+      setTimeout(function() { focusBundleOption(optionKey); }, 50);
+    },
+  });
 }
 
 /**
- * Prompt for bundle option URL input and fetch contents
+ * Show inline input for bundle option URL and fetch contents on confirm
  */
 function showBundleOptionUrlPrompt(optionKey, optionDef) {
-  var currentValue = getBundleOptionValue(optionKey, optionDef) || '';
-  var newValue = prompt(optionDef.label + ':', currentValue);
+  var row = document.querySelector('.tp-bundle-option-row[data-option-key="' + optionKey + '"]');
+  showInlineTextInput(row, getBundleOptionValue(optionKey, optionDef) || '', {
+    placeholder: optionDef.placeholder || '',
+    onConfirm: function(value) {
+      setBundleOptionValue(optionKey, value);
+      renderFields();
+      autoSaveCard('option:' + optionKey);
 
-  if (newValue !== null) {
-    setBundleOptionValue(optionKey, newValue);
-    renderFields();
-    autoSaveCard('option:' + optionKey);
+      if (value) {
+        fetchBundleOptionUrl(optionKey, value);
+      } else {
+        setBundleOptionData(optionKey, '');
+        autoSaveCard('optionData:' + optionKey);
+      }
 
-    if (newValue) {
-      fetchBundleOptionUrl(optionKey, newValue);
-    } else {
-      setBundleOptionData(optionKey, '');
-      autoSaveCard('optionData:' + optionKey);
-    }
-  }
-
-  setTimeout(function() {
-    focusBundleOption(optionKey);
-  }, 100);
+      setTimeout(function() { focusBundleOption(optionKey); }, 50);
+    },
+    onCancel: function() {
+      setTimeout(function() { focusBundleOption(optionKey); }, 50);
+    },
+  });
 }
 
 /**
@@ -2753,24 +2625,97 @@ function cycleSelectOption(fieldName, field) {
 }
 
 /**
- * Show text input prompt (uses browser prompt for simplicity)
- * In a full implementation, this would be a custom on-screen keyboard
+ * Show an inline text input in a field row for direct editing.
+ * Hides the display value, injects an <input>, and handles commit/cancel.
+ * @param {Element} row - The field row element
+ * @param {string} currentValue - Current value to pre-fill
+ * @param {Object} opts - { placeholder, onConfirm, onCancel }
+ */
+function showInlineTextInput(row, currentValue, opts) {
+  if (!row) return;
+  opts = opts || {};
+
+  var displayEl = row.querySelector('.tp-field-value');
+  if (!displayEl) return;
+
+  var input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'tp-inline-edit-input';
+  input.value = currentValue || '';
+  if (opts.placeholder) input.setAttribute('placeholder', opts.placeholder);
+
+  displayEl.style.display = 'none';
+  row.appendChild(input);
+  row.setAttribute('tabindex', '-1');
+
+  var committed = false;
+
+  function commit() {
+    if (committed) return;
+    committed = true;
+    cleanup();
+    if (typeof opts.onConfirm === 'function') {
+      opts.onConfirm(input.value);
+    }
+  }
+
+  function cancel() {
+    if (committed) return;
+    committed = true;
+    cleanup();
+    if (typeof opts.onCancel === 'function') {
+      opts.onCancel();
+    }
+  }
+
+  function cleanup() {
+    displayEl.style.display = '';
+    if (input.parentNode) input.parentNode.removeChild(input);
+    row.setAttribute('tabindex', '0');
+  }
+
+  input.addEventListener('keydown', function(e) {
+    if (e.keyCode === KEYS.ENTER) {
+      e.preventDefault();
+      e.stopPropagation();
+      commit();
+    } else if (e.keyCode === 27 || e.keyCode === KEYS.BACK || e.keyCode === KEYS.IME_CANCEL) {
+      e.preventDefault();
+      e.stopPropagation();
+      cancel();
+    }
+  });
+
+  input.addEventListener('blur', function() {
+    setTimeout(function() {
+      if (!committed) commit();
+    }, 100);
+  });
+
+  try {
+    input.focus();
+    if (input.value) input.select();
+  } catch (err) {}
+}
+
+/**
+ * Show inline text input for a card field
  */
 function showTextInputPrompt(fieldName, field) {
-  var currentValue = state.card[fieldName] || '';
-  var newValue = prompt(field.label + ':', currentValue);
-  
-  if (newValue !== null) {
-    state.card[fieldName] = newValue;
-    renderFields();
-    updatePreview();
-    autoSaveCard('text:' + fieldName);
-  }
-  
-  // Re-focus the field
-  setTimeout(function() {
-    focusField(fieldName);
-  }, 100);
+  var row = document.querySelector('.tp-field-row[data-field="' + fieldName + '"]');
+  showInlineTextInput(row, state.card[fieldName] || '', {
+    placeholder: field.placeholder || '',
+    onConfirm: function(value) {
+      state.card[fieldName] = value;
+      renderFields();
+      updatePreview();
+      autoSaveCard('text:' + fieldName);
+      setTimeout(function() { focusField(fieldName); }, 50);
+    },
+    onCancel: function() {
+      setTimeout(function() { focusField(fieldName); }, 50);
+    },
+  });
 }
 
 /**

@@ -9,6 +9,7 @@ import { isValidHexColor, isValidHttpUrl, escapeHtml } from '../core/utils.js';
 import Userscripts from '../features/userscripts.js';
 import featureLoader from '../features/index.js';
 import Registry from '../features/registry.js';
+import { KEYS } from '../input/keys.js';
 
 /**
  * Preferences state
@@ -763,27 +764,6 @@ function renderPreferencesUI() {
     });
   }
 
-  var userscriptButtons = container.querySelectorAll('.tp-userscript-btn');
-  for (var k = 0; k < userscriptButtons.length; k++) {
-    userscriptButtons[k].addEventListener('click', function(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      handleUserscriptButtonAction(this);
-    });
-    userscriptButtons[k].addEventListener('keydown', function(e) {
-      if (handleUserscriptPrefsButtonKeyDown(e, this)) {
-        return;
-      }
-      if (e.keyCode === 13) {
-        e.preventDefault();
-        e.stopPropagation();
-        handleUserscriptButtonAction(this);
-      }
-    });
-  }
-
   container.scrollTop = scrollTop;
 }
 
@@ -901,39 +881,6 @@ function formatDisplayValue(row, value) {
   return value || '(not set)';
 }
 
-function getUserscriptRowDisplay(row) {
-  ensureUserscriptsConfig();
-  var scripts = prefsState.settings.userscriptsConfig.scripts || [];
-  var idx = row.scriptIndex || 0;
-  var script = scripts[idx] || {};
-
-  if (row.type === 'userscript-name') {
-    return script.name || ('Custom Script ' + (idx + 1));
-  }
-  if (row.type === 'userscript-enabled') {
-    return script.enabled ? '✓ On' : '○ Off';
-  }
-  if (row.type === 'userscript-url') {
-    var url = script.url || '';
-    var suffix = script.cached ? ' (saved)' : '';
-    return (url || '(not set)') + suffix;
-  }
-  if (row.type === 'userscript-inline') {
-    return script.inline ? 'Inline Script (saved)' : '(not set)';
-  }
-  if (row.type === 'userscript') {
-    var source = script.source === 'url' ? 'URL' : 'Inline';
-    var hasData = script.source === 'url' ? !!script.cached : !!script.inline;
-    var status = source + (hasData ? ' (saved)' : ' (empty)');
-    return (script.name || ('Custom Script ' + (idx + 1))) + ' • ' + status;
-  }
-  if (row.type === 'userscript-refresh') return '↻';
-  if (row.type === 'userscript-remove') return '🗑';
-  if (row.type === 'userscript-add') return '＋';
-
-  return '';
-}
-
 /**
  * Navigate preferences (Up/Down)
  * Now includes Close button as final navigation target
@@ -1038,11 +985,6 @@ function activatePreferenceRow(rowEl) {
   }
 }
 
-function handleUserscriptPreferenceRow(row, index) {
-  // Old function - no longer needed with registry system
-  // Kept as stub for compatibility
-}
-
 /**
  * Cycle through select options
  */
@@ -1071,217 +1013,121 @@ function cycleSelectOption(row, index) {
 }
 
 /**
- * Show color input prompt
+/**
+ * Show an inline text input in a preferences row for direct editing.
+ * @param {Element} rowEl - The preference row DOM element
+ * @param {string} currentValue - Current value to pre-fill
+ * @param {Object} opts - { placeholder, onConfirm, onCancel }
  */
-function showColorInputPrompt(row, index) {
-  var currentValue = getValue(row) || '#1a1a2e';
-  var newValue = prompt(row.label + ' (hex color, e.g. #ff0000):', currentValue);
+function showInlinePrefInput(rowEl, currentValue, opts) {
+  if (!rowEl) return;
+  opts = opts || {};
 
-  if (newValue !== null) {
-    // Validate hex color format
-    if (/^#[0-9A-Fa-f]{6}$/.test(newValue) || /^#[0-9A-Fa-f]{3}$/.test(newValue)) {
-      setValue(row, newValue);
-      renderPreferencesUI();
-      focusPreferencesRow(index);
-      savePreferencesAuto('color:' + row.id);
-    } else {
-      alert('Invalid color format. Use hex format like #ff0000');
+  var displayEl = rowEl.querySelector('.tp-prefs-value');
+  if (!displayEl) return;
+
+  var input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'tp-inline-edit-input';
+  input.value = currentValue || '';
+  if (opts.placeholder) input.setAttribute('placeholder', opts.placeholder);
+
+  displayEl.style.display = 'none';
+  rowEl.appendChild(input);
+  rowEl.setAttribute('tabindex', '-1');
+
+  var committed = false;
+
+  function commit() {
+    if (committed) return;
+    committed = true;
+    cleanup();
+    if (typeof opts.onConfirm === 'function') {
+      opts.onConfirm(input.value);
     }
   }
+
+  function cancel() {
+    if (committed) return;
+    committed = true;
+    cleanup();
+    if (typeof opts.onCancel === 'function') {
+      opts.onCancel();
+    }
+  }
+
+  function cleanup() {
+    displayEl.style.display = '';
+    if (input.parentNode) input.parentNode.removeChild(input);
+    rowEl.setAttribute('tabindex', '0');
+  }
+
+  input.addEventListener('keydown', function(e) {
+    if (e.keyCode === KEYS.ENTER) {
+      e.preventDefault();
+      e.stopPropagation();
+      commit();
+    } else if (e.keyCode === 27 || e.keyCode === KEYS.BACK || e.keyCode === KEYS.IME_CANCEL) {
+      e.preventDefault();
+      e.stopPropagation();
+      cancel();
+    }
+  });
+
+  input.addEventListener('blur', function() {
+    setTimeout(function() {
+      if (!committed) commit();
+    }, 100);
+  });
+
+  try {
+    input.focus();
+    if (input.value) input.select();
+  } catch (err) {}
 }
 
 /**
- * Show text input prompt
+ * Show inline color input
+ */
+function showColorInputPrompt(row, index) {
+  var rowEl = document.querySelector('.tp-prefs-row[data-id="' + row.id + '"]');
+  showInlinePrefInput(rowEl, getValue(row) || '#1a1a2e', {
+    placeholder: '#rrggbb',
+    onConfirm: function(value) {
+      if (!isValidHexColor(value)) {
+        if (window.TizenPortal && window.TizenPortal.showToast) {
+          TizenPortal.showToast('Invalid color. Use hex format like #ff0000');
+        }
+        focusPreferencesRow(index);
+        return;
+      }
+      setValue(row, value);
+      renderPreferencesUI();
+      focusPreferencesRow(index);
+      savePreferencesAuto('color:' + row.id);
+    },
+    onCancel: function() {
+      focusPreferencesRow(index);
+    },
+  });
+}
+
+/**
+ * Show inline text input
  */
 function showTextInputPrompt(row, index) {
-  var currentValue = getValue(row) || '';
-  var newValue = prompt(row.label + ':', currentValue);
-
-  if (newValue !== null) {
-    setValue(row, newValue);
-    renderPreferencesUI();
-    focusPreferencesRow(index);
-    savePreferencesAuto('text:' + row.id);
-  }
-}
-
-function fetchUserscriptUrl(scriptIndex, focusIndex) {
-  ensureUserscriptsConfig();
-  var scripts = prefsState.settings.userscriptsConfig.scripts || [];
-  var script = scripts[scriptIndex];
-  if (!script) return;
-
-  if (!script.url || !isValidHttpUrl(script.url)) {
-    if (window.TizenPortal && window.TizenPortal.showToast) {
-      TizenPortal.showToast('Invalid URL');
-    }
-    return;
-  }
-
-  try {
-    if (window.TizenPortal && window.TizenPortal.showToast) {
-      TizenPortal.showToast('Fetching script...');
-    }
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', script.url, true);
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          script.cached = xhr.responseText || '';
-          script.lastFetched = Date.now();
-          renderPreferencesUI();
-          if (typeof focusIndex === 'number') {
-            focusPreferencesRow(focusIndex);
-          }
-          savePreferencesAuto('userscript:cached');
-        } else if (window.TizenPortal && window.TizenPortal.showToast) {
-          TizenPortal.showToast('Failed to fetch script');
-        }
-      }
-    };
-    xhr.send();
-  } catch (err) {
-    if (window.TizenPortal && window.TizenPortal.showToast) {
-      TizenPortal.showToast('Failed to fetch script');
-    }
-  }
-}
-
-function handleUserscriptButtonAction(btn) {
-  ensureUserscriptsConfig();
-  var action = btn.dataset.userscriptAction || '';
-  var scriptIndex = parseInt(btn.dataset.scriptIndex, 10);
-  if (isNaN(scriptIndex)) return;
-
-  var scripts = prefsState.settings.userscriptsConfig.scripts || [];
-  var script = scripts[scriptIndex];
-  if (!script) return;
-
-  if (action === 'rename') {
-    var newName = prompt('Script Name:', script.name || '');
-    if (newName !== null) {
-      script.name = newName;
+  var rowEl = document.querySelector('.tp-prefs-row[data-id="' + row.id + '"]');
+  showInlinePrefInput(rowEl, getValue(row) || '', {
+    onConfirm: function(value) {
+      setValue(row, value);
       renderPreferencesUI();
-      focusUserscriptPrefButton(scriptIndex, action);
-      savePreferencesAuto('userscript:name');
-    }
-    return;
-  }
-
-  if (action === 'source') {
-    script.source = script.source === 'url' ? 'inline' : 'url';
-    renderPreferencesUI();
-    focusUserscriptPrefButton(scriptIndex, action);
-    savePreferencesAuto('userscript:source');
-    return;
-  }
-
-  if (action === 'edit') {
-    if (script.source === 'url') {
-      var newUrl = prompt('Script URL:', script.url || '');
-      if (newUrl !== null) {
-        if (newUrl) {
-          if (!isValidHttpUrl(newUrl)) {
-            if (window.TizenPortal && window.TizenPortal.showToast) {
-              TizenPortal.showToast('Invalid URL');
-            }
-            return;
-          }
-          script.url = newUrl;
-          renderPreferencesUI();
-          focusUserscriptPrefButton(scriptIndex, action);
-          savePreferencesAuto('userscript:url');
-          fetchUserscriptUrl(scriptIndex, null);
-        } else {
-          script.url = '';
-          script.cached = '';
-          script.lastFetched = 0;
-          renderPreferencesUI();
-          focusUserscriptPrefButton(scriptIndex, action);
-          savePreferencesAuto('userscript:url');
-        }
-      }
-    } else {
-      var newInline = prompt('Inline Script:', script.inline || '');
-      if (newInline !== null) {
-        script.inline = newInline;
-        renderPreferencesUI();
-        focusUserscriptPrefButton(scriptIndex, action);
-        savePreferencesAuto('userscript:inline');
-      }
-    }
-    return;
-  }
-
-  if (action === 'refresh') {
-    if (script.source === 'url') {
-      fetchUserscriptUrl(scriptIndex, null);
-    }
-    return;
-  }
-
-  if (action === 'remove') {
-    if (scripts.length <= 1) return;
-    scripts.splice(scriptIndex, 1);
-    renderPreferencesUI();
-    savePreferencesAuto('userscript:remove');
-  }
-}
-
-function focusUserscriptPrefButton(scriptIndex, action) {
-  var selector = '.tp-userscript-btn[data-script-index="' + scriptIndex + '"]';
-  if (action) {
-    selector += '[data-userscript-action="' + action + '"]';
-  }
-  var btn = document.querySelector(selector);
-  if (btn) {
-    btn.focus();
-  }
-}
-
-function handleUserscriptPrefsButtonKeyDown(e, btn) {
-  if (!btn) return false;
-  var key = e.keyCode;
-
-  if (key === 37 || key === 39) {
-    var row = btn.closest('.tp-prefs-row');
-    if (!row) return false;
-    var buttons = row.querySelectorAll('.tp-userscript-btn');
-    var index = -1;
-    for (var i = 0; i < buttons.length; i++) {
-      if (buttons[i] === btn) {
-        index = i;
-        break;
-      }
-    }
-    if (index === -1) return false;
-    var nextIndex = key === 39 ? index + 1 : index - 1;
-    if (nextIndex >= 0 && nextIndex < buttons.length) {
-      e.preventDefault();
-      e.stopPropagation();
-      buttons[nextIndex].focus();
-      return true;
-    }
-    if (nextIndex < 0 && row) {
-      e.preventDefault();
-      e.stopPropagation();
-      row.focus();
-      return true;
-    }
-    return false;
-  }
-
-  if (key === 38 || key === 40) {
-    var parentRow = btn.closest('.tp-prefs-row');
-    if (parentRow) {
-      e.preventDefault();
-      e.stopPropagation();
-      parentRow.focus();
-      return true;
-    }
-  }
-
-  return false;
+      focusPreferencesRow(index);
+      savePreferencesAuto('text:' + row.id);
+    },
+    onCancel: function() {
+      focusPreferencesRow(index);
+    },
+  });
 }
 
 /**
