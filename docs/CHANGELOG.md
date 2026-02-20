@@ -60,7 +60,7 @@ Historical version information prior to this changelog being created can be foun
 # View commit history
 git log --oneline
 
-# View tagged releases with dates
+# View tagged releases with dates 
 git log --tags --simplify-by-decoration --pretty="format:%ai %d"
 ```
 
