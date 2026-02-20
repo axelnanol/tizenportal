@@ -112,9 +112,11 @@ function createCardElement(card, index) {
   // Icon
   var iconEl = document.createElement('div');
   iconEl.className = 'tp-card-icon';
-  if (card.icon) {
+  var fallbackIcon = window.TizenPortal && window.TizenPortal._portalFaviconUrl ? window.TizenPortal._portalFaviconUrl : '';
+  var iconSrc = card.icon || fallbackFavicon;
+  if (iconSrc) {
     var img = document.createElement('img');
-    img.src = card.icon;
+    img.src = iconSrc;
     img.alt = card.name;
     img.style.width = '100%';
     img.style.height = '100%';

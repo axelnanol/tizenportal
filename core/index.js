@@ -142,6 +142,16 @@ function setExitKeyCapture(enabled) {
 const VERSION = '__VERSION__';
 
 /**
+ * Base URL of the TizenPortal GitHub Pages deployment
+ */
+var PORTAL_BASE_URL = 'https://axelnanol.github.io/tizenportal/dist';
+
+/**
+ * TizenPortal's own favicon URL — used as a fallback icon for cards
+ */
+var TIZENPORTAL_FAVICON_URL = PORTAL_BASE_URL + '/assets/favicon.ico';
+
+/**
  * Early debug HUD - shows immediately before full init
  * This helps debug whether the script is loading at all
  */
@@ -2044,7 +2054,7 @@ function toggleSiteDiagnostics() {
 function returnToPortal() {
   log('Returning to portal...');
   // Navigate to portal using absolute URL (works from any site)
-  window.location.href = 'https://axelnanol.github.io/tizenportal/dist/index.html?v=' + encodeURIComponent(VERSION);
+  window.location.href = PORTAL_BASE_URL + '/index.html?v=' + encodeURIComponent(VERSION);
 }
 
 /**
@@ -2069,11 +2079,13 @@ function addCurrentSiteAndReturn() {
           break;
         }
       }
+      // Fall back to site's root favicon if no <link rel="icon"> found
       if (!faviconUrl) {
         faviconUrl = window.location.origin + '/favicon.ico';
       }
     } catch (e) {
-      faviconUrl = '';
+      // If DOM query fails, fall back to TizenPortal's own favicon
+      faviconUrl = TIZENPORTAL_FAVICON_URL;
     }
 
     addCard({ name: pageName, url: currentUrl, icon: faviconUrl });
@@ -2622,6 +2634,9 @@ var TizenPortalAPI = {
   // Site overlay controls
   toggleSiteAddressBar: toggleSiteAddressBar,
   toggleSiteDiagnostics: toggleSiteDiagnostics,
+
+  // TizenPortal's own favicon URL (used as fallback icon for cards with no icon)
+  _portalFaviconUrl: TIZENPORTAL_FAVICON_URL,
 
   // State access (read-only)
   getState: function() {
