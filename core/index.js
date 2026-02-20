@@ -1108,6 +1108,111 @@ function installCardPersistenceHooks() {
 
   window.addEventListener('beforeunload', persistCard);
   window.addEventListener('pagehide', persistCard);
+
+  // Inject tp= into cross-origin links so configuration carries over when
+  // the user follows a link to another site (window.name may not always survive).
+  installLinkInterceptor();
+}
+
+/**
+ * Build a base64-encoded tp= payload string from a card object.
+ * Uses the same schema as loadSite so getCardFromQuery/getCardFromHash can read it.
+ * @param {Object} card - Current card object
+ * @returns {string} Base64-encoded payload, or empty string on failure
+ */
+function buildCardEncodedPayload(card) {
+  if (!card) return '';
+  try {
+    var featureBundle = card.featureBundle || 'default';
+    var resolvedUa = resolveUserAgentMode(card);
+    var payload = {
+      cardId: card.id || null,
+      cardName: card.name || '',
+      bundleName: featureBundle,
+      ua: resolvedUa,
+      viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
+      focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
+      tabindexInjection: card.hasOwnProperty('tabindexInjection') ? card.tabindexInjection : null,
+      scrollIntoView: card.hasOwnProperty('scrollIntoView') ? card.scrollIntoView : null,
+      safeArea: card.hasOwnProperty('safeArea') ? card.safeArea : null,
+      gpuHints: card.hasOwnProperty('gpuHints') ? card.gpuHints : null,
+      cssReset: card.hasOwnProperty('cssReset') ? card.cssReset : null,
+      hideScrollbars: card.hasOwnProperty('hideScrollbars') ? card.hideScrollbars : null,
+      wrapTextInputs: card.hasOwnProperty('wrapTextInputs') ? card.wrapTextInputs : null,
+      focusStyling: card.hasOwnProperty('focusStyling') ? card.focusStyling : null,
+      focusTransitions: card.hasOwnProperty('focusTransitions') ? card.focusTransitions : null,
+      focusTransitionMode: card.hasOwnProperty('focusTransitionMode') ? card.focusTransitionMode : null,
+      focusTransitionSpeed: card.hasOwnProperty('focusTransitionSpeed') ? card.focusTransitionSpeed : null,
+      navigationFix: card.hasOwnProperty('navigationFix') ? card.navigationFix : null,
+      navigationMode: card.hasOwnProperty('navigationMode') ? card.navigationMode : null,
+      textScale: card.hasOwnProperty('textScale') ? card.textScale : null,
+      bundleOptions: card.bundleOptions || {},
+      bundleOptionData: card.bundleOptionData || {},
+      userscriptToggles: card.userscriptToggles || {},
+      bundleUserscriptToggles: card.bundleUserscriptToggles || {},
+    };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  } catch (e) {
+    warn('buildCardEncodedPayload failed: ' + e.message);
+    return '';
+  }
+}
+
+/**
+ * Intercept anchor link clicks to inject the tp= payload into cross-origin URLs.
+ * This ensures card configuration (features, bundle, userscripts) persists when the
+ * user follows a link to another site, regardless of window.name reliability.
+ */
+function installLinkInterceptor() {
+  if (installLinkInterceptor._installed) return;
+  installLinkInterceptor._installed = true;
+
+  document.addEventListener('click', function(e) {
+    if (!state.currentCard) return;
+
+    // Walk up the DOM tree to find the closest anchor element
+    var el = e.target;
+    while (el && el !== document) {
+      if (el.tagName && el.tagName.toUpperCase() === 'A') break;
+      el = el.parentElement;
+    }
+    if (!el || !el.tagName || el.tagName.toUpperCase() !== 'A') return;
+
+    // Skip hash-only or empty links (same-page scroll, no cross-origin navigation)
+    var attr = el.getAttribute('href') || '';
+    if (!attr || attr.charAt(0) === '#') return;
+
+    // Get the resolved absolute URL
+    var resolvedHref = el.href;
+    if (!resolvedHref) return;
+
+    // Only handle http/https links
+    if (resolvedHref.indexOf('http://') !== 0 && resolvedHref.indexOf('https://') !== 0) return;
+
+    // Skip if tp= is already present in the query string
+    if (resolvedHref.indexOf('?tp=') !== -1 || resolvedHref.indexOf('&tp=') !== -1) return;
+
+    // Only inject for cross-origin navigation; same-origin navigations are handled by sessionStorage
+    var currentBase = window.location.protocol + '//' + window.location.host;
+    if (
+      resolvedHref === currentBase ||
+      resolvedHref.indexOf(currentBase + '/') === 0 ||
+      resolvedHref.indexOf(currentBase + '?') === 0 ||
+      resolvedHref.indexOf(currentBase + '#') === 0
+    ) {
+      return;
+    }
+
+    // Build and inject the payload as ?tp= (placed before any hash fragment)
+    var encoded = buildCardEncodedPayload(state.currentCard);
+    if (!encoded) return;
+
+    var hashIdx = resolvedHref.indexOf('#');
+    var beforeHash = hashIdx === -1 ? resolvedHref : resolvedHref.substring(0, hashIdx);
+    var afterHash = hashIdx === -1 ? '' : resolvedHref.substring(hashIdx);
+    el.href = beforeHash + (beforeHash.indexOf('?') === -1 ? '?' : '&') + 'tp=' + encoded + afterHash;
+    log('Link intercepted: tp= payload injected for cross-origin navigation');
+  }, true); // Capture phase runs before site's own click handlers
 }
 
 /**
