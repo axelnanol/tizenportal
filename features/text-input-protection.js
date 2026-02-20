@@ -80,8 +80,12 @@ export default {
    */
   apply: function(doc) {
     if (!doc) return;
-    injectCSS(doc, 'tp-text-input-protection', this.getCSS());
-    TizenPortal.log('Text input protection: CSS applied');
+    var applied = injectCSS(doc, 'tp-text-input-protection', this.getCSS());
+    if (applied) {
+      TizenPortal.log('Text input protection: CSS applied');
+    } else {
+      TizenPortal.warn('Text input protection: Failed to apply CSS');
+    }
   },
 
   /**
@@ -90,7 +94,9 @@ export default {
    */
   remove: function(doc) {
     if (!doc) return;
-    removeCSS(doc, 'tp-text-input-protection');
-    TizenPortal.log('Text input protection: CSS removed');
+    var removed = removeCSS(doc, 'tp-text-input-protection');
+    if (removed) {
+      TizenPortal.log('Text input protection: CSS removed');
+    }
   },
 };

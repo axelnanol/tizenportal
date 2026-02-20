@@ -544,9 +544,9 @@ function handleEditorKeyDown(event) {
       return;
     }
     
-    // If on fetch favicon button
-    if (active && active.id === 'tp-editor-fetch-icon') {
-      console.log('TizenPortal: Enter on fetch icon button');
+    // If on fetch favicon row
+    if (active && active.classList && active.classList.contains('tp-field-row') && active.dataset.field === '__fetchIcon') {
+      console.log('TizenPortal: Enter on fetch icon row');
       event.preventDefault();
       event.stopPropagation();
       handleFetchFavicon();
@@ -2635,6 +2635,9 @@ function showInlineTextInput(row, currentValue, opts) {
   if (!row) return;
   opts = opts || {};
 
+  // Prevent re-entrancy if already editing this row
+  if (row.querySelector('.tp-inline-edit-input')) return;
+
   var displayEl = row.querySelector('.tp-field-value');
   if (!displayEl) return;
 
@@ -2674,6 +2677,11 @@ function showInlineTextInput(row, currentValue, opts) {
     row.setAttribute('tabindex', '0');
   }
 
+  // Stop click propagation so the row's click handler doesn't re-trigger activation
+  input.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+
   input.addEventListener('keydown', function(e) {
     if (e.keyCode === KEYS.ENTER) {
       e.preventDefault();
@@ -2687,9 +2695,13 @@ function showInlineTextInput(row, currentValue, opts) {
   });
 
   input.addEventListener('blur', function() {
-    setTimeout(function() {
-      if (!committed) commit();
-    }, 100);
+    var next = document.activeElement;
+    if (next && next !== input && next.classList && next.classList.contains('tp-inline-edit-input')) {
+      // Focus moved to another inline editor; cancel to avoid race conditions
+      cancel();
+    } else if (!committed) {
+      commit();
+    }
   });
 
   try {
@@ -2918,9 +2930,9 @@ function tryFaviconPaths(baseUrl, domain, index) {
  */
 function refocusFetchButton() {
   setTimeout(function() {
-    var fetchBtn = document.getElementById('tp-editor-fetch-icon');
-    if (fetchBtn) {
-      fetchBtn.focus();
+    var fetchRow = document.querySelector('.tp-field-row[data-field="__fetchIcon"]');
+    if (fetchRow) {
+      fetchRow.focus();
     }
   }, 100);
 }

@@ -1013,7 +1013,6 @@ function cycleSelectOption(row, index) {
 }
 
 /**
-/**
  * Show an inline text input in a preferences row for direct editing.
  * @param {Element} rowEl - The preference row DOM element
  * @param {string} currentValue - Current value to pre-fill
@@ -1022,6 +1021,9 @@ function cycleSelectOption(row, index) {
 function showInlinePrefInput(rowEl, currentValue, opts) {
   if (!rowEl) return;
   opts = opts || {};
+
+  // Prevent re-entrancy if already editing this row
+  if (rowEl.querySelector('.tp-inline-edit-input')) return;
 
   var displayEl = rowEl.querySelector('.tp-prefs-value');
   if (!displayEl) return;
@@ -1062,6 +1064,11 @@ function showInlinePrefInput(rowEl, currentValue, opts) {
     rowEl.setAttribute('tabindex', '0');
   }
 
+  // Stop click propagation so the row's click handler doesn't re-trigger activation
+  input.addEventListener('click', function(e) {
+    e.stopPropagation();
+  });
+
   input.addEventListener('keydown', function(e) {
     if (e.keyCode === KEYS.ENTER) {
       e.preventDefault();
@@ -1075,9 +1082,9 @@ function showInlinePrefInput(rowEl, currentValue, opts) {
   });
 
   input.addEventListener('blur', function() {
-    setTimeout(function() {
-      if (!committed) commit();
-    }, 100);
+    if (!committed) {
+      commit();
+    }
   });
 
   try {
