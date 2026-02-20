@@ -786,7 +786,6 @@ async function init() {
     state.initialized = true;
     tpHud('Ready!');
     log('TizenPortal ' + VERSION + ' ready');
-    showToast('TizenPortal ' + VERSION);
 
   } catch (err) {
     error('Initialization failed: ' + err.message);
