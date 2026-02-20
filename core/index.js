@@ -48,7 +48,7 @@ import {
 import { configRead, configWrite, configOnChange, configInit, configGet, configSet } from './config.js';
 import { initPolyfills, hasPolyfill, getLoadedPolyfills } from '../polyfills/index.js';
 import { KEYS } from '../input/keys.js';
-import { initInputHandler, executeColorAction, registerKeyHandler } from '../input/handler.js';
+import { initInputHandler, executeColorAction, registerKeyHandler, setBackHandler } from '../input/handler.js';
 import { initPointer, isPointerActive, togglePointer } from '../input/pointer.js';
 import { wrapTextInputs, unwrapTextInputs, activateInput, deactivateInput, isIMEActive } from '../input/text-input.js';
 import { 
@@ -66,7 +66,7 @@ import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggl
 import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, setActiveBundle } from './loader.js';
 import { getBundleNames, getBundle, logDependencyWarnings } from '../bundles/registry.js';
 import { isValidHttpUrl, sanitizeCss, safeLocalStorageSet } from './utils.js';
-import { addCard } from '../ui/cards.js';
+import { addCard, getCardById } from '../ui/cards.js';
 import featureLoader from '../features/index.js';
 import textInputProtection from '../features/text-input-protection.js';
 import userscriptEngine from '../features/userscripts.js';
@@ -497,6 +497,8 @@ function saveLastCard(card) {
       userscriptToggles: card.userscriptToggles || {},
       bundleUserscriptToggles: card.bundleUserscriptToggles || {},
       globalUserscripts: userscriptEngine.getGlobalUserscriptsForPayload(),
+      crossHistory: card.crossHistory || [],
+      crossForward: card.crossForward || [],
     };
     var json = JSON.stringify(payload);
     sessionStorage.setItem(LAST_CARD_KEY, json);
@@ -796,6 +798,43 @@ async function init() {
  * Initialize when on the portal page
  */
 async function initPortalPage() {
+  // Check for a cross-site navigation relay request from a target site.
+  // installLinkInterceptor() sends the browser here with #crossnav=BASE64({cardId, targetUrl, history, forward})
+  // so the portal can look up the full card config from its localStorage and
+  // call loadSite() directly — no script source is ever embedded in the URL.
+  try {
+    var hash = window.location.hash || '';
+    var crossnavMatch = hash.match(/[#&]crossnav=([^&]+)/);
+    if (crossnavMatch) {
+      var nav = JSON.parse(decodeURIComponent(escape(atob(crossnavMatch[1]))));
+      if (nav && nav.cardId && nav.targetUrl && isValidHttpUrl(nav.targetUrl)) {
+        var relayCard = getCardById(nav.cardId);
+        if (relayCard) {
+          // Build a launch card: use all settings from the stored card but
+          // navigate to the target URL and carry the history/forward stacks.
+          var launchCard = Object.assign({}, relayCard, {
+            url: nav.targetUrl,
+            crossHistory: nav.history || [],
+            crossForward: nav.forward || [],
+          });
+          log('Cross-site relay: card=' + nav.cardId + ' → ' + nav.targetUrl +
+              ' (history depth ' + launchCard.crossHistory.length + ')');
+          try {
+            history.replaceState(null, '', window.location.href.replace(/[#&]crossnav=[^&]*/g, '').replace(/#$/, ''));
+          } catch (e) { /* ignore */ }
+          // Hide portal UI to avoid a flash during the relay transition
+          try { if (document.body) document.body.style.visibility = 'hidden'; } catch (e) { /* ignore */ }
+          loadSite(launchCard);
+          return; // Skip normal portal initialisation
+        } else {
+          warn('Cross-site relay: card not found: ' + nav.cardId);
+        }
+      }
+    }
+  } catch (e) {
+    warn('Failed to process crossnav relay: ' + e.message);
+  }
+
   // Check for a pending card addition passed via URL from a target site.
   // addCurrentSiteAndReturn() encodes the card as #addcard=BASE64(JSON) so
   // that the card is added to the portal's own localStorage (correct origin).
@@ -1109,68 +1148,97 @@ function installCardPersistenceHooks() {
   window.addEventListener('beforeunload', persistCard);
   window.addEventListener('pagehide', persistCard);
 
-  // Inject tp= into cross-origin links so configuration carries over when
-  // the user follows a link to another site (window.name may not always survive).
+  // Route cross-origin link clicks through the portal so the portal can look
+  // up the full card config from its localStorage and inject it correctly.
   installLinkInterceptor();
+
+  // Intercept BACK key when there is a cross-site navigation history stack.
+  setBackHandler(function(event) {
+    if (!state.currentCard) return false;
+    var crossHistory = state.currentCard.crossHistory;
+    if (!crossHistory || !crossHistory.length) return false;
+
+    var newHistory = crossHistory.slice(0, -1);
+    var prevUrl = crossHistory[crossHistory.length - 1];
+    var forward = (state.currentCard.crossForward || []).slice();
+    forward.unshift(getCleanCurrentUrl());
+
+    var portalUrl = buildCrossNavUrl(state.currentCard.id, prevUrl, newHistory, forward);
+    if (!portalUrl) return false;
+
+    window.location.href = portalUrl;
+    return true;
+  });
 }
 
 /**
- * Build a base64-encoded tp= payload string from a card object.
- * Uses the same schema as loadSite so getCardFromQuery/getCardFromHash can read it.
- * @param {Object} card - Current card object
- * @returns {string} Base64-encoded payload, or empty string on failure
+ * Return the current page URL stripped of any tp= / crossnav= parameters
+ * so that clean URLs are stored in the cross-site navigation history.
  */
-function buildCardEncodedPayload(card) {
-  if (!card) return '';
+function getCleanCurrentUrl() {
   try {
-    var featureBundle = card.featureBundle || 'default';
-    var resolvedUa = resolveUserAgentMode(card);
-    var payload = {
-      cardId: card.id || null,
-      cardName: card.name || '',
-      bundleName: featureBundle,
-      ua: resolvedUa,
-      viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
-      focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
-      tabindexInjection: card.hasOwnProperty('tabindexInjection') ? card.tabindexInjection : null,
-      scrollIntoView: card.hasOwnProperty('scrollIntoView') ? card.scrollIntoView : null,
-      safeArea: card.hasOwnProperty('safeArea') ? card.safeArea : null,
-      gpuHints: card.hasOwnProperty('gpuHints') ? card.gpuHints : null,
-      cssReset: card.hasOwnProperty('cssReset') ? card.cssReset : null,
-      hideScrollbars: card.hasOwnProperty('hideScrollbars') ? card.hideScrollbars : null,
-      wrapTextInputs: card.hasOwnProperty('wrapTextInputs') ? card.wrapTextInputs : null,
-      focusStyling: card.hasOwnProperty('focusStyling') ? card.focusStyling : null,
-      focusTransitions: card.hasOwnProperty('focusTransitions') ? card.focusTransitions : null,
-      focusTransitionMode: card.hasOwnProperty('focusTransitionMode') ? card.focusTransitionMode : null,
-      focusTransitionSpeed: card.hasOwnProperty('focusTransitionSpeed') ? card.focusTransitionSpeed : null,
-      navigationFix: card.hasOwnProperty('navigationFix') ? card.navigationFix : null,
-      navigationMode: card.hasOwnProperty('navigationMode') ? card.navigationMode : null,
-      textScale: card.hasOwnProperty('textScale') ? card.textScale : null,
-      bundleOptions: card.bundleOptions || {},
-      bundleOptionData: card.bundleOptionData || {},
-      userscriptToggles: card.userscriptToggles || {},
-      bundleUserscriptToggles: card.bundleUserscriptToggles || {},
-      userscripts: card.userscripts || [],
-      globalUserscripts: userscriptEngine.getGlobalUserscriptsForPayload(),
-    };
-    return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+    var href = window.location.href;
+    // Remove tp= from query string (?tp=VALUE or &tp=VALUE)
+    href = href.replace(/([?&])tp=[^&#]*(&?)/, function(m, pre, post) {
+      if (pre === '?' && post) return '?';
+      if (pre === '?' && !post) return '';
+      return post ? pre : '';
+    }).replace(/[?&]$/, '');
+    // Remove tp= from hash (tp= may be the first or any subsequent hash param)
+    var hashIdx = href.indexOf('#');
+    if (hashIdx !== -1) {
+      var base = href.substring(0, hashIdx);
+      var frag = href.substring(hashIdx + 1)
+        .split('&')
+        .filter(function(part) { return part.indexOf('tp=') !== 0; })
+        .join('&');
+      href = frag ? base + '#' + frag : base;
+    }
+    return href;
   } catch (e) {
-    warn('buildCardEncodedPayload failed: ' + e.message);
+    return window.location.href;
+  }
+}
+
+/**
+ * Build a portal relay URL for cross-site navigation.
+ * The portal reads the crossnav hash, looks up the card by ID from its
+ * localStorage (which has the complete config), and calls loadSite().
+ * @param {string} cardId - ID of the card whose settings should apply
+ * @param {string} targetUrl - Destination URL
+ * @param {Array} history - URLs visited before targetUrl (for back navigation)
+ * @param {Array} forward - URLs visited after (populated when going back)
+ * @returns {string} Portal relay URL, or empty string on failure
+ */
+function buildCrossNavUrl(cardId, targetUrl, history, forward) {
+  if (!cardId || !targetUrl) return '';
+  try {
+    var nav = {
+      cardId: cardId,
+      targetUrl: targetUrl,
+      history: history || [],
+      forward: forward || [],
+    };
+    var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(nav))));
+    return PORTAL_BASE_URL + '/index.html?v=' + encodeURIComponent(VERSION) + '#crossnav=' + encoded;
+  } catch (e) {
+    warn('buildCrossNavUrl failed: ' + e.message);
     return '';
   }
 }
 
 /**
- * Intercept anchor link clicks to inject the tp= payload into cross-origin URLs.
- * This ensures card configuration (features, bundle, userscripts) persists when the
- * user follows a link to another site, regardless of window.name reliability.
+ * Intercept cross-origin anchor clicks and route them through the portal.
+ * The portal looks up the card by ID from its own localStorage, merges the
+ * complete configuration (features + all userscripts), and launches the
+ * target URL via loadSite() — keeping everything in one consistent place.
  */
 function installLinkInterceptor() {
   if (installLinkInterceptor._installed) return;
   installLinkInterceptor._installed = true;
 
   document.addEventListener('click', function(e) {
-    if (!state.currentCard) return;
+    if (!state.currentCard || !state.currentCard.id) return;
 
     // Find the closest anchor element (Element.closest is available since Chrome 41)
     var el = e.target && typeof e.target.closest === 'function'
@@ -1185,7 +1253,7 @@ function installLinkInterceptor() {
         })();
     if (!el) return;
 
-    // Skip hash-only or empty links (same-page scroll, no cross-origin navigation)
+    // Skip hash-only or empty links (same-page scroll, no navigation)
     var attr = el.getAttribute('href') || '';
     if (!attr || attr.charAt(0) === '#') return;
 
@@ -1196,10 +1264,10 @@ function installLinkInterceptor() {
     // Only handle http/https links
     if (resolvedHref.indexOf('http://') !== 0 && resolvedHref.indexOf('https://') !== 0) return;
 
-    // Skip if tp= is already present in the query string
-    if (resolvedHref.indexOf('?tp=') !== -1 || resolvedHref.indexOf('&tp=') !== -1) return;
+    // Skip if already a portal URL (avoid relay loops)
+    if (resolvedHref.indexOf(PORTAL_BASE_URL) === 0) return;
 
-    // Only inject for cross-origin navigation; same-origin navigations are handled by sessionStorage
+    // Only intercept cross-origin navigation; same-origin is handled by sessionStorage
     var currentBase = window.location.protocol + '//' + window.location.host;
     if (
       resolvedHref === currentBase ||
@@ -1210,17 +1278,20 @@ function installLinkInterceptor() {
       return;
     }
 
-    // Build and inject the payload as ?tp= (placed before any hash fragment)
-    var encoded = buildCardEncodedPayload(state.currentCard);
-    if (!encoded) return;
+    // Build history: add current page to the back stack
+    var crossHistory = (state.currentCard.crossHistory || []).slice();
+    crossHistory.push(getCleanCurrentUrl());
 
-    var hashIdx = resolvedHref.indexOf('#');
-    var beforeHash = hashIdx === -1 ? resolvedHref : resolvedHref.substring(0, hashIdx);
-    var afterHash = hashIdx === -1 ? '' : resolvedHref.substring(hashIdx);
-    el.href = beforeHash + (beforeHash.indexOf('?') === -1 ? '?' : '&') + 'tp=' + encoded + afterHash;
-    log('Link intercepted: tp= payload injected for cross-origin navigation');
-  }, true); // Capture phase runs before site's own click handlers
+    var portalUrl = buildCrossNavUrl(state.currentCard.id, resolvedHref, crossHistory, []);
+    if (!portalUrl) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    window.location.href = portalUrl;
+    log('Cross-origin link intercepted: routing via portal to ' + resolvedHref);
+  }, true); // Capture phase so we run before site handlers
 }
+
 
 /**
  * Re-apply userscripts when the URL changes on SPA navigations
@@ -1309,6 +1380,8 @@ function getCardFromHash() {
       bundleUserscriptToggles: payload.bundleUserscriptToggles || {},
       userscripts: payload.userscripts || [],
       globalUserscripts: payload.globalUserscripts || [],
+      crossHistory: payload.crossHistory || [],
+      crossForward: payload.crossForward || [],
       // Store raw payload for CSS/JS injection
       _payload: payload
     };
@@ -1406,6 +1479,14 @@ function normalizePayload(payload) {
     normalized.globalUserscripts = payload.globalUserscripts;
   }
 
+  if (payload.crossHistory && Array.isArray(payload.crossHistory)) {
+    normalized.crossHistory = payload.crossHistory;
+  }
+
+  if (payload.crossForward && Array.isArray(payload.crossForward)) {
+    normalized.crossForward = payload.crossForward;
+  }
+
   return normalized;
 }
 
@@ -1460,6 +1541,8 @@ function getCardFromQuery() {
       bundleUserscriptToggles: payload.bundleUserscriptToggles || {},
       userscripts: payload.userscripts || [],
       globalUserscripts: payload.globalUserscripts || [],
+      crossHistory: payload.crossHistory || [],
+      crossForward: payload.crossForward || [],
       _payload: payload
     };
 
@@ -2546,8 +2629,8 @@ function loadSite(card) {
       bundleOptionData: card.bundleOptionData || {},
       userscriptToggles: card.userscriptToggles || {},
       bundleUserscriptToggles: card.bundleUserscriptToggles || {},
-      userscripts: card.userscripts || [],
-      globalUserscripts: userscriptEngine.getGlobalUserscriptsForPayload(),
+      crossHistory: card.crossHistory || [],
+      crossForward: card.crossForward || [],
     };
     
     // NOTE: Do NOT embed bundle CSS in the URL payload.
