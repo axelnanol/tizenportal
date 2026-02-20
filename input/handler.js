@@ -91,6 +91,13 @@ function shouldSuppressExit() {
 var customHandlers = [];
 
 /**
+ * Optional override for the BACK key on non-portal pages.
+ * When set, called before the default history.back().
+ * Return true to consume the event and skip history.back().
+ */
+var backHandler = null;
+
+/**
  * Initialize the input handler
  */
 export function initInputHandler() {
@@ -152,6 +159,7 @@ function handleKeyDown(event) {
     if (!isOnPortal) {
       event.preventDefault();
       event.stopPropagation();
+      if (backHandler && backHandler(event) === true) return;
       try {
         history.back();
       } catch (err) {
@@ -562,5 +570,15 @@ export function registerKeyHandler(handler) {
       customHandlers.splice(index, 1);
     }
   };
+}
+
+/**
+ * Set an override handler for the BACK key on non-portal pages.
+ * When fn returns true the event is consumed and history.back() is skipped.
+ * Pass null to restore default behaviour.
+ * @param {Function|null} fn
+ */
+export function setBackHandler(fn) {
+  backHandler = typeof fn === 'function' ? fn : null;
 }
 
