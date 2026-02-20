@@ -1150,6 +1150,8 @@ function buildCardEncodedPayload(card) {
       bundleOptionData: card.bundleOptionData || {},
       userscriptToggles: card.userscriptToggles || {},
       bundleUserscriptToggles: card.bundleUserscriptToggles || {},
+      userscripts: card.userscripts || [],
+      globalUserscripts: userscriptEngine.getGlobalUserscriptsForPayload(),
     };
     return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
   } catch (e) {
@@ -1170,13 +1172,18 @@ function installLinkInterceptor() {
   document.addEventListener('click', function(e) {
     if (!state.currentCard) return;
 
-    // Walk up the DOM tree to find the closest anchor element
-    var el = e.target;
-    while (el && el !== document) {
-      if (el.tagName && el.tagName.toUpperCase() === 'A') break;
-      el = el.parentElement;
-    }
-    if (!el || !el.tagName || el.tagName.toUpperCase() !== 'A') return;
+    // Find the closest anchor element (Element.closest is available since Chrome 41)
+    var el = e.target && typeof e.target.closest === 'function'
+      ? e.target.closest('a')
+      : (function() {
+          var node = e.target;
+          while (node && node !== document) {
+            if (node.tagName && node.tagName.toUpperCase() === 'A') return node;
+            node = node.parentElement;
+          }
+          return null;
+        })();
+    if (!el) return;
 
     // Skip hash-only or empty links (same-page scroll, no cross-origin navigation)
     var attr = el.getAttribute('href') || '';
@@ -2539,6 +2546,8 @@ function loadSite(card) {
       bundleOptionData: card.bundleOptionData || {},
       userscriptToggles: card.userscriptToggles || {},
       bundleUserscriptToggles: card.bundleUserscriptToggles || {},
+      userscripts: card.userscripts || [],
+      globalUserscripts: userscriptEngine.getGlobalUserscriptsForPayload(),
     };
     
     // NOTE: Do NOT embed bundle CSS in the URL payload.
