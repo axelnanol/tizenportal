@@ -1874,7 +1874,7 @@ function injectOverlayStyles() {
     '  padding: 12px 24px;',
     '  border-radius: 12px;',
     '  z-index: 2147483640;',
-    '  pointer-events: none;',
+    '  pointer-events: auto;',
     '}',
     '.tp-site-hint {',
     '  display: flex;',
@@ -2083,8 +2083,46 @@ function returnToPortal() {
 function addCurrentSiteAndReturn() {
   var encoded = null;
   try {
-    // Get current URL, stripping any tp= payload parameters
-    var currentUrl = window.location.href.replace(/[#&]tp=[^&#]*/g, '').replace(/^([^#?]*)[?&]$/, '$1').replace(/^([^#]*)#$/, '$1');
+    // Get current URL, stripping any tp= payload parameters from both query string and hash
+    var href = window.location.href;
+    var hashIndex = href.indexOf('#');
+    var baseAndQuery = hashIndex === -1 ? href : href.substring(0, hashIndex);
+    var hashPart = hashIndex === -1 ? '' : href.substring(hashIndex);
+
+    // Remove tp= from hash fragment (#tp=... or &tp=...)
+    if (hashPart) {
+      hashPart = hashPart.replace(/^#tp=[^&]*/g, '').replace(/&tp=[^&]*/g, '');
+      if (hashPart === '#' || hashPart === '') {
+        hashPart = '';
+      }
+    }
+
+    // Remove tp= from query string (?tp=... or &tp=...)
+    var qIndex = baseAndQuery.indexOf('?');
+    var baseOnly = baseAndQuery;
+    var queryString = '';
+    if (qIndex !== -1) {
+      baseOnly = baseAndQuery.substring(0, qIndex);
+      queryString = baseAndQuery.substring(qIndex + 1);
+      if (queryString) {
+        var parts = queryString.split('&');
+        var cleanedParts = [];
+        for (var p = 0; p < parts.length; p++) {
+          if (parts[p] && parts[p].indexOf('tp=') !== 0) {
+            cleanedParts.push(parts[p]);
+          }
+        }
+        queryString = cleanedParts.length ? cleanedParts.join('&') : '';
+      }
+    }
+
+    var currentUrl = baseOnly;
+    if (queryString) {
+      currentUrl += '?' + queryString;
+    }
+    if (hashPart) {
+      currentUrl += hashPart;
+    }
 
     // Use page title as card name
     var pageName = document.title || currentUrl;

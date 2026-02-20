@@ -113,7 +113,7 @@ function createCardElement(card, index) {
   var iconEl = document.createElement('div');
   iconEl.className = 'tp-card-icon';
   var fallbackIcon = window.TizenPortal && window.TizenPortal._portalFaviconUrl ? window.TizenPortal._portalFaviconUrl : '';
-  var iconSrc = card.icon || fallbackFavicon;
+  var iconSrc = card.icon || fallbackIcon;
   if (iconSrc) {
     var img = document.createElement('img');
     img.src = iconSrc;
