@@ -66,6 +66,7 @@ import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggl
 import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, setActiveBundle } from './loader.js';
 import { getBundleNames, getBundle, logDependencyWarnings } from '../bundles/registry.js';
 import { isValidHttpUrl, sanitizeCss, safeLocalStorageSet } from './utils.js';
+import { addCard } from '../ui/cards.js';
 import featureLoader from '../features/index.js';
 import textInputProtection from '../features/text-input-protection.js';
 import userscriptEngine from '../features/userscripts.js';
@@ -1951,7 +1952,7 @@ function createSiteHints() {
   hints.innerHTML = [
     '<div class="tp-site-hint"><div class="tp-site-hint-key red"></div><div class="tp-site-hint-text"><span>Address</span><span class="tp-site-hint-sub">Hold: Reload</span></div></div>',
     '<div class="tp-site-hint"><div class="tp-site-hint-key green"></div><div class="tp-site-hint-text"><span>Mouse</span><span class="tp-site-hint-sub">Hold: Focus</span></div></div>',
-    '<div class="tp-site-hint"><div class="tp-site-hint-key yellow"></div><div class="tp-site-hint-text"><span>Portal</span><span class="tp-site-hint-sub">Hold: Cycle</span></div></div>',
+    '<div class="tp-site-hint"><div class="tp-site-hint-key yellow"></div><div class="tp-site-hint-text"><span>Portal</span><span class="tp-site-hint-sub">Hold: Add Site</span></div></div>',
     '<div class="tp-site-hint"><div class="tp-site-hint-key blue"></div><div class="tp-site-hint-text"><span>Console</span><span class="tp-site-hint-sub">Hold: Safe Mode</span></div></div>',
   ].join('');
   var portalConfig = configGet('tp_portal') || {};
@@ -1961,6 +1962,66 @@ function createSiteHints() {
     hints.style.display = 'none';
   }
   document.body.appendChild(hints);
+
+  // Define click actions: color -> { short, long }
+  var siteHintConfig = {
+    'red':    { short: 'addressbar',  long: 'reload' },
+    'green':  { short: 'pointerMode', long: 'focusHighlight' },
+    'yellow': { short: 'preferences', long: 'addSite' },
+    'blue':   { short: 'diagnostics', long: 'safeMode' }
+  };
+
+  var hintElements = hints.querySelectorAll('.tp-site-hint');
+  for (var i = 0; i < hintElements.length; i++) {
+    var hint = hintElements[i];
+    var keyEl = hint.querySelector('.tp-site-hint-key');
+    if (!keyEl) continue;
+
+    var color = null;
+    if (keyEl.classList.contains('red')) color = 'red';
+    else if (keyEl.classList.contains('green')) color = 'green';
+    else if (keyEl.classList.contains('yellow')) color = 'yellow';
+    else if (keyEl.classList.contains('blue')) color = 'blue';
+
+    if (!color || !siteHintConfig[color]) continue;
+
+    var cfg = siteHintConfig[color];
+
+    hint.setAttribute('data-action', cfg.short);
+    hint.style.cursor = 'pointer';
+
+    // Short-press click on the whole hint element
+    hint.addEventListener('click', function(e) {
+      if (e.target && e.target.classList.contains('tp-site-hint-sub')) return;
+      var action = this.getAttribute('data-action');
+      if (action) {
+        executeColorAction(action);
+      }
+    });
+
+    // Long-press click on the sub-text element
+    var subEl = hint.querySelector('.tp-site-hint-sub');
+    if (subEl && cfg.long) {
+      subEl.setAttribute('data-action', cfg.long);
+      subEl.style.cursor = 'pointer';
+      subEl.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var action = this.getAttribute('data-action');
+        if (action) {
+          executeColorAction(action);
+        }
+      });
+    }
+
+    hint.addEventListener('mouseenter', function() {
+      this.style.opacity = '1';
+      this.style.color = '#ffffff';
+    });
+    hint.addEventListener('mouseleave', function() {
+      this.style.opacity = '';
+      this.style.color = '';
+    });
+  }
 }
 
 /**
@@ -1987,6 +2048,49 @@ function returnToPortal() {
 }
 
 /**
+ * Add the current site as a portal card and return to portal.
+ * Reads URL, document title, and favicon from the current page.
+ */
+function addCurrentSiteAndReturn() {
+  try {
+    // Get current URL, stripping any tp= payload parameters
+    var currentUrl = window.location.href.replace(/[#&]tp=[^&#]*/g, '').replace(/^([^#?]*)[?&]$/, '$1').replace(/^([^#]*)#$/, '$1');
+
+    // Use page title as card name
+    var pageName = document.title || currentUrl;
+
+    // Try to find a favicon from the page's link elements
+    var faviconUrl = '';
+    try {
+      var links = document.querySelectorAll('link[rel~="icon"]');
+      for (var i = 0; i < links.length; i++) {
+        if (links[i].href) {
+          faviconUrl = links[i].href;
+          break;
+        }
+      }
+      if (!faviconUrl) {
+        faviconUrl = window.location.origin + '/favicon.ico';
+      }
+    } catch (e) {
+      faviconUrl = '';
+    }
+
+    addCard({ name: pageName, url: currentUrl, icon: faviconUrl });
+    log('Added site: ' + pageName + ' (' + currentUrl + ')');
+    showToast('Site added: ' + pageName, 2000);
+  } catch (err) {
+    warn('Failed to add current site: ' + err.message);
+    showToast('Failed to add site', 2000);
+  }
+
+  // Return to portal after a brief moment so the toast is visible
+  setTimeout(function() {
+    returnToPortal();
+  }, 600);
+}
+
+/**
  * Initialize color button hints with click handlers
  * Makes the hints clickable for mouse users
  */
@@ -1994,12 +2098,12 @@ function initColorHints() {
   var hints = document.getElementById('tp-hints');
   if (!hints) return;
 
-  // Define hint configurations: color class -> short press action
+  // Define hint configurations: color class -> { short, long } actions
   var hintConfig = {
-    'red': 'addressbar',
-    'green': 'pointerMode',
-    'yellow': 'editSite',
-    'blue': 'diagnostics'
+    'red':    { short: 'addressbar',  long: 'reload' },
+    'green':  { short: 'pointerMode', long: 'focusHighlight' },
+    'yellow': { short: 'preferences', long: 'addSite' },
+    'blue':   { short: 'diagnostics', long: 'safeMode' }
   };
 
   // Find all hint elements and add click handlers
@@ -2019,19 +2123,37 @@ function initColorHints() {
 
     if (!color || !hintConfig[color]) continue;
 
-    // Store the action in a data attribute
-    hint.setAttribute('data-action', hintConfig[color]);
+    var config = hintConfig[color];
+
+    // Store the short-press action on the hint element
+    hint.setAttribute('data-action', config.short);
     
     // Make it look clickable
     hint.style.cursor = 'pointer';
     
-    // Add click handler
+    // Add short-press click handler on the whole hint (but not on sub)
     hint.addEventListener('click', function(e) {
+      // If the click was on the sub-text, let the sub handler deal with it
+      if (e.target && e.target.classList.contains('tp-hint-sub')) return;
       var action = this.getAttribute('data-action');
       if (action) {
         executeColorAction(action);
       }
     });
+
+    // Add long-press click handler on the sub-text element
+    var subEl = hint.querySelector('.tp-hint-sub');
+    if (subEl && config.long) {
+      subEl.setAttribute('data-action', config.long);
+      subEl.style.cursor = 'pointer';
+      subEl.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var action = this.getAttribute('data-action');
+        if (action) {
+          executeColorAction(action);
+        }
+      });
+    }
 
     // Add hover effect
     hint.addEventListener('mouseenter', function() {
@@ -2448,6 +2570,7 @@ var TizenPortalAPI = {
   loadSite: loadSite,
   closeSite: closeSite,
   returnToPortal: returnToPortal,
+  addCurrentSiteAndReturn: addCurrentSiteAndReturn,
   setPortalHintsVisible: setPortalHintsVisible,
   setPortalHintsPosition: setPortalHintsPosition,
   updatePortalHints: updatePortalHints,
