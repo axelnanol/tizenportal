@@ -796,6 +796,25 @@ async function init() {
  * Initialize when on the portal page
  */
 async function initPortalPage() {
+  // Check for a pending card addition passed via URL from a target site.
+  // addCurrentSiteAndReturn() encodes the card as #addcard=BASE64(JSON) so
+  // that the card is added to the portal's own localStorage (correct origin).
+  try {
+    var hash = window.location.hash || '';
+    var addCardMatch = hash.match(/[#&]addcard=([^&]+)/);
+    if (addCardMatch) {
+      var cardData = JSON.parse(decodeURIComponent(escape(atob(addCardMatch[1]))));
+      addCard(cardData);
+      log('Card added from URL parameter: ' + (cardData.name || cardData.url));
+      // Clean up the hash so it doesn't persist on refresh
+      try {
+        history.replaceState(null, '', window.location.href.replace(/[#&]addcard=[^&]*/g, '').replace(/[?&]#/, '#').replace(/[?&]$/, '').replace(/#$/, ''));
+      } catch (e) { /* ignore */ }
+    }
+  } catch (e) {
+    warn('Failed to process pending card from URL: ' + e.message);
+  }
+
   // Initialize modal system
   initModal();
   log('Modal system initialized');
@@ -2062,6 +2081,7 @@ function returnToPortal() {
  * Reads URL, document title, and favicon from the current page.
  */
 function addCurrentSiteAndReturn() {
+  var encoded = null;
   try {
     // Get current URL, stripping any tp= payload parameters
     var currentUrl = window.location.href.replace(/[#&]tp=[^&#]*/g, '').replace(/^([^#?]*)[?&]$/, '$1').replace(/^([^#]*)#$/, '$1');
@@ -2088,17 +2108,28 @@ function addCurrentSiteAndReturn() {
       faviconUrl = TIZENPORTAL_FAVICON_URL;
     }
 
-    addCard({ name: pageName, url: currentUrl, icon: faviconUrl });
-    log('Added site: ' + pageName + ' (' + currentUrl + ')');
-    showToast('Site added: ' + pageName, 2000);
+    // Encode card data to pass to the portal via URL parameter.
+    // We CANNOT call addCard() here because localStorage is origin-scoped:
+    // target sites (e.g. audiobookshelf.example.com) have a different
+    // localStorage than the portal (axelnanol.github.io). The portal must
+    // call addCard() itself when it loads so the card lands in the correct
+    // origin's localStorage.
+    var cardData = { name: pageName, url: currentUrl, icon: faviconUrl };
+    encoded = btoa(unescape(encodeURIComponent(JSON.stringify(cardData))));
+    log('Prepared card for portal: ' + pageName + ' (' + currentUrl + ')');
+    showToast('Adding site: ' + pageName, 2000);
   } catch (err) {
-    warn('Failed to add current site: ' + err.message);
+    warn('Failed to prepare current site: ' + err.message);
     showToast('Failed to add site', 2000);
   }
 
-  // Return to portal after a brief moment so the toast is visible
+  // Navigate to portal, passing card data in hash so portal can save it
   setTimeout(function() {
-    returnToPortal();
+    var portalUrl = PORTAL_BASE_URL + '/index.html?v=' + encodeURIComponent(VERSION);
+    if (encoded) {
+      portalUrl += '#addcard=' + encoded;
+    }
+    window.location.href = portalUrl;
   }, 600);
 }
 
