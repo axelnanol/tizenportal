@@ -50,6 +50,9 @@ The portal is your home screen — a grid of site cards you can navigate with yo
 
 ### Adding a Site
 
+There are two ways to add a site:
+
+**From the portal:**
 1. Navigate to the **+** card
 2. Press **Enter** to open the site editor
 3. Fill in the form:
@@ -62,6 +65,12 @@ The portal is your home screen — a grid of site cards you can navigate with yo
 | Icon | Card icon (optional) | Click "Fetch Favicon" |
 
 4. Press **Close** when finished (changes auto-save)
+
+**From a site (quick-add):**
+1. Navigate to the site you want to add
+2. **Long-press 🟡 Yellow** (hold for 500ms)
+3. The current page is automatically saved as a new card (URL, title, and favicon are captured)
+4. TizenPortal returns to the portal, where the new card is immediately visible
 
 ### Editing a Site
 
@@ -118,7 +127,7 @@ Sites appear in the order they were added. To reorder:
 | Arrow Keys | Move focus between elements |
 | Enter | Click/activate focused element |
 | 🟢 Green | Toggle mouse mode for precise control |
-| 🟡 Yellow | Return to portal |
+| 🟡 Yellow | Return to portal (short press) / Add current site as card + return to portal (long press) |
 
 ### Card Interaction Model
 
@@ -162,7 +171,7 @@ Cards with multiple buttons (Play, Info, Options, etc.):
 
 ### Returning to Portal
 
-Press **🟡 Yellow** button to return to the portal launcher.
+Press **🟡 Yellow** (short press) to return to the portal launcher. **Long-press 🟡 Yellow** to save the current site as a new portal card and return to the portal.
 
 ---
 
@@ -174,7 +183,7 @@ Press **🟡 Yellow** button to return to the portal launcher.
 |--------|-------------|------------|
 | 🔴 Red | Open address bar | Reload current page |
 | 🟢 Green | Toggle mouse mode | Toggle focus highlight |
-| 🟡 Yellow | Preferences (portal) / Return to portal (sites) | Add Site (portal) / Return to portal (sites) |
+| 🟡 Yellow | Preferences (portal) / Return to portal (sites) | Add Site (portal) / **Add current site as card + return to portal** (sites) |
 | 🔵 Blue | Toggle diagnostics | Enter safe mode |
 
 ### Short Press vs Long Press

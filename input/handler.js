@@ -489,9 +489,9 @@ export function executeColorAction(action) {
     case 'addSite':
       // Portal only - add new site
       if (!isOnPortal) {
-        // On target site, Yellow returns to portal
-        if (window.TizenPortal && window.TizenPortal.returnToPortal) {
-          window.TizenPortal.returnToPortal();
+        // On target site: add current page as a new card and return to portal
+        if (window.TizenPortal && window.TizenPortal.addCurrentSiteAndReturn) {
+          window.TizenPortal.addCurrentSiteAndReturn();
         }
         break;
       }

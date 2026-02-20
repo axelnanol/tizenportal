@@ -1,6 +1,6 @@
 # TizenPortal Progress Tracker
 
-> **Last Updated:** February 13, 2026  
+> **Last Updated:** February 20, 2026  
 > **Architecture:** Universal Runtime
 >
 > **Current Version:** See [package.json](../package.json) or [CHANGELOG](CHANGELOG.md)
@@ -23,6 +23,8 @@
 | On-Screen Pointer | ✅ Working | GREEN button |
 | Input Handler | ✅ Working | Unified key handling |
 | Focus Management | ✅ Working | Focus manager module |
+| Quick-Add Site (long-press Yellow) | ✅ Working | Adds current site as portal card from any site |
+| Clickable Color Hints | ✅ Working | All 8 short/long actions clickable on portal and sites |
 
 ---
 
@@ -49,6 +51,7 @@ For detailed version history, see [CHANGELOG.md](CHANGELOG.md).
 
 ### Recent Releases
 
+- **v1086** - Long-press Yellow on sites adds current page as portal card; all 8 color hint actions clickable on portal and sites; TizenPortal favicon used as fallback card icon
 - **v1018** - Userscript toggle payload support and enhanced userscript management
 - **v1000** - New tag scheme baseline
 

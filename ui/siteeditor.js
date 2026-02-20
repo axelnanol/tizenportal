@@ -2789,12 +2789,16 @@ function updatePreview() {
   }
   
   if (iconEl) {
-    if (state.card.icon) {
+    var fallbackIcon = window.TizenPortal && window.TizenPortal._portalFaviconUrl ? window.TizenPortal._portalFaviconUrl : '';
+    var iconSrc = state.card.icon || fallbackIcon;
+    if (iconSrc) {
       iconEl.textContent = '';
       var iconImg = document.createElement('img');
-      iconImg.src = state.card.icon;
+      iconImg.src = iconSrc;
       iconImg.alt = '';
-      iconImg.addEventListener('error', function() { iconEl.textContent = '?'; });
+      iconImg.addEventListener('error', function() {
+        iconEl.textContent = state.card.name ? state.card.name.charAt(0).toUpperCase() : '?';
+      });
       iconEl.appendChild(iconImg);
     } else if (state.card.name) {
       iconEl.textContent = state.card.name.charAt(0).toUpperCase();
