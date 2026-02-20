@@ -18,6 +18,7 @@ import cssReset from './css-reset.js';
 import hideScrollbars from './hide-scrollbars.js';
 import navigationFix from './navigation-fix.js';
 import textScale from './text-scale.js';
+import textInputProtection from './text-input-protection.js';
 
 // Register all features in the unified registry
 Registry.register({
@@ -161,6 +162,19 @@ Registry.register({
   },
 });
 
+Registry.register({
+  id: 'wrapTextInputs',
+  type: Registry.ITEM_TYPES.FEATURE,
+  name: 'wrapTextInputs',
+  displayName: 'Text Input Protection',
+  category: Registry.CATEGORIES.INPUT,
+  description: 'Wraps text fields so the on-screen keyboard only opens on explicit Enter/click',
+  defaultEnabled: true,
+  configKeys: ['wrapTextInputs'],
+  implementation: textInputProtection,
+  applyArgs: function() { return []; },
+});
+
 // Legacy features object for backward compatibility
 var features = {
   focusStyling: focusStyling,
@@ -173,6 +187,7 @@ var features = {
   hideScrollbars: hideScrollbars,
   navigationFix: navigationFix,
   textScale: textScale,
+  wrapTextInputs: textInputProtection,
 };
 
 /**

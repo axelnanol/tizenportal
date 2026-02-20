@@ -67,6 +67,7 @@ import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleB
 import { getBundleNames, getBundle, logDependencyWarnings } from '../bundles/registry.js';
 import { isValidHttpUrl, sanitizeCss, safeLocalStorageSet } from './utils.js';
 import featureLoader from '../features/index.js';
+import textInputProtection from '../features/text-input-protection.js';
 import userscriptEngine from '../features/userscripts.js';
 import userscriptRegistry from '../features/userscript-registry.js';
 import { 
@@ -576,6 +577,7 @@ function loadLastCard() {
 }
 
 function startTextInputProtection() {
+  textInputProtection.apply(document);
   var count = wrapTextInputs(TEXT_INPUT_SELECTOR);
   if (window.TizenPortal && window.TizenPortal.log) {
     TizenPortal.log('TextInput: Protection enabled (wrapped ' + count + ')');
@@ -622,6 +624,7 @@ function stopTextInputProtection() {
     textInputInterval = null;
   }
   unwrapTextInputs(TEXT_INPUT_SELECTOR);
+  textInputProtection.remove(document);
   if (window.TizenPortal && window.TizenPortal.log) {
     TizenPortal.log('TextInput: Protection disabled');
   } else {
