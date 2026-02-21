@@ -274,9 +274,6 @@ export function configGet(key) {
   
   // If value doesn't exist, return default
   if (value === undefined && DEFAULT_CONFIG.hasOwnProperty(key)) {
-    if (key === 'tp_features') {
-      console.log('configGet(tp_features) - value undefined, returning default');
-    }
     return DEFAULT_CONFIG[key];
   }
   
@@ -299,18 +296,6 @@ export function configGet(key) {
       }
     }
     
-    if (key === 'tp_features') {
-      console.log('configGet(tp_features) - merging stored with defaults:', {
-        storedTextScale: value.textScale,
-        defaultTextScale: defaults.textScale,
-        mergedTextScale: merged.textScale,
-        storedNavFix: value.navigationFix,
-        defaultNavFix: defaults.navigationFix,
-        mergedNavFix: merged.navigationFix,
-        stored: value,
-        merged: merged
-      });
-    }
     return merged;
   }
   
