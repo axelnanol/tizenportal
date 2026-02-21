@@ -60,7 +60,7 @@ There are many ways to contribute, whether or not you write code:
    ```
 3. **Add upstream remote**:
    ```bash
-   git remote add upstream https://github.com/alexnolan/tizenportal.git
+   git remote add upstream https://github.com/axelnanol/tizenportal.git
    ```
 
 ---
@@ -412,6 +412,70 @@ Other ways to solve the problem
 ### Code of Conduct
 
 This project follows the [Contributor Covenant](https://www.contributor-covenant.org/) code of conduct. Please report unacceptable behavior to the maintainers.
+
+---
+
+## Forking TizenPortal
+
+If you want to maintain your own fork of TizenPortal (for example, to add private bundles or customizations), you'll need to update several references to point to your fork.
+
+### References to Update
+
+#### 1. `package.json`
+
+Update the `repository` URL and `websiteURL`:
+
+```json
+{
+  "name": "@YOUR_USERNAME/tizenportal",
+  "websiteURL": "https://YOUR_USERNAME.github.io/tizenportal/dist/index.html",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/tizenportal"
+  }
+}
+```
+
+#### 2. `dist/index.html`
+
+Update the script source URL (if you cache-bust with a version query):
+
+```html
+<script src="tizenportal.js?v=YOUR_VERSION"></script>
+```
+
+#### 3. Documentation
+
+Update all links in the `docs/` folder that reference `axelnanol/tizenportal` to use your username. You can do a find-and-replace:
+
+```bash
+find docs/ -name "*.md" -exec sed -i 's|axelnanol/tizenportal|YOUR_USERNAME/tizenportal|g' {} \;
+find docs/ -name "*.md" -exec sed -i 's|axelnanol.github.io/tizenportal|YOUR_USERNAME.github.io/tizenportal|g' {} \;
+```
+
+#### 4. GitHub Pages
+
+Enable GitHub Pages on your fork (Settings → Pages → Deploy from `main` branch / `dist/` folder or root). This hosts the portal at `https://YOUR_USERNAME.github.io/tizenportal/`.
+
+#### 5. TizenBrew Module Identifier
+
+When installing your fork via TizenBrew, use:
+
+```
+YOUR_USERNAME/tizenportal
+```
+
+### Staying Up to Date with Upstream
+
+To pull in changes from the original repository:
+
+```bash
+git remote add upstream https://github.com/axelnanol/tizenportal.git
+git fetch upstream
+git merge upstream/main
+```
+
+Resolve any conflicts, rebuild, and push to your fork.
 
 ---
 

@@ -253,7 +253,7 @@ TizenPortal undergoes regular security reviews:
 - **Vulnerabilities:** 0 critical, 0 high, 0 medium, 0 low (all issues resolved or accepted)
 - **Dependencies:** 0 vulnerable packages
 
-See `SECURITY-REVIEW.md` for the full security audit report.
+See the [Security Guide](Security.md) for full security documentation.
 
 ## Reporting Security Issues
 
@@ -311,7 +311,7 @@ Before using TizenPortal:
 
 ## Additional Resources
 
-- [SECURITY-REVIEW.md](../SECURITY-REVIEW.md) - Full security audit report
+
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/) - Web application security risks
 - [Mozilla Web Security Guidelines](https://infosec.mozilla.org/guidelines/web_security) - Security best practices
 

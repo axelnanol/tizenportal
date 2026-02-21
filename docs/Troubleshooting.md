@@ -42,17 +42,12 @@ Before diving into specific issues, try these quick fixes:
 
 1. **Check the module name** — Ensure you typed it correctly:
    ```
-   alexnolan/tizenportal@<version-tag>
+   axelnanol/tizenportal
    ```
-   Example (for version 1026):
-   ```
-   alexnolan/tizenportal@1026
-   ```
-   See [CHANGELOG](CHANGELOG.md) for available versions.
 
 2. **Check your internet connection** — TizenBrew needs to download from GitHub
 
-3. **Try a different version** — Check the [releases page](https://github.com/alexnolan/tizenportal/releases) for the latest version
+3. **Check the [releases page](https://github.com/axelnanol/tizenportal/releases)** — Verify the module is accessible
 
 4. **Restart TizenBrew** — Close and reopen TizenBrew completely
 
@@ -457,7 +452,7 @@ For detailed debugging:
 1. Open diagnostics (🔵 Blue)
 2. Look for red [ERROR] entries
 3. Note the error message and location
-4. Search for the error or [open an issue](https://github.com/alexnolan/tizenportal/issues)
+4. Search for the error or [open an issue](https://github.com/axelnanol/tizenportal/issues)
 
 ### Reporting Bugs
 
@@ -484,9 +479,9 @@ To completely reset TizenPortal:
 
 If none of these solutions work:
 
-1. **Search existing issues** — [GitHub Issues](https://github.com/alexnolan/tizenportal/issues)
+1. **Search existing issues** — [GitHub Issues](https://github.com/axelnanol/tizenportal/issues)
 2. **Open a new issue** — Include all relevant details
-3. **Join discussions** — [GitHub Discussions](https://github.com/alexnolan/tizenportal/discussions)
+3. **Join discussions** — [GitHub Discussions](https://github.com/axelnanol/tizenportal/discussions)
 
 ---
 

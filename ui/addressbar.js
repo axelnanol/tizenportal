@@ -100,6 +100,10 @@ function createAddressBar() {
       '<button type="button" class="tp-addressbar-btn tp-addressbar-go" id="tp-addressbar-go" tabindex="0" title="Go">' +
         '<span class="tp-btn-icon">→</span>' +
       '</button>' +
+      // Info button - open TizenPortal documentation
+      '<button type="button" class="tp-addressbar-btn tp-addressbar-info" id="tp-addressbar-info" tabindex="0" title="TizenPortal Documentation">' +
+        '<svg viewBox="0 0 24 24" fill="currentColor" class="tp-btn-svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>' +
+      '</button>' +
     '</div>';
   
   // Insert at beginning of shell
@@ -170,6 +174,15 @@ function attachEventHandlers(bar) {
     goBtn.addEventListener('click', handleGo);
     goBtn.addEventListener('keydown', function(e) {
       if (e.keyCode === 13) handleGo();
+    });
+  }
+  
+  // Info button - open TizenPortal documentation
+  var infoBtn = bar.querySelector('#tp-addressbar-info');
+  if (infoBtn) {
+    infoBtn.addEventListener('click', handleInfo);
+    infoBtn.addEventListener('keydown', function(e) {
+      if (e.keyCode === 13) handleInfo();
     });
   }
   
@@ -521,4 +534,13 @@ function handleGo() {
   window.location.href = url;
   
   hideAddressBar();
+}
+
+/**
+ * Handle Info button - open TizenPortal documentation
+ */
+function handleInfo() {
+  console.log('TizenPortal: Address bar - Info');
+  hideAddressBar();
+  window.open('https://axelnanol.github.io/tizenportal/', '_blank');
 }

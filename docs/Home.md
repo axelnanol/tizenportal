@@ -24,20 +24,19 @@ Welcome to the TizenPortal documentation! This wiki provides comprehensive guide
 | [Navigation Mode Configuration](Navigation-Mode-Configuration.md) | Spatial navigation mode system |
 | [Manifest Schema](Manifest-Schema.md) | Bundle manifest.json reference |
 | [API Reference](Api-Reference.md) | Complete API documentation |
+| [Unified Registry](UNIFIED-REGISTRY.md) | Registry system for features and userscripts |
 | [Focus Transitions Guide](Focus-Transitions-Guide.md) | Focus management and transitions |
 | [Security](Security.md) | Security features and best practices |
-| [Engineering Plan](Engineering-Plan.md) | Roadmap and project status |
-| [Progress Tracker](Progress.md) | Version history and changelog |
 | [Contributing](Contributing.md) | How to contribute to the project |
 
 ---
 
 ## Quick Links
 
-- 🏠 [Project Repository](https://github.com/alexnolan/tizenportal)
-- 📦 [Latest Release](https://github.com/alexnolan/tizenportal/releases)
-- 🐛 [Report an Issue](https://github.com/alexnolan/tizenportal/issues)
-- 💬 [Discussions](https://github.com/alexnolan/tizenportal/discussions)
+- 🏠 [Project Repository](https://github.com/axelnanol/tizenportal)
+- 📦 [Latest Release](https://github.com/axelnanol/tizenportal/releases)
+- 🐛 [Report an Issue](https://github.com/axelnanol/tizenportal/issues)
+- 💬 [Discussions](https://github.com/axelnanol/tizenportal/discussions)
 
 ---
 
