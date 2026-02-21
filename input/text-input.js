@@ -136,12 +136,14 @@ function wrapSingleInput(input, opts) {
     var cs = window.getComputedStyle(input);
     if (cs) {
       capturedStyles = {
-        borderTop: { width: cs.borderTopWidth, style: cs.borderTopStyle, color: cs.borderTopColor },
-        borderRight: { width: cs.borderRightWidth, style: cs.borderRightStyle, color: cs.borderRightColor },
-        borderBottom: { width: cs.borderBottomWidth, style: cs.borderBottomStyle, color: cs.borderBottomColor },
-        borderLeft: { width: cs.borderLeftWidth, style: cs.borderLeftStyle, color: cs.borderLeftColor },
+        // Borders are NOT copied to the wrapper: copying them would produce a
+        // visible double-border when the real <input> is shown for editing
+        // (wrapper border + input border). A default CSS border on the wrapper
+        // handles display-mode visibility; it is cleared in the .editing state.
         borderRadius: cs.borderRadius,
         backgroundColor: cs.backgroundColor,
+        // Padding is applied to the display span (not the wrapper) so it does
+        // not add a second inset to the real input in the editing state.
         paddingTop: cs.paddingTop,
         paddingRight: cs.paddingRight,
         paddingBottom: cs.paddingBottom,
@@ -157,27 +159,15 @@ function wrapSingleInput(input, opts) {
   wrapper.className = opts.wrapperClass;
   wrapper.setAttribute('tabindex', '0');
 
-  // Apply captured visual styles to wrapper so it looks like the original input
+  // Apply captured visual styles (background, radius only) to wrapper
   try {
     if (capturedStyles) {
-      var sides = ['borderTop', 'borderRight', 'borderBottom', 'borderLeft'];
-      for (var s = 0; s < sides.length; s++) {
-        var side = sides[s];
-        var b = capturedStyles[side];
-        if (b && b.width && b.width !== '0px') {
-          wrapper.style[side] = b.width + ' ' + b.style + ' ' + b.color;
-        }
-      }
       if (capturedStyles.borderRadius && capturedStyles.borderRadius !== '0px') {
         wrapper.style.borderRadius = capturedStyles.borderRadius;
       }
       if (capturedStyles.backgroundColor && capturedStyles.backgroundColor !== 'rgba(0, 0, 0, 0)' && capturedStyles.backgroundColor !== 'transparent') {
         wrapper.style.backgroundColor = capturedStyles.backgroundColor;
       }
-      if (capturedStyles.paddingTop) wrapper.style.paddingTop = capturedStyles.paddingTop;
-      if (capturedStyles.paddingRight) wrapper.style.paddingRight = capturedStyles.paddingRight;
-      if (capturedStyles.paddingBottom) wrapper.style.paddingBottom = capturedStyles.paddingBottom;
-      if (capturedStyles.paddingLeft) wrapper.style.paddingLeft = capturedStyles.paddingLeft;
     }
   } catch (err) {
     // Ignore style application errors
@@ -190,6 +180,19 @@ function wrapSingleInput(input, opts) {
   display.textContent = input.value || placeholder;
   if (input.value) {
     display.classList.add(opts.hasValueClass);
+  }
+
+  // Apply captured padding to the display span so text aligns with the original
+  // input's inset, without affecting the real input's own padding in editing state.
+  try {
+    if (capturedStyles) {
+      if (capturedStyles.paddingTop) display.style.paddingTop = capturedStyles.paddingTop;
+      if (capturedStyles.paddingRight) display.style.paddingRight = capturedStyles.paddingRight;
+      if (capturedStyles.paddingBottom) display.style.paddingBottom = capturedStyles.paddingBottom;
+      if (capturedStyles.paddingLeft) display.style.paddingLeft = capturedStyles.paddingLeft;
+    }
+  } catch (err) {
+    // Ignore style application errors
   }
   
   // Insert wrapper before input
