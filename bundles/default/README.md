@@ -40,7 +40,7 @@ All hooks provide logging output for diagnostics.
 ## Configuration
 
 The default bundle uses:
-- **Navigation Mode:** Geometric (strict axis-aligned navigation)
+- **Navigation Mode:** Directional (preferred smart navigation)
 - **Features Enabled:**
   - `focusStyling: true`
   - `tabindexInjection: true`
@@ -79,7 +79,7 @@ If the default bundle doesn't work well for your site, create a custom bundle:
   "description": "Basic bundle with focus styling and focusable elements. Used as fallback when no site-specific bundle is configured.",
   "requires": [],
   "provides": ["focus-styling", "focusable-elements"],
-  "navigationMode": "geometric",
+  "navigationMode": "directional",
   "features": {
     "focusStyling": true,
     "tabindexInjection": true

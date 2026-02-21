@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Blocks advertisements and tracking scripts for cleaner browsing",
   "author": "TizenPortal",
-  "navigationMode": "geometric",
+  "navigationMode": "directional",
   "viewportLock": false,
   "provides": ["ad-blocking", "tracker-blocking", "cookie-banner-hiding"],
   "options": [

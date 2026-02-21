@@ -84,6 +84,142 @@ function shouldSuppressExit() {
   return false;
 }
 
+function getSpatialNavigationMode() {
+  try {
+    if (!window.SpatialNavigation || typeof window.SpatialNavigation.getConfig !== 'function') {
+      return null;
+    }
+    var cfg = window.SpatialNavigation.getConfig();
+    return cfg && cfg.mode ? cfg.mode : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function isFocusableFallbackElement(element) {
+  if (!element || typeof element.focus !== 'function') return false;
+  if (element.disabled) return false;
+  if (element.getAttribute && element.getAttribute('tabindex') === '-1') return false;
+
+  var style = null;
+  try {
+    style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+  } catch (e) {
+    style = null;
+  }
+  if (style && (style.display === 'none' || style.visibility === 'hidden')) return false;
+
+  if (!element.getBoundingClientRect) return false;
+  var rect = element.getBoundingClientRect();
+  if (!rect || rect.width <= 0 || rect.height <= 0) return false;
+
+  var vw = window.innerWidth || document.documentElement.clientWidth || 1920;
+  var vh = window.innerHeight || document.documentElement.clientHeight || 1080;
+  var inViewport = rect.bottom > 0 && rect.top < vh && rect.right > 0 && rect.left < vw;
+  return inViewport;
+}
+
+function getViewportFocusableElements() {
+  var selector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  var nodes = document.querySelectorAll(selector);
+  var result = [];
+  for (var i = 0; i < nodes.length; i++) {
+    if (isFocusableFallbackElement(nodes[i])) {
+      result.push(nodes[i]);
+    }
+  }
+  return result;
+}
+
+function pickEdgeFocusable(direction, candidates, originRect) {
+  if (!candidates || !candidates.length) return null;
+
+  var best = null;
+  var bestValue = direction === 'down' ? -Infinity : Infinity;
+  var preferRelative = !!originRect;
+
+  function candidateValue(rect) {
+    return direction === 'down' ? rect.bottom : rect.top;
+  }
+
+  function isRelativeMatch(rect) {
+    if (!originRect) return true;
+    if (direction === 'down') return rect.top >= originRect.top + 2;
+    return rect.bottom <= originRect.bottom - 2;
+  }
+
+  for (var pass = 0; pass < 2; pass++) {
+    for (var i = 0; i < candidates.length; i++) {
+      var el = candidates[i];
+      var rect = el.getBoundingClientRect();
+      if (!rect) continue;
+      if (preferRelative && pass === 0 && !isRelativeMatch(rect)) continue;
+
+      var val = candidateValue(rect);
+      if (
+        !best ||
+        (direction === 'down' && val > bestValue) ||
+        (direction === 'up' && val < bestValue)
+      ) {
+        best = el;
+        bestValue = val;
+      }
+    }
+    if (best) return best;
+  }
+
+  return null;
+}
+
+function tryDirectionalScrollFallback(direction) {
+  if (direction !== 'down' && direction !== 'up') return false;
+
+  var origin = document.activeElement;
+  var originRect = origin && origin.getBoundingClientRect ? origin.getBoundingClientRect() : null;
+
+  var beforeY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  var vh = window.innerHeight || document.documentElement.clientHeight || 1080;
+  var step = Math.max(120, Math.floor(vh * 0.22));
+  var delta = direction === 'down' ? step : -step;
+
+  window.scrollBy(0, delta);
+
+  var afterY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  if (afterY === beforeY) {
+    return false;
+  }
+
+  var candidates = getViewportFocusableElements();
+  var target = pickEdgeFocusable(direction, candidates, originRect);
+  if (target) {
+    try {
+      target.focus();
+      return true;
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Scrolled successfully even if no focus target was found yet.
+  return true;
+}
+
+function handleDirectionalArrow(direction) {
+  if (!window.SpatialNavigation || typeof window.SpatialNavigation.navigate !== 'function') {
+    return false;
+  }
+
+  try {
+    if (window.SpatialNavigation.navigate(direction)) {
+      return true;
+    }
+  } catch (err) {
+    console.warn('TizenPortal [Navigation]: Directional navigate error:', err.message);
+  }
+
+  return tryDirectionalScrollFallback(direction);
+}
+
 
 /**
  * Custom key handlers registered by bundles
@@ -340,6 +476,23 @@ function handleKeyDown(event) {
       event.preventDefault();
       event.stopPropagation();
       console.log('TizenPortal: Card interaction - Back handled');
+      return;
+    }
+  }
+
+  // Directional mode arrow fallback:
+  // when no candidate is focusable in the requested direction, scroll one step
+  // and focus a newly visible edge element to avoid dead-end navigation.
+  if (isArrowKey && getSpatialNavigationMode() === 'directional') {
+    var direction = null;
+    if (keyCode === KEYS.LEFT) direction = 'left';
+    else if (keyCode === KEYS.RIGHT) direction = 'right';
+    else if (keyCode === KEYS.UP) direction = 'up';
+    else if (keyCode === KEYS.DOWN) direction = 'down';
+
+    if (direction && handleDirectionalArrow(direction)) {
+      event.preventDefault();
+      event.stopPropagation();
       return;
     }
   }
