@@ -277,7 +277,7 @@ Open Preferences with **🟡 Yellow** on the portal.
 Global defaults that can be overridden per-site in the editor.
 
 **Appearance**
-- **Text Scale**: Off / Small (+10%) / Medium (+25%) / Large (+50%)
+- **Text Scale**: Extra Small (75%) / Small (90%) / Normal (100%) / Medium (115%) / Large (135%) / Extra Large (160%)
   - Scales all text for improved TV legibility while maintaining relative sizing
 
 **Navigation**

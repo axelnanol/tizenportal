@@ -16,10 +16,10 @@ export var bundles = {
 };
 
 export var bundleMeta = {
-  'adblock': { jsBytes: 34544, cssBytes: 7584 },
-  'audiobookshelf': { jsBytes: 53410, cssBytes: 77020 },
-  'default': { jsBytes: 1496, cssBytes: 116 },
-  'example-elements': { jsBytes: 6861, cssBytes: 884 }
+  'adblock': { jsBytes: 35748, cssBytes: 7880 },
+  'audiobookshelf': { jsBytes: 54929, cssBytes: 79475 },
+  'default': { jsBytes: 1565, cssBytes: 119 },
+  'example-elements': { jsBytes: 7073, cssBytes: 928 }
 };
 
 export var bundleManifests = {
