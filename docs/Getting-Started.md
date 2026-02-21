@@ -34,16 +34,7 @@ Launch TizenBrew on your Samsung TV from the app list.
 2. Select **Add Module**
 3. Enter the module identifier:
    ```
-   alexnolan/tizenportal@<version-tag>
-   ```
-   
-   Example (for version 1026):
-   ```
-   alexnolan/tizenportal@1026
-   ```
-   Or specify a version from [CHANGELOG](CHANGELOG.md):
-   ```
-   alexnolan/tizenportal@<version-tag>
+   axelnanol/tizenportal
    ```
 4. Confirm the addition
 
@@ -72,7 +63,7 @@ When TizenPortal first loads, you'll see:
    - **URL**: Full URL including `https://` (e.g., `https://abs.myserver.com`)
    - **Bundle**: Select from available options
    - **Icon**: Click "Fetch Favicon" or enter a custom icon URL
-4. Press **Close** when you’re done
+4. Press **Close** when you're done
 
 Your new site card will appear in the grid!
 
@@ -120,14 +111,12 @@ Now that you're set up:
 
 ## Updating TizenPortal
 
-When a new version is released:
+TizenBrew automatically serves the latest version when you use the standard module identifier. If you experience issues after an update:
 
 1. Open TizenBrew settings
-2. Remove the old module: `alexnolan/tizenportal@OLDVERSION`
-3. Add the new module: `alexnolan/tizenportal@NEWVERSION`
+2. Remove the module: `axelnanol/tizenportal`
+3. Add the module again: `axelnanol/tizenportal`
 4. Relaunch TizenPortal
-
-> **Note:** TizenBrew caches modules by version tag. You must add the new version number to get updates.
 
 ---
 
@@ -137,10 +126,10 @@ To remove TizenPortal:
 
 1. Open TizenBrew settings
 2. Navigate to the module list
-3. Remove `alexnolan/tizenportal`
+3. Remove `axelnanol/tizenportal`
 
 Your saved sites are stored in the TV's localStorage and will persist. To clear them, use the diagnostics panel before uninstalling.
 
 ---
 
-*Need help? Check the [Troubleshooting](Troubleshooting.md) guide or [open an issue](https://github.com/alexnolan/tizenportal/issues).*
+*Need help? Check the [Troubleshooting](Troubleshooting.md) guide or [open an issue](https://github.com/axelnanol/tizenportal/issues).*

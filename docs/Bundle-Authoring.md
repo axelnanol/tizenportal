@@ -6,6 +6,47 @@
 
 ---
 
+## ⚡ Quick Start (Minimum Viable Bundle)
+
+Need to create a bundle quickly? Here's all you need:
+
+**1. Create `bundles/my-site/manifest.json`:**
+```json
+{
+  "name": "my-site",
+  "displayName": "My Site",
+  "version": "1.0.0",
+  "description": "TV support for My Site",
+  "author": "Your Name"
+}
+```
+
+**2. Create `bundles/my-site/style.css`:**
+```css
+/* Viewport lock for TV */
+html, body { width: 1920px !important; overflow-x: hidden; }
+/* Focus visibility */
+*:focus { outline: 3px solid #00a8ff !important; }
+```
+
+**3. Create `bundles/my-site/main.js`:**
+```js
+import myStyles from './style.css';
+export default {
+  style: myStyles,
+  onActivate(window, card) {
+    // Make interactive elements focusable
+    window.TizenPortal.elements.register({ selector: 'a, button', operation: 'focusable' });
+  }
+};
+```
+
+**4. Run `npm run build`** — that's it! The bundle is automatically discovered, registered, and compiled in.
+
+> 💡 See [Section 3](#3-creating-a-bundle) for the full step-by-step guide and [Section 5](#5-using-core-utilities) for all the things the core can do for you automatically.
+
+---
+
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
@@ -43,6 +84,26 @@ A **bundle** is a collection of CSS and JavaScript that fixes or enhances a spec
 - No manual DOM observation needed
 - Automatic handling of dynamic content
 - Consistent patterns across all bundles
+
+### What the Core Does For You (Free!)
+
+The TizenPortal core handles a lot automatically — you don't need to implement these yourself:
+
+| Feature | How to use it |
+|---------|---------------|
+| **Spatial navigation** | Core provides D-pad navigation between focusable elements automatically |
+| **DOM observation** | Once you register elements/cards, core watches for new DOM nodes and applies registrations automatically |
+| **CSS injection** | Set `style: myStyles` in main.js — core injects it at the right time |
+| **Viewport locking** | Set `"viewportLock": true` in manifest.json |
+| **Navigation mode** | Set `"navigationMode": "directional"` in manifest.json |
+| **Tabindex injection** | Set `"features": { "tabindexInjection": true }` in manifest.json |
+| **Scroll-into-view** | Set `"features": { "scrollIntoView": true }` in manifest.json |
+| **Focus outline** | Always active; style-able via CSS |
+| **Card two-level nav** | Register cards via `TizenPortal.cards.register()` — Enter/Back handled automatically |
+| **Cleanup on exit** | Registered elements/cards are automatically cleaned up on deactivation |
+| **Safe-area inset** | Set `"features": { "safeArea": true }` in manifest.json |
+| **Bundle options UI** | Declare `options` in manifest.json — the site editor renders the UI automatically |
+| **Payload passing** | Bundle name, options, and settings are passed to the site automatically via URL hash |
 
 ### What Bundles Can Do
 

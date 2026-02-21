@@ -40,7 +40,7 @@ Runs as a TizenBrew module to inject fixes into any site.
 This project is designed to be loaded via **TizenBrew** on your Samsung TV.
 
 1. **Open TizenBrew** on your Samsung TV
-2. **Add Module:** `axelnanol/tizenportal` (e.g., `axelnanol/tizenportal`) - see [CHANGELOG](docs/CHANGELOG.md) for available versions
+2. **Add Module:** `axelnanol/tizenportal`
 3. **Launch** TizenPortal from your TizenBrew dashboard
 
 TizenBrew will open the portal and inject the runtime into all navigated pages.
@@ -65,6 +65,14 @@ TizenBrew will open the portal and inject the runtime into all navigated pages.
 1. Select a site card and press **Enter** to open
 2. Use **D-pad** for navigation or press **🟢 Green** for mouse mode
 3. Press **🟡 Yellow** to return to the portal
+
+### Address Bar
+
+Press **🔴 Red** to open the address bar overlay with browser controls:
+- **⎈** Return to portal  &nbsp; **🏠** Site home  &nbsp; **←** Back  &nbsp; **→** Forward  &nbsp; **↻** Reload
+- **URL field** — Press Enter to edit, type a new address
+- **→ Go** — Navigate to the entered URL
+- **ℹ Info** — Open TizenPortal documentation
 
 ### Preferences
 - Press **🟡 Yellow** on the portal to open Preferences
@@ -151,6 +159,7 @@ TizenPortal uses a **Universal Runtime** architecture:
 - **[Getting Started](docs/Getting-Started.md)** — Quick start guide for new users
 - **[FAQ](docs/FAQ.md)** — Frequently asked questions
 - **[Troubleshooting](docs/Troubleshooting.md)** — Common issues and solutions
+- **[Contributing](docs/Contributing.md)** — How to contribute or fork the project
 - **[Adblock Bundle](bundles/adblock/README.md)** — Usage guide and performance benchmarks
 - **[Audiobookshelf Bundle](bundles/audiobookshelf/README.md)** — Bundle documentation
 
@@ -164,7 +173,7 @@ TizenPortal is designed with security as a priority:
 - ✅ **Comprehensive input sanitization** (XSS prevention)
 - ✅ **Secure URL handling** (blocks javascript:, data:, etc.)
 - ✅ **Safe DOM manipulation** (no eval or innerHTML with user data)
-- ✅ **Regular security audits** (see [SECURITY-REVIEW.md](SECURITY-REVIEW.md))
+- ✅ **Regular security audits** (see [Security Guide](docs/Security.md))
 
 **Important:** Userscripts run with full page access. Only enable scripts you trust and have reviewed. See the [Security Guide](docs/Security.md) for details.
 
@@ -185,7 +194,9 @@ TizenPortal is designed with security as a priority:
 
 This project uses code and inspiration from the following sources:
 
-- **[TizenTube](https://github.com/reisxd/TizenTube)** — Spatial navigation polyfill and DOMRect polyfill
+- **[WICG/spatial-navigation](https://github.com/WICG/spatial-navigation)** — Spatial navigation polyfill (`spatial-navigation-polyfill` npm package), modified with cross-origin guards and UMD wrapper fix
+- **[Financial-Times/polyfill-library](https://github.com/Financial-Times/polyfill-library)** — DOMRect polyfill
+- **[TizenTube](https://github.com/reisxd/TizenTube)** — Inspiration and approach for Tizen TV compatibility
 - **[TizenBrew](https://github.com/reisxd/TizenBrew)** — Module loading platform
 
 ---

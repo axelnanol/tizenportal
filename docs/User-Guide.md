@@ -169,6 +169,12 @@ Cards with multiple buttons (Play, Info, Options, etc.):
 - Use **Up/Down arrows** to scroll the page
 - Some sites may require mouse mode for scrolling
 
+### Following Links to Other Sites
+
+When you follow a link to a different domain (e.g. from your Audiobookshelf to an external site), TizenPortal automatically carries your bundle configuration along via the URL. The same bundle and settings that were active on the original card continue to apply on the new site.
+
+If the new site needs different settings, return to the portal and open it as its own card.
+
 ### Returning to Portal
 
 Press **🟡 Yellow** (short press) to return to the portal launcher. **Long-press 🟡 Yellow** to save the current site as a new portal card and return to the portal.
@@ -233,9 +239,9 @@ Press **🔴 Red** to show/hide the address bar.
 ### Address Bar Controls
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│ ⎈ │ 🏠 │ ← │ → │ ↻ │ https://example.com/page                 │ → │
-└──────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⎈ │ 🏠 │ ← │ → │ ↻ │ https://example.com/page                 │ → │ ℹ │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 | Button | Function |
@@ -247,6 +253,7 @@ Press **🔴 Red** to show/hide the address bar.
 | ↻ | Reload page |
 | URL field | Edit URL (select and type) |
 | → (Go) | Navigate to URL |
+| ℹ | Open TizenPortal documentation |
 
 ### Navigating to a New URL
 

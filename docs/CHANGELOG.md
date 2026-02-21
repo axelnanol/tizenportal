@@ -25,21 +25,18 @@ git log --tags --simplify-by-decoration --pretty="format:%d %s"
 
 ## Installation
 
-To install a specific version:
+To install TizenPortal via TizenBrew, use:
 ```
-axelnanol/tizenportal@<version-tag>
+axelnanol/tizenportal
 ```
 
-Example:
-```
-axelnanol/tizenportal@1026
-```
+TizenBrew will automatically serve the latest release.
 
 ## Version Notes
 
 ### Versioning Philosophy
 
-TizenPortal uses numeric 4-digit tags instead of semantic versioning tags for ease of use on TV remotes. Typing `axelnanol/tizenportal@1018` on a TV remote is much faster than typing `@v1.0.18`.
+TizenPortal uses numeric 4-digit tags for releases. The format is `XXYY` where `XX` = major.minor and `YY` = patch (e.g., `1018` = v1.0.18).
 
 ### Breaking Changes
 
@@ -48,8 +45,6 @@ Major breaking changes are documented in git commit messages when they occur. Al
 ## Recent Development
 
 For current development status and roadmap:
-- See [Progress.md](Progress.md) for completed and in-progress work
-- See [Engineering-Plan.md](Engineering-Plan.md) for the development roadmap
 - See [Contributing.md](Contributing.md) for how to contribute
 
 ## Legacy Versions

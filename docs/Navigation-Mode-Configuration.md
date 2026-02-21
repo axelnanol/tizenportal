@@ -547,5 +547,5 @@ TizenPortal.navigation.applyNavigationMode(card, bundle)
 
 For more information:
 - Bundle Navigation Guide: `docs/Bundle-Navigation-Guide.md`
-- Navigation Compatibility: `docs/NAVIGATION-COMPATIBILITY-SUMMARY.md`
+- Navigation Compatibility: `docs/development/NAVIGATION-COMPATIBILITY-SUMMARY.md`
 - Spatial Navigation Library: `navigation/README.md`
