@@ -806,10 +806,13 @@ async function initPortalPage() {
         if (relayCard) {
           // Build a launch card: use all settings from the stored card but
           // navigate to the target URL and carry the history/forward stacks.
+          // IMPORTANT: Override featureBundle with the one from crossnav payload
+          // to preserve the originating site's bundle across the relay.
           var launchCard = Object.assign({}, relayCard, {
             url: nav.targetUrl,
             crossHistory: nav.history || [],
             crossForward: nav.forward || [],
+            featureBundle: nav.bundleName || relayCard.featureBundle || 'default'
           });
           log('Cross-site relay: card=' + nav.cardId + ' → ' + nav.targetUrl +
               ' (history depth ' + launchCard.crossHistory.length + ')');
@@ -1105,7 +1108,7 @@ function installCardPersistenceHooks() {
     var forward = (state.currentCard.crossForward || []).slice();
     forward.unshift(getCleanCurrentUrl());
 
-    var portalUrl = buildCrossNavUrl(state.currentCard.id, prevUrl, newHistory, forward);
+    var portalUrl = buildCrossNavUrl(state.currentCard.id, prevUrl, newHistory, forward, state.currentBundle);
     if (!portalUrl) return false;
 
     window.location.href = portalUrl;
@@ -1146,13 +1149,16 @@ function getCleanCurrentUrl() {
  * Build a portal relay URL for cross-site navigation.
  * The portal reads the crossnav hash, looks up the card by ID from its
  * localStorage (which has the complete config), and calls loadSite().
+ * The bundleName is also passed to ensure the originating bundle is preserved
+ * even if the card lookup returns a different bundle setting.
  * @param {string} cardId - ID of the card whose settings should apply
  * @param {string} targetUrl - Destination URL
  * @param {Array} history - URLs visited before targetUrl (for back navigation)
  * @param {Array} forward - URLs visited after (populated when going back)
+ * @param {string} bundleName - Current bundle name to preserve across navigation
  * @returns {string} Portal relay URL, or empty string on failure
  */
-function buildCrossNavUrl(cardId, targetUrl, history, forward) {
+function buildCrossNavUrl(cardId, targetUrl, history, forward, bundleName) {
   if (!cardId || !targetUrl) return '';
   try {
     var nav = {
@@ -1160,6 +1166,7 @@ function buildCrossNavUrl(cardId, targetUrl, history, forward) {
       targetUrl: targetUrl,
       history: history || [],
       forward: forward || [],
+      bundleName: bundleName || 'default'
     };
     var encoded = btoa(unescape(encodeURIComponent(JSON.stringify(nav))));
     return PORTAL_BASE_URL + '/index.html?v=' + encodeURIComponent(VERSION) + '#crossnav=' + encoded;
@@ -1224,7 +1231,7 @@ function installLinkInterceptor() {
     var crossHistory = (state.currentCard.crossHistory || []).slice();
     crossHistory.push(getCleanCurrentUrl());
 
-    var portalUrl = buildCrossNavUrl(state.currentCard.id, resolvedHref, crossHistory, []);
+    var portalUrl = buildCrossNavUrl(state.currentCard.id, resolvedHref, crossHistory, [], state.currentBundle);
     if (!portalUrl) return;
 
     e.preventDefault();
