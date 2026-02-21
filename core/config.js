@@ -91,12 +91,6 @@ var changeListeners = [];
  */
 function loadConfig() {
   if (configCache !== null) {
-    if (configCache.tp_features) {
-      console.log('loadConfig() - returning cached tp_features:', {
-        textScale: configCache.tp_features.textScale,
-        navigationFix: configCache.tp_features.navigationFix
-      });
-    }
     return configCache;
   }
 
@@ -104,11 +98,6 @@ function loadConfig() {
     var stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       configCache = JSON.parse(stored);
-      console.log('loadConfig() - loaded from localStorage, tp_features:', {
-        textScale: configCache.tp_features.textScale,
-        navigationFix: configCache.tp_features.navigationFix,
-        full: configCache.tp_features
-      });
       // Merge with defaults for any missing keys
       for (var key in DEFAULT_CONFIG) {
         if (DEFAULT_CONFIG.hasOwnProperty(key) && !configCache.hasOwnProperty(key)) {
@@ -142,27 +131,12 @@ function loadConfig() {
 function saveConfig() {
   if (configCache === null) return;
 
-  if (configCache.tp_features) {
-    console.log('saveConfig() - about to save tp_features to localStorage:', {
-      textScale: configCache.tp_features.textScale,
-      navigationFix: configCache.tp_features.navigationFix,
-      full: configCache.tp_features
-    });
-  }
-
   var result = safeLocalStorageSet(STORAGE_KEY, JSON.stringify(configCache));
   if (!result.success) {
     if (result.error === 'quota') {
       console.error('TizenPortal: ' + result.message);
     } else {
       console.error('TizenPortal: Failed to save config: ' + result.message);
-    }
-  } else {
-    if (configCache.tp_features) {
-      console.log('saveConfig() - SAVED to localStorage, verifying cache has:', {
-        textScale: configCache.tp_features.textScale,
-        navigationFix: configCache.tp_features.navigationFix
-      });
     }
   }
 }

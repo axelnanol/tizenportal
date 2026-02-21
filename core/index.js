@@ -553,89 +553,18 @@ function saveLastCard(card) {
     };
     var json = JSON.stringify(payload);
     sessionStorage.setItem(LAST_CARD_KEY, json);
-    // Also persist to window.name for cross-origin survival.
-    // sessionStorage is per-origin and won't carry over when the portal
-    // navigates to a different-origin target site. window.name persists
-    // across navigations in the same tab, even across origins.
-    try { window.name = 'tp:' + json; } catch (e) { /* ignore */ }
+    // Note: window.name is no longer used. All cross-origin navigations
+    // must route through the portal via the link interceptor and crossnav relay.
   } catch (err) {
     // Ignore
   }
 }
 
 /**
- * Load card from window.name (cross-origin fallback).
- * window.name persists across navigations in the same tab, even
- * across different origins — unlike sessionStorage/localStorage.
- * We prefix our data with 'tp:' to avoid collisions.
+ * Load card from sessionStorage (same-origin fallback).
+ * When navigating within the same origin, sessionStorage contains
+ * the previously loaded card config from saveLastCard().
  */
-function loadCardFromWindowName() {
-  try {
-    var name = window.name;
-    if (!name || typeof name !== 'string' || name.indexOf('tp:') !== 0) return null;
-    var json = name.substring(3);
-    var card = JSON.parse(json);
-    if (card && card.featureBundle) {
-      // saveLastCard() stores the card id as 'cardId', not 'id'.
-      // Normalise so that state.currentCard.id is always set, which is
-      // required for installLinkInterceptor() to intercept cross-origin
-      // links and route them through the portal relay.
-      if (!card.id && card.cardId) card.id = card.cardId;
-      return card;
-    }
-    return null;
-  } catch (err) {
-    return null;
-  }
-}
-
-function mergeUserscriptsFromWindow(card) {
-  if (!card) return;
-  var windowCard = loadCardFromWindowName();
-  if (!windowCard) return;
-
-  var cardId = card.id || card.cardId || null;
-  var windowCardId = windowCard.cardId || windowCard.id || null;
-  if (cardId && windowCardId && cardId !== windowCardId) {
-    return;
-  }
-
-  if ((!card.userscripts || !card.userscripts.length) && Array.isArray(windowCard.userscripts)) {
-    card.userscripts = windowCard.userscripts;
-  }
-
-  if (Array.isArray(windowCard.globalUserscripts)) {
-    if (!card._payload || typeof card._payload !== 'object') {
-      card._payload = {};
-    }
-    if (!Array.isArray(card._payload.globalUserscripts) || !card._payload.globalUserscripts.length) {
-      card._payload.globalUserscripts = windowCard.globalUserscripts;
-    }
-  }
-
-  if (windowCard.userscriptToggles && typeof windowCard.userscriptToggles === 'object') {
-    if (!card.userscriptToggles || typeof card.userscriptToggles !== 'object') {
-      card.userscriptToggles = {};
-    }
-    for (var key in windowCard.userscriptToggles) {
-      if (windowCard.userscriptToggles.hasOwnProperty(key) && !card.userscriptToggles.hasOwnProperty(key)) {
-        card.userscriptToggles[key] = windowCard.userscriptToggles[key];
-      }
-    }
-  }
-
-  if (windowCard.bundleUserscriptToggles && typeof windowCard.bundleUserscriptToggles === 'object') {
-    if (!card.bundleUserscriptToggles || typeof card.bundleUserscriptToggles !== 'object') {
-      card.bundleUserscriptToggles = {};
-    }
-    for (var bundleKey in windowCard.bundleUserscriptToggles) {
-      if (windowCard.bundleUserscriptToggles.hasOwnProperty(bundleKey) && !card.bundleUserscriptToggles.hasOwnProperty(bundleKey)) {
-        card.bundleUserscriptToggles[bundleKey] = windowCard.bundleUserscriptToggles[bundleKey];
-      }
-    }
-  }
-}
-
 function loadLastCard() {
   try {
     var stored = sessionStorage.getItem(LAST_CARD_KEY);
@@ -1055,80 +984,26 @@ async function initTargetSite() {
     }
   }
 
-  if (!matchedCard) {
-    var hashHasTp = false;
-    try {
-      var h = window.location.hash || '';
-      hashHasTp = /[#&]tp=/.test(h);
-    } catch (e) {
-      // Ignore
-    }
-    log('Card hash present: ' + (hashHasTp ? 'yes' : 'no'));
-    var queryHasTp = false;
-    try {
-      var s = window.location.search || '';
-      queryHasTp = /[?&]tp=/.test(s);
-    } catch (e) {
-      // Ignore
-    }
-    log('Card query present: ' + (queryHasTp ? 'yes' : 'no'));
-  }
-  
-  // Fallback: check window.name (cross-origin persistence).
-  // When the portal navigates to a different-origin target site,
-  // sessionStorage and localStorage are inaccessible (per-origin).
-  // window.name survives cross-origin navigations in the same tab.
-  if (!matchedCard) {
-    var windowCard = loadCardFromWindowName();
-    if (windowCard) {
-      matchedCard = Object.assign({}, windowCard, {
-        url: window.location.href,
-        name: windowCard.name || document.title || 'Unknown Site'
-      });
-      log('Card from window.name: ' + (matchedCard.featureBundle || 'default'));
-      tpHud('Card (window): ' + (matchedCard.name || 'Window'));
-      // Save to sessionStorage for this origin's future navigations
-      saveLastCard(matchedCard);
-    } else {
-      var nameState = 'empty';
-      try {
-        var wn = window.name;
-        if (wn && typeof wn === 'string') {
-          nameState = wn.indexOf('tp:') === 0 ? 'tp: present (parse failed)' : 'non-tp value';
-        }
-      } catch (e) {
-        nameState = 'read error';
-      }
-      log('Card window.name: ' + nameState);
-    }
-  }
-
-  // Fallback: reuse last card from session (same-origin navigations).
-  // After the first successful match on this origin, subsequent page
-  // loads (e.g. SPA navigations within the site) can use sessionStorage.
+  // Fallback: reuse last card from session (same-origin navigations only).
+  // When navigating within the same origin (e.g. SPA page loads), sessionStorage
+  // contains the previously loaded card config. For cross-origin navigations,
+  // everything must come via the portal with a #tp= payload (no sessionStorage).
   if (!matchedCard) {
     var lastCard = loadLastCard();
     if (lastCard) {
-      matchedCard = Object.assign({}, lastCard, {
-        url: window.location.href,
-        name: lastCard.name || document.title || 'Unknown Site'
-      });
-      log('Using last card bundle: ' + (matchedCard.featureBundle || 'default'));
-      tpHud('Card (session): ' + (matchedCard.name || 'Last Card'));
-    } else {
-      log('Card sessionStorage: empty');
-    }
-  }
-
-  // Fallback: try matching current URL against saved cards in localStorage
-  if (!matchedCard) {
-    matchedCard = findMatchingCard(window.location.href);
-    if (matchedCard) {
-      log('Matched card from localStorage: ' + matchedCard.name + ' (bundle: ' + (matchedCard.featureBundle || 'default') + ')');
-      tpHud('Card (storage): ' + matchedCard.name);
-      saveLastCard(matchedCard);
-    } else {
-      log('Card localStorage: no match for ' + window.location.href);
+      // Verify this is a same-origin session reuse, not a cross-origin leak
+      var lastOrigin = (lastCard.url || '').split('/').slice(0, 3).join('/');
+      var currentOrigin = window.location.href.split('/').slice(0, 3).join('/');
+      if (lastOrigin === currentOrigin) {
+        matchedCard = Object.assign({}, lastCard, {
+          url: window.location.href,
+          name: lastCard.name || document.title || 'Unknown Site'
+        });
+        log('Using last card bundle (same-origin): ' + (matchedCard.featureBundle || 'default'));
+        tpHud('Card (session): ' + (matchedCard.name || 'Last Card'));
+      } else {
+        log('Session card origin mismatch; not reusing (last: ' + lastOrigin + ', current: ' + currentOrigin + ')');
+      }
     }
   }
 
@@ -1456,8 +1331,6 @@ function getCardFromHash() {
       // Store raw payload for CSS/JS injection
       _payload: payload
     };
-
-    mergeUserscriptsFromWindow(card);
     
     log('Card from URL hash: ' + card.name + ' (bundle: ' + (card.featureBundle || 'default') + ')');
     log('[DEBUG] Card decoded from hash - userscriptToggles: ' + JSON.stringify(card.userscriptToggles || {}));
@@ -1618,8 +1491,6 @@ function getCardFromQuery() {
       crossForward: payload.crossForward || [],
       _payload: payload
     };
-
-    mergeUserscriptsFromWindow(card);
 
     log('Card from URL query: ' + card.name + ' (bundle: ' + (card.featureBundle || 'default') + ')');
     log('[DEBUG] Card decoded from query - userscriptToggles: ' + JSON.stringify(card.userscriptToggles || {}));
