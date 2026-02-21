@@ -524,7 +524,14 @@ function loadCardFromWindowName() {
     if (!name || typeof name !== 'string' || name.indexOf('tp:') !== 0) return null;
     var json = name.substring(3);
     var card = JSON.parse(json);
-    if (card && card.featureBundle) return card;
+    if (card && card.featureBundle) {
+      // saveLastCard() stores the card id as 'cardId', not 'id'.
+      // Normalise so that state.currentCard.id is always set, which is
+      // required for installLinkInterceptor() to intercept cross-origin
+      // links and route them through the portal relay.
+      if (!card.id && card.cardId) card.id = card.cardId;
+      return card;
+    }
     return null;
   } catch (err) {
     return null;
@@ -583,7 +590,13 @@ function loadLastCard() {
     var stored = sessionStorage.getItem(LAST_CARD_KEY);
     if (!stored) return null;
     var card = JSON.parse(stored);
-    return card || null;
+    if (!card) return null;
+    // saveLastCard() stores the card id as 'cardId', not 'id'.
+    // Normalise so that state.currentCard.id is always set, which is
+    // required for installLinkInterceptor() to intercept cross-origin
+    // links and route them through the portal relay.
+    if (!card.id && card.cardId) card.id = card.cardId;
+    return card;
   } catch (err) {
     return null;
   }
