@@ -21,20 +21,20 @@ This guide explains how the navigation mode system works in TizenPortal and how 
 
 TizenPortal supports three navigation modes:
 
-1. **Directional** - Cone-based navigation (PREFERRED for most use cases)
-2. **Geometric** - Strict axis-aligned navigation (enhanced polyfill approach)
+1. **Geometric** - Strict axis-aligned navigation (CURRENT GLOBAL DEFAULT)
+2. **Directional** - Cone-based navigation (great for irregular layouts)
 3. **Polyfill** - Legacy spatial-navigation-polyfill.js (backwards compatibility/testing ONLY)
 
 The system uses a priority-based approach to determine which mode to use, allowing:
-- **Global defaults** - Set in preferences (defaults to Directional)
+- **Global defaults** - Set in preferences (defaults to Geometric)
 - **Per-site overrides** - Configure for specific sites
-- **Bundle preferences** - Bundles can suggest or require modes
+- **Bundle preferences** - Bundles can suggest or require modes (built-in bundles currently omit this)
 
 ---
 
 ## Navigation Modes
 
-### Directional Mode (PREFERRED - Default)
+### Directional Mode
 
 **Best for:** Most use cases, irregular layouts, content-heavy sites, modern TV UIs
 
@@ -53,7 +53,7 @@ Cone-based, forgiving navigation using the new spatial-navigation.js library:
 - Content-dense library views
 - Navigation needs to feel natural
 - Example: Media libraries, content grids, streaming UIs
-- **This is the recommended default for new sites**
+- Use this when geometric is too strict for a layout
 
 **Configuration options:**
 ```javascript
@@ -172,8 +172,8 @@ Bundle: directional (required)
 3. Navigate to **Site Preferences → Navigation**
 4. Select **Navigation Mode**
 5. Choose: 
-   - **Smart Navigation (Directional) - Preferred** (default, recommended)
-   - **Grid Navigation (Geometric)** (for perfect grids)
+  - **Grid Navigation (Geometric)** (default)
+  - **Smart Navigation (Directional)** (for irregular layouts)
    - **Legacy Polyfill (Compatibility Only)** (not recommended)
 6. Auto-saves
 
@@ -181,7 +181,7 @@ Bundle: directional (required)
 ```json
 {
   "tp_features": {
-    "navigationMode": "directional"
+    "navigationMode": "geometric"
   }
 }
 ```
@@ -195,13 +195,9 @@ Bundle: directional (required)
 
 ### Recommended Default
 
-**Directional mode** is now the default and is recommended for most users because:
-- Works well with both regular and irregular layouts
-- Provides natural, forgiving navigation
-- Handles imperfect alignment gracefully
-- Best overall user experience
+**Geometric mode** is now the global default because it is currently more functionally stable.
 
-Only switch to geometric if you have sites with perfect grids, or to polyfill if you need backwards compatibility.
+Switch to directional when a site's layout is irregular or geometric feels too rigid.
 
 ---
 
@@ -299,10 +295,10 @@ Bundles can configure navigation preferences in their `manifest.json`:
 
 | Bundle | Mode | Required | Reason |
 |--------|------|----------|--------|
-| **default** | geometric | - | General purpose, enhanced polyfill approach |
-| **audiobookshelf** | directional | No | Irregular layouts, content cards, preferred but user can override |
-| **adblock** | geometric | - | General purpose, enhanced polyfill approach |
-| **userscript-sandbox** | geometric | - | General purpose, enhanced polyfill approach |
+| **default** | (none) | - | Uses global/site setting |
+| **audiobookshelf** | (none) | - | Uses global/site setting |
+| **adblock** | (none) | - | Uses global/site setting |
+| **userscript-sandbox** | (none) | - | Uses global/site setting |
 
 **Note:** No built-in bundles use polyfill mode. The new library (geometric/directional) is preferred for all cases.
 
@@ -310,28 +306,26 @@ Bundles can configure navigation preferences in their `manifest.json`:
 
 ## Examples
 
-### Example 1: Audiobookshelf with Directional Mode
+### Example 1: Audiobookshelf with Global Geometric
 
 **Scenario:** You're using Audiobookshelf, which has mixed card sizes (square books, wide series).
 
 **Configuration:**
 ```
-Global: directional (default)
+Global: geometric (default)
 Site: (not configured)
-Bundle: directional (preferred, not required)
+Bundle: (no preference)
 ```
 
-**Result:** Uses directional mode
-- Cone-based navigation handles irregular layout
-- Overlap bonus helps stay in rows
-- Row/column bias improves predictability
+**Result:** Uses geometric mode
+- Strict axis-aligned behavior
+- Deterministic movement
 
 **How it works:**
-1. Audiobookshelf bundle suggests directional mode
+1. Audiobookshelf bundle has no navigation preference
 2. No site override configured
-3. Global default is directional
-4. Bundle preference and global default align
-5. Directional mode activated
+3. Global default is geometric
+4. Geometric mode activated
 
 ### Example 2: Forcing Geometric for Perfect Grid Site
 
@@ -345,7 +339,7 @@ Bundle: directional (preferred, not required)
 
 **Result:**
 ```
-Global: directional (default)
+Global: geometric (default)
 Site: geometric
 Bundle: directional (preferred) // if using custom bundle
 → Effective: geometric ✓
@@ -389,7 +383,7 @@ Bundle required (priority 1) overrides everything.
 1. **What layout does the target site use?**
    - Perfect grid → Consider geometric
    - Irregular cards → Consider directional
-   - Standard content → Stick with polyfill
+  - Standard content → Start with geometric and test directional
 
 2. **Are card sizes uniform?**
    - Yes → Geometric may work well
@@ -522,9 +516,9 @@ TizenPortal.navigation.applyNavigationMode(card, bundle)
 
 **Key Takeaways:**
 
-1. ✅ **Three modes:** directional (preferred), geometric (enhanced polyfill), polyfill (compatibility only)
-2. ✅ **Default is directional** - Best for most use cases
-3. ✅ **Geometric for perfect grids** - Enhanced polyfill approach
+1. ✅ **Three modes:** geometric (default), directional (irregular layouts), polyfill (compatibility only)
+2. ✅ **Default is geometric** - Current stable baseline
+3. ✅ **Directional is optional** - Use when layouts are irregular
 4. ✅ **Polyfill only when necessary** - Backwards compatibility/testing only
 5. ✅ **Three levels:** global default, per-site override, bundle preference
 6. ✅ **Priority order:** bundle required > site override > bundle preferred > global
@@ -535,12 +529,12 @@ TizenPortal.navigation.applyNavigationMode(card, bundle)
 
 | Scenario | Recommended Mode |
 |----------|------------------|
-| Default for new users | Directional (automatically set) |
-| Most sites | Directional (cone-based, forgiving) |
+| Default for new users | Geometric (automatically set) |
+| Most sites | Geometric (strict axis-aligned) |
 | Perfect grids/settings | Geometric (strict axis-aligned) |
 | Backwards compatibility | Polyfill (only if needed) |
 | Irregular layouts | Directional (handles imperfect alignment) |
-| Media libraries | Directional (Audiobookshelf example) |
+| Media libraries | Start Geometric, switch to Directional if needed |
 | Testing/debugging | Polyfill (to compare with legacy) |
 
 ---

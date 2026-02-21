@@ -27,6 +27,8 @@ export default {
     }
 
     var ringShadow = '0 0 0 ' + ringWidth + 'px ' + hexToRgba(color, ringAlpha) + ', 0 8px 24px rgba(0, 0, 0, 0.5)';
+    var ringOffset = 2;
+    var ringRadius = 10;
 
     return [
       '/* TizenPortal Focus Styling */',
@@ -34,9 +36,9 @@ export default {
       'body.tp-focus-mode-on :focus,',
       'body.tp-focus-mode-high :focus {',
       '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
-      '  outline-offset: 2px !important;',
+      '  outline-offset: ' + ringOffset + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
-      '  border-radius: 10px !important;',
+      '  border-radius: ' + ringRadius + 'px !important;',
       '}',
       '',
       'a:focus,',
@@ -51,16 +53,16 @@ export default {
       'select:focus,',
       'textarea:focus {',
       '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
-      '  outline-offset: 2px !important;',
+      '  outline-offset: ' + ringOffset + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
-      '  border-radius: 10px !important;',
+      '  border-radius: ' + ringRadius + 'px !important;',
       '}',
       '',
       '.tp-focus-proxy {',
       '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
-      '  outline-offset: 2px !important;',
+      '  outline-offset: ' + ringOffset + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
-      '  border-radius: 10px !important;',
+      '  border-radius: ' + ringRadius + 'px !important;',
       '}',
       '',
       '#tp-focus-ring-overlay {',
@@ -68,8 +70,10 @@ export default {
       '  pointer-events: none !important;',
       '  z-index: 2147483646 !important;',
       '  box-sizing: border-box !important;',
-      '  border: ' + ringWidth + 'px solid ' + color + ' !important;',
-      '  border-radius: 10px !important;',
+      '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
+      '  outline-offset: ' + ringOffset + 'px !important;',
+      '  border: none !important;',
+      '  border-radius: ' + ringRadius + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
       '  opacity: 0 !important;',
       '  transition: opacity 0.08s linear !important;',
@@ -141,19 +145,17 @@ export default {
     }
 
     var rect = target.getBoundingClientRect();
-    var width = Math.round(rect.width);
-    var height = Math.round(rect.height);
+    var width = rect.width;
+    var height = rect.height;
     if (width <= 0 || height <= 0) {
       this.hideRingOverlay();
       return;
     }
 
-    var top = Math.round(rect.top) - 2;
-    var left = Math.round(rect.left) - 2;
-    this._ringOverlay.style.top = top + 'px';
-    this._ringOverlay.style.left = left + 'px';
-    this._ringOverlay.style.width = (width + 4) + 'px';
-    this._ringOverlay.style.height = (height + 4) + 'px';
+    this._ringOverlay.style.top = rect.top + 'px';
+    this._ringOverlay.style.left = rect.left + 'px';
+    this._ringOverlay.style.width = width + 'px';
+    this._ringOverlay.style.height = height + 'px';
     this._ringOverlay.classList.add('tp-visible');
   },
 

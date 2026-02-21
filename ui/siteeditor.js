@@ -97,9 +97,9 @@ var UA_MODE_OPTIONS = [
 ];
 
 var NAVIGATION_MODE_OPTIONS = [
-  { value: null, label: 'Global (default)' },
-  { value: 'directional', label: 'Smart Navigation (Directional) - Preferred' },
+  { value: null, label: 'Global (Geometric default)' },
   { value: 'geometric', label: 'Grid Navigation (Geometric)' },
+  { value: 'directional', label: 'Smart Navigation (Directional)' },
   { value: 'polyfill', label: 'Legacy Polyfill (Compatibility Only)' },
 ];
 

@@ -127,11 +127,11 @@ var UA_MODE_OPTIONS = [
 
 /**
  * Navigation mode options
- * Note: Directional is preferred for most use cases
+ * Note: Geometric is the current global default
  */
 var NAVIGATION_MODE_OPTIONS = [
-  { value: 'directional', label: 'Smart Navigation (Directional) - Preferred' },
-  { value: 'geometric', label: 'Grid Navigation (Geometric)' },
+  { value: 'geometric', label: 'Grid Navigation (Geometric) - Default' },
+  { value: 'directional', label: 'Smart Navigation (Directional)' },
   { value: 'polyfill', label: 'Legacy Polyfill (Compatibility Only)' },
 ];
 

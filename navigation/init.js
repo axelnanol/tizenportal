@@ -49,8 +49,8 @@ export function getEffectiveMode(options) {
     return options.bundleMode;
   }
   
-  // Priority 4: Global default (defaults to 'directional' if not set)
-  return options.globalMode || 'directional';
+  // Priority 4: Global default (defaults to 'geometric' if not set)
+  return options.globalMode || 'geometric';
 }
 
 /**
@@ -262,8 +262,8 @@ export function applyNavigationMode(card, bundle) {
  * Initialize navigation with global defaults (for portal page)
  */
 export function initializeGlobalNavigation() {
-  // Default to 'directional' mode, overridden by global preferences if set
-  var globalMode = 'directional';
+  // Default to 'geometric' mode, overridden by global preferences if set
+  var globalMode = 'geometric';
   
   if (window.TizenPortal && window.TizenPortal.config) {
     var features = window.TizenPortal.config.get('tp_features');

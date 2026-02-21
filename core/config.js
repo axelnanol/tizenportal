@@ -53,10 +53,10 @@ var DEFAULT_CONFIG = {
     navigationFix: true,
     
     // Navigation mode: which navigation system to use
-    // 'directional' - Use new library in directional mode (cone-based, forgiving) - PREFERRED
-    // 'geometric' - Use new library in geometric mode (strict axis-aligned, enhanced polyfill)
+    // 'geometric' - Use new library in geometric mode (strict axis-aligned) - DEFAULT
+    // 'directional' - Use new library in directional mode (cone-based, forgiving)
     // 'polyfill' - Use legacy spatial-navigation-polyfill.js (backwards compatibility/testing ONLY)
-    navigationMode: 'directional',
+    navigationMode: 'geometric',
   },
 
   // Global user scripts

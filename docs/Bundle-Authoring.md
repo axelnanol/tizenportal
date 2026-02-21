@@ -95,7 +95,7 @@ The TizenPortal core handles a lot automatically — you don't need to implement
 | **DOM observation** | Once you register elements/cards, core watches for new DOM nodes and applies registrations automatically |
 | **CSS injection** | Set `style: myStyles` in main.js — core injects it at the right time |
 | **Viewport locking** | Set `"viewportLock": true` in manifest.json |
-| **Navigation mode** | Set `"navigationMode": "directional"` in manifest.json |
+| **Navigation mode** | Optional: set `"navigationMode": "geometric"` (or directional) only when needed |
 | **Tabindex injection** | Set `"features": { "tabindexInjection": true }` in manifest.json |
 | **Scroll-into-view** | Set `"features": { "scrollIntoView": true }` in manifest.json |
 | **Focus outline** | Always active; style-able via CSS |
@@ -173,7 +173,7 @@ With options and configuration:
   "description": "Bundle description for site selection",
   "author": "Your Name",
   "homepage": "https://example.com/",
-  "navigationMode": "directional",
+  "navigationMode": "geometric",
   "viewportLock": true,
   "provides": ["focus-styling", "navigation"],
   "options": [
@@ -337,7 +337,7 @@ Define your bundle metadata and configuration:
   "version": "1.0.0",
   "description": "TV support for My Site",
   "author": "Your Name",
-  "navigationMode": "directional",
+  "navigationMode": "geometric",
   "viewportLock": true,
   "provides": ["focus-styling", "navigation"],
   "options": [
