@@ -130,10 +130,48 @@ function isTizenPortalInput(el) {
  * @param {Object} opts
  */
 function wrapSingleInput(input, opts) {
+  // Capture the input's visual styles before wrapping so the wrapper looks like the original input
+  var capturedStyles = null;
+  try {
+    var cs = window.getComputedStyle(input);
+    if (cs) {
+      capturedStyles = {
+        // Borders are NOT copied to the wrapper: copying them would produce a
+        // visible double-border when the real <input> is shown for editing
+        // (wrapper border + input border). A default CSS border on the wrapper
+        // handles display-mode visibility; it is cleared in the .editing state.
+        borderRadius: cs.borderRadius,
+        backgroundColor: cs.backgroundColor,
+        // Padding is applied to the display span (not the wrapper) so it does
+        // not add a second inset to the real input in the editing state.
+        paddingTop: cs.paddingTop,
+        paddingRight: cs.paddingRight,
+        paddingBottom: cs.paddingBottom,
+        paddingLeft: cs.paddingLeft,
+      };
+    }
+  } catch (err) {
+    // Ignore style capture errors
+  }
+
   // Create wrapper
   var wrapper = document.createElement('div');
   wrapper.className = opts.wrapperClass;
   wrapper.setAttribute('tabindex', '0');
+
+  // Apply captured visual styles (background, radius only) to wrapper
+  try {
+    if (capturedStyles) {
+      if (capturedStyles.borderRadius && capturedStyles.borderRadius !== '0px') {
+        wrapper.style.borderRadius = capturedStyles.borderRadius;
+      }
+      if (capturedStyles.backgroundColor && capturedStyles.backgroundColor !== 'rgba(0, 0, 0, 0)' && capturedStyles.backgroundColor !== 'transparent') {
+        wrapper.style.backgroundColor = capturedStyles.backgroundColor;
+      }
+    }
+  } catch (err) {
+    // Ignore style application errors
+  }
   
   // Create display element
   var display = document.createElement('span');
@@ -142,6 +180,19 @@ function wrapSingleInput(input, opts) {
   display.textContent = input.value || placeholder;
   if (input.value) {
     display.classList.add(opts.hasValueClass);
+  }
+
+  // Apply captured padding to the display span so text aligns with the original
+  // input's inset, without affecting the real input's own padding in editing state.
+  try {
+    if (capturedStyles) {
+      if (capturedStyles.paddingTop) display.style.paddingTop = capturedStyles.paddingTop;
+      if (capturedStyles.paddingRight) display.style.paddingRight = capturedStyles.paddingRight;
+      if (capturedStyles.paddingBottom) display.style.paddingBottom = capturedStyles.paddingBottom;
+      if (capturedStyles.paddingLeft) display.style.paddingLeft = capturedStyles.paddingLeft;
+    }
+  } catch (err) {
+    // Ignore style application errors
   }
   
   // Insert wrapper before input
