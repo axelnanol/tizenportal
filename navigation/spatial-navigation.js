@@ -23,7 +23,7 @@
     // Browser globals
     root.SpatialNavigation = factory();
   }
-}(typeof self !== 'undefined' ? self : this, function() {
+}(typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {}, function() {
   'use strict';
 
   // ========================================================================
