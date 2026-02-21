@@ -2287,9 +2287,15 @@ function addCurrentSiteAndReturn() {
     // localStorage than the portal (axelnanol.github.io). The portal must
     // call addCard() itself when it loads so the card lands in the correct
     // origin's localStorage.
-    var cardData = { name: pageName, url: currentUrl, icon: faviconUrl };
+    var cardData = { 
+      name: pageName, 
+      url: currentUrl, 
+      icon: faviconUrl,
+      // Preserve the bundle from the current site so cross-site navigation works
+      featureBundle: state.currentBundle || null
+    };
     encoded = btoa(unescape(encodeURIComponent(JSON.stringify(cardData))));
-    log('Prepared card for portal: ' + pageName + ' (' + currentUrl + ')');
+    log('Prepared card for portal: ' + pageName + ' (' + currentUrl + ') with bundle: ' + (state.currentBundle || 'default'));
     showToast('Adding site: ' + pageName, 2000);
   } catch (err) {
     warn('Failed to prepare current site: ' + err.message);
