@@ -1108,7 +1108,8 @@ function installCardPersistenceHooks() {
     var forward = (state.currentCard.crossForward || []).slice();
     forward.unshift(getCleanCurrentUrl());
 
-    var portalUrl = buildCrossNavUrl(state.currentCard.id, prevUrl, newHistory, forward, state.currentBundle);
+    var relayBundleName = state.currentBundle || state.currentCard.featureBundle || 'default';
+    var portalUrl = buildCrossNavUrl(state.currentCard.id, prevUrl, newHistory, forward, relayBundleName);
     if (!portalUrl) return false;
 
     window.location.href = portalUrl;
@@ -1231,7 +1232,8 @@ function installLinkInterceptor() {
     var crossHistory = (state.currentCard.crossHistory || []).slice();
     crossHistory.push(getCleanCurrentUrl());
 
-    var portalUrl = buildCrossNavUrl(state.currentCard.id, resolvedHref, crossHistory, [], state.currentBundle);
+    var relayBundleName = state.currentBundle || state.currentCard.featureBundle || 'default';
+    var portalUrl = buildCrossNavUrl(state.currentCard.id, resolvedHref, crossHistory, [], relayBundleName);
     if (!portalUrl) return;
 
     e.preventDefault();
@@ -1706,9 +1708,10 @@ async function applyBundleToPage(card) {
     return;
   }
   
-  log('Applying bundle: ' + bundle.name);
-  tpHud('Applying: ' + bundle.name);
-  state.currentBundle = bundle.name;
+  var appliedBundleName = bundleName;
+  log('Applying bundle: ' + (bundle.name || appliedBundleName));
+  tpHud('Applying: ' + (bundle.name || appliedBundleName));
+  state.currentBundle = appliedBundleName;
   
   // Log manifest info if available
   if (bundle.manifest) {
