@@ -130,10 +130,58 @@ function isTizenPortalInput(el) {
  * @param {Object} opts
  */
 function wrapSingleInput(input, opts) {
+  // Capture the input's visual styles before wrapping so the wrapper looks like the original input
+  var capturedStyles = null;
+  try {
+    var cs = window.getComputedStyle(input);
+    if (cs) {
+      capturedStyles = {
+        borderTop: { width: cs.borderTopWidth, style: cs.borderTopStyle, color: cs.borderTopColor },
+        borderRight: { width: cs.borderRightWidth, style: cs.borderRightStyle, color: cs.borderRightColor },
+        borderBottom: { width: cs.borderBottomWidth, style: cs.borderBottomStyle, color: cs.borderBottomColor },
+        borderLeft: { width: cs.borderLeftWidth, style: cs.borderLeftStyle, color: cs.borderLeftColor },
+        borderRadius: cs.borderRadius,
+        backgroundColor: cs.backgroundColor,
+        paddingTop: cs.paddingTop,
+        paddingRight: cs.paddingRight,
+        paddingBottom: cs.paddingBottom,
+        paddingLeft: cs.paddingLeft,
+      };
+    }
+  } catch (err) {
+    // Ignore style capture errors
+  }
+
   // Create wrapper
   var wrapper = document.createElement('div');
   wrapper.className = opts.wrapperClass;
   wrapper.setAttribute('tabindex', '0');
+
+  // Apply captured visual styles to wrapper so it looks like the original input
+  try {
+    if (capturedStyles) {
+      var sides = ['borderTop', 'borderRight', 'borderBottom', 'borderLeft'];
+      for (var s = 0; s < sides.length; s++) {
+        var side = sides[s];
+        var b = capturedStyles[side];
+        if (b && b.width && b.width !== '0px') {
+          wrapper.style[side] = b.width + ' ' + b.style + ' ' + b.color;
+        }
+      }
+      if (capturedStyles.borderRadius && capturedStyles.borderRadius !== '0px') {
+        wrapper.style.borderRadius = capturedStyles.borderRadius;
+      }
+      if (capturedStyles.backgroundColor && capturedStyles.backgroundColor !== 'rgba(0, 0, 0, 0)' && capturedStyles.backgroundColor !== 'transparent') {
+        wrapper.style.backgroundColor = capturedStyles.backgroundColor;
+      }
+      if (capturedStyles.paddingTop) wrapper.style.paddingTop = capturedStyles.paddingTop;
+      if (capturedStyles.paddingRight) wrapper.style.paddingRight = capturedStyles.paddingRight;
+      if (capturedStyles.paddingBottom) wrapper.style.paddingBottom = capturedStyles.paddingBottom;
+      if (capturedStyles.paddingLeft) wrapper.style.paddingLeft = capturedStyles.paddingLeft;
+    }
+  } catch (err) {
+    // Ignore style application errors
+  }
   
   // Create display element
   var display = document.createElement('span');
