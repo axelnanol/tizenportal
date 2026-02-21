@@ -194,7 +194,9 @@ TizenPortal is designed with security as a priority:
 
 This project uses code and inspiration from the following sources:
 
-- **[TizenTube](https://github.com/reisxd/TizenTube)** — Spatial navigation polyfill and DOMRect polyfill
+- **[WICG/spatial-navigation](https://github.com/WICG/spatial-navigation)** — Spatial navigation polyfill (`spatial-navigation-polyfill` npm package), modified with cross-origin guards and UMD wrapper fix
+- **[Financial-Times/polyfill-library](https://github.com/Financial-Times/polyfill-library)** — DOMRect polyfill
+- **[TizenTube](https://github.com/reisxd/TizenTube)** — Inspiration and approach for Tizen TV compatibility
 - **[TizenBrew](https://github.com/reisxd/TizenBrew)** — Module loading platform
 
 ---
