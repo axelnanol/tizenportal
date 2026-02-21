@@ -1,8 +1,7 @@
 /**
  * Focus Styling Feature
- * 
- * Provides blue outline focus indicators for TV navigation.
- * Extracted from default bundle.
+ *
+ * Provides visible focus indicators for TV navigation.
  */
 
 import { injectCSS, removeCSS } from '../core/utils.js';
@@ -12,10 +11,11 @@ export default {
   displayName: 'Focus Styling',
   _focusProxyHandler: null,
   _focusedProxy: null,
-  
-  /**
-   * CSS to inject
-   */
+  _ringOverlay: null,
+  _ringUpdateHandler: null,
+  _ringScrollHandler: null,
+  _ringResizeHandler: null,
+
   getCSS: function(mode) {
     var color = '#00b2ff';
     var ringAlpha = 0.45;
@@ -25,16 +25,15 @@ export default {
       ringAlpha = 0.7;
       ringWidth = 4;
     }
+
     var ringShadow = '0 0 0 ' + ringWidth + 'px ' + hexToRgba(color, ringAlpha) + ', 0 8px 24px rgba(0, 0, 0, 0.5)';
-    var outlineColor = mode === 'high' ? '#fcd34d' : '#00b2ff';
-    var outlineWidth = mode === 'high' ? 4 : 3;
 
     return [
       '/* TizenPortal Focus Styling */',
       ':focus,',
       'body.tp-focus-mode-on :focus,',
       'body.tp-focus-mode-high :focus {',
-      '  outline: ' + outlineWidth + 'px solid ' + outlineColor + ' !important;',
+      '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
       '  outline-offset: 2px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
       '  border-radius: 10px !important;',
@@ -51,17 +50,32 @@ export default {
       'input:focus,',
       'select:focus,',
       'textarea:focus {',
-      '  outline: ' + outlineWidth + 'px solid ' + outlineColor + ' !important;',
+      '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
       '  outline-offset: 2px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
       '  border-radius: 10px !important;',
       '}',
       '',
       '.tp-focus-proxy {',
-      '  outline: ' + outlineWidth + 'px solid ' + outlineColor + ' !important;',
+      '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
       '  outline-offset: 2px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
       '  border-radius: 10px !important;',
+      '}',
+      '',
+      '#tp-focus-ring-overlay {',
+      '  position: fixed !important;',
+      '  pointer-events: none !important;',
+      '  z-index: 2147483646 !important;',
+      '  box-sizing: border-box !important;',
+      '  border: ' + ringWidth + 'px solid ' + color + ' !important;',
+      '  border-radius: 10px !important;',
+      '  box-shadow: ' + ringShadow + ' !important;',
+      '  opacity: 0 !important;',
+      '  transition: opacity 0.08s linear !important;',
+      '}',
+      '#tp-focus-ring-overlay.tp-visible {',
+      '  opacity: 1 !important;',
       '}',
       '',
       '*:focus {',
@@ -99,6 +113,50 @@ export default {
     return target;
   },
 
+  ensureRingOverlay: function(doc) {
+    if (this._ringOverlay && this._ringOverlay.parentNode) return this._ringOverlay;
+    var targetDoc = doc || document;
+    var overlay = targetDoc.createElement('div');
+    overlay.id = 'tp-focus-ring-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    (targetDoc.body || targetDoc.documentElement).appendChild(overlay);
+    this._ringOverlay = overlay;
+    return overlay;
+  },
+
+  hideRingOverlay: function() {
+    if (!this._ringOverlay) return;
+    this._ringOverlay.classList.remove('tp-visible');
+    this._ringOverlay.style.width = '0px';
+    this._ringOverlay.style.height = '0px';
+  },
+
+  updateRingOverlay: function() {
+    if (!this._ringOverlay) return;
+
+    var target = this._focusedProxy || document.activeElement;
+    if (!target || target === document.body || !target.getBoundingClientRect) {
+      this.hideRingOverlay();
+      return;
+    }
+
+    var rect = target.getBoundingClientRect();
+    var width = Math.round(rect.width);
+    var height = Math.round(rect.height);
+    if (width <= 0 || height <= 0) {
+      this.hideRingOverlay();
+      return;
+    }
+
+    var top = Math.round(rect.top) - 2;
+    var left = Math.round(rect.left) - 2;
+    this._ringOverlay.style.top = top + 'px';
+    this._ringOverlay.style.left = left + 'px';
+    this._ringOverlay.style.width = (width + 4) + 'px';
+    this._ringOverlay.style.height = (height + 4) + 'px';
+    this._ringOverlay.classList.add('tp-visible');
+  },
+
   installFocusProxy: function(doc) {
     var self = this;
     this.removeFocusProxy(doc);
@@ -112,6 +170,7 @@ export default {
         try { proxy.classList.add('tp-focus-proxy'); } catch (e2) { /* ignore */ }
       }
       self._focusedProxy = proxy || null;
+      self.updateRingOverlay();
     };
     doc.addEventListener('focusin', this._focusProxyHandler, true);
   },
@@ -125,12 +184,50 @@ export default {
       try { this._focusedProxy.classList.remove('tp-focus-proxy'); } catch (e2) { /* ignore */ }
     }
     this._focusedProxy = null;
+    this.hideRingOverlay();
   },
-  
-  /**
-   * Apply feature to document
-   * @param {Document} doc
-   */
+
+  installRingTracking: function(doc) {
+    var self = this;
+    this.removeRingTracking(doc);
+    this.ensureRingOverlay(doc);
+
+    this._ringUpdateHandler = function() { self.updateRingOverlay(); };
+    this._ringScrollHandler = function() { self.updateRingOverlay(); };
+    this._ringResizeHandler = function() { self.updateRingOverlay(); };
+
+    doc.addEventListener('focusin', this._ringUpdateHandler, true);
+    doc.addEventListener('focusout', this._ringUpdateHandler, true);
+    window.addEventListener('scroll', this._ringScrollHandler, true);
+    window.addEventListener('resize', this._ringResizeHandler, true);
+
+    this.updateRingOverlay();
+  },
+
+  removeRingTracking: function(doc) {
+    var targetDoc = doc || document;
+
+    if (this._ringUpdateHandler) {
+      try { targetDoc.removeEventListener('focusin', this._ringUpdateHandler, true); } catch (e) { /* ignore */ }
+      try { targetDoc.removeEventListener('focusout', this._ringUpdateHandler, true); } catch (e2) { /* ignore */ }
+    }
+    if (this._ringScrollHandler) {
+      try { window.removeEventListener('scroll', this._ringScrollHandler, true); } catch (e3) { /* ignore */ }
+    }
+    if (this._ringResizeHandler) {
+      try { window.removeEventListener('resize', this._ringResizeHandler, true); } catch (e4) { /* ignore */ }
+    }
+
+    this._ringUpdateHandler = null;
+    this._ringScrollHandler = null;
+    this._ringResizeHandler = null;
+
+    if (this._ringOverlay && this._ringOverlay.parentNode) {
+      try { this._ringOverlay.parentNode.removeChild(this._ringOverlay); } catch (e5) { /* ignore */ }
+    }
+    this._ringOverlay = null;
+  },
+
   apply: function(doc) {
     if (!doc) return;
     var mode = arguments.length > 1 ? arguments[1] : 'on';
@@ -138,16 +235,14 @@ export default {
     if (mode === 'off') return;
     injectCSS(doc, 'tp-focus-styling', this.getCSS(mode));
     this.installFocusProxy(doc);
+    this.installRingTracking(doc);
     TizenPortal.log('Focus styling applied: ' + mode);
   },
-  
-  /**
-   * Remove feature from document
-   * @param {Document} doc
-   */
+
   remove: function(doc) {
     if (!doc) return;
     this.removeFocusProxy(doc);
+    this.removeRingTracking(doc);
     removeCSS(doc, 'tp-focus-styling');
     TizenPortal.log('Focus styling removed');
   },

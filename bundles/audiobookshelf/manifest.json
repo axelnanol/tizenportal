@@ -5,10 +5,6 @@
   "description": "Media controls, library navigation, and player integration for Audiobookshelf",
   "author": "TizenPortal",
   "homepage": "https://www.audiobookshelf.org/",
-  "navigationMode": {
-    "mode": "directional",
-    "required": false
-  },
   "viewportLock": "force",
   "requires": ["focus-styling", "media-keys"],
   "provides": ["media-controls", "library-navigation", "player-integration"],
