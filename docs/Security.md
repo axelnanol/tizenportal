@@ -191,7 +191,6 @@ TizenPortal includes vetted bundles:
 - **Default** - Basic enhancements for all sites
 - **Audiobookshelf** - Optimized for Audiobookshelf
 - **Adblock** - Generic ad blocking (CSS-based)
-- **Userscript Sandbox** - Safe userscript environment
 
 All built-in bundles are reviewed and considered safe.
 
