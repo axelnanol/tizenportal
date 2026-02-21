@@ -46,7 +46,6 @@ Major breaking changes are documented in git commit messages when they occur. Al
 
 For current development status and roadmap:
 - See [Contributing.md](Contributing.md) for how to contribute
-- See [Contributing.md](Contributing.md) for how to contribute
 
 ## Legacy Versions
 
