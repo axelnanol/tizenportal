@@ -2598,19 +2598,27 @@ function loadSite(card) {
     var json = JSON.stringify(payload);
     var encoded = btoa(unescape(encodeURIComponent(json)));
 
-    // Append to URL query (survives some redirects)
-    if (targetUrl.indexOf('?') === -1) {
-      targetUrl += '?tp=' + encoded;
-    } else {
-      targetUrl += '&tp=' + encoded;
+    // Append to URL query + hash robustly.
+    // Important: if the target URL already has a hash fragment, query params
+    // must be added BEFORE '#', otherwise '?tp=' ends up inside the hash and
+    // can be lost by SPA hash routers before runtime init.
+    var hashIndex = targetUrl.indexOf('#');
+    var baseUrl = hashIndex === -1 ? targetUrl : targetUrl.substring(0, hashIndex);
+    var hashFragment = hashIndex === -1 ? '' : targetUrl.substring(hashIndex + 1);
+
+    // Query payload (survives some redirects)
+    if (!/[?&]tp=/.test(baseUrl)) {
+      baseUrl += (baseUrl.indexOf('?') === -1 ? '?tp=' : '&tp=') + encoded;
     }
 
-    // Append to URL hash (fast path when hash survives)
-    if (targetUrl.indexOf('#') === -1) {
-      targetUrl += '#tp=' + encoded;
-    } else {
-      targetUrl += '&tp=' + encoded;
+    // Hash payload (fast path when hash survives)
+    if (!hashFragment) {
+      hashFragment = 'tp=' + encoded;
+    } else if (!/(^|[&?])tp=/.test(hashFragment)) {
+      hashFragment += '&tp=' + encoded;
     }
+
+    targetUrl = baseUrl + '#' + hashFragment;
     
     log('Payload size: ' + json.length + ' bytes, encoded: ' + encoded.length);
     tpHud('Payload: ' + json.length + 'b, encoded ' + encoded.length + 'b');
