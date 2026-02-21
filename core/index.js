@@ -190,6 +190,57 @@ function tpHud(msg) {
 tpHud('Script loaded, waiting for DOM...');
 
 /**
+ * Synchronous capture of the URL hash and query string at the exact moment
+ * this script is executed.  Target-site SPA routers often call
+ * history.replaceState() or modify window.location.hash very early in the
+ * page lifecycle, which can silently discard the #tp= / ?tp= payload before
+ * TizenPortal's async init() gets a chance to read it.  Capturing the values
+ * synchronously here — before any async work — guarantees that the URL
+ * parameter injection mechanism remains the authoritative source of card/
+ * bundle data regardless of what the host page does to its own URL.
+ */
+var capturedHash = (function() {
+  try { return window.location.hash || ''; } catch(e) { return ''; }
+}());
+var capturedSearch = (function() {
+  try { return window.location.search || ''; } catch(e) { return ''; }
+}());
+
+/**
+ * Return the URL hash to use for a given payload parameter pattern.
+ *
+ * Two-phase strategy:
+ *  1. If the synchronously captured hash contains the pattern → return it.
+ *     This is immune to SPA router rewrites that happen after script load.
+ *  2. Otherwise fall back to the live window.location.hash so that payloads
+ *     that arrive *after* script load (e.g. via a server redirect that adds
+ *     the hash) are still detected.
+ *
+ * @param {RegExp} requiredPattern - Pattern the hash must contain (e.g. /[#&]tp=/)
+ * @returns {string}
+ */
+function getCapturedHash(requiredPattern) {
+  return (capturedHash && requiredPattern.test(capturedHash))
+    ? capturedHash
+    : (window.location.hash || '');
+}
+
+/**
+ * Return the URL query string to use for a given payload parameter pattern.
+ * Follows the same two-phase strategy as getCapturedHash():
+ *  1. Use synchronously captured search when it contains the pattern.
+ *  2. Fall back to live window.location.search otherwise.
+ *
+ * @param {RegExp} requiredPattern - Pattern the search must contain (e.g. /[?&]tp=/)
+ * @returns {string}
+ */
+function getCapturedSearch(requiredPattern) {
+  return (capturedSearch && requiredPattern.test(capturedSearch))
+    ? capturedSearch
+    : (window.location.search || '');
+}
+
+/**
  * Application state
  */
 const state = {
@@ -815,7 +866,9 @@ async function initPortalPage() {
   // so the portal can look up the full card config from its localStorage and
   // call loadSite() directly — no script source is ever embedded in the URL.
   try {
-    var hash = window.location.hash || '';
+    // Use the captured hash so that any JS running before initPortalPage()
+    // cannot discard the crossnav payload by modifying window.location.hash.
+    var hash = getCapturedHash(/[#&]crossnav=/);
     var crossnavMatch = hash.match(/[#&]crossnav=([^&]+)/);
     if (crossnavMatch) {
       var nav = JSON.parse(decodeURIComponent(escape(atob(crossnavMatch[1]))));
@@ -851,7 +904,7 @@ async function initPortalPage() {
   // addCurrentSiteAndReturn() encodes the card as #addcard=BASE64(JSON) so
   // that the card is added to the portal's own localStorage (correct origin).
   try {
-    var hash = window.location.hash || '';
+    var hash = getCapturedHash(/[#&]addcard=/);
     var addCardMatch = hash.match(/[#&]addcard=([^&]+)/);
     if (addCardMatch) {
       var cardData = JSON.parse(decodeURIComponent(escape(atob(addCardMatch[1]))));
@@ -919,8 +972,10 @@ function waitForPayload(maxWaitMs, intervalMs) {
     var interval = intervalMs || 50;
 
     function hasPayload() {
-      var hash = window.location.hash || '';
-      var search = window.location.search || '';
+      // Check the captured values first (immune to SPA router rewrites),
+      // then fall back to the live location for any late-arriving payload.
+      var hash = getCapturedHash(/[#&]tp=/);
+      var search = getCapturedSearch(/[?&]tp=/);
       return /[#&]tp=/.test(hash) || /[?&]tp=/.test(search);
     }
 
@@ -1346,7 +1401,11 @@ function startUserscriptUrlWatcher() {
  */
 function getCardFromHash() {
   try {
-    var hash = window.location.hash;
+    // Prefer the synchronously captured hash so that SPA routers that
+    // rewrite window.location.hash before our async init() runs cannot
+    // discard the #tp= payload.  Fall back to the live value when the
+    // captured hash contains no tp= (e.g. on pages loaded without a relay).
+    var hash = getCapturedHash(/[#&]tp=/);
     if (!hash) return null;
     
     // Look for tp= parameter in hash
@@ -1510,7 +1569,9 @@ function normalizePayload(payload) {
  */
 function getCardFromQuery() {
   try {
-    var search = window.location.search;
+    // Prefer the synchronously captured search string for the same reason as
+    // getCardFromHash(): site JS may clean up the query before init() runs.
+    var search = getCapturedSearch(/[?&]tp=/);
     if (!search) return null;
 
     var match = search.match(/[?&]tp=([^&]+)/);
