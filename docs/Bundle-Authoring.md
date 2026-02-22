@@ -496,13 +496,24 @@ export default {
     }
     return false; // Let default handle
   },
+
+  /**
+   * Called by core when the URL changes during SPA navigation.
+   * Use this to reset per-page state, set initial focus, clear caches, etc.
+   * Core polls window.location.href every 500 ms and also listens for
+   * popstate, so you don't need your own URL-change watcher.
+   *
+   * @param {string} url - The new URL after navigation
+   */
+  onNavigate(url) {
+    console.log('Navigated to:', url);
+    // Re-focus the first interactive element on the new page
+    // setInitialFocus(['button', 'a[href]'], 200);
+  },
 };
 ```
 
 **Note:** For complete lifecycle hook documentation with detailed examples and use cases, see [API Reference - Bundle Interface](Api-Reference.md#9-bundle-interface).
-
-**Additional lifecycle hooks:**
-- `onNavigate(url)` - Called on SPA URL changes (requires manual invocation or URL watching)
 
 ---
 
