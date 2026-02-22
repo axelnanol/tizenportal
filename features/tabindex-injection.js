@@ -56,6 +56,20 @@ var NAVIGABLE_SELECTORS = [
 ];
 
 /**
+ * Number of built-in core selectors.
+ * Bundle-added selectors are appended after this index and can be
+ * removed via resetBundleSelectors() on bundle deactivation so they
+ * do not persist into the next bundle's page context.
+ *
+ * This value is set immediately after the static array literal above,
+ * before this module is exported or any other code runs, so it always
+ * captures exactly the inline core list — addNavigableSelector() (which
+ * lives in features/index.js and imports this module) cannot be called
+ * before this assignment.
+ */
+var CORE_SELECTOR_COUNT = NAVIGABLE_SELECTORS.length;
+
+/**
  * MutationObserver instance kept for cleanup
  */
 var _observer = null;
@@ -225,6 +239,23 @@ export default {
       }
     } catch (err) {
       TizenPortal.warn('Tabindex removal failed: ' + err.message);
+    }
+  },
+
+  /**
+   * Remove any selectors added by bundles via addNavigableSelector(),
+   * restoring the list to built-in core defaults.
+   *
+   * Called automatically on bundle deactivation (applyLateCardBundle) so
+   * that site-specific selectors from one bundle do not persist into the
+   * next bundle's page context when bundles are swapped without a full
+   * page reload.
+   */
+  resetBundleSelectors: function() {
+    if (NAVIGABLE_SELECTORS.length > CORE_SELECTOR_COUNT) {
+      var removed = NAVIGABLE_SELECTORS.length - CORE_SELECTOR_COUNT;
+      NAVIGABLE_SELECTORS.splice(CORE_SELECTOR_COUNT);
+      console.log('TizenPortal [TabindexInjection]: Removed ' + removed + ' bundle-added selector(s); ' + CORE_SELECTOR_COUNT + ' core selectors remain');
     }
   },
 };

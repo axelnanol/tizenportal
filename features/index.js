@@ -467,6 +467,19 @@ export default {
     }
   },
 
+  /**
+   * Remove all bundle-added navigable selectors, restoring the list to
+   * built-in core defaults.  Called automatically by the core on bundle
+   * deactivation (applyLateCardBundle) so that site-specific selectors
+   * from one bundle do not leak into the next bundle's page context.
+   */
+  resetBundleNavigableSelectors: function() {
+    var item = Registry.getById('tabindexInjection');
+    if (item && item.implementation && typeof item.implementation.resetBundleSelectors === 'function') {
+      item.implementation.resetBundleSelectors();
+    }
+  },
+
   // Expose registry for advanced use
   registry: Registry,
 };
