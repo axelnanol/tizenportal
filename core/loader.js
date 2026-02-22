@@ -116,6 +116,26 @@ export function handleBundleKeyDown(event) {
 }
 
 /**
+ * Notify the active bundle that a navigation (URL change) has occurred.
+ * Called by the core URL watcher on every SPA navigation so bundles can
+ * reset per-page state, re-apply focus, clear caches, etc. without having
+ * to implement their own URL polling.
+ *
+ * @param {string} url - The new URL after navigation
+ */
+export function handleBundleNavigate(url) {
+  if (!activeBundle) return;
+
+  try {
+    if (typeof activeBundle.onNavigate === 'function') {
+      activeBundle.onNavigate(url);
+    }
+  } catch (err) {
+    warn('TizenPortal Loader: Error in onNavigate:', err.message);
+  }
+}
+
+/**
  * Get the currently active bundle
  * @returns {Object|null}
  */

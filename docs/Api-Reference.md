@@ -1391,6 +1391,7 @@ interface Bundle {
   onAfterLoad?: (window: Window, card: Card) => void;
   onActivate?: (window: Window, card: Card) => void;
   onDeactivate?: (window: Window, card: Card) => void;
+  onNavigate?: (url: string) => void;
   onKeyDown?: (event: KeyboardEvent) => boolean;
 }
 ```
@@ -1525,9 +1526,9 @@ export default {
 };
 ```
 
-**Use cases:** SPA navigation handling, re-processing cards
+**Use cases:** SPA navigation handling, re-processing cards for new page content, resetting per-page state, setting initial focus.
 
-**Note:** Not currently triggered by core, may need manual invocation or URL watching.
+**Note:** Core polls `window.location.href` every 500 ms and also listens to `popstate`, so bundles do not need their own URL-change watcher.
 
 #### onKeyDown
 

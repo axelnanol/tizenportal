@@ -246,12 +246,6 @@ var unregisterKeyHandler = null;
 /** Stop function for DOM observer */
 var stopObserver = null;
 
-/** Last known URL for detecting SPA navigation */
-var lastUrl = '';
-
-/** Cleanup function for URL change detection */
-var stopUrlWatcher = null;
-
 /** Bundle matcher registration flag */
 var matcherRegistered = false;
 
@@ -363,9 +357,8 @@ export default {
       }
     }, { debounceMs: 250 });
     
-    // SPA NAVIGATION: Watch for URL changes and reset navigation state
-    // Nuxt uses History API for navigation, which doesn't trigger page reload
-    stopUrlWatcher = this.watchUrlChanges();
+    // SPA NAVIGATION: core calls onNavigate() when URL changes — no custom
+    // URL watcher needed here.
     
     // OVERRIDE: Register custom key handler for ABS-specific behaviour
     // This runs BEFORE core handlers - return true to consume the event
@@ -404,12 +397,6 @@ export default {
     if (stopObserver) {
       stopObserver();
       stopObserver = null;
-    }
-    
-    // Clean up URL watcher
-    if (stopUrlWatcher) {
-      stopUrlWatcher();
-      stopUrlWatcher = null;
     }
     
     // Clean up DOMContentLoaded listener (if it was added)
@@ -1112,90 +1099,61 @@ export default {
   },
   
   /**
-   * Watch for SPA URL changes and reset navigation state
-   * 
-   * Nuxt/Vue uses the History API for SPA navigation, which doesn't trigger
-   * page reload. When the URL changes, we need to:
-   * 1. Force re-process all card registrations (some DOM elements are stale)
-   * 2. Reset focus to something sensible on the new page
-   * 3. Clear and re-relocate toolbar elements
-   * 4. Check for auto-play flag
-   * 
-   * @returns {Function} Cleanup function to stop watching
+   * Called by core when a URL change is detected (SPA navigation).
+   *
+   * Core polls window.location.href every 500 ms and also listens for
+   * popstate, so this replaces the bundle's own watchUrlChanges() polling.
+   *
+   * @param {string} url - The new URL after navigation
    */
-  watchUrlChanges: function() {
+  onNavigate: function(url) {
     var self = this;
-    lastUrl = window.location.href;
-    
-    // Handler for URL changes
-    function onUrlChange() {
-      try {
-        var currentUrl = window.location.href;
-        if (currentUrl === lastUrl) return;
-        
-        console.log('TizenPortal [ABS]: URL changed from', lastUrl, 'to', currentUrl);
-        lastUrl = currentUrl;
-        
-        // Exit any entered card state
-        if (isInsideCard()) {
-          exitCard();
-        }
-        
-        // Force re-process cards - remove all data-tp-card attributes first
-        // so they get re-registered with fresh DOM elements
-        var staleCards = document.querySelectorAll('[data-tp-card]');
-        for (var i = 0; i < staleCards.length; i++) {
-          staleCards[i].removeAttribute('data-tp-card');
-          staleCards[i].removeAttribute('tabindex');
-        }
-        
-        // Small delay for Vue/Nuxt to render new content
-        setTimeout(function() {
-          try {
-            // Re-run card registration
-            if (window.TizenPortal && window.TizenPortal.cards) {
-              window.TizenPortal.cards.process();
-            }
-            
-            // Element registrations are automatically reapplied by core observers
-            // Global features handle text input wrapping.
-        
-            // Set initial focus on new page
-            setInitialFocus(getInitialFocusSelectors(), 100);
-            
-            // Check for auto-play flag (set when navigating from card via PLAY key)
-            if (window.sessionStorage.getItem('tp_autoplay') === 'true') {
-              window.sessionStorage.removeItem('tp_autoplay');
-              setTimeout(function() {
-                self.playItemFromDetailPage();
-              }, 500);
-            }
-          } catch (err) {
-            console.warn('TizenPortal [ABS]: Error in URL change timeout:', err.message);
+    try {
+      console.log('TizenPortal [ABS]: onNavigate', url);
+
+      // Exit any entered card state
+      if (isInsideCard()) {
+        exitCard();
+      }
+
+      // Force re-process cards - remove stale data-tp-card attributes first
+      // so they get re-registered against the fresh Vue/Nuxt DOM.
+      var staleCards = document.querySelectorAll('[data-tp-card]');
+      for (var i = 0; i < staleCards.length; i++) {
+        staleCards[i].removeAttribute('data-tp-card');
+        staleCards[i].removeAttribute('tabindex');
+      }
+
+      // Small delay for Vue/Nuxt to render new page content
+      setTimeout(function() {
+        try {
+          // Re-run card registration
+          if (window.TizenPortal && window.TizenPortal.cards) {
+            window.TizenPortal.cards.process();
           }
-        }, 300);
-      } catch (err) {
-        console.warn('TizenPortal [ABS]: Error in URL change handler:', err.message);
-      }
+
+          // Element registrations are automatically reapplied by core observers.
+          // Global features handle text input wrapping.
+
+          // Set initial focus for the new page
+          setInitialFocus(getInitialFocusSelectors(), 100);
+
+          // Check for auto-play flag (set when navigating from a card via PLAY key)
+          if (window.sessionStorage.getItem('tp_autoplay') === 'true') {
+            window.sessionStorage.removeItem('tp_autoplay');
+            setTimeout(function() {
+              self.playItemFromDetailPage();
+            }, 500);
+          }
+        } catch (err) {
+          console.warn('TizenPortal [ABS]: Error in onNavigate timeout:', err.message);
+        }
+      }, 300);
+    } catch (err) {
+      console.warn('TizenPortal [ABS]: Error in onNavigate:', err.message);
     }
-    
-    // Listen for popstate (back/forward buttons)
-    window.addEventListener('popstate', onUrlChange);
-    
-    // Also poll for URL changes (catches programmatic navigation)
-    var pollInterval = setInterval(function() {
-      if (window.location.href !== lastUrl) {
-        onUrlChange();
-      }
-    }, 500);
-    
-    // Return cleanup function
-    return function() {
-      window.removeEventListener('popstate', onUrlChange);
-      clearInterval(pollInterval);
-    };
   },
-  
+
   /**
    * DEPRECATED: Setup focusable elements on detail pages.
    * Now handled by registerNavigableSelectors() and registerElementManipulations().

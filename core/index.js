@@ -63,7 +63,7 @@ import { initPreferences, showPreferences, closePreferences, isPreferencesOpen, 
 import { initAddressBar, showAddressBar, hideAddressBar, toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
 import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
 import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggleDiagnosticsPanel } from '../ui/diagnostics.js';
-import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, setActiveBundle, registerBundleCleanup } from './loader.js';
+import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, handleBundleNavigate, setActiveBundle, registerBundleCleanup } from './loader.js';
 import { getBundleNames, getBundle, logDependencyWarnings } from '../bundles/registry.js';
 import { isValidHttpUrl, sanitizeCss, safeLocalStorageSet, once } from './utils.js';
 import { addCard, getCardById } from '../ui/cards.js';
@@ -1248,14 +1248,15 @@ function installLinkInterceptor() {
 
 
 /**
- * Re-apply userscripts when the URL changes on SPA navigations
+ * Re-apply userscripts and notify the active bundle when the URL changes on
+ * SPA navigations.  Polling runs every 500 ms; popstate covers back/forward.
  */
 function startUserscriptUrlWatcher() {
   if (userscriptUrlWatcher) return;
 
   var lastUrl = window.location.href;
 
-  userscriptUrlWatcher = setInterval(function() {
+  function onUrlChange() {
     try {
       var currentUrl = window.location.href;
       if (currentUrl === lastUrl) return;
@@ -1264,6 +1265,13 @@ function startUserscriptUrlWatcher() {
       if (state.currentCard) {
         state.currentCard.url = currentUrl;
         saveLastCard(state.currentCard);
+      }
+
+      // Notify the active bundle of the navigation event.
+      try {
+        handleBundleNavigate(currentUrl);
+      } catch (navErr) {
+        warn('Bundle onNavigate failed: ' + navErr.message);
       }
 
       try {
@@ -1277,7 +1285,25 @@ function startUserscriptUrlWatcher() {
     } catch (err2) {
       // Ignore
     }
-  }, 500);
+  }
+
+  // Poll for programmatic navigation (pushState / replaceState)
+  var intervalId = setInterval(onUrlChange, 500);
+
+  // Also respond immediately to popstate (browser back/forward)
+  window.addEventListener('popstate', onUrlChange);
+
+  // Store both the interval ID and the popstate handler so the watcher can
+  // be fully torn down if needed.
+  userscriptUrlWatcher = {
+    intervalId: intervalId,
+    popstateHandler: onUrlChange,
+    stop: function() {
+      clearInterval(intervalId);
+      window.removeEventListener('popstate', onUrlChange);
+      userscriptUrlWatcher = null;
+    }
+  };
 }
 
 /**
