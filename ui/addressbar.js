@@ -527,20 +527,30 @@ function handleGo() {
   
   console.log('TizenPortal: Address bar - Go to:', url);
   
-  // Navigate to URL
   if (window.TizenPortal) {
     window.TizenPortal.showToast('Loading...');
   }
-  window.location.href = url;
-  
+
   hideAddressBar();
+
+  // Use navigateUrl to inject tp= payload on portal and crossnav relay on sites
+  if (window.TizenPortal && window.TizenPortal.navigateUrl) {
+    window.TizenPortal.navigateUrl(url);
+  } else {
+    window.location.href = url;
+  }
 }
 
 /**
- * Handle Info button - open TizenPortal documentation
+ * Handle Info button - navigate to TizenPortal documentation via portal relay
  */
 function handleInfo() {
   console.log('TizenPortal: Address bar - Info');
   hideAddressBar();
-  window.open('https://axelnanol.github.io/tizenportal/', '_blank');
+  var docsUrl = 'https://axelnanol.github.io/tizenportal/';
+  if (window.TizenPortal && window.TizenPortal.navigateUrl) {
+    window.TizenPortal.navigateUrl(docsUrl);
+  } else {
+    window.location.href = docsUrl;
+  }
 }

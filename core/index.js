@@ -2706,6 +2706,68 @@ function closeSite() {
 }
 
 /**
+ * Navigate to an arbitrary URL using the appropriate mechanism:
+ * - On portal: launch via loadSite with a minimal ad-hoc card
+ * - On sites: route via portal crossnav relay to preserve card context
+ * Falls back to direct navigation if card context is unavailable.
+ * @param {string} url - Destination URL (must be http/https)
+ */
+function navigateUrl(url) {
+  if (!url) return;
+  if (url.indexOf('http://') !== 0 && url.indexOf('https://') !== 0) return;
+
+  if (state.isPortalPage) {
+    // id is intentionally null: this card is not saved to localStorage,
+    // so the crossnav relay can't look it up. installLinkInterceptor skips
+    // cards without an id, which is the correct behaviour for ad-hoc pages.
+    var adhocCard = {
+      id: null,
+      name: url,
+      url: url,
+      featureBundle: 'default',
+    };
+    loadSite(adhocCard);
+    return;
+  }
+
+  // On a site: avoid relay loops back to the portal itself
+  if (url.indexOf(PORTAL_BASE_URL) === 0) {
+    window.location.href = url;
+    return;
+  }
+
+  // Same-origin navigation is handled by the sessionStorage relay —
+  // no need to round-trip through the portal crossnav relay.
+  var currentBase = window.location.protocol + '//' + window.location.host;
+  if (
+    url === currentBase ||
+    url.indexOf(currentBase + '/') === 0 ||
+    url.indexOf(currentBase + '?') === 0 ||
+    url.indexOf(currentBase + '#') === 0
+  ) {
+    window.location.href = url;
+    return;
+  }
+
+  // Cross-origin: route via portal crossnav relay to preserve card context
+  if (!state.currentCard || !state.currentCard.id) {
+    warn('navigateUrl: no current card context, falling back to direct navigation');
+    window.location.href = url;
+    return;
+  }
+  var crossHistory = (state.currentCard.crossHistory || []).slice();
+  crossHistory.push(getCleanCurrentUrl());
+  var relayBundleName = state.currentBundle || state.currentCard.featureBundle || 'default';
+  var portalUrl = buildCrossNavUrl(state.currentCard.id, url, crossHistory, [], relayBundleName);
+  if (!portalUrl) {
+    warn('navigateUrl: crossnav URL build failed, falling back to direct navigation');
+    window.location.href = url;
+    return;
+  }
+  window.location.href = portalUrl;
+}
+
+/**
  * Show a toast notification
  * @param {string} message - Message to display
  * @param {number} duration - Duration in milliseconds (default 3000)
@@ -2862,6 +2924,7 @@ var TizenPortalAPI = {
   loadSite: loadSite,
   closeSite: closeSite,
   returnToPortal: returnToPortal,
+  navigateUrl: navigateUrl,
   addCurrentSiteAndReturn: addCurrentSiteAndReturn,
   setPortalHintsVisible: setPortalHintsVisible,
   setPortalHintsPosition: setPortalHintsPosition,
