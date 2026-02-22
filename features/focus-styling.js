@@ -6,6 +6,34 @@
 
 import { injectCSS, removeCSS } from '../core/utils.js';
 
+// MutationObserver that keeps tp-focus-styling as the last stylesheet in <head>
+// SPAs inject their own <style>/<link> tags dynamically; without this our rules
+// lose source-order to any later outline:none !important in their CSS resets.
+var _headObserver = null;
+
+function startHeadObserver(doc) {
+  if (_headObserver) return;
+  if (typeof MutationObserver === 'undefined') return;
+
+  var head = doc.head || doc.documentElement;
+  _headObserver = new MutationObserver(function() {
+    var el = doc.getElementById('tp-focus-styling');
+    if (!el) return;
+    // If our style is not the last child of head, move it there
+    if (head.lastChild !== el) {
+      head.appendChild(el);
+    }
+  });
+  _headObserver.observe(head, { childList: true });
+}
+
+function stopHeadObserver() {
+  if (_headObserver) {
+    _headObserver.disconnect();
+    _headObserver = null;
+  }
+}
+
 export default {
   name: 'focusStyling',
   displayName: 'Focus Styling',
@@ -95,11 +123,14 @@ export default {
     this.remove(doc);
     if (mode === 'none') return;
     injectCSS(doc, 'tp-focus-styling', this.getCSS(mode));
+    // Keep our style last so SPA-injected stylesheets can't override it
+    startHeadObserver(doc);
     TizenPortal.log('Focus styling applied: ' + mode);
   },
 
   remove: function(doc) {
     if (!doc) return;
+    stopHeadObserver();
     removeCSS(doc, 'tp-focus-styling');
     TizenPortal.log('Focus styling removed');
   },
