@@ -2836,10 +2836,20 @@ function showEditorToast(message) {
  */
 var FAVICON_PATHS = [
   '/favicon.ico',
+  '/favicon-32x32.png',
+  '/favicon-16x16.png',
+  '/site.webmanifest',
+  '/manifest.webmanifest',
+  '/manifest.json',
   '/favicon.svg',
   '/favicon.png',
   '/apple-touch-icon.png',
+  '/apple-touch-icon-180x180.png',
+  '/apple-touch-icon-152x152.png',
+  '/apple-touch-icon-120x120.png',
   '/apple-touch-icon-precomposed.png',
+  '/android-chrome-512x512.png',
+  '/android-chrome-192x192.png',
   '/static/favicon.ico',
   '/static/favicon.svg',
   '/static/favicon.png',
@@ -2883,48 +2893,144 @@ function handleFetchFavicon() {
   }
   
   showEditorToast('Searching for favicon...');
-  
-  // Try common favicon paths sequentially
-  tryFaviconPaths(baseUrl, domain, 0);
+
+  // 1) Try to discover explicit icon links from page HTML head when possible.
+  discoverIconCandidatesFromHtml(baseUrl, function(discoveredCandidates) {
+    // 2) Build robust fallback guesses and service URLs.
+    var guessedCandidates = buildGuessedIconCandidates(baseUrl, domain);
+    var allCandidates = mergeUniqueIconCandidates(discoveredCandidates, guessedCandidates);
+    if (!allCandidates.length) {
+      showEditorToast('No favicon candidates found');
+      return;
+    }
+    tryFaviconCandidates(allCandidates, 0);
+  });
+}
+
+function buildGuessedIconCandidates(baseUrl, domain) {
+  var candidates = [];
+  for (var i = 0; i < FAVICON_PATHS.length; i++) {
+    candidates.push(baseUrl + FAVICON_PATHS[i]);
+  }
+  candidates.push('https://icons.duckduckgo.com/ip3/' + encodeURIComponent(domain) + '.ico');
+  candidates.push('https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=128');
+  candidates.push('https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=64');
+  return candidates;
+}
+
+function mergeUniqueIconCandidates(primary, secondary) {
+  var merged = [];
+  var seen = {};
+  var lists = [primary || [], secondary || []];
+  for (var l = 0; l < lists.length; l++) {
+    for (var i = 0; i < lists[l].length; i++) {
+      var item = lists[l][i];
+      if (!item) continue;
+      if (!seen[item]) {
+        seen[item] = true;
+        merged.push(item);
+      }
+    }
+  }
+  return merged;
+}
+
+function resolveIconUrl(baseUrl, href) {
+  if (!href || typeof href !== 'string') return '';
+  var value = href.replace(/^\s+|\s+$/g, '');
+  if (!value) return '';
+  if (/^https?:\/\//i.test(value)) return value;
+  if (/^\/\//.test(value)) {
+    var scheme = baseUrl.indexOf('https://') === 0 ? 'https:' : 'http:';
+    return scheme + value;
+  }
+  if (value.charAt(0) === '/') return baseUrl + value;
+  return baseUrl + '/' + value;
+}
+
+function discoverIconCandidatesFromHtml(baseUrl, done) {
+  var completed = false;
+  function finish(candidates) {
+    if (completed) return;
+    completed = true;
+    done(candidates || []);
+  }
+
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', baseUrl, true);
+    xhr.timeout = 5000;
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== 4) return;
+      if (xhr.status < 200 || xhr.status >= 400) {
+        finish([]);
+        return;
+      }
+      var html = xhr.responseText || '';
+      if (!html) {
+        finish([]);
+        return;
+      }
+
+      var candidates = [];
+      var linkRegex = /<link[^>]*>/gi;
+      var hrefRegex = /href\s*=\s*["']([^"']+)["']/i;
+      var relRegex = /rel\s*=\s*["']([^"']+)["']/i;
+      var match;
+      while ((match = linkRegex.exec(html))) {
+        var tag = match[0] || '';
+        var relMatch = relRegex.exec(tag);
+        if (!relMatch || !relMatch[1]) continue;
+        var rel = relMatch[1].toLowerCase();
+        if (rel.indexOf('icon') === -1 && rel.indexOf('apple-touch-icon') === -1 && rel.indexOf('mask-icon') === -1) {
+          continue;
+        }
+        var hrefMatch = hrefRegex.exec(tag);
+        if (!hrefMatch || !hrefMatch[1]) continue;
+        var resolved = resolveIconUrl(baseUrl, hrefMatch[1]);
+        if (resolved) candidates.push(resolved);
+      }
+
+      finish(candidates);
+    };
+    xhr.onerror = function() { finish([]); };
+    xhr.ontimeout = function() { finish([]); };
+    xhr.send();
+  } catch (err) {
+    finish([]);
+  }
 }
 
 /**
- * Try favicon paths one by one
- * @param {string} baseUrl - Base URL (protocol + domain)
- * @param {string} domain - Domain only
+ * Try favicon candidates one by one
+ * @param {string[]} candidates - Candidate icon URLs
  * @param {number} index - Current path index
  */
-function tryFaviconPaths(baseUrl, domain, index) {
-  // If we've exhausted all paths, fall back to Google
-  if (index >= FAVICON_PATHS.length) {
-    showEditorToast('Trying Google favicon service...');
-    var googleFaviconUrl = 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=64';
-    
-    state.card.icon = googleFaviconUrl;
-    renderFields();
-    updatePreview();
-    refocusFetchButton();
-    autoSaveCard('favicon');
-    showEditorToast('Using Google favicon');
+function tryFaviconCandidates(candidates, index) {
+  if (!candidates || index >= candidates.length) {
+    showEditorToast('Could not find favicon');
     return;
   }
-  
-  var faviconUrl = baseUrl + FAVICON_PATHS[index];
-  
-  // Test if this favicon exists by loading it in an Image
+
+  var faviconUrl = candidates[index];
   var img = new Image();
   img.onload = function() {
-    // Found a working favicon!
+    if ((img.naturalWidth && img.naturalWidth <= 0) || (img.naturalHeight && img.naturalHeight <= 0)) {
+      tryFaviconCandidates(candidates, index + 1);
+      return;
+    }
     state.card.icon = faviconUrl;
     renderFields();
     updatePreview();
     refocusFetchButton();
     autoSaveCard('favicon');
-    showEditorToast('Found: ' + FAVICON_PATHS[index]);
+    showEditorToast('Found favicon');
   };
   img.onerror = function() {
-    // This path failed, try the next one
-    tryFaviconPaths(baseUrl, domain, index + 1);
+    tryFaviconCandidates(candidates, index + 1);
+  };
+  img.onabort = function() {
+    tryFaviconCandidates(candidates, index + 1);
   };
   img.src = faviconUrl;
 }

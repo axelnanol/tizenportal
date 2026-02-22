@@ -158,7 +158,11 @@ export default {
     var hasOutline = outlineStyle !== 'none' && outlineWidth > 0 && !isTransparentCssColor(outlineColor);
 
     var boxShadow = (computed.boxShadow || '').toLowerCase();
-    var hasShadow = boxShadow && boxShadow !== 'none' && boxShadow.indexOf('rgba(0, 0, 0, 0)') === -1;
+    var hasRingColorShadow = false;
+    if (boxShadow && boxShadow !== 'none') {
+      hasRingColorShadow = boxShadow.indexOf('0, 178, 255') !== -1 || boxShadow.indexOf('252, 211, 77') !== -1;
+    }
+    var hasShadow = !!hasRingColorShadow;
 
     return hasOutline || hasShadow;
   },
@@ -166,7 +170,7 @@ export default {
   updateRingOverlay: function() {
     if (!this._ringOverlay) return;
 
-    var target = document.activeElement || this._focusedProxy;
+    var target = this._focusedProxy || document.activeElement;
     if (!target || target === document.body || !target.getBoundingClientRect) {
       this.hideRingOverlay();
       return;
