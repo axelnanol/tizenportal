@@ -234,71 +234,10 @@ function stopRescanInterval() {
 }
 
 /**
- * Inject core card focus styles
- * These apply to ALL registered cards automatically
- * 
- * NOTE: Uses both outline and box-shadow for maximum visibility across different
- * card backgrounds and layouts. Respects global focus styling preferences.
- */
-function injectFocusStyles() {
-  if (document.getElementById('tp-card-focus-styles')) return;
-  
-  var style = document.createElement('style');
-  style.id = 'tp-card-focus-styles';
-  style.textContent = [
-    '/* TizenPortal Core Card Focus Styles */',
-    '',
-    '/* Base card styles - cursor and transition */',
-    '[data-tp-card] {',
-    '  cursor: pointer;',
-    '  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;',
-    '}',
-    '',
-    '/* Universal focus indicator for ALL registered cards */',
-    '/* Uses both outline (for edge definition) and box-shadow (for glow) */',
-    '/* Use high specificity to override any resets */',
-    '[data-tp-card]:focus,',
-    'a[data-tp-card]:focus,',
-    'div[data-tp-card]:focus,',
-    'button[data-tp-card]:focus {',
-    '  outline: 4px solid #1ad691 !important;',
-    '  outline-offset: 2px !important;',
-    '  box-shadow: 0 0 0 4px #1ad691, 0 0 20px rgba(26, 214, 145, 0.4) !important;',
-    '  z-index: 100 !important;',
-    '  position: relative !important;',
-    '  transform: scale(1.02);',
-    '}',
-    '',
-    '/* Entered state for multi-action cards - use yellow to distinguish */',
-    '[data-tp-card="multi"].tp-card-entered,',
-    '[data-tp-card="multi"][data-tp-entered="true"] {',
-    '  outline: 4px solid #fcd34d !important;',
-    '  outline-offset: 2px !important;',
-    '  box-shadow: 0 0 0 4px #fcd34d, 0 0 20px rgba(252, 211, 77, 0.4) !important;',
-    '}',
-    '',
-    '/* Focus within entered card - inner buttons get white outline */',
-    '[data-tp-card].tp-card-entered :focus,',
-    '[data-tp-card][data-tp-entered="true"] :focus {',
-    '  outline: 2px solid #fff !important;',
-    '  outline-offset: 2px;',
-    '}'
-  ].join('\n');
-  
-  var head = document.head || document.documentElement;
-  head.insertBefore(style, head.firstChild);
-  
-  console.log('TizenPortal [Cards]: Focus styles injected');
-}
-
-/**
  * Initialize the card system
  * Called automatically when bundle is loaded
  */
 export function initCards() {
-  // Inject focus styles first
-  injectFocusStyles();
-  
   // Process any existing registrations
   processCards();
   

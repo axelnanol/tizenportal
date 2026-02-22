@@ -1,11 +1,11 @@
 {
   "name": "@axelnanol/tizenportal",
   "appName": "TizenPortal",
-  "version": "1109",
+  "version": "1110",
   "description": "Universal Tizen Browser Shell",
   "type": "module",
   "packageType": "mods",
-  "websiteURL": "https://axelnanol.github.io/tizenportal/dist/index.html?v=1109",
+  "websiteURL": "https://axelnanol.github.io/tizenportal/dist/index.html?v=1110",
   "main": "dist/tizenportal.js",
   "keys": [
     "MediaPlayPause",
