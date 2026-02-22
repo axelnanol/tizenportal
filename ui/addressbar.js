@@ -537,10 +537,15 @@ function handleGo() {
 }
 
 /**
- * Handle Info button - open TizenPortal documentation
+ * Handle Info button - navigate to TizenPortal documentation via portal relay
  */
 function handleInfo() {
   console.log('TizenPortal: Address bar - Info');
   hideAddressBar();
-  window.open('https://axelnanol.github.io/tizenportal/', '_blank');
+  var docsUrl = 'https://axelnanol.github.io/tizenportal/';
+  if (window.TizenPortal && window.TizenPortal.navigateUrl) {
+    window.TizenPortal.navigateUrl(docsUrl);
+  } else {
+    window.location.href = docsUrl;
+  }
 }
