@@ -9,6 +9,27 @@ import userscriptEngine from '../features/userscripts.js';
 import { log, warn } from './utils.js';
 
 /**
+ * Per-bundle cleanup callback registry.
+ * Bundles register functions via TizenPortal.onCleanup(fn); every registered
+ * function is called (and the list cleared) inside unloadBundle() so bundles
+ * do not need to track cleanup state manually.
+ */
+var cleanupCallbacks = [];
+
+/**
+ * Register a cleanup function to be called when the active bundle deactivates.
+ * Safe to call at any point during a bundle's activation; all registered
+ * functions are invoked in registration order and then discarded.
+ *
+ * @param {Function} fn - Cleanup function (no arguments)
+ */
+export function registerBundleCleanup(fn) {
+  if (typeof fn === 'function') {
+    cleanupCallbacks.push(fn);
+  }
+}
+
+/**
  * Currently active bundle instance
  */
 var activeBundle = null;
@@ -53,6 +74,17 @@ export async function unloadBundle() {
     userscriptEngine.clearUserscripts();
   } catch (err2) {
     warn('TizenPortal Loader: Failed to clear userscripts:', err2.message);
+  }
+
+  // Run bundle-registered cleanup callbacks (registered via TizenPortal.onCleanup)
+  var callbacks = cleanupCallbacks.slice();
+  cleanupCallbacks = [];
+  for (var i = 0; i < callbacks.length; i++) {
+    try {
+      callbacks[i]();
+    } catch (err3) {
+      warn('TizenPortal Loader: Error in onCleanup callback:', err3.message);
+    }
   }
 
   // Clear state

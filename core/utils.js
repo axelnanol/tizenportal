@@ -289,3 +289,49 @@ export function warn() {
     console.warn.apply(console, arguments);
   }
 }
+
+/**
+ * Attach a one-time event listener that removes itself after the first call.
+ * Bundles can use this for DOMContentLoaded and similar single-fire events
+ * without storing listener references for manual cleanup.
+ *
+ * @param {EventTarget} element - DOM element or event target
+ * @param {string} eventType - Event type, e.g. 'DOMContentLoaded'
+ * @param {Function} handler - Listener to invoke once
+ * @returns {Function} Cancel function — call it to remove the listener before it fires
+ */
+export function once(element, eventType, handler) {
+  if (!element || typeof element.addEventListener !== 'function') {
+    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+      console.warn('TizenPortal [once]: element must be an EventTarget');
+    }
+    return function() {};
+  }
+  if (typeof eventType !== 'string' || !eventType) {
+    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+      console.warn('TizenPortal [once]: eventType must be a non-empty string');
+    }
+    return function() {};
+  }
+  if (typeof handler !== 'function') {
+    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
+      console.warn('TizenPortal [once]: handler must be a function');
+    }
+    return function() {};
+  }
+
+  var cancelled = false;
+  var wrappedHandler = function(e) {
+    if (!cancelled) {
+      cancelled = true;
+      element.removeEventListener(eventType, wrappedHandler);
+      handler(e);
+    }
+  };
+  element.addEventListener(eventType, wrappedHandler);
+
+  return function() {
+    cancelled = true;
+    element.removeEventListener(eventType, wrappedHandler);
+  };
+}

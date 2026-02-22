@@ -63,9 +63,9 @@ import { initPreferences, showPreferences, closePreferences, isPreferencesOpen, 
 import { initAddressBar, showAddressBar, hideAddressBar, toggleAddressBar, isAddressBarVisible } from '../ui/addressbar.js';
 import { initDiagnostics, log, warn, error } from '../diagnostics/console.js';
 import { initDiagnosticsPanel, showDiagnosticsPanel, hideDiagnosticsPanel, toggleDiagnosticsPanel } from '../ui/diagnostics.js';
-import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, setActiveBundle } from './loader.js';
+import { loadBundle, unloadBundle, getActiveBundle, getActiveBundleName, handleBundleKeyDown, setActiveBundle, registerBundleCleanup } from './loader.js';
 import { getBundleNames, getBundle, logDependencyWarnings } from '../bundles/registry.js';
-import { isValidHttpUrl, sanitizeCss, safeLocalStorageSet } from './utils.js';
+import { isValidHttpUrl, sanitizeCss, safeLocalStorageSet, once } from './utils.js';
 import { addCard, getCardById } from '../ui/cards.js';
 import featureLoader from '../features/index.js';
 import textInputProtection from '../features/text-input-protection.js';
@@ -2855,6 +2855,32 @@ var TizenPortalAPI = {
       return bundle ? bundle.manifest : null;
     },
   },
+
+  /**
+   * Register a cleanup function to be called automatically when the active
+   * bundle deactivates (inside unloadBundle).  Bundles call this instead of
+   * storing references for manual teardown in onDeactivate.
+   *
+   * Example:
+   *   TizenPortal.onCleanup(function() { stopMyObserver(); });
+   *
+   * @param {Function} fn - Cleanup function (no arguments)
+   */
+  onCleanup: registerBundleCleanup,
+
+  /**
+   * Attach a one-time event listener that removes itself after the first call.
+   * Returns a cancel function that removes the listener before it fires.
+   *
+   * Example:
+   *   TizenPortal.once(document, 'DOMContentLoaded', function() { init(); });
+   *
+   * @param {EventTarget} element - DOM element or event target
+   * @param {string} eventType - Event type
+   * @param {Function} handler - Listener to invoke once
+   * @returns {Function} Cancel function
+   */
+  once: once,
 
   // Features system
   features: {
