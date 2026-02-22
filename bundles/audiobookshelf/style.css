@@ -219,6 +219,7 @@ img {
 /* Em-based utilities - ABS uses these for relative sizing */
 .h-6e { height: 1.5em !important; }
 .h-8e { height: 2em !important; }
+.h-1e { height: 0.25em !important; }
 .pt-6e { padding-top: 1.5em !important; }
 .my-6e { margin-top: 1.5em !important; margin-bottom: 1.5em !important; }
 .mx-2e { margin-left: 0.5em !important; margin-right: 0.5em !important; }
@@ -227,6 +228,15 @@ img {
 .left-4e { left: 1em !important; }
 .left-8e { left: 2em !important; }
 .w-44e { width: 11em !important; }
+
+/* Progress bars (homepage/library cards) - keep slim and consistent */
+[cy-id="progressBar"],
+.box-shadow-progressbar {
+  height: 6px !important;
+  min-height: 6px !important;
+  max-height: 6px !important;
+  border-radius: 3px !important;
+}
 
 /* Min/max width */
 .min-w-5 { min-width: 20px !important; }
@@ -681,8 +691,20 @@ button[aria-label*="Options"] {
 /* Homepage cards only - position relative for flex layout (NOT library page) */
 /* Be specific: only target card elements directly in the flex container */
 .categorizedBookshelfRow .flex.items-center > [id^="book-card-"],
-.categorizedBookshelfRow .flex.items-center > [id^="series-card-"] {
+.categorizedBookshelfRow .flex.items-center > [id^="series-card-"],
+.categorizedBookshelfRow .flex.items-center > [id^="author-card-"] {
   position: relative !important;
+}
+
+/* Newest authors row - explicit focus visibility */
+.categorizedBookshelfRow a[href*="/author/"]:focus,
+.categorizedBookshelfRow [id^="author-card-"]:focus,
+.categorizedBookshelfRow .author-card:focus,
+.categorizedBookshelfRow [id^="author-card-"] [tabindex="0"]:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(0, 178, 255, 0.55), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 10px !important;
+  background: rgba(0, 178, 255, 0.12) !important;
 }
 
 /* Shelf category labels ("Continue Listening", etc.) */
