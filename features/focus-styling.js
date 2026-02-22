@@ -19,20 +19,36 @@ export default {
   _ringWidthPx: 3,
   _ringOffsetPx: 2,
   _ringRadiusPx: 10,
+  _ringShadowCss: '0 0 0 3px rgba(0, 178, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5)',
 
-  getCSS: function(mode) {
+  getRingVisualConfig: function(mode) {
     var color = '#00b2ff';
     var ringAlpha = 0.45;
     var ringWidth = 3;
+    var ringOffset = 2;
+    var ringRadius = 10;
     if (mode === 'high') {
       color = '#fcd34d';
       ringAlpha = 0.7;
       ringWidth = 4;
     }
-
     var ringShadow = '0 0 0 ' + ringWidth + 'px ' + hexToRgba(color, ringAlpha) + ', 0 8px 24px rgba(0, 0, 0, 0.5)';
-    var ringOffset = 2;
-    var ringRadius = 10;
+    return {
+      color: color,
+      width: ringWidth,
+      offset: ringOffset,
+      radius: ringRadius,
+      shadow: ringShadow,
+    };
+  },
+
+  getCSS: function(mode) {
+    var ring = this.getRingVisualConfig(mode);
+    var color = ring.color;
+    var ringWidth = ring.width;
+    var ringOffset = ring.offset;
+    var ringRadius = ring.radius;
+    var ringShadow = ring.shadow;
 
     return [
       '/* TizenPortal Focus Styling */',
@@ -57,14 +73,6 @@ export default {
       'input:focus,',
       'select:focus,',
       'textarea:focus {',
-      '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
-      '  outline-offset: ' + ringOffset + 'px !important;',
-      '  box-shadow: ' + ringShadow + ' !important;',
-      '  -webkit-border-radius: ' + ringRadius + 'px !important;',
-      '  border-radius: ' + ringRadius + 'px !important;',
-      '}',
-      '',
-      '.tp-focus-proxy {',
       '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
       '  outline-offset: ' + ringOffset + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
@@ -108,6 +116,12 @@ export default {
     overlay.id = 'tp-focus-ring-overlay';
     overlay.setAttribute('aria-hidden', 'true');
     (targetDoc.body || targetDoc.documentElement).appendChild(overlay);
+    setImportantStyle(overlay, 'outline', 'none');
+    setImportantStyle(overlay, 'border', 'none');
+    setImportantStyle(overlay, 'box-sizing', 'border-box');
+    setImportantStyle(overlay, '-webkit-border-radius', (this._ringRadiusPx || 10) + 'px');
+    setImportantStyle(overlay, 'border-radius', (this._ringRadiusPx || 10) + 'px');
+    setImportantStyle(overlay, 'box-shadow', this._ringShadowCss || 'none');
     this._ringOverlay = overlay;
     return overlay;
   },
@@ -164,12 +178,13 @@ export default {
     }
 
     var inset = this._ringOffsetPx || 0;
-    this._ringOverlay.style.top = (rect.top - inset) + 'px';
-    this._ringOverlay.style.left = (rect.left - inset) + 'px';
-    this._ringOverlay.style.width = (width + inset * 2) + 'px';
-    this._ringOverlay.style.height = (height + inset * 2) + 'px';
-    this._ringOverlay.style.webkitBorderRadius = (this._ringRadiusPx || 10) + 'px';
-    this._ringOverlay.style.borderRadius = (this._ringRadiusPx || 10) + 'px';
+    setImportantStyle(this._ringOverlay, 'top', (rect.top - inset) + 'px');
+    setImportantStyle(this._ringOverlay, 'left', (rect.left - inset) + 'px');
+    setImportantStyle(this._ringOverlay, 'width', (width + inset * 2) + 'px');
+    setImportantStyle(this._ringOverlay, 'height', (height + inset * 2) + 'px');
+    setImportantStyle(this._ringOverlay, '-webkit-border-radius', (this._ringRadiusPx || 10) + 'px');
+    setImportantStyle(this._ringOverlay, 'border-radius', (this._ringRadiusPx || 10) + 'px');
+    setImportantStyle(this._ringOverlay, 'box-shadow', this._ringShadowCss || 'none');
     this._ringOverlay.classList.add('tp-visible');
   },
 
@@ -179,12 +194,6 @@ export default {
     this._focusProxyHandler = function(event) {
       var target = event && event.target ? event.target : null;
       var proxy = self.resolveFocusProxy(target);
-      if (self._focusedProxy && self._focusedProxy !== proxy) {
-        try { self._focusedProxy.classList.remove('tp-focus-proxy'); } catch (e) { /* ignore */ }
-      }
-      if (proxy && proxy.classList) {
-        try { proxy.classList.add('tp-focus-proxy'); } catch (e2) { /* ignore */ }
-      }
       self._focusedProxy = proxy || null;
       self.updateRingOverlay();
     };
@@ -196,9 +205,6 @@ export default {
       try { doc.removeEventListener('focusin', this._focusProxyHandler, true); } catch (e) { /* ignore */ }
     }
     this._focusProxyHandler = null;
-    if (this._focusedProxy && this._focusedProxy.classList) {
-      try { this._focusedProxy.classList.remove('tp-focus-proxy'); } catch (e2) { /* ignore */ }
-    }
     this._focusedProxy = null;
     this.hideRingOverlay();
   },
@@ -247,9 +253,11 @@ export default {
   apply: function(doc) {
     if (!doc) return;
     var mode = arguments.length > 1 ? arguments[1] : 'on';
-    this._ringWidthPx = mode === 'high' ? 4 : 3;
-    this._ringOffsetPx = 2;
-    this._ringRadiusPx = 10;
+    var ring = this.getRingVisualConfig(mode);
+    this._ringWidthPx = ring.width;
+    this._ringOffsetPx = ring.offset;
+    this._ringRadiusPx = ring.radius;
+    this._ringShadowCss = ring.shadow;
     this._ringMode = mode;
     this.remove(doc);
     if (mode === 'off') return;
@@ -293,4 +301,13 @@ function isTransparentCssColor(value) {
   if (!value) return true;
   var color = String(value).toLowerCase();
   return color === 'transparent' || color === 'rgba(0, 0, 0, 0)' || color === 'rgba(0,0,0,0)';
+}
+
+function setImportantStyle(element, property, value) {
+  if (!element || !element.style) return;
+  try {
+    element.style.setProperty(property, value, 'important');
+  } catch (e) {
+    // ignore
+  }
 }
