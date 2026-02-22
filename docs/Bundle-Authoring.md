@@ -508,7 +508,7 @@ export default {
 
 ## 4.1 Cleanup Best Practices ⚠️ CRITICAL
 
-**ALWAYS clean up global modifications in `onDeactivate` to prevent memory leaks and state pollution.**
+**ALWAYS clean up global modifications when a bundle deactivates to prevent memory leaks and state pollution.**
 
 When bundles are deactivated (switching to another bundle or returning to portal), **all global modifications must be reversed**. Failure to clean up causes:
 - Memory leaks from accumulated event listeners
@@ -516,17 +516,49 @@ When bundles are deactivated (switching to another bundle or returning to portal
 - Stale state persisting across activations
 - Unpredictable behavior when bundle is reactivated
 
+### Automatic Cleanup Helpers (Preferred)
+
+Use the built-in helpers instead of manually tracking references wherever possible:
+
+**`TizenPortal.onCleanup(fn)`** — register a cleanup callback that is called automatically after `onDeactivate` when the bundle deactivates. No need to store references in module state.
+
+```js
+onActivate: function(window, card) {
+  var observer = new MutationObserver(handleMutation);
+  observer.observe(document.body, { childList: true, subtree: true });
+  TizenPortal.onCleanup(function() { observer.disconnect(); });
+
+  var pollId = setInterval(recheckCards, 2000);
+  TizenPortal.onCleanup(function() { clearInterval(pollId); });
+},
+// onDeactivate not needed for the above - core calls the callbacks automatically
+```
+
+**`TizenPortal.once(element, eventType, handler)`** — one-time event listener that removes itself after the first call. Returns a cancel function:
+
+```js
+onActivate: function(window, card) {
+  // If DOM is still loading, wait for it; otherwise run immediately
+  if (document.readyState === 'loading') {
+    var cancel = TizenPortal.once(document, 'DOMContentLoaded', this.onDOMReady.bind(this));
+    TizenPortal.onCleanup(cancel);  // Cancels the pending listener if bundle deactivates before DOM fires
+  } else {
+    this.onDOMReady();
+  }
+},
+```
+
 ### What Requires Cleanup
 
-| Modification Type | Storage Pattern | Cleanup Method |
-|-------------------|-----------------|----------------|
-| **Event Listeners** | Store handler references | `removeEventListener` |
-| **Timers** | Store timer IDs | `clearInterval`, `clearTimeout` |
-| **Observers** | Store observer references | `disconnect()` |
-| **DOM Modifications** | Store original prototypes | Restore originals |
-| **Request Interception** | Store original XHR/fetch | Restore originals |
-| **Injected Elements** | Store element references | `remove()` or `removeChild()` |
-| **Global Flags** | Module variables | Reset to defaults |
+| Modification Type | Preferred Method | Manual Fallback |
+|-------------------|-----------------|-----------------|
+| **Event Listeners** | `TizenPortal.once()` + `onCleanup()` | Store reference, `removeEventListener` in `onDeactivate` |
+| **Timers** | `TizenPortal.onCleanup()` | Store IDs, `clearInterval`/`clearTimeout` in `onDeactivate` |
+| **Observers** | `TizenPortal.onCleanup()` | Store reference, `disconnect()` in `onDeactivate` |
+| **DOM Modifications** | `TizenPortal.onCleanup()` | Store originals, restore in `onDeactivate` |
+| **Request Interception** | `onDeactivate` (needs `window` ref) | Store originals, restore originals |
+| **Injected Elements** | `TizenPortal.onCleanup()` | Store reference, `remove()` in `onDeactivate` |
+| **Global Flags** | `TizenPortal.onCleanup()` | Reset to defaults in `onDeactivate` |
 
 ### Cleanup Pattern
 
@@ -742,10 +774,10 @@ export default {
 
 Before marking your bundle complete, verify:
 
-- [ ] All `addEventListener` calls have corresponding `removeEventListener` in `onDeactivate`
-- [ ] All `setInterval`/`setTimeout` IDs are stored and cleared
-- [ ] All `MutationObserver`/`IntersectionObserver` instances are disconnected
-- [ ] All prototype modifications (XHR, fetch, DOM methods) are restored
+- [ ] Event listeners use `TizenPortal.once()` or have `removeEventListener` registered via `TizenPortal.onCleanup()`
+- [ ] All `setInterval`/`setTimeout` IDs are cleared via `TizenPortal.onCleanup()` or stored and cleared in `onDeactivate`
+- [ ] All `MutationObserver`/`IntersectionObserver` instances are disconnected via `TizenPortal.onCleanup()` or `onDeactivate`
+- [ ] All prototype modifications (XHR, fetch, DOM methods) are restored in `onDeactivate`
 - [ ] All injected style elements are removed
 - [ ] All module-level state variables are reset
 - [ ] Window/element references are cleared to prevent memory leaks

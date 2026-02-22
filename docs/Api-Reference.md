@@ -776,6 +776,66 @@ styleElement.textContent = safeCss;
 
 ---
 
+## Bundle Lifecycle Helpers
+
+These helpers simplify teardown so bundles do not need to store listener references manually.
+
+### TizenPortal.once
+
+Attach a one-time event listener that removes itself after the first invocation. Returns a cancel function that removes the listener before it fires.
+
+```typescript
+TizenPortal.once(
+  element: EventTarget,
+  eventType: string,
+  handler: (event: Event) => void
+): () => void
+```
+
+```js
+// Wait for DOMContentLoaded without storing a reference
+TizenPortal.once(document, 'DOMContentLoaded', function() {
+  registerCards();
+});
+
+// Cancel before firing if needed
+var cancel = TizenPortal.once(document, 'DOMContentLoaded', init);
+if (notNeededAfterAll) cancel();
+```
+
+Warns to console if called with invalid arguments.
+
+### TizenPortal.onCleanup
+
+Register a cleanup callback that is called automatically when the active bundle deactivates (inside `unloadBundle()`), after `onDeactivate`. All registered callbacks are drained and called in registration order; each is isolated in its own try-catch.
+
+```typescript
+TizenPortal.onCleanup(fn: () => void): void
+```
+
+```js
+onActivate: function(window, card) {
+  var observer = new MutationObserver(handleMutation);
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // No need to store observer in module state or manually clean up in onDeactivate
+  TizenPortal.onCleanup(function() {
+    observer.disconnect();
+  });
+},
+```
+
+Combine with `TizenPortal.once` for one-time DOM listeners:
+
+```js
+onActivate: function(window, card) {
+  var cancel = TizenPortal.once(document, 'DOMContentLoaded', init);
+  TizenPortal.onCleanup(cancel);  // Cancels listener if page was already loaded
+},
+```
+
+---
+
 ## 5d. Elements API
 
 **Available in:** v1.0+
@@ -1422,20 +1482,28 @@ Called when the bundle is deactivated (user navigates away).
 export default {
   name: 'my-bundle',
   
+  onActivate(window, card) {
+    // Preferred: use TizenPortal.onCleanup so cleanup is automatic
+    var observer = new MutationObserver(handleMutation);
+    observer.observe(document.body, { childList: true, subtree: true });
+    TizenPortal.onCleanup(function() { observer.disconnect(); });
+
+    var cancel = TizenPortal.once(document, 'DOMContentLoaded', init);
+    TizenPortal.onCleanup(cancel);
+  },
+
   onDeactivate(window, card) {
     // Bundle is being deactivated
     TizenPortal.log('Cleaning up...');
     
-    // Remove event listeners
-    document.removeEventListener('myEvent', handleEvent);
-    
-    // Clear intervals/timeouts
+    // Only manual teardown that cannot use onCleanup still belongs here
+    // (e.g. restoring patched prototypes that require the window reference)
     clearInterval(myInterval);
   }
 };
 ```
 
-**Use cases:** Cleanup, remove listeners, clear timers
+**Use cases:** Cleanup, remove listeners, clear timers. Prefer `TizenPortal.onCleanup()` for most teardown — see [Bundle Lifecycle Helpers](#bundle-lifecycle-helpers).
 
 #### onNavigate
 
