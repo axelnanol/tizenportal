@@ -20,6 +20,8 @@ export default {
   _ringOffsetPx: 2,
   _ringRadiusPx: 10,
   _ringShadowCss: '0 0 0 3px rgba(0, 178, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5)',
+  _ringBorderCss: '3px solid rgba(0, 178, 255, 0.45)',
+  _ringDropShadowCss: '0 8px 24px rgba(0, 0, 0, 0.5)',
 
   getRingVisualConfig: function(mode) {
     var color = '#00b2ff';
@@ -32,12 +34,16 @@ export default {
       ringAlpha = 0.7;
       ringWidth = 4;
     }
+    var ringColorCss = hexToRgba(color, ringAlpha);
+    var dropShadow = '0 8px 24px rgba(0, 0, 0, 0.5)';
     var ringShadow = '0 0 0 ' + ringWidth + 'px ' + hexToRgba(color, ringAlpha) + ', 0 8px 24px rgba(0, 0, 0, 0.5)';
     return {
       color: color,
+      ringColorCss: ringColorCss,
       width: ringWidth,
       offset: ringOffset,
       radius: ringRadius,
+      dropShadow: dropShadow,
       shadow: ringShadow,
     };
   },
@@ -46,9 +52,11 @@ export default {
     var ring = this.getRingVisualConfig(mode);
     var color = ring.color;
     var ringWidth = ring.width;
+    var ringColorCss = ring.ringColorCss;
     var ringOffset = ring.offset;
     var ringRadius = ring.radius;
     var ringShadow = ring.shadow;
+    var ringDropShadow = ring.dropShadow;
 
     return [
       '/* TizenPortal Focus Styling */',
@@ -86,10 +94,10 @@ export default {
       '  z-index: 2147483646 !important;',
       '  box-sizing: border-box !important;',
       '  outline: none !important;',
-      '  border: none !important;',
+      '  border: ' + ringWidth + 'px solid ' + ringColorCss + ' !important;',
       '  -webkit-border-radius: ' + ringRadius + 'px !important;',
       '  border-radius: ' + ringRadius + 'px !important;',
-      '  box-shadow: ' + ringShadow + ' !important;',
+      '  box-shadow: ' + ringDropShadow + ' !important;',
       '  opacity: 0 !important;',
       '  transition: opacity 0.08s linear !important;',
       '}',
@@ -117,11 +125,11 @@ export default {
     overlay.setAttribute('aria-hidden', 'true');
     (targetDoc.body || targetDoc.documentElement).appendChild(overlay);
     setImportantStyle(overlay, 'outline', 'none');
-    setImportantStyle(overlay, 'border', 'none');
+    setImportantStyle(overlay, 'border', this._ringBorderCss || 'none');
     setImportantStyle(overlay, 'box-sizing', 'border-box');
     setImportantStyle(overlay, '-webkit-border-radius', (this._ringRadiusPx || 10) + 'px');
     setImportantStyle(overlay, 'border-radius', (this._ringRadiusPx || 10) + 'px');
-    setImportantStyle(overlay, 'box-shadow', this._ringShadowCss || 'none');
+    setImportantStyle(overlay, 'box-shadow', this._ringDropShadowCss || 'none');
     this._ringOverlay = overlay;
     return overlay;
   },
@@ -182,9 +190,10 @@ export default {
     setImportantStyle(this._ringOverlay, 'left', (rect.left - inset) + 'px');
     setImportantStyle(this._ringOverlay, 'width', (width + inset * 2) + 'px');
     setImportantStyle(this._ringOverlay, 'height', (height + inset * 2) + 'px');
+    setImportantStyle(this._ringOverlay, 'border', this._ringBorderCss || 'none');
     setImportantStyle(this._ringOverlay, '-webkit-border-radius', (this._ringRadiusPx || 10) + 'px');
     setImportantStyle(this._ringOverlay, 'border-radius', (this._ringRadiusPx || 10) + 'px');
-    setImportantStyle(this._ringOverlay, 'box-shadow', this._ringShadowCss || 'none');
+    setImportantStyle(this._ringOverlay, 'box-shadow', this._ringDropShadowCss || 'none');
     this._ringOverlay.classList.add('tp-visible');
   },
 
@@ -257,6 +266,8 @@ export default {
     this._ringWidthPx = ring.width;
     this._ringOffsetPx = ring.offset;
     this._ringRadiusPx = ring.radius;
+    this._ringBorderCss = ring.width + 'px solid ' + ring.ringColorCss;
+    this._ringDropShadowCss = ring.dropShadow;
     this._ringShadowCss = ring.shadow;
     this._ringMode = mode;
     this.remove(doc);

@@ -82,7 +82,7 @@ export var KEYS = {
  * | Button | Short Press         | Long Press              |
  * |--------|---------------------|-------------------------|
  * | Red    | Address bar         | Reload page             |
- * | Green  | Mouse mode toggle   | Focus highlight toggle  |
+ * | Green  | Mouse mode toggle   | Edit card (portal) / Focus highlight (sites) |
  * | Yellow | Preferences         | Add site                |
  * | Blue   | Diagnostics menu    | Safe mode               |
  */

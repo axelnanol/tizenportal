@@ -546,6 +546,8 @@ function handleKeyUp(event) {
  * @param {boolean} isLongPress
  */
 function handleColorButton(keyCode, isLongPress) {
+  var isOnPortal = window.TizenPortal && window.TizenPortal.isPortalPage;
+
   // If diagnostics panel is open, Yellow clears logs (short or long)
   if (keyCode === KEYS.YELLOW && isDiagnosticsPanelVisible()) {
     clearDiagnosticsLogs();
@@ -559,7 +561,11 @@ function handleColorButton(keyCode, isLongPress) {
       action = isLongPress ? COLOR_ACTIONS.RED.long : COLOR_ACTIONS.RED.short;
       break;
     case KEYS.GREEN:
-      action = isLongPress ? COLOR_ACTIONS.GREEN.long : COLOR_ACTIONS.GREEN.short;
+      if (isLongPress && isOnPortal) {
+        action = 'editFocusedCard';
+      } else {
+        action = isLongPress ? COLOR_ACTIONS.GREEN.long : COLOR_ACTIONS.GREEN.short;
+      }
       break;
     case KEYS.YELLOW:
       action = isLongPress ? COLOR_ACTIONS.YELLOW.long : COLOR_ACTIONS.YELLOW.short;
@@ -628,6 +634,30 @@ export function executeColorAction(action) {
         
         window.TizenPortal.showToast('Focus highlight: ' + (!currentHighlight ? 'ON' : 'OFF'));
       }
+      break;
+
+    case 'editFocusedCard':
+      // Portal only - edit currently focused card
+      if (!isOnPortal) {
+        break;
+      }
+      if (isSiteEditorOpen() || isPreferencesOpen()) {
+        break;
+      }
+
+      var focusedCard = getFocusedCard();
+      if (!focusedCard) {
+        if (window.TizenPortal) {
+          window.TizenPortal.showToast('Focus a site card to edit');
+        }
+        break;
+      }
+
+      showEditSiteEditor(focusedCard, function() {
+        if (window.TizenPortal && window.TizenPortal._refreshPortal) {
+          window.TizenPortal._refreshPortal();
+        }
+      });
       break;
 
     case 'preferences':
