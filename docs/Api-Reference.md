@@ -123,10 +123,11 @@ interface BundlesAPI {
 }
 
 interface FeaturesAPI {
-  applyFeatures: (doc?: Document) => void;
-  removeFeatures: (doc?: Document) => void;
-  getFeatures: () => Array<{ key: string; name: string; displayName: string }>;
-  getConfig: () => Record<string, any>;
+  apply: (doc?: Document) => void;          // Apply all enabled features to document
+  remove: (doc?: Document) => void;         // Remove all features from document
+  getAll: () => Array<{ key: string; name: string; displayName: string }>;
+  getConfig: () => Record<string, any>;     // Current feature toggle values
+  getDefaults: () => Record<string, any>;   // Default feature toggle values
   addNavigableSelector: (selector: string) => void;
   registry: RegistryAPI;  // Shared unified registry
 }

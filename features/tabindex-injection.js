@@ -64,14 +64,12 @@ var _observer = null;
  * Make a single element navigable if it matches our selectors and doesn't
  * already have a tabindex attribute.
  * @param {Element} el
+ * @param {string} selectorString - pre-joined selector string for this batch
  */
-function makeNavigable(el) {
+function makeNavigable(el, selectorString) {
   if (el.nodeType !== 1) return;
   if (el.hasAttribute('tabindex')) return;
   try {
-    // Recompute from the live array so selectors added by addNavigableSelector
-    // after apply() are always included.
-    var selectorString = NAVIGABLE_SELECTORS.join(',');
     if (el.matches && el.matches(selectorString)) {
       el.setAttribute('tabindex', '0');
       el.setAttribute('data-tp-tabindex', 'auto');
@@ -83,32 +81,48 @@ function makeNavigable(el) {
 
 /**
  * Process a newly-inserted subtree: check the root node and all descendants.
- * @param {Element} root
+ * Handles both Element (nodeType 1) and DocumentFragment (nodeType 11) roots
+ * so that MutationObserver addedNodes containing fragments are fully covered.
+ * @param {Element|DocumentFragment} root
+ * @param {string} selectorString - pre-joined selector string for this batch
  */
-function processSubtree(root) {
-  if (!root || root.nodeType !== 1) return;
-  makeNavigable(root);
-  try {
-    // Recompute the selector string from the live array each time, so that
-    // selectors registered via addNavigableSelector() after apply() are
-    // always included without requiring a restart of the observer.
-    var selectorString = NAVIGABLE_SELECTORS.join(',');
-    var children = root.querySelectorAll(selectorString);
-    for (var i = 0; i < children.length; i++) {
-      if (!children[i].hasAttribute('tabindex')) {
-        children[i].setAttribute('tabindex', '0');
-        children[i].setAttribute('data-tp-tabindex', 'auto');
+function processSubtree(root, selectorString) {
+  if (!root) return;
+
+  if (root.nodeType === 1) {
+    // Element — check this node and all its descendants
+    makeNavigable(root, selectorString);
+    try {
+      var children = root.querySelectorAll(selectorString);
+      for (var i = 0; i < children.length; i++) {
+        if (!children[i].hasAttribute('tabindex')) {
+          children[i].setAttribute('tabindex', '0');
+          children[i].setAttribute('data-tp-tabindex', 'auto');
+        }
+      }
+    } catch (err) {
+      // Ignore
+    }
+    return;
+  }
+
+  if (root.nodeType === 11 && root.childNodes) {
+    // DocumentFragment — iterate its element children so the subtree is
+    // fully covered even when MutationObserver delivers a fragment node.
+    for (var j = 0; j < root.childNodes.length; j++) {
+      var child = root.childNodes[j];
+      if (child && child.nodeType === 1) {
+        processSubtree(child, selectorString);
       }
     }
-  } catch (err) {
-    // Ignore
   }
 }
 
 /**
  * Start watching the document for dynamically added nodes.
- * The observer always reads from the live NAVIGABLE_SELECTORS array so
- * that selectors added after apply() take immediate effect.
+ * The selector string is recomputed once per mutation batch from the live
+ * NAVIGABLE_SELECTORS array, so selectors added via addNavigableSelector()
+ * after apply() take immediate effect for any new DOM nodes.
  * @param {Document} doc
  */
 function startObserver(doc) {
@@ -117,10 +131,14 @@ function startObserver(doc) {
   if (!target) return;
 
   _observer = new MutationObserver(function(mutations) {
+    // Compute the selector string once per batch so we don't repeat the
+    // join() for every added node, while still always reading from the
+    // live array (picks up any addNavigableSelector() calls at any time).
+    var selectorString = NAVIGABLE_SELECTORS.join(',');
     for (var i = 0; i < mutations.length; i++) {
       var added = mutations[i].addedNodes;
       for (var j = 0; j < added.length; j++) {
-        processSubtree(added[j]);
+        processSubtree(added[j], selectorString);
       }
     }
   });
