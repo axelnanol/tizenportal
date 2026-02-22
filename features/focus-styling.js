@@ -40,47 +40,40 @@ export default {
   _ringMode: 'off',
 
   getCSS: function(mode) {
-    // Use outline (not box-shadow) as the primary ring mechanism.
-    // outline renders outside the element box and is NOT clipped by
-    // overflow:hidden on parent containers - critical for card shelves.
-    // box-shadow is added only as a secondary glow and may be clipped.
+    // Only use :focus - :focus-visible is not supported until Chrome 86 and
+    // an unknown pseudo-class in a selector list invalidates the entire rule.
+    // Target range: Chrome 47-69 (Tizen TVs).
     var f = ':focus:not(#tp-focus-never)';
-    var fv = ':focus-visible:not(#tp-focus-never)';
 
     return [
-      '/* TizenPortal Focus Styling (outline-based, overflow-safe) */',
+      '/* TizenPortal Focus Styling */',
       '',
-      // Suppress tap highlight globally
       '*:focus {',
       '  -webkit-tap-highlight-color: transparent;',
       '}',
       '',
       // Universal fallback + off mode: subtle blue ring
-      f + ', ' + fv + ',',
-      'body.tp-focus-mode-off ' + f + ',',
-      'body.tp-focus-mode-off ' + fv + ' {',
+      f + ',',
+      'body.tp-focus-mode-off ' + f + ' {',
       '  outline: 3px solid rgba(0, 178, 255, 0.7) !important;',
       '  outline-offset: 2px !important;',
       '  box-shadow: 0 0 8px rgba(0, 178, 255, 0.35) !important;',
       '}',
       '',
       // On mode: solid full-opacity blue with more breathing room
-      'body.tp-focus-mode-on ' + f + ',',
-      'body.tp-focus-mode-on ' + fv + ' {',
+      'body.tp-focus-mode-on ' + f + ' {',
       '  outline: 3px solid #00b2ff !important;',
       '  outline-offset: 6px !important;',
       '  box-shadow: 0 0 12px rgba(0, 178, 255, 0.55) !important;',
       '}',
       '',
       // High mode: yellow highlight
-      'body.tp-focus-mode-high ' + f + ',',
-      'body.tp-focus-mode-high ' + fv + ' {',
+      'body.tp-focus-mode-high ' + f + ' {',
       '  outline: 3px solid #fcd34d !important;',
       '  outline-offset: 6px !important;',
       '  box-shadow: 0 0 12px rgba(252, 211, 77, 0.55) !important;',
       '}',
       '',
-      // Card system visual styles (owned here, not in core/cards.js)
       '[data-tp-card] {',
       '  cursor: pointer;',
       '  transition: transform 0.15s ease-out;',
@@ -95,14 +88,12 @@ export default {
       '  transform: scale(1.02);',
       '}',
       '',
-      // Entered state for multi-action cards (yellow = "you are inside")
       '[data-tp-card="multi"].tp-card-entered,',
       '[data-tp-card="multi"][data-tp-entered="true"] {',
       '  outline: 4px solid #fcd34d !important;',
       '  outline-offset: 2px !important;',
       '}',
       '',
-      // Focus within entered card - inner elements get white ring
       '[data-tp-card].tp-card-entered ' + f + ',',
       '[data-tp-card][data-tp-entered="true"] ' + f + ' {',
       '  outline: 2px solid #fff !important;',
