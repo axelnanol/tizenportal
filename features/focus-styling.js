@@ -42,6 +42,7 @@ export default {
       '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
       '  outline-offset: ' + ringOffset + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
+      '  -webkit-border-radius: ' + ringRadius + 'px !important;',
       '  border-radius: ' + ringRadius + 'px !important;',
       '}',
       '',
@@ -59,6 +60,7 @@ export default {
       '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
       '  outline-offset: ' + ringOffset + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
+      '  -webkit-border-radius: ' + ringRadius + 'px !important;',
       '  border-radius: ' + ringRadius + 'px !important;',
       '}',
       '',
@@ -66,6 +68,7 @@ export default {
       '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
       '  outline-offset: ' + ringOffset + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
+      '  -webkit-border-radius: ' + ringRadius + 'px !important;',
       '  border-radius: ' + ringRadius + 'px !important;',
       '}',
       '',
@@ -76,6 +79,7 @@ export default {
       '  box-sizing: border-box !important;',
       '  outline: none !important;',
       '  border: none !important;',
+      '  -webkit-border-radius: ' + ringRadius + 'px !important;',
       '  border-radius: ' + ringRadius + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
       '  opacity: 0 !important;',
@@ -93,31 +97,8 @@ export default {
 
   resolveFocusProxy: function(target) {
     if (!target) return null;
-    var node = target;
-    while (node && node !== document && node.nodeType === 1) {
-      var tag = node.tagName ? node.tagName.toUpperCase() : '';
-      var role = node.getAttribute ? node.getAttribute('role') : null;
-      var tabindex = node.getAttribute ? node.getAttribute('tabindex') : null;
-      var href = node.getAttribute ? node.getAttribute('href') : null;
-      if (
-        tag === 'A' ||
-        tag === 'BUTTON' ||
-        tag === 'INPUT' ||
-        tag === 'SELECT' ||
-        tag === 'TEXTAREA' ||
-        role === 'button' ||
-        role === 'link' ||
-        role === 'menuitem' ||
-        role === 'tab' ||
-        role === 'option' ||
-        (tabindex !== null && tabindex !== '-1') ||
-        (tag === 'A' && href)
-      ) {
-        return node;
-      }
-      node = node.parentNode;
-    }
-    return target;
+    if (target.nodeType === 1) return target;
+    return null;
   },
 
   ensureRingOverlay: function(doc) {
@@ -187,6 +168,7 @@ export default {
     this._ringOverlay.style.left = (rect.left - inset) + 'px';
     this._ringOverlay.style.width = (width + inset * 2) + 'px';
     this._ringOverlay.style.height = (height + inset * 2) + 'px';
+    this._ringOverlay.style.webkitBorderRadius = (this._ringRadiusPx || 10) + 'px';
     this._ringOverlay.style.borderRadius = (this._ringRadiusPx || 10) + 'px';
     this._ringOverlay.classList.add('tp-visible');
   },
