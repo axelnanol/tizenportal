@@ -1549,6 +1549,7 @@ async function applyLateCardBundle(card) {
     if (style && style.parentNode) style.parentNode.removeChild(style);
     shutdownCards();
     shutdownElements();
+    featureLoader.resetBundleNavigableSelectors();
 
     state.currentCard = card;
     applyUserAgentOverride(resolveUserAgentMode(card));
