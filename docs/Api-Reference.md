@@ -13,9 +13,10 @@
 3. [Configuration API](#3-configuration-api)
 4. [Input API](#4-input-api)
 5. [Focus API](#5-focus-api)
-5a. [Cards API](#5a-cards-api)
-5b. [Utilities API](#5b-utilities-api)
-5c. [Elements API](#5c-elements-api)
+5a. [Features API](#5a-features-api)
+5b. [Cards API](#5b-cards-api)
+5c. [Utilities API](#5c-utilities-api)
+5d. [Elements API](#5d-elements-api)
 6. [Key Constants](#6-key-constants)
 7. [Payload Interface](#7-payload-interface)
 8. [Card Interface](#8-card-interface)
@@ -75,6 +76,7 @@ interface TizenPortal {
   keys: KeyConstants;
   cards: CardsAPI;
   elements: ElementsAPI;     // Element registration API (v1.0+)
+  features: FeaturesAPI;     // Feature management & navigable selector registry
   bundles: BundlesAPI;
   polyfills: PolyfillAPI;
   
@@ -118,6 +120,15 @@ interface BundlesAPI {
   list: () => string[];
   getActive: () => any | null;
   getActiveName: () => string | null;
+}
+
+interface FeaturesAPI {
+  applyFeatures: (doc?: Document) => void;
+  removeFeatures: (doc?: Document) => void;
+  getFeatures: () => Array<{ key: string; name: string; displayName: string }>;
+  getConfig: () => Record<string, any>;
+  addNavigableSelector: (selector: string) => void;
+  registry: RegistryAPI;  // Shared unified registry
 }
 
 interface PolyfillAPI {
@@ -340,7 +351,12 @@ interface PortalPreferences {
 ```typescript
 interface FeatureToggles {
   focusStyling: boolean;          // Global focus styling control
-  focusOutlineMode: 'on' | 'high' | 'off';  // off=base blue ring, on=blue highlight, high=yellow highlight
+  focusOutlineMode: 'off' | 'on' | 'high' | 'portal' | 'white';
+  // off    = subtle blue ring (browser default-like)
+  // on     = solid blue ring (default)
+  // high   = yellow ring (maximum contrast on dark backgrounds)
+  // portal = layered box-shadow glow ring matching the portal card style
+  // white  = white ring (maximum contrast on colourful backgrounds)
   tabindexInjection: boolean;     // Auto-add tabindex to elements
   scrollIntoView: boolean;        // Auto-scroll on focus
   safeArea: boolean;              // Apply TV safe area inset (5%)
@@ -548,7 +564,39 @@ TizenPortal.focus.observeDOM(function() {
 
 ---
 
-## 5a. Cards API
+## 5a. Features API
+
+### TizenPortal.features.addNavigableSelector
+
+Register a CSS selector whose matching elements should receive `tabindex="0"` for TV
+navigation.  Call this from your bundle's `onDOMReady` (or `onActivate`) to teach the
+global tabindex injection system about site-specific interactive elements.
+
+- Elements **already in the DOM** are picked up on the next `applyFeatures()` call or
+  the next SPA route change.
+- Elements **inserted after this call** are picked up immediately by the running
+  `MutationObserver`, which always reads from the live selector list.
+
+```js
+// bundles/my-bundle/main.js – onDOMReady or onActivate
+onDOMReady: function() {
+  var add = window.TizenPortal.features.addNavigableSelector
+              .bind(window.TizenPortal.features);
+
+  // Site-specific interactive elements that are not covered by
+  // the global selector list (a[href], button, [role="button"], …)
+  add('.my-custom-card');
+  add('[data-clickable]');
+  add('.sidebar-item');
+},
+```
+
+The global list already includes all native interactive elements and ARIA roles, so only
+add selectors for elements that are **unique to the target site**.
+
+---
+
+## 5b. Cards API
 
 ### TizenPortal.cards
 
@@ -662,7 +710,7 @@ userscript.cleanup = function() {
 
 ---
 
-## 5b. Utilities API
+## 5c. Utilities API
 
 TizenPortal provides utility functions for common tasks.
 
@@ -727,7 +775,7 @@ styleElement.textContent = safeCss;
 
 ---
 
-## 5c. Elements API
+## 5d. Elements API
 
 **Available in:** v1.0+
 
@@ -1156,7 +1204,7 @@ interface Payload {
   js?: string;             // Bundle JS bootstrap (optional)
   ua?: string;             // User-Agent override
   viewportMode?: string;
-  focusOutlineMode?: string;
+  focusOutlineMode?: 'off' | 'on' | 'high' | 'portal' | 'white';
   tabindexInjection?: boolean;
   scrollIntoView?: boolean;
   safeArea?: boolean;
@@ -1210,7 +1258,7 @@ interface Card {
   featureBundle: string | null; // Feature bundle name
   icon?: string | null;    // Base64 or URL
   viewportMode?: 'auto' | 'locked' | 'unlocked' | null;
-  focusOutlineMode?: 'on' | 'high' | 'off' | null;
+  focusOutlineMode?: 'on' | 'high' | 'off' | 'portal' | 'white' | null;
   userAgent?: 'tizen' | 'mobile' | 'desktop' | null;
   tabindexInjection?: boolean | null;
   scrollIntoView?: boolean | null;
