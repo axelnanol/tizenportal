@@ -2333,7 +2333,7 @@ function initColorHints() {
   // Define hint configurations: color class -> { short, long } actions
   var hintConfig = {
     'red':    { short: 'addressbar',  long: 'reload' },
-    'green':  { short: 'pointerMode', long: 'focusHighlight' },
+    'green':  { short: 'pointerMode', long: 'editFocusedCard' },
     'yellow': { short: 'preferences', long: 'addSite' },
     'blue':   { short: 'diagnostics', long: 'safeMode' }
   };
@@ -2398,9 +2398,11 @@ function initColorHints() {
     });
   }
   
-  // Set up focus tracking to update yellow hint contextually
+  // Set up focus tracking to update hint labels contextually
   document.addEventListener('focusin', updateYellowHint);
+  document.addEventListener('focusin', updateGreenHint);
   updateYellowHint(); // Initial update
+  updateGreenHint(); // Initial update
 }
 
 /**
@@ -2430,10 +2432,34 @@ function updateYellowHint() {
 }
 
 /**
+ * Update the green hint sub-text based on current context
+ */
+function updateGreenHint() {
+  var hintSub = null;
+  var greenKey = document.querySelector('#tp-hints .tp-hint-key.green');
+  if (greenKey && greenKey.parentNode) {
+    var textContainer = greenKey.parentNode.querySelector('.tp-hint-text');
+    if (textContainer) {
+      hintSub = textContainer.querySelector('.tp-hint-sub');
+    }
+  }
+
+  if (!hintSub) return;
+
+  if (isSiteEditorOpen() || isPreferencesOpen()) {
+    hintSub.textContent = 'Hold: Disabled';
+    return;
+  }
+
+  hintSub.textContent = 'Hold: Edit Card';
+}
+
+/**
  * Refresh portal hint labels (yellow short/long)
  */
 function updatePortalHints() {
   updateYellowHint();
+  updateGreenHint();
 }
 
 function resolveHintsPosition(portalConfig) {
@@ -2448,6 +2474,7 @@ function resolveHintsPosition(portalConfig) {
 
 function applyHintsPosition(element, position) {
   if (!element) return;
+  element.style.position = 'fixed';
   element.style.top = 'auto';
   element.style.bottom = 'auto';
   element.style.left = 'auto';

@@ -740,7 +740,7 @@ export const KEYS = {
 | Key | Short Press | Long Press |
 |-----|-------------|------------|
 | Red | Address bar | Reload page |
-| Green | Pointer toggle | Focus highlight |
+| Green | Pointer toggle | Edit focused card (portal) / Focus highlight (sites) |
 | Yellow | Preferences (portal) / Return to portal (sites) | Add Site (portal) / Return to portal (sites) |
 | Blue | Diagnostics | Safe mode |
 

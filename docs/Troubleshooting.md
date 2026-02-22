@@ -229,7 +229,7 @@ Before diving into specific issues, try these quick fixes:
 
 **Solutions:**
 
-1. **Enable focus highlight** — Long-press 🟢 Green
+1. **Enable focus highlight** — On sites, long-press 🟢 Green
 
 2. **Check TV picture settings** — May need adjustment
 

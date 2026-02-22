@@ -1636,7 +1636,7 @@ userscript.cleanup = function() {
 | Button | Short Press | Long Press |
 |--------|-------------|------------|
 | Red (403) | Address bar | Reload |
-| Green (404) | Pointer toggle | Focus highlight toggle |
+| Green (404) | Pointer toggle | Edit focused card (portal) / Focus highlight toggle (sites) |
 | Yellow (405) | Preferences (portal) / Return to portal (sites) | Add Site (portal) / Return to portal (sites) |
 | Blue (406) | Diagnostics | Safe mode |
 

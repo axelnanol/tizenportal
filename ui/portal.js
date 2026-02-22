@@ -314,25 +314,46 @@ export function hidePortal() {
  * @returns {Object|null}
  */
 export function getFocusedCard() {
-  var focusedElement = document.activeElement;
-  if (!focusedElement) return null;
-  
-  // Check if it's the Add Site card
-  if (focusedElement.classList.contains('tp-card-add')) {
+  var cards = getCards();
+  if (!cards || !cards.length) return null;
+
+  function findCardById(cardId) {
+    if (!cardId) return null;
+    for (var i = 0; i < cards.length; i++) {
+      if (cards[i].id === cardId) {
+        return cards[i];
+      }
+    }
     return null;
   }
-  
-  // Check if it's a card with a card ID
-  var cardId = focusedElement.getAttribute('data-card-id');
-  if (!cardId) return null;
-  
-  // Find the card in our stored cards
-  var cards = getCards();
-  for (var i = 0; i < cards.length; i++) {
-    if (cards[i].id === cardId) {
-      return cards[i];
+
+  // Primary: active element (or nearest card ancestor)
+  var activeElement = document.activeElement;
+  if (activeElement) {
+    var activeCard = activeElement;
+    if (!activeCard.classList || !activeCard.classList.contains('tp-card')) {
+      activeCard = activeElement.closest ? activeElement.closest('.tp-card') : null;
+    }
+    if (activeCard && activeCard.classList && !activeCard.classList.contains('tp-card-add')) {
+      var activeCardId = activeCard.getAttribute('data-card-id');
+      var activeCardData = findCardById(activeCardId);
+      if (activeCardData) return activeCardData;
     }
   }
-  
+
+  // Secondary: explicitly focused card element in the portal
+  if (gridElement) {
+    var domFocusedCard = gridElement.querySelector('.tp-card[data-card-id]:focus');
+    if (domFocusedCard) {
+      var domFocusedCardData = findCardById(domFocusedCard.getAttribute('data-card-id'));
+      if (domFocusedCardData) return domFocusedCardData;
+    }
+  }
+
+  // Fallback: tracked focus index (survives mouse clicks on hint labels)
+  if (focusedIndex >= 0 && focusedIndex < cards.length) {
+    return cards[focusedIndex];
+  }
+
   return null;
 }

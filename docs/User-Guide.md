@@ -188,7 +188,7 @@ Press **🟡 Yellow** (short press) to return to the portal launcher. **Long-pre
 | Button | Short Press | Long Press |
 |--------|-------------|------------|
 | 🔴 Red | Open address bar | Reload current page |
-| 🟢 Green | Toggle mouse mode | Toggle focus highlight |
+| 🟢 Green | Toggle mouse mode | Edit focused card (portal) / Toggle focus highlight (sites) |
 | 🟡 Yellow | Preferences (portal) / Return to portal (sites) | Add Site (portal) / **Add current site as card + return to portal** (sites) |
 | 🔵 Blue | Toggle diagnostics | Enter safe mode |
 
@@ -224,7 +224,7 @@ Press **🟢 Green** to toggle mouse mode on/off.
 
 ### Focus Highlight
 
-Long-press **🟢 Green** to toggle focus highlighting. This makes the currently focused element more visible with a bright outline.
+On sites, long-press **🟢 Green** to toggle focus highlighting. This makes the currently focused element more visible with a bright outline.
 
 ---
 
@@ -675,7 +675,7 @@ When the keyboard is active:
 
 ### High Contrast
 
-Enable focus highlight (long-press 🟢 Green) for better visibility of focused elements.
+On sites, enable focus highlight (long-press 🟢 Green) for better visibility of focused elements.
 
 ### Large Text
 

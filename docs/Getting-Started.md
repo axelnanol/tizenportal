@@ -83,7 +83,7 @@ Your new site card will appear in the grid!
 | Button | Short Press | Long Press |
 |--------|-------------|------------|
 | 🔴 Red | Address bar | Reload page |
-| 🟢 Green | Mouse mode | Focus highlight |
+| 🟢 Green | Mouse mode | Edit card (portal) / Focus highlight (sites) |
 | 🟡 Yellow | Preferences (portal) / Return to portal (sites) | Add Site (portal) / Return to portal (sites) |
 | 🔵 Blue | Diagnostics | Safe mode |
 

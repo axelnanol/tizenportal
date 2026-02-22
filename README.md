@@ -88,7 +88,7 @@ Press **🔴 Red** to open the address bar overlay with browser controls:
 | Button | Short Press | Long Press |
 |--------|-------------|------------|
 | 🔴 Red | Address Bar | Reload Page |
-| 🟢 Green | Toggle Mouse | Focus Highlight |
+| 🟢 Green | Toggle Mouse | Edit Card (portal) / Focus Highlight (sites) |
 | 🟡 Yellow | Preferences (portal) / Return to portal (sites) | Add Site (portal) / Return to portal (sites) |
 | 🔵 Blue | Diagnostics | Safe Mode |
 
