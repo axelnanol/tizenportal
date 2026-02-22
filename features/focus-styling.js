@@ -2,6 +2,14 @@
  * Focus Styling Feature
  *
  * Provides visible focus indicators for TV navigation.
+ *
+ * Modes:
+ *  off    – subtle blue outline (reliable fallback, always visible)
+ *  on     – solid blue outline with glow (default)
+ *  high   – yellow outline with glow (high-visibility)
+ *  portal – box-shadow ring with glow matching portal card style (rounded-aware)
+ *  white  – white outline for maximum contrast on dark/colourful backgrounds
+ *  none   – disabled (no CSS injected; use sparingly)
  */
 
 import { injectCSS, removeCSS } from '../core/utils.js';
@@ -45,35 +53,78 @@ export default {
     // Target range: Chrome 47-69 (Tizen TVs).
     var f = ':focus:not(#tp-focus-never)';
 
-    return [
+    var base = [
       '/* TizenPortal Focus Styling */',
       '',
+      '/* Remove browser default tap highlight */',
       '*:focus {',
       '  -webkit-tap-highlight-color: transparent;',
       '}',
       '',
-      // Universal fallback + off mode: subtle blue ring
-      f + ',',
-      'body.tp-focus-mode-off ' + f + ' {',
-      '  outline: 3px solid rgba(0, 178, 255, 0.7) !important;',
-      '  outline-offset: 2px !important;',
-      '  box-shadow: 0 0 8px rgba(0, 178, 255, 0.35) !important;',
-      '}',
+    ];
+
+    // ── mode-specific rules ────────────────────────────────────────────
+    var ring;
+
+    if (mode === 'portal') {
+      // Box-shadow ring: follows border-radius of the element (rounded-aware).
+      // Uses two layers: a dark gap then the coloured ring, plus a soft glow.
+      ring = [
+        '/* Portal-style focus ring (box-shadow, rounded-aware) */',
+        f + ' {',
+        '  outline: none !important;',
+        '  box-shadow:',
+        '    0 0 0 2px rgba(0,0,0,0.6),',
+        '    0 0 0 5px rgba(0, 178, 255, 0.9),',
+        '    0 0 18px rgba(0, 178, 255, 0.55) !important;',
+        '}',
+      ];
+    } else if (mode === 'high') {
+      // Yellow ring – high visibility
+      ring = [
+        '/* Yellow focus ring */',
+        f + ' {',
+        '  outline: 3px solid #fcd34d !important;',
+        '  outline-offset: 6px !important;',
+        '  box-shadow: 0 0 14px rgba(252, 211, 77, 0.6) !important;',
+        '}',
+      ];
+    } else if (mode === 'white') {
+      // White ring – maximum contrast on dark/colorful backgrounds
+      ring = [
+        '/* White focus ring */',
+        f + ' {',
+        '  outline: 3px solid #ffffff !important;',
+        '  outline-offset: 4px !important;',
+        '  box-shadow: 0 0 10px rgba(255,255,255,0.45) !important;',
+        '}',
+      ];
+    } else if (mode === 'off') {
+      // Subtle fallback – always injected so there is *some* ring
+      ring = [
+        '/* Subtle blue focus ring (fallback) */',
+        f + ' {',
+        '  outline: 3px solid rgba(0, 178, 255, 0.7) !important;',
+        '  outline-offset: 2px !important;',
+        '  box-shadow: 0 0 8px rgba(0, 178, 255, 0.35) !important;',
+        '}',
+      ];
+    } else {
+      // 'on' (default) – solid blue ring with breathing room
+      ring = [
+        '/* Blue focus ring */',
+        f + ' {',
+        '  outline: 3px solid #00b2ff !important;',
+        '  outline-offset: 6px !important;',
+        '  box-shadow: 0 0 14px rgba(0, 178, 255, 0.55) !important;',
+        '}',
+      ];
+    }
+
+    // ── portal card overrides (consistent with mode color) ────────────
+    var cards = [
       '',
-      // On mode: solid full-opacity blue with more breathing room
-      'body.tp-focus-mode-on ' + f + ' {',
-      '  outline: 3px solid #00b2ff !important;',
-      '  outline-offset: 6px !important;',
-      '  box-shadow: 0 0 12px rgba(0, 178, 255, 0.55) !important;',
-      '}',
-      '',
-      // High mode: yellow highlight
-      'body.tp-focus-mode-high ' + f + ' {',
-      '  outline: 3px solid #fcd34d !important;',
-      '  outline-offset: 6px !important;',
-      '  box-shadow: 0 0 12px rgba(252, 211, 77, 0.55) !important;',
-      '}',
-      '',
+      '/* Portal card focus */',
       '[data-tp-card] {',
       '  cursor: pointer;',
       '  transition: transform 0.15s ease-out;',
@@ -99,10 +150,12 @@ export default {
       '  outline: 2px solid #fff !important;',
       '  outline-offset: 2px !important;',
       '}',
-    ].join('\n');
+    ];
+
+    return base.concat(ring).concat(cards).join('\n');
   },
 
-  // No-op: all modes are embedded directly in getCSS() above
+  // No-op kept for backward compatibility
   appendHighlightCSS: function(css) {
     return css;
   },

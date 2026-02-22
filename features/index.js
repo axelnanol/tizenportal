@@ -427,7 +427,25 @@ export default {
   getFeatures: getFeatures,
   getDefaults: getDefaults,
   getConfig: getConfig,
-  
+
+  /**
+   * Register an additional CSS selector whose matching elements should
+   * receive tabindex="0" for TV navigation (both on page load and when
+   * new nodes are inserted).  Bundles call this before applyFeatures()
+   * so the selector is included in the initial scan and in the observer.
+   *
+   * @param {string} selector - Valid CSS selector string
+   */
+  addNavigableSelector: function(selector) {
+    if (!selector || typeof selector !== 'string') return;
+    var item = Registry.getById('tabindexInjection');
+    if (item && item.implementation && Array.isArray(item.implementation.selectors)) {
+      if (item.implementation.selectors.indexOf(selector) === -1) {
+        item.implementation.selectors.push(selector);
+      }
+    }
+  },
+
   // Expose registry for advanced use
   registry: Registry,
 };

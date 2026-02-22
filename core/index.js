@@ -2863,6 +2863,7 @@ var TizenPortalAPI = {
     getConfig: featureLoader.getConfig,
     getDefaults: featureLoader.getDefaults,
     registry: featureLoader.registry,  // Expose unified registry
+    addNavigableSelector: featureLoader.addNavigableSelector,
   },
 
   // Userscript engine
