@@ -16,6 +16,9 @@ export default {
   _ringScrollHandler: null,
   _ringResizeHandler: null,
   _ringMode: 'on',
+  _ringWidthPx: 3,
+  _ringOffsetPx: 2,
+  _ringRadiusPx: 10,
 
   getCSS: function(mode) {
     var color = '#00b2ff';
@@ -71,8 +74,7 @@ export default {
       '  pointer-events: none !important;',
       '  z-index: 2147483646 !important;',
       '  box-sizing: border-box !important;',
-      '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
-      '  outline-offset: ' + ringOffset + 'px !important;',
+      '  outline: none !important;',
       '  border: none !important;',
       '  border-radius: ' + ringRadius + 'px !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
@@ -158,20 +160,6 @@ export default {
     return hasOutline || hasShadow;
   },
 
-  getTargetRingRadius: function(target) {
-    if (!target || !target.ownerDocument || !target.ownerDocument.defaultView) return '10px';
-    try {
-      var computed = target.ownerDocument.defaultView.getComputedStyle(target);
-      var radius = computed && computed.borderRadius ? computed.borderRadius : '';
-      if (radius && radius !== '0px' && radius !== '0px 0px 0px 0px') {
-        return radius;
-      }
-    } catch (e) {
-      // ignore
-    }
-    return '10px';
-  },
-
   updateRingOverlay: function() {
     if (!this._ringOverlay) return;
 
@@ -194,11 +182,12 @@ export default {
       return;
     }
 
-    this._ringOverlay.style.top = rect.top + 'px';
-    this._ringOverlay.style.left = rect.left + 'px';
-    this._ringOverlay.style.width = width + 'px';
-    this._ringOverlay.style.height = height + 'px';
-    this._ringOverlay.style.borderRadius = this.getTargetRingRadius(target);
+    var inset = this._ringOffsetPx || 0;
+    this._ringOverlay.style.top = (rect.top - inset) + 'px';
+    this._ringOverlay.style.left = (rect.left - inset) + 'px';
+    this._ringOverlay.style.width = (width + inset * 2) + 'px';
+    this._ringOverlay.style.height = (height + inset * 2) + 'px';
+    this._ringOverlay.style.borderRadius = (this._ringRadiusPx || 10) + 'px';
     this._ringOverlay.classList.add('tp-visible');
   },
 
@@ -276,6 +265,9 @@ export default {
   apply: function(doc) {
     if (!doc) return;
     var mode = arguments.length > 1 ? arguments[1] : 'on';
+    this._ringWidthPx = mode === 'high' ? 4 : 3;
+    this._ringOffsetPx = 2;
+    this._ringRadiusPx = 10;
     this._ringMode = mode;
     this.remove(doc);
     if (mode === 'off') return;
