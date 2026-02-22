@@ -2727,23 +2727,44 @@ function navigateUrl(url) {
       featureBundle: 'default',
     };
     loadSite(adhocCard);
-  } else {
-    if (!state.currentCard || !state.currentCard.id) {
-      warn('navigateUrl: no current card context, falling back to direct navigation');
-      window.location.href = url;
-      return;
-    }
-    var crossHistory = (state.currentCard.crossHistory || []).slice();
-    crossHistory.push(getCleanCurrentUrl());
-    var relayBundleName = state.currentBundle || state.currentCard.featureBundle || 'default';
-    var portalUrl = buildCrossNavUrl(state.currentCard.id, url, crossHistory, [], relayBundleName);
-    if (!portalUrl) {
-      warn('navigateUrl: crossnav URL build failed, falling back to direct navigation');
-      window.location.href = url;
-      return;
-    }
-    window.location.href = portalUrl;
+    return;
   }
+
+  // On a site: avoid relay loops back to the portal itself
+  if (url.indexOf(PORTAL_BASE_URL) === 0) {
+    window.location.href = url;
+    return;
+  }
+
+  // Same-origin navigation is handled by the sessionStorage relay —
+  // no need to round-trip through the portal crossnav relay.
+  var currentBase = window.location.protocol + '//' + window.location.host;
+  if (
+    url === currentBase ||
+    url.indexOf(currentBase + '/') === 0 ||
+    url.indexOf(currentBase + '?') === 0 ||
+    url.indexOf(currentBase + '#') === 0
+  ) {
+    window.location.href = url;
+    return;
+  }
+
+  // Cross-origin: route via portal crossnav relay to preserve card context
+  if (!state.currentCard || !state.currentCard.id) {
+    warn('navigateUrl: no current card context, falling back to direct navigation');
+    window.location.href = url;
+    return;
+  }
+  var crossHistory = (state.currentCard.crossHistory || []).slice();
+  crossHistory.push(getCleanCurrentUrl());
+  var relayBundleName = state.currentBundle || state.currentCard.featureBundle || 'default';
+  var portalUrl = buildCrossNavUrl(state.currentCard.id, url, crossHistory, [], relayBundleName);
+  if (!portalUrl) {
+    warn('navigateUrl: crossnav URL build failed, falling back to direct navigation');
+    window.location.href = url;
+    return;
+  }
+  window.location.href = portalUrl;
 }
 
 /**
