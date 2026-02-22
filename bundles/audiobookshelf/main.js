@@ -8,7 +8,7 @@
  * - Keep site selectors centralized and updated.
  * - Mark focusable elements with data-tp-card.
  * - Clean up listeners in onDeactivate.
- * - Prefer config objects for site-specific behavior.
+ * - Prefer config objects for site-specific behaviour.
  */
 
 import absStyles from './style.css';
@@ -334,9 +334,16 @@ export default {
     // CORE: Register cards using the new card registration API
     // This replaces manual setupFocusables() for card elements
     this.registerCardSelectors();
-    
+
+    // CORE: Register ABS-specific navigable element selectors with the
+    // global tabindex injection system so they are automatically covered
+    // by both the initial page scan and the dynamic-content observer.
+    this.registerNavigableSelectors();
+
     // CORE: Register element manipulations using declarative API
-    // This replaces all imperative DOM manipulation patterns
+    // Only used for operations that cannot be expressed as a plain selector:
+    // navigation-direction attributes, spacing classes, and complex
+    // conditional focusables (e.g. collection/playlist rows).
     this.registerElementManipulations();
     
     // Global features handle text input wrapping and scroll-into-view.
@@ -349,8 +356,8 @@ export default {
         // Global features handle text input wrapping.
         // Monitor audio element when DOM changes (player may have been created)
         self.monitorAudioElement();
-        // Handle color hints visibility based on player state
-        self.updateColorHintsVisibility();
+        // Handle colour hints visibility based on player state
+        self.updateColourHintsVisibility();
       } catch (err) {
         console.warn('TizenPortal [ABS]: Error in DOM observer:', err.message);
       }
@@ -360,7 +367,7 @@ export default {
     // Nuxt uses History API for navigation, which doesn't trigger page reload
     stopUrlWatcher = this.watchUrlChanges();
     
-    // OVERRIDE: Register custom key handler for ABS-specific behavior
+    // OVERRIDE: Register custom key handler for ABS-specific behaviour
     // This runs BEFORE core handlers - return true to consume the event
     // NOTE: Accessed via global API to avoid circular dependency
     if (window.TizenPortal && window.TizenPortal.input && window.TizenPortal.input.registerKeyHandler) {
@@ -462,7 +469,7 @@ export default {
   // ==========================================================================
   
   /**
-   * Custom key handler - OVERRIDES core behavior when returning true
+   * Custom key handler - OVERRIDES core behaviour when returning true
    * 
    * This function is registered with registerKeyHandler() and runs BEFORE
    * any core handlers. Return true to consume the event (core won't see it),
@@ -561,7 +568,7 @@ export default {
    * WHAT GOES IN CARD REGISTRATION:
    * - Visual card elements (books, series, collections, authors, playlists)
    * - Primary navigation items (siderail links)
-   * - Any element that represents a distinct "item" with card-like behavior
+   * - Any element that represents a distinct "item" with card-like behaviour
    * 
    * WHAT STAYS IN setupOtherFocusables():
    * - UI chrome (appbar buttons, search inputs)
@@ -632,11 +639,65 @@ export default {
   },
 
   /**
-   * Register element manipulations using declarative API
-   * 
-   * This replaces many imperative DOM manipulations from setupOtherFocusables()
-   * with declarative registrations that are automatically applied to existing
-   * and dynamically added elements.
+   * Register ABS-specific navigable element selectors with the global
+   * tabindex injection system via TizenPortal.features.addNavigableSelector().
+   *
+   * These selectors extend the core NAVIGABLE_SELECTORS list so that both
+   * the initial page scan and the live MutationObserver cover ABS-specific
+   * interactive elements automatically – no manual tabindex setAttribute
+   * calls or custom MutationObserver wiring required in the bundle.
+   *
+   * Only selectors that are unique to ABS belong here.  Native interactive
+   * elements (a[href], button, input, [role="menuitem"], etc.) are already
+   * handled by the global list and must not be duplicated.
+   */
+  registerNavigableSelectors: function() {
+    if (!window.TizenPortal || !window.TizenPortal.features ||
+        typeof window.TizenPortal.features.addNavigableSelector !== 'function') {
+      console.warn('TizenPortal [ABS]: addNavigableSelector not available');
+      return;
+    }
+
+    var add = window.TizenPortal.features.addNavigableSelector.bind(window.TizenPortal.features);
+
+    // ── Filter/sort dropdown list items (ABS ui-dropdown-menu component) ──
+    // [role="option"] and [role="menuitem"] are now in the global list;
+    // plain <li> items inside the ABS-specific dropdown are not.
+    add('.ui-dropdown-menu li');
+
+    // ── Clickable table rows (search results, settings tables) ───────────
+    add('tr[class*="cursor-pointer"]');
+
+    // ── Item detail: chapter list entries ────────────────────────────────
+    add('.chapter-row');
+    add('[class*="chapters"] > div > div');
+
+    // ── Icon/action buttons not captured by native selectors ─────────────
+    // button/[role="button"] are already global; these are <div>/<span>
+    // elements styled as buttons via CSS class rather than semantics.
+    add('.icon-btn');
+    add('[class*="icon-btn"]');
+
+    // ── Success-coloured play/read button on detail and list pages ───────
+    add('.bg-success');
+
+    console.log('TizenPortal [ABS]: ABS-specific navigable selectors registered');
+  },
+
+  /**
+   * Register element manipulations using declarative API.
+   *
+   * This function now only covers operations that CANNOT be expressed as a
+   * plain navigable selector:
+   *   - navigation-direction attributes (data-tp-nav)
+   *   - spacing/layout CSS classes
+   *   - data-tp-card single-action marking
+   *   - conditional focusables where the condition requires DOM inspection
+   *     (collection rows, playlist rows that must contain a book cover)
+   *
+   * All simple "make this element focusable" work has moved to
+   * registerNavigableSelectors() above, or is already covered by the
+   * global NAVIGABLE_SELECTORS list in tabindex-injection.js.
    */
   registerElementManipulations: function() {
     if (!window.TizenPortal || !window.TizenPortal.elements) {
@@ -646,305 +707,109 @@ export default {
     
     var elements = window.TizenPortal.elements;
     
-    // ========================================================================
-    // SIDERAIL - Mark for vertical navigation
-    // ========================================================================
+    // ── SIDERAIL ──────────────────────────────────────────────────────────
+    // Mark for vertical spatial navigation.
     elements.register({
       selector: SELECTORS.siderail,
       operation: 'attribute',
-      attributes: {
-        'data-tp-nav': 'vertical'
-      }
+      attributes: { 'data-tp-nav': 'vertical' }
     });
-    
-    // ========================================================================
-    // DROPDOWN CONTAINERS - Add spacing and vertical navigation
-    // ========================================================================
+
+    // ── DROPDOWN CONTAINERS ───────────────────────────────────────────────
+    // Mark containers for vertical navigation and add spacing class.
+    // Individual items inside (.ui-dropdown-menu li, [role="menuitem"],
+    // [role="option"]) are handled by registerNavigableSelectors() and the
+    // global NAVIGABLE_SELECTORS list, so operation: 'focusable' is not
+    // needed on the container itself.
     elements.register({
       selector: SELECTORS.dropdownContainer,
-      operation: 'focusable',
-      nav: 'vertical',
+      operation: 'attribute',
+      attributes: { 'data-tp-nav': 'vertical' }
+    });
+    elements.register({
+      selector: SELECTORS.dropdownContainer,
+      operation: 'class',
       classes: [SPACING_CLASS]
     });
-    
-    // ========================================================================
-    // DROPDOWN MENU ITEMS - Make focusable
-    // ========================================================================
-    elements.register({
-      selector: SELECTORS.menuItems,
-      operation: 'focusable'
-    });
-    
-    // ========================================================================
-    // FILTER DROPDOWN ITEMS - Make visible items focusable
-    // ========================================================================
-    elements.register({
-      selector: SELECTORS.filterDropdownItems,
-      operation: 'focusable',
-      condition: function(el) {
-        // Only make focusable if visible
-        return el.offsetParent !== null;
-      }
-    });
-    
-    // ========================================================================
-    // APPBAR - Search and buttons
-    // ========================================================================
-    elements.register({
-      selector: SELECTORS.appbarButtons,
-      operation: 'focusable',
-      condition: function(el) {
-        // Only if visible and not hidden
-        return !el.closest('[style*="display: none"]') && 
-               el.getAttribute('aria-hidden') !== 'true';
-      }
-    });
-    
-    elements.register({
-      selector: SELECTORS.appbarSearch,
-      operation: 'focusable',
-      condition: function(el) {
-        return el.getAttribute('aria-hidden') !== 'true';
-      }
-    });
-    
-    // ========================================================================
-    // PLAYER CONTROLS - Make horizontal and all controls focusable
-    // ========================================================================
+
+    // ── PLAYER CONTAINER ──────────────────────────────────────────────────
+    // Mark for horizontal spatial navigation.
+    // button / a / [role="button"] inside the player are already navigable
+    // via global NAVIGABLE_SELECTORS; no extra focusable registration needed.
     elements.register({
       selector: SELECTORS.playerContainer,
       operation: 'attribute',
-      attributes: {
-        'data-tp-nav': 'horizontal'
-      }
+      attributes: { 'data-tp-nav': 'horizontal' }
     });
-    
-    // Player interactive elements (buttons, links, controls)
-    var playerInteractiveSelector = [
-      SELECTORS.playerContainer + ' button',
-      SELECTORS.playerContainer + ' a',
-      SELECTORS.playerContainer + ' [role="button"]'
-    ].join(', ');
-    
+
+    // Mark individual player buttons as nav items for the horizontal group.
     elements.register({
-      selector: playerInteractiveSelector,
-      operation: 'focusable',
+      selector: 'button',
+      operation: 'attribute',
       container: SELECTORS.playerContainer,
+      attributes: { 'data-tp-nav-item': 'true' },
       condition: function(el) {
         return !el.disabled && el.getAttribute('aria-hidden') !== 'true';
       }
     });
-    
-    // ========================================================================
-    // GENERIC PAGE CONTENT - Links and buttons (excluding specific areas)
-    // ========================================================================
-    elements.register({
-      selector: 'a[href]:not([tabindex])',
-      operation: 'focusable',
-      container: SELECTORS.pageWrapper,
-      condition: function(el) {
-        // Skip if inside siderail or appbar (handled separately)
-        return !el.closest(SELECTORS.siderail) && 
-               !el.closest('#appbar') &&
-               el.offsetParent !== null;
-      }
-    });
-    
-    elements.register({
-      selector: 'button:not([tabindex])',
-      operation: 'focusable',
-      container: SELECTORS.pageWrapper,
-      condition: function(el) {
-        return !el.closest(SELECTORS.siderail) && 
-               !el.closest('#appbar') &&
-               !el.disabled &&
-               el.offsetParent !== null;
-      }
-    });
-    
-    // ========================================================================
-    // TABLE ROWS - Clickable rows
-    // ========================================================================
-    elements.register({
-      selector: 'tr[class*="cursor-pointer"], tr.hover\\:bg-',
-      operation: 'focusable',
-      container: SELECTORS.pageWrapper
-    });
-    
-    // Also mark table rows as single-action cards
+
+    // ── TABLE ROWS ────────────────────────────────────────────────────────
+    // Mark clickable rows as single-action cards.
+    // Focusability is provided by registerNavigableSelectors().
     elements.register({
       selector: 'tr[class*="cursor-pointer"], tr.hover\\:bg-',
       operation: 'attribute',
       container: SELECTORS.pageWrapper,
-      attributes: {
-        'data-tp-card': 'single'
-      }
+      attributes: { 'data-tp-card': 'single' }
     });
-    
-    // ========================================================================
-    // ITEM DETAIL PAGE - Icon buttons and links
-    // ========================================================================
-    // Icon buttons (Play, Queue, Edit, Finished, More)
-    elements.register({
-      selector: '.icon-btn, [class*="icon-btn"], button.mx-0\\.5',
-      operation: 'focusable',
-      condition: function(el) {
-        return window.location.pathname.indexOf('/item/') !== -1 && !el.disabled;
-      }
-    });
-    
-    // ui-btn components (Play button, Read button)
-    elements.register({
-      selector: '#item-page-wrapper button, #page-wrapper .flex.items-center button',
-      operation: 'focusable',
-      condition: function(el) {
-        return window.location.pathname.indexOf('/item/') !== -1 && !el.disabled;
-      }
-    });
-    
-    // Links to series/author
-    elements.register({
-      selector: '#item-page-wrapper a[href], #page-wrapper .grow a[href]',
-      operation: 'focusable',
-      condition: function(el) {
-        return window.location.pathname.indexOf('/item/') !== -1;
-      }
-    });
-    
-    // ========================================================================
-    // LOGIN PAGE - Form elements
-    // ========================================================================
-    elements.register({
-      selector: SELECTORS.loginUsername + ', ' + SELECTORS.loginPassword,
-      operation: 'focusable',
-      condition: function(el) {
-        return window.location.pathname.indexOf('/login') !== -1;
-      }
-    });
-    
-    elements.register({
-      selector: SELECTORS.loginSubmit,
-      operation: 'focusable',
-      condition: function(el) {
-        return window.location.pathname.indexOf('/login') !== -1;
-      }
-    });
-    
-    elements.register({
-      selector: SELECTORS.loginOpenID,
-      operation: 'focusable',
-      condition: function(el) {
-        return window.location.pathname.indexOf('/login') !== -1;
-      }
-    });
-    
-    // ========================================================================
-    // MODALS - All interactive elements when modal is visible
-    // ========================================================================
-    elements.register({
-      selector: SELECTORS.modal + ' button, ' + 
-                SELECTORS.modal + ' a, ' + 
-                SELECTORS.modal + ' input, ' + 
-                SELECTORS.modal + ' select',
-      operation: 'focusable',
-      condition: function(el) {
-        // Only make focusable if modal is visible
-        var modal = el.closest(SELECTORS.modal);
-        return modal && modal.offsetParent !== null;
-      }
-    });
-    
-    // ========================================================================
-    // SPACING CLASSES - Apply to containers for spatial navigation
-    // ========================================================================
-    // Bookshelf rows (horizontal scroll containers)
+
+    // ── SPACING CLASSES ───────────────────────────────────────────────────
     elements.register({
       selector: SELECTORS.bookshelfRow,
       operation: 'class',
       classes: [SPACING_CLASS]
     });
-    
-    // Siderail navigation container
     elements.register({
       selector: '#siderail-buttons-container',
       operation: 'class',
       classes: [SPACING_CLASS]
     });
-    
-    // Top appbar
     elements.register({
       selector: SELECTORS.appbar,
       operation: 'class',
       classes: [SPACING_CLASS]
     });
-    
-    // Player container
     elements.register({
       selector: SELECTORS.playerContainer,
       operation: 'class',
       classes: [SPACING_CLASS]
     });
-    
-    // ========================================================================
-    // PLAYER CONTROLS - Additional setup for navigation
-    // ========================================================================
-    // Mark buttons for horizontal navigation within player
-    elements.register({
-      selector: 'button',
-      operation: 'attribute',
-      container: SELECTORS.playerContainer,
-      attributes: {
-        'data-tp-nav-item': 'true'
-      },
-      condition: function(el) {
-        return !el.disabled && el.getAttribute('aria-hidden') !== 'true';
-      }
-    });
-    
-    // ========================================================================
-    // DETAIL PAGES - Page-specific elements
-    // ========================================================================
-    // Item/Collection/Playlist detail pages - Play buttons
-    elements.register({
-      selector: '.bg-success',
-      operation: 'focusable',
-      condition: function(el) {
-        var path = window.location.pathname || '';
-        return (path.indexOf('/item/') !== -1 || 
-                path.indexOf('/collection/') !== -1 || 
-                path.indexOf('/playlist/') !== -1);
-      }
-    });
-    
-    // Chapter rows on item detail page
-    elements.register({
-      selector: '[class*="chapters"] > div > div, .chapter-row',
-      operation: 'focusable',
-      condition: function(el) {
-        return window.location.pathname.indexOf('/item/') !== -1;
-      }
-    });
-    
-    // Book rows in collection page
+
+    // ── COLLECTION ROWS ───────────────────────────────────────────────────
+    // Only rows that contain a book cover image should be focusable.
+    // A plain CSS selector cannot express this, so the condition is
+    // necessary here (no :has() support in Chrome 47-69).
     elements.register({
       selector: '[class*="collection"] > div, .collection-book-row, .w-full.flex.items-center',
       operation: 'focusable',
+      container: SELECTORS.pageWrapper,
       condition: function(el) {
-        return window.location.pathname.indexOf('/collection/') !== -1 && 
+        return window.location.pathname.indexOf('/collection/') !== -1 &&
                el.querySelector('.covers-book-cover, [class*="book-cover"]');
       }
     });
-    
-    // Playlist item rows
+
+    // ── PLAYLIST ROWS ─────────────────────────────────────────────────────
+    // Same reasoning: only rows with a preview cover image.
     elements.register({
       selector: '[class*="playlist"] .w-full.flex, .playlist-item-row',
       operation: 'focusable',
       condition: function(el) {
-        return window.location.pathname.indexOf('/playlist/') !== -1 && 
+        return window.location.pathname.indexOf('/playlist/') !== -1 &&
                el.querySelector('.covers-book-cover, [class*="book-cover"], [class*="preview-cover"]');
       }
     });
-    
+
     console.log('TizenPortal [ABS]: Element manipulations registered');
   },
   
@@ -967,12 +832,12 @@ export default {
   },
   
   /**
-   * Update color hints visibility based on player state
+   * Update colour hints visibility based on player state
    * 
-   * When the media player is visible, the color hints at the bottom
+   * When the media player is visible, the colour hints at the bottom
    * overlap badly with the player controls. We hide them during playback.
    */
-  updateColorHintsVisibility: function() {
+  updateColourHintsVisibility: function() {
     try {
       var hints = document.querySelector('.tp-site-hints');
       if (!hints) return;
@@ -984,20 +849,20 @@ export default {
         getComputedStyle(playerContainer).display !== 'none';
       
       if (playerVisible) {
-        // Hide color hints when player is visible
+        // Hide colour hints when player is visible
         if (hints.style.display !== 'none') {
           hints.style.display = 'none';
-          console.log('TizenPortal [ABS]: Hiding color hints (player visible)');
+          console.log('TizenPortal [ABS]: Hiding colour hints (player visible)');
         }
       } else {
-        // Show color hints when player is hidden
+        // Show colour hints when player is hidden
         if (hints.style.display === 'none') {
           hints.style.display = '';
-          console.log('TizenPortal [ABS]: Showing color hints (player hidden)');
+          console.log('TizenPortal [ABS]: Showing colour hints (player hidden)');
         }
       }
     } catch (err) {
-      console.warn('TizenPortal [ABS]: Error updating color hints:', err.message);
+      console.warn('TizenPortal [ABS]: Error updating colour hints:', err.message);
     }
   },
   
@@ -1212,7 +1077,7 @@ export default {
   
   /**
    * Play from a focused book/series card
-   * Simulates the hover-to-play behavior
+   * Simulates the hover-to-play behaviour
    * @param {Element} card - The focused card element
    */
   playFromFocusedCard: function(card) {
@@ -1332,33 +1197,13 @@ export default {
   },
   
   /**
-   * Set up focusable elements on item detail, collection, and playlist pages
-   * These pages have different layouts than the main bookshelf grid
+   * DEPRECATED: Setup focusable elements on detail pages.
+   * Now handled by registerNavigableSelectors() and registerElementManipulations().
    */
-  setupDetailPageFocusables: function() {
-    // Now handled by registerElementManipulations()
-  },
-  
-  /**
-   * Setup focusable elements on item detail page
-   */
-  setupItemDetailPage: function() {
-    // Now handled by registerElementManipulations()
-  },
-  
-  /**
-   * Setup focusable elements on collection page
-   */
-  setupCollectionPage: function() {
-    // Now handled by registerElementManipulations()
-  },
-  
-  /**
-   * Setup focusable elements on playlist page
-   */
-  setupPlaylistPage: function() {
-    // Now handled by registerElementManipulations()
-  },
+  setupDetailPageFocusables: function() {},
+  setupItemDetailPage: function() {},
+  setupCollectionPage: function() {},
+  setupPlaylistPage: function() {},
   
   // ==========================================================================
   // TIZEN AUDIO HANDLING

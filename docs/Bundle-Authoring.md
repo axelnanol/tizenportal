@@ -98,7 +98,8 @@ The TizenPortal core handles a lot automatically — you don't need to implement
 | **Navigation mode** | Optional: set `"navigationMode": "geometric"` (or directional) only when needed |
 | **Tabindex injection** | Set `"features": { "tabindexInjection": true }` in manifest.json |
 | **Scroll-into-view** | Set `"features": { "scrollIntoView": true }` in manifest.json |
-| **Focus outline** | Always active; style-able via CSS |
+| **Focus outline** | Always active; style configurable via the Focus Outline preference (5 modes: Subtle Blue, Blue Ring, Yellow Ring, Portal Style, White Ring) |
+| **Custom navigable selectors** | Call `TizenPortal.features.addNavigableSelector('.my-selector')` — core observer picks them up for new DOM nodes automatically |
 | **Card two-level nav** | Register cards via `TizenPortal.cards.register()` — Enter/Back handled automatically |
 | **Cleanup on exit** | Registered elements/cards are automatically cleaned up on deactivation |
 | **Safe-area inset** | Set `"features": { "safeArea": true }` in manifest.json |
@@ -109,6 +110,7 @@ The TizenPortal core handles a lot automatically — you don't need to implement
 
 - **Declare** element manipulations (focusable, styles, classes, attributes)
 - **Declare** card interactions (single/multi-action cards)
+- **Register custom navigable selectors** via `addNavigableSelector()` so site-specific interactive elements are automatically covered by the global tabindex injection and focus ring system
 - Inject CSS to fix layout issues
 - Handle custom key events for site-specific actions
 - Configure via manifest (navigation mode, viewport lock, etc.)
@@ -1693,10 +1695,10 @@ export default {
 
 ### Focus Not Working
 
-1. Add `tabindex="0"` to elements
-2. Check for `outline: none` in site CSS
-3. Add `!important` to focus styles
-4. Verify elements are visible (not `display: none`)
+1. **Elements not receiving tabindex**: call `TizenPortal.features.addNavigableSelector('.my-selector')` in `onDOMReady` — this extends the global list and is picked up by the live observer for any new DOM nodes, with no restart required.
+2. **Focus ring not visible**: the global focus-styling feature manages rings — check the user's Focus Outline preference is not set to *Subtle Blue* (lowest visibility). Site CSS using `outline: none !important` is countered by the focus-styling observer which keeps its stylesheet last in `<head>`; if a site still overrides rings, add a bundle CSS rule with `!important` for the `:focus` state.
+3. **Dynamic content missing tabindex**: the tabindex injection `MutationObserver` watches `document.body` with `childList + subtree` automatically — if elements are still missed, verify `tabindexInjection` is enabled in the feature toggles.
+4. **Verify elements are visible**: `display: none` prevents focus.
 
 ### Layout Broken
 
@@ -1706,9 +1708,9 @@ export default {
 
 ### SPA Navigation Issues
 
-1. Use `observeDOM()` to watch for changes
-2. Re-run initialization on DOM mutations
-3. Check for route change events
+1. The tabindex injection `MutationObserver` handles dynamically inserted elements automatically — no manual `observeDOM()` needed for making new elements focusable.
+2. If the SPA resets styles or removes custom attributes on route change, use `watchUrlChanges()` (see the Audiobookshelf bundle as a reference) to re-process card registrations after navigation.
+3. Check for route change events emitted by the framework if polling is insufficient.
 
 ---
 
@@ -1719,6 +1721,7 @@ export default {
 | 1.0 | 2026-01-12 | Initial version (APP mode) |
 | 2.0 | 2026-01-20 | MOD mode architecture |
 | 3.0 | 2026-01-31 | Universal runtime, core utilities |
+| 4.1 | 2026-02-22 | `addNavigableSelector()` API; focus outline expanded to 5 modes; dynamic-content observer always uses live selector list |
 
 ---
 

@@ -427,7 +427,46 @@ export default {
   getFeatures: getFeatures,
   getDefaults: getDefaults,
   getConfig: getConfig,
-  
+
+  /**
+   * Register an additional CSS selector whose matching elements should
+   * receive tabindex="0" for TV navigation.  May be called at any time —
+   * before or after applyFeatures().
+   *
+   * - Elements already in the DOM that match the new selector will be picked
+   *   up on the next call to applyFeatures() (or on the next SPA route change
+   *   if the bundle re-applies features).
+   * - Elements inserted into the DOM *after* this call are picked up
+   *   immediately by the running MutationObserver, which always reads from
+   *   the live selector list.
+   *
+   * @param {string} selector - Valid CSS selector string
+   */
+  addNavigableSelector: function(selector) {
+    if (!selector || typeof selector !== 'string') return;
+    // Validate the selector before registering it.  An invalid selector
+    // would cause the entire joined string passed to querySelectorAll() /
+    // matches() to throw, silently breaking tabindex injection for every
+    // element.  We check here so bundles get a clear console warning
+    // rather than silent failures.
+    try {
+      document.querySelector(selector);
+    } catch (err) {
+      if (window.TizenPortal) {
+        TizenPortal.warn('addNavigableSelector: invalid CSS selector "' + selector + '" — ' + err.message);
+      } else {
+        console.warn('TizenPortal [addNavigableSelector]: invalid CSS selector "' + selector + '" — ' + err.message);
+      }
+      return;
+    }
+    var item = Registry.getById('tabindexInjection');
+    if (item && item.implementation && Array.isArray(item.implementation.selectors)) {
+      if (item.implementation.selectors.indexOf(selector) === -1) {
+        item.implementation.selectors.push(selector);
+      }
+    }
+  },
+
   // Expose registry for advanced use
   registry: Registry,
 };

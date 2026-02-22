@@ -15,6 +15,7 @@
  */
 
 import adblockStyles from './style.css';
+import { injectCSS, removeCSS } from '../../core/utils.js';
 
 /**
  * Consolidated ad-related URL patterns
@@ -226,8 +227,6 @@ var state = {
   originalXHRSend: null,
   originalFetch: null,
   targetWindow: null,
-  strictStyleEl: null,
-  cookieStyleEl: null,
   hideCookieBanners: false,
   inlineHeuristics: true,
   urlCheckCache: {}, // Cache for URL checks (cleared on navigation)
@@ -455,12 +454,8 @@ export default {
   injectStrictStyles: function(win) {
     try {
       var doc = win.document || document;
-      if (!doc || !doc.createElement) return;
-      if (state.strictStyleEl) return;
-
-      var style = doc.createElement('style');
-      style.type = 'text/css';
-      style.textContent = [
+      if (!doc) return;
+      injectCSS(doc, 'tp-adblock-strict', [
         '[data-google-query-id],[data-ad-client],[data-ad-slot],[data-ad-unit],[data-ad-format],[data-adtest],',
         '[data-testid*="ad"],[data-testid*="sponsor"],[data-testid*="promoted"],',
         '[aria-label*="Sponsored"],[aria-label*="sponsored"],[aria-label*="Advertisement"],[aria-label*="advertisement"],',
@@ -470,10 +465,7 @@ export default {
         'img[src*="pixel"],img[src*="tracker"],img[src*="tracking"],',
         'div[style*="z-index: 2147483647"]',
         '{display:none !important;visibility:hidden !important;height:0 !important;width:0 !important;overflow:hidden !important;opacity:0 !important;}'
-      ].join('');
-
-      (doc.head || doc.documentElement || doc.body).appendChild(style);
-      state.strictStyleEl = style;
+      ].join(''));
     } catch (err) {
       // Ignore
     }
@@ -486,14 +478,10 @@ export default {
   injectCookieStyles: function(win) {
     try {
       var doc = win.document || document;
-      if (!doc || !doc.createElement) return;
-      if (state.cookieStyleEl) return;
-
-      var style = doc.createElement('style');
-      style.type = 'text/css';
-      style.textContent = COOKIE_SELECTORS.join(',') + '{display:none !important;visibility:hidden !important;height:0 !important;overflow:hidden !important;opacity:0 !important;}';
-      (doc.head || doc.documentElement || doc.body).appendChild(style);
-      state.cookieStyleEl = style;
+      if (!doc) return;
+      injectCSS(doc, 'tp-adblock-cookies',
+        COOKIE_SELECTORS.join(',') + '{display:none !important;visibility:hidden !important;height:0 !important;overflow:hidden !important;opacity:0 !important;}'
+      );
     } catch (err) {
       // Ignore
     }
@@ -1175,22 +1163,16 @@ export default {
     }
 
     try {
-      if (state.strictStyleEl && state.strictStyleEl.parentNode) {
-        state.strictStyleEl.parentNode.removeChild(state.strictStyleEl);
-      }
+      removeCSS(document, 'tp-adblock-strict');
     } catch (err) {
       console.warn('TizenPortal [AdBlock]: cleanup strict style error:', err.message);
     }
-    state.strictStyleEl = null;
 
     try {
-      if (state.cookieStyleEl && state.cookieStyleEl.parentNode) {
-        state.cookieStyleEl.parentNode.removeChild(state.cookieStyleEl);
-      }
+      removeCSS(document, 'tp-adblock-cookies');
     } catch (err) {
       console.warn('TizenPortal [AdBlock]: cleanup cookie style error:', err.message);
     }
-    state.cookieStyleEl = null;
     
     try {
       if (this._cleanTimeout) {
