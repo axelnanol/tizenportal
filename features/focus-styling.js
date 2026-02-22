@@ -15,6 +15,7 @@ export default {
   _ringUpdateHandler: null,
   _ringScrollHandler: null,
   _ringResizeHandler: null,
+  _ringMode: 'on',
 
   getCSS: function(mode) {
     var color = '#00b2ff';
@@ -135,11 +136,52 @@ export default {
     this._ringOverlay.style.height = '0px';
   },
 
+  isCssRingLikelyVisible: function(target) {
+    if (!target || !target.ownerDocument || !target.ownerDocument.defaultView) return false;
+    var view = target.ownerDocument.defaultView;
+    var computed = null;
+    try {
+      computed = view.getComputedStyle(target);
+    } catch (e) {
+      return false;
+    }
+    if (!computed) return false;
+
+    var outlineStyle = (computed.outlineStyle || '').toLowerCase();
+    var outlineWidth = parseCssPx(computed.outlineWidth);
+    var outlineColor = (computed.outlineColor || '').toLowerCase();
+    var hasOutline = outlineStyle !== 'none' && outlineWidth > 0 && !isTransparentCssColor(outlineColor);
+
+    var boxShadow = (computed.boxShadow || '').toLowerCase();
+    var hasShadow = boxShadow && boxShadow !== 'none' && boxShadow.indexOf('rgba(0, 0, 0, 0)') === -1;
+
+    return hasOutline || hasShadow;
+  },
+
+  getTargetRingRadius: function(target) {
+    if (!target || !target.ownerDocument || !target.ownerDocument.defaultView) return '10px';
+    try {
+      var computed = target.ownerDocument.defaultView.getComputedStyle(target);
+      var radius = computed && computed.borderRadius ? computed.borderRadius : '';
+      if (radius && radius !== '0px' && radius !== '0px 0px 0px 0px') {
+        return radius;
+      }
+    } catch (e) {
+      // ignore
+    }
+    return '10px';
+  },
+
   updateRingOverlay: function() {
     if (!this._ringOverlay) return;
 
-    var target = this._focusedProxy || document.activeElement;
+    var target = document.activeElement || this._focusedProxy;
     if (!target || target === document.body || !target.getBoundingClientRect) {
+      this.hideRingOverlay();
+      return;
+    }
+
+    if (this.isCssRingLikelyVisible(target)) {
       this.hideRingOverlay();
       return;
     }
@@ -156,6 +198,7 @@ export default {
     this._ringOverlay.style.left = rect.left + 'px';
     this._ringOverlay.style.width = width + 'px';
     this._ringOverlay.style.height = height + 'px';
+    this._ringOverlay.style.borderRadius = this.getTargetRingRadius(target);
     this._ringOverlay.classList.add('tp-visible');
   },
 
@@ -233,6 +276,7 @@ export default {
   apply: function(doc) {
     if (!doc) return;
     var mode = arguments.length > 1 ? arguments[1] : 'on';
+    this._ringMode = mode;
     this.remove(doc);
     if (mode === 'off') return;
     injectCSS(doc, 'tp-focus-styling', this.getCSS(mode));
@@ -263,4 +307,16 @@ function hexToRgba(hex, alpha) {
   var g = (value >> 8) & 255;
   var b = value & 255;
   return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
+}
+
+function parseCssPx(value) {
+  if (!value) return 0;
+  var parsed = parseFloat(String(value).replace('px', ''));
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+function isTransparentCssColor(value) {
+  if (!value) return true;
+  var color = String(value).toLowerCase();
+  return color === 'transparent' || color === 'rgba(0, 0, 0, 0)' || color === 'rgba(0,0,0,0)';
 }
