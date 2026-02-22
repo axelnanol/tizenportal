@@ -90,7 +90,7 @@ export default {
         '}',
       ];
     } else if (mode === 'white') {
-      // White ring – maximum contrast on dark/colorful backgrounds
+      // White ring – maximum contrast on dark/colourful backgrounds
       ring = [
         '/* White focus ring */',
         f + ' {',
@@ -121,7 +121,7 @@ export default {
       ];
     }
 
-    // ── portal card overrides (consistent with mode color) ────────────
+    // ── portal card overrides (consistent with mode colour) ────────────
     var cards = [
       '',
       '/* Portal card focus */',
