@@ -255,7 +255,12 @@ export default {
     if (NAVIGABLE_SELECTORS.length > CORE_SELECTOR_COUNT) {
       var removed = NAVIGABLE_SELECTORS.length - CORE_SELECTOR_COUNT;
       NAVIGABLE_SELECTORS.splice(CORE_SELECTOR_COUNT);
-      console.log('TizenPortal [TabindexInjection]: Removed ' + removed + ' bundle-added selector(s); ' + CORE_SELECTOR_COUNT + ' core selectors remain');
+      var msg = 'TizenPortal [TabindexInjection]: Removed ' + removed + ' bundle-added selector(s); ' + CORE_SELECTOR_COUNT + ' core selectors remain';
+      if (typeof TizenPortal !== 'undefined' && TizenPortal && typeof TizenPortal.log === 'function') {
+        TizenPortal.log(msg);
+      } else if (typeof console !== 'undefined' && console && typeof console.log === 'function') {
+        console.log(msg);
+      }
     }
   },
 };
