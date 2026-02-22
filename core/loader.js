@@ -76,7 +76,11 @@ export async function unloadBundle() {
     warn('TizenPortal Loader: Failed to clear userscripts:', err2.message);
   }
 
-  // Run bundle-registered cleanup callbacks (registered via TizenPortal.onCleanup)
+  // Run bundle-registered cleanup callbacks (registered via TizenPortal.onCleanup).
+  // Snapshot and clear before the loop so that any callbacks registered by a
+  // new bundle activation that races with teardown are not lost.  Clearing
+  // after the snapshot means any onCleanup() calls made *during* a callback
+  // (unusual but possible) are preserved for the next unload cycle.
   var callbacks = cleanupCallbacks.slice();
   cleanupCallbacks = [];
   for (var i = 0; i < callbacks.length; i++) {

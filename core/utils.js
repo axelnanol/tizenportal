@@ -302,21 +302,15 @@ export function warn() {
  */
 export function once(element, eventType, handler) {
   if (!element || typeof element.addEventListener !== 'function') {
-    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
-      console.warn('TizenPortal [once]: element must be an EventTarget');
-    }
+    warn('TizenPortal [once]: element must be an EventTarget');
     return function() {};
   }
   if (typeof eventType !== 'string' || !eventType) {
-    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
-      console.warn('TizenPortal [once]: eventType must be a non-empty string');
-    }
+    warn('TizenPortal [once]: eventType must be a non-empty string');
     return function() {};
   }
   if (typeof handler !== 'function') {
-    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
-      console.warn('TizenPortal [once]: handler must be a function');
-    }
+    warn('TizenPortal [once]: handler must be a function');
     return function() {};
   }
 
