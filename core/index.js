@@ -276,7 +276,7 @@ var TEXT_INPUT_SELECTOR = 'input, textarea';
 
 function resolveFocusOutlineMode(card, bundle) {
   var features = configGet('tp_features') || {};
-  var mode = features.focusOutlineMode || (features.focusStyling ? 'on' : 'off');
+  var mode = features.focusOutlineMode || 'off';
   
   // Apply bundle manifest default if no card override
   if (bundle && bundle.manifest && bundle.manifest.features && bundle.manifest.features.focusOutlineMode && !card.focusOutlineMode) {
@@ -287,11 +287,11 @@ function resolveFocusOutlineMode(card, bundle) {
   if (card && card.focusOutlineMode) {
     mode = card.focusOutlineMode;
   } else if (card && card.hasOwnProperty('focusStyling') && card.focusStyling === false) {
-    mode = 'off';
+    mode = 'none';
   } else if (features.focusStyling === false) {
-    mode = 'off';
+    mode = 'none';
   }
-  return mode || 'on';
+  return mode || 'off';
 }
 
 function resolveViewportMode(card, bundle) {
@@ -427,9 +427,12 @@ function applyFocusModeClass(mode) {
   target.classList.remove('tp-focus-mode-on');
   target.classList.remove('tp-focus-mode-high');
   target.classList.remove('tp-focus-mode-off');
+  target.classList.remove('tp-focus-mode-none');
 
   if (mode === 'high') {
     target.classList.add('tp-focus-mode-high');
+  } else if (mode === 'none') {
+    target.classList.add('tp-focus-mode-none');
   } else if (mode === 'off') {
     target.classList.add('tp-focus-mode-off');
   } else {

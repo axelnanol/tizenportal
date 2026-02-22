@@ -32,8 +32,8 @@ Registry.register({
   configKeys: ['focusStyling', 'focusOutlineMode'],
   implementation: focusStyling,
   applyArgs: function(config) {
-    var mode = config.focusOutlineMode || (config.focusStyling ? 'on' : 'off');
-    if (config.focusStyling === false) mode = 'off';
+    var mode = config.focusOutlineMode || 'off';
+    if (config.focusStyling === false) mode = 'none';
     return [mode];
   },
 });
@@ -300,10 +300,10 @@ function applyFeatures(doc, overrides) {
     
     // Special handling for features with complex enable/disable logic
     if (item.id === 'focusStyling') {
-      var focusMode = effectiveConfig.focusOutlineMode || (effectiveConfig.focusStyling ? 'on' : 'off');
-      if (effectiveConfig.focusStyling === false) focusMode = 'off';
+      var focusMode = effectiveConfig.focusOutlineMode || 'off';
+      if (effectiveConfig.focusStyling === false) focusMode = 'none';
       
-      if (focusMode === 'off') {
+      if (focusMode === 'none') {
         return { shouldApply: false, shouldRemove: true, args: [] };
       } else {
         var args = item.applyArgs ? item.applyArgs(effectiveConfig) : [];

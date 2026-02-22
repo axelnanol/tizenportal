@@ -80,9 +80,9 @@ var VIEWPORT_OPTIONS = [
  * Focus outline options
  */
 var FOCUS_OUTLINE_OPTIONS = [
-  { value: 'on', label: 'On (Blue)' },
-  { value: 'high', label: 'High Contrast (Yellow)' },
-  { value: 'off', label: 'Off' },
+  { value: 'off', label: 'Off (Base Blue Ring)' },
+  { value: 'on', label: 'Blue Highlight' },
+  { value: 'high', label: 'Yellow Highlight' },
 ];
 
 /**

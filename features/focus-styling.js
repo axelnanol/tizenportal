@@ -9,73 +9,70 @@ import { injectCSS, removeCSS } from '../core/utils.js';
 export default {
   name: 'focusStyling',
   displayName: 'Focus Styling',
-  _ringMode: 'on',
+  _ringMode: 'off',
   _ringWidthPx: 3,
   _ringOffsetPx: 2,
   _ringRadiusPx: 10,
   _ringShadowCss: '0 0 0 3px rgba(0, 178, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5)',
 
   getRingVisualConfig: function(mode) {
-    var color = '#00b2ff';
-    var ringAlpha = 0.45;
+    var ringColor = '#00b2ff';
+    var ringAlpha = 0.55;
     var ringWidth = 3;
-    var ringOffset = 2;
+    var ringOffset = 0;
     var ringRadius = 10;
+    var highlightColor = null;
+    var highlightWidth = 0;
+    var highlightOffset = 0;
+
+    if (mode === 'on') {
+      highlightColor = '#00b2ff';
+      highlightWidth = 2;
+      highlightOffset = 6;
+    } else if (mode === 'high') {
+      highlightColor = '#fcd34d';
+      highlightWidth = 3;
+      highlightOffset = 6;
+    }
+
     if (mode === 'high') {
-      color = '#fcd34d';
-      ringAlpha = 0.7;
+      ringAlpha = 0.65;
       ringWidth = 4;
     }
-    var ringColorCss = hexToRgba(color, ringAlpha);
+    var ringColorCss = hexToRgba(ringColor, ringAlpha);
     var dropShadow = '0 8px 24px rgba(0, 0, 0, 0.5)';
-    var ringShadow = '0 0 0 ' + ringWidth + 'px ' + hexToRgba(color, ringAlpha) + ', 0 8px 24px rgba(0, 0, 0, 0.5)';
+    var ringShadow = '0 0 0 ' + ringWidth + 'px ' + ringColorCss + ', 0 8px 24px rgba(0, 0, 0, 0.5)';
     return {
-      color: color,
+      color: ringColor,
       ringColorCss: ringColorCss,
       width: ringWidth,
       offset: ringOffset,
       radius: ringRadius,
       dropShadow: dropShadow,
       shadow: ringShadow,
+      highlightColor: highlightColor,
+      highlightWidth: highlightWidth,
+      highlightOffset: highlightOffset,
     };
   },
 
   getCSS: function(mode) {
     var ring = this.getRingVisualConfig(mode);
-    var color = ring.color;
-    var ringWidth = ring.width;
-    var ringColorCss = ring.ringColorCss;
-    var ringOffset = ring.offset;
-    var ringRadius = ring.radius;
     var ringShadow = ring.shadow;
+    var ringRadius = ring.radius;
+    var highlightWidth = ring.highlightWidth;
+    var highlightColor = ring.highlightColor;
+    var highlightOffset = ring.highlightOffset;
+    var selectorBase = ':focus:not(#tp-focus-never), :focus-visible:not(#tp-focus-never)';
+    var selectorOff = 'body.tp-focus-mode-off :focus:not(#tp-focus-never), body.tp-focus-mode-off :focus-visible:not(#tp-focus-never)';
+    var selectorOn = 'body.tp-focus-mode-on :focus:not(#tp-focus-never), body.tp-focus-mode-on :focus-visible:not(#tp-focus-never)';
+    var selectorHigh = 'body.tp-focus-mode-high :focus:not(#tp-focus-never), body.tp-focus-mode-high :focus-visible:not(#tp-focus-never)';
+    var baseSelector = selectorBase + ', ' + selectorOff + ', ' + selectorOn + ', ' + selectorHigh;
 
     return [
       '/* TizenPortal Focus Styling */',
-      ':focus,',
-      ':focus-visible,',
-      'body.tp-focus-mode-on :focus,',
-      'body.tp-focus-mode-on :focus-visible,',
-      'body.tp-focus-mode-high :focus {',
-      '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
-      '  outline-offset: ' + ringOffset + 'px !important;',
-      '  box-shadow: ' + ringShadow + ' !important;',
-      '  -webkit-border-radius: ' + ringRadius + 'px !important;',
-      '  border-radius: ' + ringRadius + 'px !important;',
-      '}',
-      '',
-      'a:focus,',
-      'button:focus,',
-      '[role="button"]:focus,',
-      '[role="link"]:focus,',
-      '[role="menuitem"]:focus,',
-      '[role="tab"]:focus,',
-      '[role="option"]:focus,',
-      '[tabindex]:focus,',
-      'input:focus,',
-      'select:focus,',
-      'textarea:focus {',
-      '  outline: ' + ringWidth + 'px solid ' + color + ' !important;',
-      '  outline-offset: ' + ringOffset + 'px !important;',
+      baseSelector + ' {',
+      '  outline: none !important;',
       '  box-shadow: ' + ringShadow + ' !important;',
       '  -webkit-border-radius: ' + ringRadius + 'px !important;',
       '  border-radius: ' + ringRadius + 'px !important;',
@@ -84,12 +81,34 @@ export default {
       '*:focus {',
       '  -webkit-tap-highlight-color: transparent;',
       '}',
+      '',
+      'body.tp-focus-mode-on :focus:not(#tp-focus-never),',
+      'body.tp-focus-mode-on :focus-visible:not(#tp-focus-never),',
+      'body.tp-focus-mode-high :focus:not(#tp-focus-never),',
+      'body.tp-focus-mode-high :focus-visible:not(#tp-focus-never) {',
+      '  outline-style: solid !important;',
+      '}',
+    ].join('\n');
+  },
+
+  appendHighlightCSS: function(css, mode) {
+    var ring = this.getRingVisualConfig(mode);
+    if (!ring.highlightColor || ring.highlightWidth <= 0) {
+      return css;
+    }
+
+    return css + '\n\n' + [
+      'body.tp-focus-mode-' + mode + ' :focus:not(#tp-focus-never),',
+      'body.tp-focus-mode-' + mode + ' :focus-visible:not(#tp-focus-never) {',
+      '  outline: ' + ring.highlightWidth + 'px solid ' + ring.highlightColor + ' !important;',
+      '  outline-offset: ' + ring.highlightOffset + 'px !important;',
+      '}',
     ].join('\n');
   },
 
   apply: function(doc) {
     if (!doc) return;
-    var mode = arguments.length > 1 ? arguments[1] : 'on';
+    var mode = arguments.length > 1 ? arguments[1] : 'off';
     var ring = this.getRingVisualConfig(mode);
     this._ringWidthPx = ring.width;
     this._ringOffsetPx = ring.offset;
@@ -97,8 +116,8 @@ export default {
     this._ringShadowCss = ring.shadow;
     this._ringMode = mode;
     this.remove(doc);
-    if (mode === 'off') return;
-    injectCSS(doc, 'tp-focus-styling', this.getCSS(mode));
+    if (mode === 'none') return;
+    injectCSS(doc, 'tp-focus-styling', this.appendHighlightCSS(this.getCSS(mode), mode));
     TizenPortal.log('Focus styling applied: ' + mode);
   },
 

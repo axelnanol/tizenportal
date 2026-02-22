@@ -281,7 +281,7 @@ Global defaults that can be overridden per-site in the editor.
   - Scales all text for improved TV legibility while maintaining relative sizing
 
 **Navigation**
-- **Focus Outline**: On (Blue) / High Contrast (Yellow) / Off
+- **Focus Outline**: Off (Base Blue Ring) / Blue Highlight / Yellow Highlight
 - **Focus Transition Style**: Slide / Scale / Glow / Off
 - **Focus Transition Speed**: Fast / Medium / Slow
 

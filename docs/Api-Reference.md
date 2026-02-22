@@ -340,7 +340,7 @@ interface PortalPreferences {
 ```typescript
 interface FeatureToggles {
   focusStyling: boolean;          // Global focus styling control
-  focusOutlineMode: 'on' | 'high' | 'off';  // Focus outline appearance
+  focusOutlineMode: 'on' | 'high' | 'off';  // off=base blue ring, on=blue highlight, high=yellow highlight
   tabindexInjection: boolean;     // Auto-add tabindex to elements
   scrollIntoView: boolean;        // Auto-scroll on focus
   safeArea: boolean;              // Apply TV safe area inset (5%)

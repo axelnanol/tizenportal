@@ -28,13 +28,13 @@ var TEXT_SCALE_OPTIONS = [
 **FOCUS_OUTLINE_OPTIONS** (line 65 in ui/preferences.js):
 ```js
 var FOCUS_OUTLINE_OPTIONS = [
-  { value: 'on', label: 'On (Blue)' },                      // INDEX 0 - DEFAULT
-  { value: 'high', label: 'High Contrast (Yellow)' },        // INDEX 1
-  { value: 'off', label: 'Off' },                            // INDEX 2
+  { value: 'off', label: 'Off (Base Blue Ring)' },           // INDEX 0 - DEFAULT
+  { value: 'on', label: 'Blue Highlight' },                  // INDEX 1
+  { value: 'high', label: 'Yellow Highlight' },              // INDEX 2
 ];
 ```
 
-**Why this matters:**  When cycling through options with `(index+1)%length`, if the saved value cannot be found (returns -1), the code defaults to index 0. This is `'off'` for textScale and `'on'` for focusOutlineMode - matching their respective defaults!
+**Why this matters:**  When cycling through options with `(index+1)%length`, if the saved value cannot be found (returns -1), the code defaults to index 0. This is `'off'` for textScale and `'off'` for focusOutlineMode - matching their respective defaults.
 
 ### 2. DEFAULT VALUES
 
