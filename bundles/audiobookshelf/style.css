@@ -2459,20 +2459,3 @@ body {
   background: rgba(255, 255, 255, 0.03) !important;
 }
 
-/* Portal-style focus rings */
-body.tp-focus-mode-on :focus {
-  outline: none !important;
-  box-shadow: 0 0 0 3px rgba(0, 178, 255, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-  border-radius: 10px !important;
-}
-
-body.tp-focus-mode-high :focus {
-  outline: none !important;
-  box-shadow: 0 0 0 4px rgba(252, 211, 77, 0.7), 0 8px 24px rgba(0, 0, 0, 0.5) !important;
-  border-radius: 10px !important;
-}
-
-body.tp-focus-mode-off :focus {
-  outline: none !important;
-  box-shadow: none !important;
-}
