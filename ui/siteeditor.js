@@ -2324,6 +2324,8 @@ function handleFeatureRowClick(row) {
   var key = row.dataset.featureKey || '';
   if (!key) return;
 
+  var globalConfig = getGlobalFeaturesConfig();
+  var globalEnabled = globalConfig[key] !== false;
   var hasOverride = state.card.hasOwnProperty(key);
 
   if (hasOverride && (state.card[key] === null || state.card[key] === undefined)) {
@@ -2331,15 +2333,15 @@ function handleFeatureRowClick(row) {
     hasOverride = false;
   }
 
-  var currentValue = hasOverride ? state.card[key] : null;
-  var nextValue = getNextOverrideValue(FEATURE_TOGGLE_OPTIONS, currentValue);
-
-  if (nextValue === null || nextValue === undefined) {
+  if (!hasOverride) {
+    state.card[key] = !globalEnabled;
+    showEditorToast(state.card[key] ? 'Enabled for this site' : 'Disabled for this site');
+  } else if (state.card[key] === !globalEnabled) {
+    state.card[key] = globalEnabled;
+    showEditorToast(state.card[key] ? 'Enabled for this site' : 'Disabled for this site');
+  } else {
     delete state.card[key];
     showEditorToast('Reset to global setting');
-  } else {
-    state.card[key] = nextValue;
-    showEditorToast(nextValue === true ? 'Enabled for this site' : 'Disabled for this site');
   }
 
   renderFields();
