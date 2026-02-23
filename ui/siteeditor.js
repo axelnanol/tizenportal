@@ -32,6 +32,37 @@ var state = {
   onComplete: null,
 };
 
+var OVERRIDE_KEYS = [
+  'navigationMode',
+  'viewportMode',
+  'focusOutlineMode',
+  'focusStyling',
+  'focusTransitions',
+  'focusTransitionMode',
+  'focusTransitionSpeed',
+  'userAgent',
+  'tabindexInjection',
+  'scrollIntoView',
+  'navigationFix',
+  'safeArea',
+  'gpuHints',
+  'cssReset',
+  'hideScrollbars',
+  'wrapTextInputs',
+  'textScale',
+];
+
+function copyDefinedOverrides(target, source) {
+  if (!target || !source) return;
+
+  for (var i = 0; i < OVERRIDE_KEYS.length; i++) {
+    var key = OVERRIDE_KEYS[i];
+    if (source.hasOwnProperty(key) && source[key] !== null && source[key] !== undefined) {
+      target[key] = source[key];
+    }
+  }
+}
+
 /**
  * Editor mode - stored on DOM element to prevent state loss
  * Mode can be: 'add' or 'edit'
@@ -552,16 +583,6 @@ export function showAddSiteEditor(onComplete) {
     name: '',
     url: '',
     featureBundle: null,
-    viewportMode: null,
-    focusOutlineMode: null,
-    userAgent: null,
-    tabindexInjection: null,
-    scrollIntoView: null,
-    safeArea: null,
-    gpuHints: null,
-    cssReset: null,
-    hideScrollbars: null,
-    wrapTextInputs: null,
     icon: '',
     bundleOptions: {},
     bundleOptionData: {},
@@ -592,28 +613,12 @@ export function showEditSiteEditor(card, onComplete) {
     name: card.name || '',
     url: stripTrailingSlash(card.url || ''),
     featureBundle: card.featureBundle || null,
-    navigationMode: card.hasOwnProperty('navigationMode') ? card.navigationMode : null,
-    viewportMode: card.hasOwnProperty('viewportMode') ? card.viewportMode : null,
-    focusOutlineMode: card.hasOwnProperty('focusOutlineMode') ? card.focusOutlineMode : null,
-    focusStyling: card.hasOwnProperty('focusStyling') ? card.focusStyling : null,
-    focusTransitions: card.hasOwnProperty('focusTransitions') ? card.focusTransitions : null,
-    focusTransitionMode: card.hasOwnProperty('focusTransitionMode') ? card.focusTransitionMode : null,
-    focusTransitionSpeed: card.hasOwnProperty('focusTransitionSpeed') ? card.focusTransitionSpeed : null,
-    userAgent: card.hasOwnProperty('userAgent') ? card.userAgent : null,
-    tabindexInjection: card.hasOwnProperty('tabindexInjection') ? card.tabindexInjection : null,
-    scrollIntoView: card.hasOwnProperty('scrollIntoView') ? card.scrollIntoView : null,
-    navigationFix: card.hasOwnProperty('navigationFix') ? card.navigationFix : null,
-    safeArea: card.hasOwnProperty('safeArea') ? card.safeArea : null,
-    gpuHints: card.hasOwnProperty('gpuHints') ? card.gpuHints : null,
-    cssReset: card.hasOwnProperty('cssReset') ? card.cssReset : null,
-    hideScrollbars: card.hasOwnProperty('hideScrollbars') ? card.hideScrollbars : null,
-    wrapTextInputs: card.hasOwnProperty('wrapTextInputs') ? card.wrapTextInputs : null,
-    textScale: card.hasOwnProperty('textScale') ? card.textScale : null,
     icon: card.icon || '',
     bundleOptions: card.bundleOptions || {},
     bundleOptionData: card.bundleOptionData || {},
     userscriptToggles: card.userscriptToggles || {},
   };
+  copyDefinedOverrides(state.card, card);
   state.onComplete = onComplete;
   
   openEditor();
@@ -1394,6 +1399,9 @@ function renderFeatureOverridesField() {
       if (def.category !== category.id) continue;
 
       var hasOverride = state.card && state.card.hasOwnProperty(def.key);
+      if (hasOverride && (state.card[def.key] === null || state.card[def.key] === undefined)) {
+        hasOverride = false;
+      }
       var globalEnabled = globalFeatures[def.key] !== false;
       var effectiveEnabled = hasOverride ? (state.card[def.key] === true) : globalEnabled;
 
