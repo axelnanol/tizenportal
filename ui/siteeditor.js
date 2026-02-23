@@ -2195,6 +2195,35 @@ function handleUserscriptRowClick(row) {
   }, 50);
 }
 
+function findOptionLabel(options, value) {
+  if (!options || !options.length) return '';
+  for (var i = 0; i < options.length; i++) {
+    if (options[i].value === value) {
+      return options[i].label;
+    }
+  }
+  return '';
+}
+
+function getNextOverrideValue(options, currentValue) {
+  if (!options || !options.length) return null;
+
+  var currentIndex = -1;
+  for (var i = 0; i < options.length; i++) {
+    if (options[i].value === currentValue) {
+      currentIndex = i;
+      break;
+    }
+  }
+
+  if (currentIndex === -1) {
+    currentIndex = 0;
+  }
+
+  var nextIndex = (currentIndex + 1) % options.length;
+  return options[nextIndex].value;
+}
+
 /**
  * Handle row click for global overrides (cycle through values)
  */
@@ -2213,49 +2242,21 @@ function handleGlobalOverrideRowClick(row) {
   }
   if (!def) return;
 
-  var globalFeatures = getGlobalFeaturesConfig();
   var hasOverride = state.card.hasOwnProperty(key);
-  if (hasOverride && state.card[key] === null) {
+  if (hasOverride && (state.card[key] === null || state.card[key] === undefined)) {
     delete state.card[key];
     hasOverride = false;
   }
 
-  if (hasOverride) {
-    // Has override - cycle to next option, or delete if back at start
-    var currentValue = state.card[key];
-    var currentIdx = -1;
-    for (var j = 0; j < def.options.length; j++) {
-      if (def.options[j].value === currentValue) {
-        currentIdx = j;
-        break;
-      }
-    }
-    
-    var nextIdx = (currentIdx + 1) % def.options.length;
-    var globalValue = getNormalizedGlobalValue(globalFeatures, key);
-    var nextValue = def.options[nextIdx].value;
-    
-    // If cycling back to global value, remove override
-    if (nextValue === globalValue || (nextValue === null && globalValue === undefined)) {
-      delete state.card[key];
-      showEditorToast('Reset to global: ' + def.options[nextIdx].label);
-    } else {
-      state.card[key] = nextValue;
-      showEditorToast('Override: ' + def.options[nextIdx].label);
-    }
+  var currentValue = hasOverride ? state.card[key] : null;
+  var nextValue = getNextOverrideValue(def.options, currentValue);
+
+  if (nextValue === null || nextValue === undefined) {
+    delete state.card[key];
+    showEditorToast('Reset to global setting');
   } else {
-    // No override - set to next value from global
-    var globalValue = getNormalizedGlobalValue(globalFeatures, key);
-    var currentIdx = 0;
-    for (var j = 0; j < def.options.length; j++) {
-      if (def.options[j].value === globalValue) {
-        currentIdx = j;
-        break;
-      }
-    }
-    var nextIdx = (currentIdx + 1) % def.options.length;
-    state.card[key] = def.options[nextIdx].value;
-    showEditorToast('Override: ' + def.options[nextIdx].label);
+    state.card[key] = nextValue;
+    showEditorToast('Override: ' + (findOptionLabel(def.options, nextValue) || String(nextValue)));
   }
 
   renderFields();
@@ -2287,49 +2288,21 @@ function handleSiteOverrideRowClick(row) {
   }
   if (!def) return;
 
-  var globalFeatures = getGlobalFeaturesConfig();
   var hasOverride = state.card.hasOwnProperty(key);
-  if (hasOverride && state.card[key] === null) {
+  if (hasOverride && (state.card[key] === null || state.card[key] === undefined)) {
     delete state.card[key];
     hasOverride = false;
   }
 
-  if (hasOverride) {
-    // Has override - cycle to next option, or delete if back at global value
-    var currentValue = state.card[key];
-    var currentIdx = -1;
-    for (var j = 0; j < def.options.length; j++) {
-      if (def.options[j].value === currentValue) {
-        currentIdx = j;
-        break;
-      }
-    }
-    
-    var nextIdx = (currentIdx + 1) % def.options.length;
-    var globalValue = getNormalizedGlobalValue(globalFeatures, key);
-    var nextValue = def.options[nextIdx].value;
-    
-    // If cycling back to global value, remove override
-    if (nextValue === globalValue || (nextValue === null && globalValue === undefined)) {
-      delete state.card[key];
-      showEditorToast('Reset to global: ' + def.options[nextIdx].label);
-    } else {
-      state.card[key] = nextValue;
-      showEditorToast('Setting: ' + def.options[nextIdx].label);
-    }
+  var currentValue = hasOverride ? state.card[key] : null;
+  var nextValue = getNextOverrideValue(def.options, currentValue);
+
+  if (nextValue === null || nextValue === undefined) {
+    delete state.card[key];
+    showEditorToast('Reset to global setting');
   } else {
-    // No override - set to next value from global
-    var globalValue = getNormalizedGlobalValue(globalFeatures, key);
-    var currentIdx = 0;
-    for (var j = 0; j < def.options.length; j++) {
-      if (def.options[j].value === globalValue) {
-        currentIdx = j;
-        break;
-      }
-    }
-    var nextIdx = (currentIdx + 1) % def.options.length;
-    state.card[key] = def.options[nextIdx].value;
-    showEditorToast('Setting: ' + def.options[nextIdx].label);
+    state.card[key] = nextValue;
+    showEditorToast('Setting: ' + (findOptionLabel(def.options, nextValue) || String(nextValue)));
   }
 
   renderFields();
@@ -2351,16 +2324,22 @@ function handleFeatureRowClick(row) {
   var key = row.dataset.featureKey || '';
   if (!key) return;
 
-  var globalConfig = getGlobalFeaturesConfig();
-  var globalEnabled = globalConfig[key] !== false;
   var hasOverride = state.card.hasOwnProperty(key);
 
-  if (hasOverride) {
+  if (hasOverride && (state.card[key] === null || state.card[key] === undefined)) {
+    delete state.card[key];
+    hasOverride = false;
+  }
+
+  var currentValue = hasOverride ? state.card[key] : null;
+  var nextValue = getNextOverrideValue(FEATURE_TOGGLE_OPTIONS, currentValue);
+
+  if (nextValue === null || nextValue === undefined) {
     delete state.card[key];
     showEditorToast('Reset to global setting');
   } else {
-    state.card[key] = !globalEnabled;
-    showEditorToast(globalEnabled ? 'Disabled for this site' : 'Enabled for this site');
+    state.card[key] = nextValue;
+    showEditorToast(nextValue === true ? 'Enabled for this site' : 'Disabled for this site');
   }
 
   renderFields();
