@@ -10,6 +10,15 @@ import Userscripts from '../features/userscripts.js';
 import featureLoader from '../features/index.js';
 import Registry from '../features/registry.js';
 import { KEYS } from '../input/keys.js';
+import {
+  FOCUS_OUTLINE_OPTIONS,
+  FOCUS_TRANSITION_MODE_OPTIONS,
+  FOCUS_TRANSITION_SPEED_OPTIONS,
+  TEXT_SCALE_OPTIONS,
+  NAVIGATION_MODE_OPTIONS,
+  VIEWPORT_OPTIONS,
+  UA_MODE_OPTIONS,
+} from '../features/options.js';
 
 /**
  * Preferences state
@@ -67,75 +76,6 @@ var HINT_POSITION_OPTIONS = [
   { value: 'bottom-left', label: 'Bottom Left' },
 ];
 
-/**
- * Viewport mode options
- */
-var VIEWPORT_OPTIONS = [
-  { value: 'auto', label: 'Auto' },
-  { value: 'locked', label: 'Locked (1920)' },
-  { value: 'unlocked', label: 'Unlocked' },
-];
-
-/**
- * Focus outline options
- */
-var FOCUS_OUTLINE_OPTIONS = [
-  { value: 'off', label: 'Subtle Blue' },
-  { value: 'on', label: 'Blue Ring' },
-  { value: 'high', label: 'Yellow Ring' },
-  { value: 'portal', label: 'Portal Style (Glow)' },
-  { value: 'white', label: 'White Ring' },
-];
-
-/**
- * Focus transition mode options
- */
-var FOCUS_TRANSITION_MODE_OPTIONS = [
-  { value: 'slide', label: 'Slide (Directional)' },
-  { value: 'scale', label: 'Scale (Grow)' },
-  { value: 'glow', label: 'Glow (Pulse)' },
-  { value: 'off', label: 'Off' },
-];
-
-/**
- * Focus transition speed options
- */
-var FOCUS_TRANSITION_SPEED_OPTIONS = [
-  { value: 'fast', label: 'Fast (150ms)' },
-  { value: 'medium', label: 'Medium (250ms)' },
-  { value: 'slow', label: 'Slow (400ms)' },
-];
-
-/**
- * Text scale options
- */
-var TEXT_SCALE_OPTIONS = [
-  { value: 'extra-small', label: 'Extra Small (75%)' },
-  { value: 'small', label: 'Small (90%)' },
-  { value: 'off', label: 'Normal (100%)' },
-  { value: 'medium', label: 'Medium (115%)' },
-  { value: 'large', label: 'Large (135%)' },
-  { value: 'extra-large', label: 'Extra Large (160%)' },
-];
-
-/**
- * User Agent mode options
- */
-var UA_MODE_OPTIONS = [
-  { value: 'tizen', label: 'Tizen TV' },
-  { value: 'desktop', label: 'Desktop' },
-  { value: 'mobile', label: 'Mobile' },
-];
-
-/**
- * Navigation mode options
- * Note: Geometric is the current global default
- */
-var NAVIGATION_MODE_OPTIONS = [
-  { value: 'geometric', label: 'Grid Navigation (Geometric) - Default' },
-  { value: 'directional', label: 'Smart Navigation (Directional)' },
-  { value: 'polyfill', label: 'Legacy Polyfill (Compatibility Only)' },
-];
 
 /**
  * Normalize stored theme value to valid option
