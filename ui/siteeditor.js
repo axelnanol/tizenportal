@@ -12,6 +12,15 @@ import { escapeHtml, sanitizeUrl, isValidHttpUrl } from '../core/utils.js';
 import Userscripts from '../features/userscripts.js';
 import Registry from '../features/registry.js';
 import { KEYS } from '../input/keys.js';
+import {
+  FOCUS_OUTLINE_OPTIONS as FOCUS_OUTLINE_BASE,
+  FOCUS_TRANSITION_MODE_OPTIONS as FOCUS_TRANSITION_MODE_BASE,
+  FOCUS_TRANSITION_SPEED_OPTIONS as FOCUS_TRANSITION_SPEED_BASE,
+  TEXT_SCALE_OPTIONS as TEXT_SCALE_BASE,
+  NAVIGATION_MODE_OPTIONS as NAVIGATION_MODE_BASE,
+  VIEWPORT_OPTIONS,
+  UA_MODE_OPTIONS as UA_MODE_BASE,
+} from '../features/options.js';
 
 /**
  * Editor state
@@ -50,58 +59,30 @@ function setEditorMode(mode, cardId) {
 /**
  * Field definitions for the editor
  */
-var VIEWPORT_MODE_OPTIONS = [
-  { value: null, label: 'Global (default)' },
-  { value: 'auto', label: 'Auto' },
-  { value: 'locked', label: 'Locked (1920)' },
-  { value: 'unlocked', label: 'Unlocked' },
-];
 
-var FOCUS_OUTLINE_OPTIONS = [
-  { value: null, label: 'Global (default)' },
-  { value: 'off', label: 'Off (Base Blue Ring)' },
-  { value: 'on', label: 'Blue Highlight' },
-  { value: 'high', label: 'Yellow Highlight' },
-];
+/**
+ * Prepend the "use global setting" sentinel to a shared option list.
+ * Used by every cycle-type override control in the site editor.
+ * @param {Array} options - Base option array from features/options.js
+ * @returns {Array} New array with {value: null, label: 'Global (default)'} prepended
+ */
+function withGlobalDefault(options) {
+  return [{ value: null, label: 'Global (default)' }].concat(options);
+}
 
-var FOCUS_TRANSITION_MODE_OPTIONS = [
-  { value: null, label: 'Global (default)' },
-  { value: 'slide', label: 'Slide (Directional)' },
-  { value: 'scale', label: 'Scale (Grow)' },
-  { value: 'glow', label: 'Glow (Pulse)' },
-  { value: 'off', label: 'Off' },
-];
+var VIEWPORT_MODE_OPTIONS = withGlobalDefault(VIEWPORT_OPTIONS);
 
-var FOCUS_TRANSITION_SPEED_OPTIONS = [
-  { value: null, label: 'Global (default)' },
-  { value: 'fast', label: 'Fast (150ms)' },
-  { value: 'medium', label: 'Medium (250ms)' },
-  { value: 'slow', label: 'Slow (400ms)' },
-];
+var FOCUS_OUTLINE_OPTIONS = withGlobalDefault(FOCUS_OUTLINE_BASE);
 
-var TEXT_SCALE_OPTIONS = [
-  { value: null, label: 'Global (default)' },
-  { value: 'extra-small', label: 'Extra Small (75%)' },
-  { value: 'small', label: 'Small (90%)' },
-  { value: 'off', label: 'Normal (100%)' },
-  { value: 'medium', label: 'Medium (115%)' },
-  { value: 'large', label: 'Large (135%)' },
-  { value: 'extra-large', label: 'Extra Large (160%)' },
-];
+var FOCUS_TRANSITION_MODE_OPTIONS = withGlobalDefault(FOCUS_TRANSITION_MODE_BASE);
 
-var UA_MODE_OPTIONS = [
-  { value: null, label: 'Global (default)' },
-  { value: 'tizen', label: 'Tizen TV' },
-  { value: 'mobile', label: 'Mobile' },
-  { value: 'desktop', label: 'Desktop' },
-];
+var FOCUS_TRANSITION_SPEED_OPTIONS = withGlobalDefault(FOCUS_TRANSITION_SPEED_BASE);
 
-var NAVIGATION_MODE_OPTIONS = [
-  { value: null, label: 'Global (Geometric default)' },
-  { value: 'geometric', label: 'Grid Navigation (Geometric)' },
-  { value: 'directional', label: 'Smart Navigation (Directional)' },
-  { value: 'polyfill', label: 'Legacy Polyfill (Compatibility Only)' },
-];
+var TEXT_SCALE_OPTIONS = withGlobalDefault(TEXT_SCALE_BASE);
+
+var UA_MODE_OPTIONS = withGlobalDefault(UA_MODE_BASE);
+
+var NAVIGATION_MODE_OPTIONS = withGlobalDefault(NAVIGATION_MODE_BASE);
 
 var FEATURE_TOGGLE_OPTIONS = [
   { value: null, label: 'Global (default)' },
